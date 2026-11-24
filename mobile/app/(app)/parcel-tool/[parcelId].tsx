@@ -14,12 +14,16 @@ import { ReportPageHost } from '@/components/surfaces/ReportPageHost';
 import { REPORT_SLICE, reportScreenState } from '@/components/surfaces/ReportBinding';
 import { useParcelLookup } from '@/hooks/useParcelLookup';
 import { useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
+import { useWallState } from '@/hooks/useWallState';
 import { needsSemiQuestion, semiQuestionRoute, SEMI_PARAM } from '@/lib/lotForm';
 
 export default function ParcelReportScreen() {
   const { parcelId, [SEMI_PARAM]: semi } = useLocalSearchParams<{ parcelId: string; semi?: string }>();
   const semiParam = typeof semi === 'string' ? semi : undefined;
-  const { data, isError, isFetching, refetch } = useParcelLookup(parcelId, semiParam);
+  const { data, isError, isFetching, refetch, error } = useParcelLookup(parcelId, semiParam);
+  // task-452 SEARCHFIX.4: a refused lookup (limit, expired) shows the wall once the entitlement read has answered; while it is pending the loading
+  // lifecycle shows, never the error one; a shown report is never replaced (the wall is drawn only while view is null).
+  const { kind: wallKind, wall } = useWallState(error);
   // SEMI-B (operator "semi ask a", 2026-11-13): an unsure lot (the doubt band of Spec 78 O-4) is asked the one question BEFORE the report shows. The
   // redirect fires once, on the first settled data (Spec 99 §6.5), never on a background refetch; a `semi` param means it was answered, and an older
   // server that sends no lotForm never asks. Clear semis and clear detached lots stay on the report.
@@ -30,5 +34,5 @@ export default function ParcelReportScreen() {
   const { view, lifecycle } = reportScreenState({ data: data && !ask ? { page: data.page ?? null } : undefined, isError });
   const onRetry = useCallback(() => void refetch(), [refetch]);
   const onBack = useGoBack();
-  return <ReportPageHost view={view} lifecycle={lifecycle} content={REPORT_SLICE.content} onRetry={onRetry} onBack={onBack} />;
+  return <ReportPageHost view={view} lifecycle={view === null && wallKind === 'wait' ? 'loading' : lifecycle} content={REPORT_SLICE.content} onRetry={onRetry} onBack={onBack} wall={view === null ? wall : null} />;
 }

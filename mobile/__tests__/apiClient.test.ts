@@ -67,7 +67,7 @@ jest.mock('@sentry/react-native', () => ({
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
-import { fetchWithAuth, AccountDeletedError, ApiError, NetworkError } from '@/lib/apiClient';
+import { fetchWithAuth, AccountDeletedError, ApiError, NetworkError, ReportLimitError, SubscriptionRequiredError } from '@/lib/apiClient';
 
 function makeResponse(status: number, body: unknown): Response {
   return {
@@ -159,6 +159,51 @@ describe('fetchWithAuth — AccountDeletedError', () => {
     const err = await fetchWithAuth('/api/user-profile').catch((e) => e);
     expect(err).toBeInstanceOf(AccountDeletedError);
     expect((err as AccountDeletedError).days_remaining).toBe(0);
+  });
+});
+
+// task-452 SEARCHFIX.4 AC1 (RR-0444 2b): the two parcel 403s keep their code (src/features/leads/api/error-mapping.ts:29 SUBSCRIPTION_REQUIRED, :38
+// REPORT_LIMIT_REACHED with details { reportsLimit, resetsOn }); each is its own class and still an ApiError(403). Every other 403 stays ApiError(403).
+describe('fetchWithAuth — the two parcel 403 classes (task-452 AC1)', () => {
+  const limitBody = (details: unknown) => ({ data: null, error: { code: 'REPORT_LIMIT_REACHED', message: 'The monthly report limit is reached', details }, meta: null });
+  const subscriptionBody = { data: null, error: { code: 'SUBSCRIPTION_REQUIRED', message: 'An active subscription is required to view parcel details' }, meta: null };
+
+  it('REPORT_LIMIT_REACHED gives ReportLimitError with its code, limit and ISO reset date; it is an ApiError(403)', async () => {
+    mockFetch.mockResolvedValueOnce(makeResponse(403, limitBody({ reportsLimit: 10, resetsOn: '2026-12-09T05:00:00.000Z' })));
+    const err = await fetchWithAuth('/api/parcels/lookup?parcelId=PCL-1').catch((e) => e);
+    expect(err).toBeInstanceOf(ReportLimitError);
+    expect(err).toBeInstanceOf(ApiError);
+    expect(err).toMatchObject({ status: 403, code: 'REPORT_LIMIT_REACHED', reportsLimit: 10, resetsOn: '2026-12-09T05:00:00.000Z' });
+  });
+
+  it.each([
+    ['the lookup route', '/api/parcels/lookup?parcelId=PCL-1'],
+    ['the lot-size route', '/api/parcels/lot-size'],
+  ])('SUBSCRIPTION_REQUIRED from %s gives SubscriptionRequiredError with its code; it is an ApiError(403)', async (_name, p) => {
+    mockFetch.mockResolvedValueOnce(makeResponse(403, subscriptionBody));
+    const err = await fetchWithAuth(p).catch((e) => e);
+    expect(err).toBeInstanceOf(SubscriptionRequiredError);
+    expect(err).toBeInstanceOf(ApiError);
+    expect(err).not.toBeInstanceOf(ReportLimitError);
+    expect(err).toMatchObject({ status: 403, code: 'SUBSCRIPTION_REQUIRED' });
+  });
+
+  it('a limit 403 with details of the wrong type keeps the class and code with null limit and date', async () => {
+    mockFetch.mockResolvedValueOnce(makeResponse(403, limitBody({ reportsLimit: '10', resetsOn: 7 })));
+    const err = await fetchWithAuth('/api/parcels/lookup?parcelId=PCL-1').catch((e) => e);
+    expect(err).toBeInstanceOf(ReportLimitError);
+    expect(err).toMatchObject({ code: 'REPORT_LIMIT_REACHED', reportsLimit: null, resetsOn: null });
+    mockFetch.mockResolvedValueOnce(makeResponse(403, limitBody(undefined)));
+    const bare = await fetchWithAuth('/api/parcels/lookup?parcelId=PCL-1').catch((e) => e);
+    expect(bare).toMatchObject({ code: 'REPORT_LIMIT_REACHED', reportsLimit: null, resetsOn: null });
+  });
+
+  it('an ENTRY_OFF 403 (lot-size route.ts:52) stays a plain ApiError(403), neither parcel class', async () => {
+    mockFetch.mockResolvedValueOnce(makeResponse(403, { data: null, error: { code: 'ENTRY_OFF', message: 'Lot size entry is not open yet' }, meta: null }));
+    const err = await fetchWithAuth('/api/parcels/lot-size').catch((e) => e);
+    // Its own class is ApiError itself (not a subclass), so this case is green before and after the change.
+    expect(Object.getPrototypeOf(err)).toBe(ApiError.prototype);
+    expect((err as ApiError).status).toBe(403);
   });
 });
 

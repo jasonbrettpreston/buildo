@@ -1402,6 +1402,77 @@
      "busy": "busy"
     }
    ]
+  },
+  "mobile_parcel_wall": {
+   "prefix": "parcel-wall",
+   "contract": "contract_parcels_entitlement",
+   "binding": "mobile/src/components/surfaces/WallBinding.tsx",
+   "platforms": [
+    "mobile"
+   ],
+   "sections": [
+    {
+     "kind": "notice",
+     "id": "limit",
+     "when": "limit",
+     "tone": "neutral",
+     "icon": "Info",
+     "parts": [
+      {
+       "role": "title",
+       "content": "wall.limit.title",
+       "vars": {
+        "limit": "reportsLimit"
+       }
+      },
+      {
+       "role": "small",
+       "content": "wall.limit.reset",
+       "vars": {
+        "date": "resetsOnDisplay"
+       }
+      },
+      {
+       "role": "text",
+       "content": "wall.limit.opened"
+      },
+      {
+       "role": "text",
+       "content": "wall.limit.stay"
+      },
+      {
+       "role": "text",
+       "content": "wall.plan"
+      }
+     ]
+    },
+    {
+     "kind": "notice",
+     "id": "reactivate",
+     "when": "reactivate",
+     "tone": "neutral",
+     "icon": "Info",
+     "parts": [
+      {
+       "role": "text",
+       "content": "wall.reactivate"
+      },
+      {
+       "role": "text",
+       "content": "wall.plan"
+      }
+     ]
+    },
+    {
+     "kind": "button",
+     "id": "tracked",
+     "variant": "default",
+     "label": "wall.tracked",
+     "content": "wall.tracked",
+     "action": "push",
+     "target": "route"
+    }
+   ]
   }
  }
 }

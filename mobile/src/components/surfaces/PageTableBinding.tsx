@@ -18,7 +18,7 @@ type PageChild = PageNode | Ref | Template;
 type Gate = { when?: string; platforms?: ReadonlyArray<'web' | 'mobile'> };
 type BarPart = { role: 'back'; icon: string; content: string; action: string };
 type ButtonRow = { variant: 'default' | 'outline'; label: string; content: string; action: string; idle?: string; target?: string; busy?: string };
-type NoticePart = ({ role: 'text'; content: string; vars?: Record<string, string> } | ({ role: 'button'; id: string } & Omit<ButtonRow, 'idle' | 'target' | 'busy'>)) & { when?: string };
+type NoticePart = ({ role: 'text' | 'title' | 'small'; content: string; vars?: Record<string, string> } | ({ role: 'button'; id: string } & Omit<ButtonRow, 'idle' | 'target' | 'busy'>)) & { when?: string };
 export type PageSection = Gate & (
   | { kind: 'bar'; id: string; parts: BarPart[] }
   | { kind: 'status'; id: string; content: string }
@@ -33,7 +33,8 @@ export type PageStyles = {
   screen: string; scroll: string; column: string; bottomPadding: number; maxWidth: number;
   bar: string; back: string; backIconSize: number; iconColor: string;
   status: string; heading: string;
-  notice: Record<'error' | 'neutral', { box: string; icon: string; text: string }>;
+  /** task-452 (RR-0466): `title` and `small` are the classes of a notice text part with that role; a table that leaves them unset draws every part with `text`. */
+  notice: Record<'error' | 'neutral', { box: string; icon: string; text: string; title?: string; small?: string }>;
   card: { idle: string; checked: string; row: string; dotIdle: string; dotChecked: string; text: string };
   button: Record<'default' | 'outline', { className: string; busyClassName: string; text: string }>;
 };
@@ -94,11 +95,16 @@ export function pageProps(screen: PageScreen, flags: Readonly<Record<string, boo
         return [node('Text', { key: s.id, testID: testID(s.id), className: styles.heading, role: s.role }, [content(s.content)])];
       case 'notice': {
         const t = styles.notice[s.tone];
+        // task-452 (risk 5, RR-0466): React keys are unique among siblings. The first shown text part keeps today's key exactly (every semi golden is
+        // byte-identical); each later text part of the same notice gets a counter (`<id>-text-1`, `<id>-text-2`, ...).
+        let texts = 0;
         return [node('Alert', { key: s.id, testID: testID(s.id), icon: s.icon, iconClassName: t.icon, className: t.box }, s.parts.filter((p) => on(p.when)).map((p): PageNode => {
           if (p.role === 'button') return button(p.id, p);
           const child: PageChild = p.vars === undefined ? content(p.content)
             : { text: content(p.content), vars: Object.fromEntries(Object.entries(p.vars).map(([k, path]) => [k, { contract: `${screen.contract}.${path}` }])) };
-          return node('AlertDescription', { key: `${s.id}-text`, className: t.text }, [child]);
+          const n = texts++;
+          const className = p.role === 'title' ? (t.title ?? t.text) : p.role === 'small' ? (t.small ?? t.text) : t.text;
+          return node('AlertDescription', { key: n === 0 ? `${s.id}-text` : `${s.id}-text-${n}`, className }, [child]);
         }))];
       }
       case 'choices': {

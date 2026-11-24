@@ -3,11 +3,11 @@ id: TASK-452
 title: >-
   SEARCHFIX.4 Report-limit screen (subscription upgrade with more report room)
   and reactivate screen for an expired subscription, phone first
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-SFX4'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T20:55:00Z'
+updated_date: '2026-11-24T21:14:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -29,6 +29,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-24/BL-SFX4/REPORT.md
+  - docs/reports/lanes/2026-11-24/BL-SFX4/GROUNDER.md
+  - docs/reports/lanes/2026-11-24/BL-SFX4/TRIAGE.md
 type: build
 ordinal: 150050
 ---
@@ -55,10 +58,10 @@ Files: src/tests/surfaces/page-arm.logic.test.ts, mobile/src/components/surfaces
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A limit-reached or subscription-required 403 keeps its code, as two error classes (the limit one also keeps its limit and reset date); every other 403 stays today's ApiError, and ACCOUNT_DELETED still gives AccountDeletedError
-- [ ] #2 At the limit, once the entitlement read has answered, the search page and the report screen show the wall with the count, the reset date and the plan line (no top-up or upgrade control until the buying work, RR-0454 item 3); never the reactivate copy; a failed read keeps today's notice (the count and date are the read's, not the 403's)
-- [ ] #3 An expired subscription shows the reactivate state (the reactivate sentence, the plan line and Go to Tracked Lots); a subscription-required 403 with no plan, an active status or a failed read keeps today's notice (the no-plan page is task-357, RR-0455 item 2)
-- [ ] #4 The web is unchanged by this card: it keeps its one not-entitled notice and gets the limit and reactivate screens with the web switch-on (MB-44, task-123, MAXBLD_WEB_LIVE pinned false; RR-0455 item 1)
+- [x] #1 A limit-reached or subscription-required 403 keeps its code, as two error classes (the limit one also keeps its limit and reset date); every other 403 stays today's ApiError, and ACCOUNT_DELETED still gives AccountDeletedError
+- [x] #2 At the limit, once the entitlement read has answered, the search page and the report screen show the wall with the count, the reset date and the plan line (no top-up or upgrade control until the buying work, RR-0454 item 3); never the reactivate copy; a failed read keeps today's notice (the count and date are the read's, not the 403's)
+- [x] #3 An expired subscription shows the reactivate state (the reactivate sentence, the plan line and Go to Tracked Lots); a subscription-required 403 with no plan, an active status or a failed read keeps today's notice (the no-plan page is task-357, RR-0455 item 2)
+- [x] #4 The web is unchanged by this card: it keeps its one not-entitled notice and gets the limit and reactivate screens with the web switch-on (MB-44, task-123, MAXBLD_WEB_LIVE pinned false; RR-0455 item 1)
 <!-- AC:END -->
 
 ## Definition of Done
@@ -388,4 +391,26 @@ rg#4 MED folded owed now (not at lan
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-24 taken on the board at lane launch (lane BL-SFX4, worktree /Users/brettpreston_macmini/Buildo-wt-sfx4, branch wf2/inc1b-sfx4), RR-0240
+
+Lane BL-SFX4 commit 1 (plan step 11, first commit): the three useParcelEntitlement cites in census/contracts.json move from useParcelLookup.ts:162 to :168; the emit run rewrote the F02 entitlement descriptor and 127-surface-registry.md. Red: fix-tune D15 condition read in memory before the edit (hook line 168, descriptor :162). Green: the same read after the emit; registry --check clean, consumer-registry --check fresh.
+
+Tests first (lane BL-SFX4): phone red run 16 failed / 161 passed of 177 in 8 files (lane proof red.out); web red: the refused commit attempt with only the test and task files staged, Test Files 4 failed, Tests 6 failed | 122 passed (red-web.out).
+
+Lane BL-SFX4 work commit (RR-0466 card, plan sha256:7a8c2de9fe27). Deviation 1: ReportPageHost's wall prop and useWallState's WallView are { tree, content, data, actions }, not { tree, content, actions }: the notice text vars resolve contract refs (contract_parcels_entitlement.reportsLimit, .resetsOnDisplay) from the renderer's data, so without data the count and date cannot draw; for the validating grounder to rule. Deviation 2: the key walker's red-first could not be shown on the limit golden (the PageTableBinding key fix went in before any wall golden existed); the evidence is the in-memory probe (keys n-text x3 DUPLICATE before, n-text, n-text-1, n-text-2 after) and the walker's planted RED case; accepted by the orchestrator. Deviation 3: the ENTRY_OFF apiClient case asserts the prototype is ApiError itself so it is green before and after (as planned). Measured: surface-validate --check S-desc examined 34 (converted 18), S-screen 18 surfaces 102 goldens, S-sbind 18 surfaces 443 strings, S-page 2 of 2; semi capture --check ok (8) after the key fix and the role classes; phone: 13 touched files 282 of 282, full local phone run 59 files 905 of 905 (RR-0460); mobile tsc clean. S-096 claimed in the ID ledger.
+
+Deviation 4: surface-conformance.logic.test.ts C-7 pins the live descriptor count (172 -> 173, +mobile_parcel_wall); the plan's pin list did not name it; the first work-commit attempt's related run refused on it (expected 173 to be 172).
+
+CHK.3: WallBinding.tsx lands with the policy-ledger row chk3-new-component (ruling MD:2026-11-20:1476, the operator's delegation, plan step 6). The ruling is a delegation; the operator's confirmation of the file is asked on his return, and nothing is pushed before it.
+
+Output review round 1 (task-460 shape): one code-review lens over 4 chunks (out-code-review-p1..p4.txt in docs/reports/lanes/2026-11-24/BL-SFX4/), 15 findings (HIGH 3, MED 3, LOW 7, NIT 2), listed in FINDINGS.md there. Grounder owed: the separate validating grounder rules them; the task stays RUNNING.
+
+Dated note 2026-11-24 (round 1 close, grounder Cairn-Ground-O452): 15 findings, 2 CONFIRMED (LOW, piled), 13 REJECTED; no fix round. Piled: out-code-review-p1#4 (the C-069 sharing why names the search page only; wording waits for the next edit of that row); out-code-review-p4#1 (wall-golden-capture --write leaves a stray golden, as the semi capture does; none exists). The grounder found the three HIGH registry comments are a generator display defect and a stale generated column list that predate this card. The web test files in the grounder's point C are unverified until the push-station run on the folded tip. Nothing is pushed before the operator answers the two open items: the wording of line three (wall.limit.opened) and WallBinding.tsx under the MD:1476 delegation (MORNING-DECISIONS.md:2416-2419).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+SEARCHFIX.4 built on the phone: work commit 4cf68ec45 (hooks: related run Test Files 4 passed, Tests 147 passed; GATE OK; POLICY CHECKS OK), D15 cite e4a9eea86, dated notes 1ce7b88ae, review records aa6de17b3. AC1 errors.ts/apiClient.ts classes (apiClient.test.ts); AC2 limit wall on search and report (parcelSearchScreen.behaviour, reportPage.behaviour, reportScreen.mount, wallScreens.golden); AC3 reactivate only for expired, status null keeps the notice (parcelSearchMatch.test.ts searchWall); AC4 no web file in the diff. Phone: full local run 59 suites 905/905. Web files outside the related run unverified until the push station.
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 2 pile; grounder docs/reports/lanes/2026-11-24/BL-SFX4/GROUNDER.md; triage docs/reports/lanes/2026-11-24/BL-SFX4/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->

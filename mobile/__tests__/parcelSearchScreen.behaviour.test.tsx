@@ -8,9 +8,11 @@
 // records; the map kinds push the disambiguate route; a miss, an error and outside Toronto record nothing; there is no in-bar account button (A.13).
 require('react-native-css-interop/test');
 import * as React from 'react';
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, within } from '@testing-library/react-native';
 
 const mockPush = jest.fn();
+// task-452 (SEARCHFIX.4): the wall's Go to Tracked Lots switches tab with router.navigate (never the search page's push, which records a recent search).
+const mockNavigate = jest.fn();
 // task-362 (AC5): the search page's "Report incorrect address match" reaches the in-app browser sheet, not Linking.
 const mockOpenBrowser = jest.fn();
 jest.mock('expo-web-browser', () => ({ openBrowserAsync: (u: string) => mockOpenBrowser(u) }));
@@ -20,7 +22,7 @@ jest.mock('expo-web-browser', () => ({ openBrowserAsync: (u: string) => mockOpen
 // the reports-left line itself is pinned by the search goldens (reports_left) and the entitlement hook by its own tests, not here.
 jest.mock('expo-router', () => {
   const R = jest.requireActual('react');
-  return { useRouter: () => ({ push: mockPush }), useFocusEffect: (cb: () => void) => R.useEffect(cb, [cb]) };
+  return { useRouter: () => ({ push: mockPush, navigate: mockNavigate }), useFocusEffect: (cb: () => void) => R.useEffect(cb, [cb]) };
 });
 jest.mock('@/store/authStore', () => ({ useAuthStore: (select: (s: { accessToken: string | null }) => unknown) => select({ accessToken: null }) }));
 jest.mock('react-native-safe-area-context', () => {
@@ -31,12 +33,15 @@ jest.mock('react-native-mmkv', () => ({ createMMKV: () => ({ getString: () => nu
 type Hook = { data?: unknown; isFetching: boolean; error: unknown; refetch: jest.Mock };
 let mockHook: Hook = { data: undefined, isFetching: false, error: null, refetch: jest.fn() };
 const mockCalls: string[] = [];
+// task-452: the entitlement read the wall waits on and draws from (data, isFetching, isError; the search page and useWallState share the one query key).
+type Read = { data?: unknown; isFetching: boolean; isError: boolean; refetch: jest.Mock };
+let mockEntitlement: Read = { data: undefined, isFetching: false, isError: false, refetch: jest.fn() };
 jest.mock('@/hooks/useParcelLookup', () => {
   class ParcelLookupSchemaError extends Error {}
   return {
     ParcelLookupSchemaError,
     useParcelSearch: (q: string) => { mockCalls.push(q); return mockHook; },
-    useParcelEntitlement: () => ({ data: undefined, isError: false, refetch: jest.fn() }),
+    useParcelEntitlement: () => mockEntitlement,
   };
 });
 
@@ -56,6 +61,8 @@ beforeEach(() => {
   mockOpenBrowser.mockReset().mockResolvedValue({ type: 'dismiss' });
   mockCalls.length = 0;
   mockHook = { data: undefined, isFetching: false, error: null, refetch: jest.fn() };
+  mockNavigate.mockClear();
+  mockEntitlement = { data: undefined, isFetching: false, isError: false, refetch: jest.fn() };
   useRecentSearchesStore.getState().reset();
 });
 afterEach(() => jest.useRealTimers());
@@ -180,5 +187,97 @@ describe('parcel search screen behaviour (rows 8, 10, 11, 22, 27, 28)', () => {
     render(<Screen />);
     type('12');
     expect(screen.getByText('Type at least ' + SEARCH_MIN_QUERY_LEN + ' characters to search.')).toBeTruthy();
+  });
+});
+
+// task-452 SEARCHFIX.4 (AC2, AC3): a refused lookup shows the wall once the entitlement read has answered. The count and the date are the read's.
+describe('the report-limit and reactivate wall (task-452)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { ReportLimitError, SubscriptionRequiredError } = require('@/lib/errors') as typeof import('@/lib/errors');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { PARCEL_TAB_ROUTE } = require('@/lib/parcelSearchMatch') as typeof import('@/lib/parcelSearchMatch');
+  const REACTIVATE = "Your subscription doesn't include the parcel tool right now. This isn't a missing address — reactivate to search lots again.";
+  const active = { status: 'active', reportsUsed: 10, reportsLimit: 10, reportsLeft: 0, reportsLimitReached: true, resetsOn: '2026-12-09T05:00:00.000Z', resetsOnDisplay: '9 Dec 2026' };
+  const lapsed = (status: string | null) => ({ status, reportsUsed: null, reportsLimit: null, reportsLeft: null, reportsLimitReached: null, resetsOn: null, resetsOnDisplay: null });
+  const refused = (error: unknown, data: unknown, over: Partial<Read> = {}) => {
+    mockEntitlement = { data, isFetching: false, isError: false, refetch: jest.fn(), ...over };
+    mockHook = { ...mockHook, data: undefined, error };
+  };
+  const noSearchCopy = () => {
+    expect(screen.queryByTestId('parcel-search-entitlement')).toBeNull();
+    expect(screen.queryByTestId('parcel-search-empty')).toBeNull();
+  };
+
+  it('limit wall: the count, the reset date and the plan line from the read; not the notice, the miss or the reactivate copy; Go to Tracked Lots navigates and records nothing', () => {
+    render(<Screen />);
+    refused(new ReportLimitError(10, '2026-12-09T05:00:00.000Z'), active);
+    type('26 Hurlingham Cres');
+    expect(screen.getByTestId('parcel-wall-limit')).toBeTruthy();
+    expect(screen.getByText('You’ve used all 10 reports')).toBeTruthy();
+    expect(screen.getByText('Your count resets on 9 Dec 2026.')).toBeTruthy();
+    // RR-0466 (MD:2410-2413): the two lead lines and the plan line as the operator reworded them.
+    expect(screen.getByText('Lot reports you’ve opened this month stay available.')).toBeTruthy();
+    expect(screen.getByText('Your Tracked Lots remain.')).toBeTruthy();
+    expect(screen.getByText('Your plan is managed on the web for changes.')).toBeTruthy();
+    expect(screen.queryByText(REACTIVATE)).toBeNull();
+    noSearchCopy();
+    fireEvent.press(screen.getByTestId('parcel-wall-tracked'));
+    expect(mockNavigate).toHaveBeenCalledWith(PARCEL_TAB_ROUTE.tracked);
+    expect(PARCEL_TAB_ROUTE.tracked).toBe('/(app)/parcel-tool/tracked');
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(useRecentSearchesStore.getState().recent).toEqual([]);
+  });
+  it('wait: while the read is pending the loading state shows, neither the notice, the miss copy nor the wall', () => {
+    render(<Screen />);
+    refused(new ReportLimitError(10, '2026-12-09T05:00:00.000Z'), undefined, { isFetching: true });
+    type('26 Hurlingham Cres');
+    expect(screen.getByTestId('parcel-search-spinner')).toBeTruthy();
+    expect(screen.queryByTestId('parcel-wall-screen')).toBeNull();
+    noSearchCopy();
+  });
+  it('a failed read keeps today\'s notice (the 403 values are never drawn)', () => {
+    render(<Screen />);
+    refused(new ReportLimitError(10, '2026-12-09T05:00:00.000Z'), undefined, { isError: true });
+    type('26 Hurlingham Cres');
+    expect(screen.getByTestId('parcel-search-entitlement')).toBeTruthy();
+    expect(screen.queryByTestId('parcel-wall-screen')).toBeNull();
+  });
+  it('Spec 99 §8.3 gate stability: the wall and the wait state render the same tree with isFetching true and false', () => {
+    const tree = (error: unknown, data: unknown, entFetching: boolean, searchFetching: boolean): string => {
+      mockHook = { data: undefined, isFetching: false, error: null, refetch: jest.fn() };
+      mockEntitlement = { data: undefined, isFetching: false, isError: false, refetch: jest.fn() };
+      const r = render(<Screen />);
+      refused(error, data, { isFetching: entFetching });
+      mockHook = { ...mockHook, isFetching: searchFetching };
+      type('26 Hurlingham Cres');
+      const json = JSON.stringify(r.toJSON());
+      r.unmount();
+      return json;
+    };
+    const limit = new ReportLimitError(10, '2026-12-09T05:00:00.000Z');
+    expect(tree(limit, active, true, true)).toBe(tree(limit, active, false, false));
+    expect(tree(new SubscriptionRequiredError(), lapsed('expired'), true, false)).toBe(tree(new SubscriptionRequiredError(), lapsed('expired'), false, true));
+    expect(tree(limit, undefined, true, true)).toBe(tree(limit, undefined, true, false));
+  });
+  it('expired: the reactivate state inside the wall, with the plan line and Go to Tracked Lots; no search notice or miss copy', () => {
+    render(<Screen />);
+    refused(new SubscriptionRequiredError(), lapsed('expired'));
+    type('26 Hurlingham Cres');
+    expect(within(screen.getByTestId('parcel-wall-reactivate')).getByText(REACTIVATE)).toBeTruthy();
+    expect(within(screen.getByTestId('parcel-wall-reactivate')).getByText('Your plan is managed on the web for changes.')).toBeTruthy();
+    expect(screen.getByTestId('parcel-wall-tracked')).toBeTruthy();
+    expect(screen.getByText('Go to Tracked Lots')).toBeTruthy();
+    expect(screen.queryByTestId('parcel-wall-limit')).toBeNull();
+    noSearchCopy();
+  });
+  it('no plan yet (status null) and an active status keep today\'s notice (task-357 flips the status-null case to its no-plan page)', () => {
+    for (const data of [lapsed(null), active]) {
+      const r = render(<Screen />);
+      refused(new SubscriptionRequiredError(), data);
+      type('26 Hurlingham Cres');
+      expect(screen.getByTestId('parcel-search-entitlement')).toBeTruthy();
+      expect(screen.queryByTestId('parcel-wall-screen')).toBeNull();
+      r.unmount();
+    }
   });
 });

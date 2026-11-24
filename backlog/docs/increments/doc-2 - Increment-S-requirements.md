@@ -3,7 +3,7 @@ id: doc-2
 title: Increment S requirements
 type: specification
 created_date: '2026-11-19T04:56:00Z'
-updated_date: '2026-11-24T16:58:00Z'
+updated_date: '2026-11-24T20:58:00Z'
 ---
 # Increment S requirements
 
@@ -172,3 +172,5 @@ Dated notes 2026-11-24 (M-246, prior text kept; task-451 SEARCHFIX.3, lane BL-SF
 - C.12: the status NOT BUILT is wrong. The link "Not sure which lot? Get help with an address" was built by task-321 (SRCH.C12; mobile/src/components/surfaces/LotMapBinding.tsx, the help row under the cards). Status: BUILT; task-451 points it at the topic wrong-lot.
 - B.6 and B.7: the no-lot message now ends "Try a nearby address or report it.", with "report it" an inline link to Help & Support, topic wrong-lot; every "Get help with an address" link takes the topic wrong-lot (the Help page has it since task-450).
 - C.9: the card's screen-reader label no longer reads the facts. Frontage and zoning are still sent by the lookup (the map field whitelist) but are no longer shown or spoken; the label is the card's visible text (lead line and area). An implausible lot size (outside LOT_SIZE_PLAUSIBLE_M2) is sent as a null area and reads "Not available" (RR-0444, MORNING-DECISIONS.md:2290-2291).
+
+Dated note 2026-11-24 (M-246, prior text kept; task-452 SEARCHFIX.4, lane BL-SFX4, commit 4cf68ec45; the table rows above are unchanged): G.6 BUILT was not true for the limit page; it is now true on the phone only. At the limit a refused lookup shows the wall S-096 mobile_parcel_wall (the read’s count and reset date, the plan line "Your plan is managed on the web for changes.", Go to Tracked Lots); an expired subscription shows the reactivate state. No top-up or upgrade control until the buying work (RR-0454 item 3); the no-plan page is task-357 (RR-0455 item 2); the web keeps its notice until its switch-on (RR-0455 item 1).

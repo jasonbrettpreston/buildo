@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-A6'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-24T18:41:00Z'
+updated_date: '2026-11-24T20:58:00Z'
 labels:
   - dead
 milestone: m-1
@@ -117,6 +117,8 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0312 · task-320 · Backlog; o
 Dated note 2026-11-19 (M-246, prior text kept; RR-0313 · task-320 · Backlog; operator, verbatim: "c. can't we put in the search box. Enter a Toronto address")
 
 Dated note 2026-11-19 (M-246, prior text kept; RR-0314 · task-320 · Backlog; operator, verbatim: "yes.")
+
+Dated note 2026-11-24 (task-452 SEARCHFIX.4, lane BL-SFX4, commit 4cf68ec45): ST2 closed. A refused lookup at the report limit now shows the wall S-096 mobile_parcel_wall on the phone (count and reset date from the entitlement read this line reads, RR-0310); an expired subscription shows the reactivate state.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

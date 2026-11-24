@@ -25,6 +25,7 @@ import {
 } from '@/components/surfaces/SearchBinding';
 import { useParcelEntitlement, useParcelSearch, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
 import { useDebouncedValue, useGoBack } from '@/hooks/useParcelPageHooks';
+import { useWallState } from '@/hooks/useWallState';
 import { buildSearchSituation, searchQueryArg } from '@/lib/parcelSearchMatch';
 import { openHelp } from '@/lib/maxbldHelp';
 import { useRecentSearchesStore } from '@/store/recentSearchesStore';
@@ -59,14 +60,18 @@ export default function ParcelSearchScreen() {
 
   // The Toronto-only rule (operator ruling 2026-09-16 (b)): an out-of-Toronto address is refused visibly and never sent ('' disables the hook).
   const { data, isFetching, error, refetch } = useParcelSearch(searchQueryArg(debounced));
+  // task-452 SEARCHFIX.4: a refused lookup (limit, expired) shows the wall in place of the page once the entitlement read has answered; while the read is
+  // pending ('wait') the page shows its loading state (neither the notice nor the miss copy). A plain 403, a failed read or no plan keep today's notice.
+  const { kind: wallKind, wall } = useWallState(error);
+  const waiting = wallKind === 'wait';
 
   const situation = useMemo(
     () => buildSearchSituation({
       input,
       debounced,
-      data,
-      error,
-      isFetching,
+      data: waiting ? undefined : data,
+      error: waiting ? null : error,
+      isFetching: waiting || isFetching,
       schemaDrift: error instanceof ParcelLookupSchemaError,
       recent,
       selectedParcelId,
@@ -74,7 +79,7 @@ export default function ParcelSearchScreen() {
       minQueryLen: SEARCH_MIN_QUERY_LEN,
       entitlement: entitlement ? { reportsLeft: entitlement.reportsLeft, reportsLimit: entitlement.reportsLimit, resetsOnDisplay: entitlement.resetsOnDisplay } : null,
     }),
-    [input, debounced, data, error, isFetching, recent, selectedParcelId, entitlement],
+    [input, debounced, data, error, isFetching, recent, selectedParcelId, entitlement, waiting],
   );
 
   // A search is recorded only when it opens a page (P35-D16 a): the lot, SELECT, the map page. One navigation, one record.
@@ -117,6 +122,7 @@ export default function ParcelSearchScreen() {
     [refetch, navigate, goBack],
   );
 
+  if (wall) return <SurfaceRenderer tree={wall.tree} content={wall.content} data={wall.data} actions={wall.actions} />;
   return (
     <SurfaceRenderer
       tree={searchProps(situation) as SurfaceTree}

@@ -27,7 +27,10 @@ import {
   isOutsideToronto,
   isOverCandidateCap,
   parcelSearchRoute,
+  searchWall,
+  type WallRead,
 } from '@/lib/parcelSearchMatch';
+import { ApiError, RateLimitError, ReportLimitError, SubscriptionRequiredError } from '@/lib/errors';
 import { shouldHideAppTabBar } from '@/lib/appShell';
 import {
   SEARCH_CANDIDATE_LIMIT,
@@ -517,5 +520,42 @@ describe('deriveMatchType — the server resolution (MF-53)', () => {
   it('RED (planted): a client that ignores resolution would guess no_match for a server unlinked', () => {
     const legacy = ({ resolution: _r, ...rest }: ConsumerParcelLookupResult) => rest as ConsumerParcelLookupResult;
     expect(deriveMatchType('12 Main St', legacy(withResolution('unlinked')))).toBe('no_match');
+  });
+});
+
+// task-452 SEARCHFIX.4 (AC2, AC3; RR-0444 2b; RR-0455 item 2): which wall a refused lookup shows, from the error class and the entitlement read. The count and
+// the date are the read's (RR-0310), never the 403's; a failed read keeps today's notice; reactivate only for an expired subscription; status null (no plan)
+// keeps today's notice until task-357 adds its no_plan branch.
+describe('searchWall', () => {
+  const limitErr = () => new ReportLimitError(10, '2026-12-09T05:00:00.000Z');
+  const subErr = () => new SubscriptionRequiredError();
+  const read = (data: WallRead['data'], over: { isFetching?: boolean; isError?: boolean } = {}) => ({ data, isFetching: over.isFetching ?? false, isError: over.isError ?? false });
+  const active = { status: 'active', reportsLimit: 10, resetsOnDisplay: '9 Dec 2026' };
+
+  it('limit: wait while the read is pending (fetching, no data, not failed); limit once it answered a count and a date', () => {
+    expect(searchWall(limitErr(), read(undefined, { isFetching: true }))).toBe('wait');
+    expect(searchWall(limitErr(), read(active))).toBe('limit');
+    expect(searchWall(limitErr(), read(active, { isFetching: true }))).toBe('limit');
+  });
+  it('limit: a failed read, a disabled read (no token: not fetching, no data) or an incomplete read keeps the notice (null)', () => {
+    expect(searchWall(limitErr(), read(undefined, { isError: true }))).toBeNull();
+    expect(searchWall(limitErr(), read(active, { isError: true }))).toBeNull();
+    expect(searchWall(limitErr(), read(undefined))).toBeNull();
+    expect(searchWall(limitErr(), read({ ...active, reportsLimit: null }))).toBeNull();
+    expect(searchWall(limitErr(), read({ ...active, resetsOnDisplay: null }))).toBeNull();
+  });
+  it('subscription required: wait while pending; reactivate only for expired; null, active and a failed read keep the notice', () => {
+    expect(searchWall(subErr(), read(undefined, { isFetching: true }))).toBe('wait');
+    expect(searchWall(subErr(), read({ status: 'expired', reportsLimit: null, resetsOnDisplay: null }))).toBe('reactivate');
+    // A lock until task-357 (no-plan page, RR-0455 item 2): its card says to flip this line to 'no_plan'.
+    expect(searchWall(subErr(), read({ status: null, reportsLimit: null, resetsOnDisplay: null }))).toBeNull();
+    expect(searchWall(subErr(), read(active))).toBeNull();
+    expect(searchWall(subErr(), read(undefined, { isError: true }))).toBeNull();
+  });
+  it('anything else is no wall: a plain 403, a 500, a 429 and no error', () => {
+    for (const e of [new ApiError(403, 'Forbidden'), new ApiError(500, 'boom'), new RateLimitError(30), null, undefined]) {
+      expect(searchWall(e, read(active))).toBeNull();
+      expect(searchWall(e, read(undefined, { isFetching: true }))).toBeNull();
+    }
   });
 });

@@ -84,7 +84,13 @@ describe('P4 the arm fails on an unreadable or empty table', () => {
   const BUILDER = 'mobile/src/components/surfaces/PageTableBinding.tsx';
   const TABLE_PATH = 'scripts/surfaces/_schema/static-page.json';
   const DESC = `scripts/surfaces/parcel_product/F01/surfaces/${ID}.descriptor.json`;
-  const files = [TABLE_PATH, SCREEN.binding, BUILDER, DESC, `scripts/surfaces/parcel_product/F01/surfaces/${ID}.content.json`];
+  // task-452 (SEARCHFIX.4; dated 2026-11-24; prior text kept: the context held the semi screen alone, one screen expected): the wall S-096 is the
+  // second screens row, so the context carries both converted surfaces, both bindings, both contracts and their files; the counts move 1 -> 2.
+  const WALL = 'mobile_parcel_wall';
+  const WALL_SCREEN = TABLE.screens[WALL] as Json;
+  const WALL_DESC = `scripts/surfaces/parcel_product/F01/surfaces/${WALL}.descriptor.json`;
+  const files = [TABLE_PATH, SCREEN.binding, BUILDER, DESC, `scripts/surfaces/parcel_product/F01/surfaces/${ID}.content.json`,
+    WALL_SCREEN.binding, WALL_DESC, `scripts/surfaces/parcel_product/F01/surfaces/${WALL}.content.json`];
   const rootWith = (table: string | null): string => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'page-arm-'));
     for (const f of files) { fs.mkdirSync(path.dirname(path.join(root, f)), { recursive: true }); fs.copyFileSync(path.join(ROOT, f), path.join(root, f)); }
@@ -92,15 +98,16 @@ describe('P4 the arm fails on an unreadable or empty table', () => {
     return root;
   };
   const ctxOf = (root: string, ok = true) => ({
-    root, ok, manifest: { converted: [ID] }, inScope: new Map([[ID, { d: rj(DESC), file: DESC }]]), contracts: new Map([['contract_parcels_lookup', {}]]),
-    bindings: { modules: [{ path: SCREEN.binding, platform: 'mobile' }, { path: BUILDER, platform: 'mobile' }] },
+    root, ok, manifest: { converted: [ID, WALL] }, inScope: new Map([[ID, { d: rj(DESC), file: DESC }], [WALL, { d: rj(WALL_DESC), file: WALL_DESC }]]),
+    contracts: new Map([['contract_parcels_lookup', {}], ['contract_parcels_entitlement', {}]]),
+    bindings: { modules: [{ path: SCREEN.binding, platform: 'mobile' }, { path: WALL_SCREEN.binding, platform: 'mobile' }, { path: BUILDER, platform: 'mobile' }] },
   });
-  it('the real table is the passing control: one screen expected, one found, no finding', () => {
-    expect(pageArm(ctxOf(rootWith(read(TABLE_PATH)))).findings).toEqual([]);
+  it('the real table is the passing control: two screens expected, two found, no finding', () => {
+    expect(pageArm(ctxOf(rootWith(read(TABLE_PATH))))).toEqual({ findings: [], note: 'S-page ok (2 of 2 screens)' });
   });
   it('RED: a missing table, an empty screens map and a failed context are each a finding', () => {
     const missing = pageArm(ctxOf(rootWith(null))).findings;
-    expect(missing).toEqual([`SV-PAGE ${TABLE_PATH}: no readable screens (expected 1 screen(s) from the binding modules that call the page builder, found 0)`]);
+    expect(missing).toEqual([`SV-PAGE ${TABLE_PATH}: no readable screens (expected 2 screen(s) from the binding modules that call the page builder, found 0)`]);
     expect(pageArm(ctxOf(rootWith(JSON.stringify({ pages: {}, screens: {} })))).findings).toEqual(missing);
     expect(pageArm(ctxOf(rootWith(read(TABLE_PATH)), false)).findings).toEqual(missing);
   });
@@ -120,6 +127,6 @@ describe('P4 the arm fails on an unreadable or empty table', () => {
     const other = 'mobile/src/components/surfaces/OtherBinding.tsx';
     fs.writeFileSync(path.join(root, other), 'export const x = pageProps(a, b, c, d);\n');
     const c = ctxOf(root); c.bindings.modules.push({ path: other, platform: 'mobile' });
-    expect(pageArm(c).findings).toEqual([`SV-PAGE ${TABLE_PATH}: 1 screen(s) read, 2 expected (the binding modules that call the page builder)`]);
+    expect(pageArm(c).findings).toEqual([`SV-PAGE ${TABLE_PATH}: 2 screen(s) read, 3 expected (the binding modules that call the page builder)`]);
   });
 });
