@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-HOOKS3'
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T19:33:00Z'
+updated_date: '2026-11-24T00:03:00Z'
 labels:
   - McFix
   - McFix B
@@ -22,7 +22,7 @@ ordinal: 81012
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Plan section B1. Page-runner measurement: redirect-once-on-settled, back-with-canGoBack and retry-to-refetch are each written four times (index.tsx:96-105, disambiguate.tsx:36-40, semi-question.tsx:49-53, [parcelId].tsx:29-33); debounce timer at index.tsx:41-44. Build useSettledRedirect, useGoBack, useDebouncedValue in the form of the nearest existing hook; one test that a background fetch cannot re-fire the redirect; no behaviour change; existing page tests assert unchanged. Phone-test green is proven only by Mobile CI. Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane. Files: mobile/src/hooks/useParcelLookup.ts, mobile/app/(app)/parcel-tool/index.tsx, mobile/app/(app)/parcel-tool/disambiguate.tsx, mobile/app/(app)/parcel-tool/semi-question.tsx, mobile/app/(app)/parcel-tool/[parcelId].tsx, docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, mobile/src/hooks/useParcelPageHooks.ts, mobile/__tests__/parcelPageHooks.test.tsx
+Plan section B1. Page-runner measurement: redirect-once-on-settled, back-with-canGoBack and retry-to-refetch are each written four times (index.tsx:96-105, disambiguate.tsx:36-40, semi-question.tsx:49-53, [parcelId].tsx:29-33); debounce timer at index.tsx:41-44. Build useSettledRedirect, useGoBack, useDebouncedValue in the form of the nearest existing hook; one test that a background fetch cannot re-fire the redirect; no behaviour change; existing page tests assert unchanged. Phone-test green is proven only by Mobile CI. Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane. Files: mobile/src/hooks/useParcelLookup.ts, mobile/app/(app)/parcel-tool/index.tsx, mobile/app/(app)/parcel-tool/disambiguate.tsx, mobile/app/(app)/parcel-tool/semi-question.tsx, mobile/app/(app)/parcel-tool/[parcelId].tsx, docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, mobile/src/hooks/useParcelPageHooks.ts, mobile/__tests__/parcelPageHooks.test.tsx, src/tests/search-routing.logic.test.ts
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Definition of Done
@@ -55,4 +55,6 @@ Operator ruling 2026-11-20 (same entry, item 1; his words: "yes to all"): the th
 2026-11-20 BL-HOOKS3: built in 5614c611b (test) and 5b744d820 (hooks + pages); index.tsx redirect left as code (not the same code); lens outputs and FINDINGS.md in docs/reports/lanes/2026-11-20/BL-HOOKS3/; grounder owed; phone-test green only from Mobile CI.
 
 2026-11-20 BL-HOOKS3 doc fix after grounder: header cites corrected, Spec 100 Target Files lists the two new files (no behaviour change).
+
+2026-11-23 RR-0435: one-line pin fix in src/tests/search-routing.logic.test.ts after the fold (the pin follows the shared hook); path added to the Files line.
 <!-- SECTION:NOTES:END -->

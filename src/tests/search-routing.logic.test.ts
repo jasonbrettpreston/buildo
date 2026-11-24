@@ -144,7 +144,7 @@ describe('SRCH.ROUTE: one route per case', () => {
     // the report mount sends an unsure lot to the question page once: its source holds the decision and the target
     const mount = fs.readFileSync(MOUNT, 'utf8');
     expect(mount).toContain('needsSemiQuestion(data');
-    expect(mount).toContain('router.replace(semiQuestionRoute(parcelId))');
+    expect(mount).toContain('useSettledRedirect(ask && parcelId ? semiQuestionRoute(parcelId) : null, isFetching)'); // task-381: the shared hook does the one router.replace
   });
 
   it('an absent view (the lot has no parcel_lot_form row: lotForm null) never asks the semi question', async () => {
