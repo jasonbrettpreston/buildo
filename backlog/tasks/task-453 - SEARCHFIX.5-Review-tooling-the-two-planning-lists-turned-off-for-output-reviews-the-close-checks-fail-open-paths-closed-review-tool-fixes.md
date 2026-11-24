@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T14:58:00Z'
+updated_date: '2026-11-24T15:04:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -63,4 +63,6 @@ Files: scripts/analysis/rule-lists.json, scripts/analysis/rule-lists.mjs, script
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-24: scope added by the operator's ruling RR-0450 (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2325, verbatim: "I just dont see how queue rules and orchestrator notes are valuable to anything from a code persepctive."): (a) the queue-137 and orchestrator-doc17 lists come off the lane-tools row of scripts/analysis/rule-lists.json; (b) the step handbook list stays on the compute rows only (orchestrator reading: already so, the plan confirms); (c) the five-principles list is replaced by three focused questions asked at the plan stage: is this the simplest design; are we adding infrastructure and complexity for small gains; is the scope limited (RR-0449, /Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2320). Switches and text changes only. Also on the Files line by this note: docs/specs/00-architecture/plan-protocol.md.
+
+2026-11-24: RR-0452 (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2336, operator verbatim: "Plan approved with one change - do not add the addiitonal 3 questions"): item (c) of the note above is withdrawn. The five-principles list is turned off and nothing replaces it; no three questions; docs/specs/00-architecture/plan-protocol.md is not edited for them.
 <!-- SECTION:NOTES:END -->
