@@ -69,6 +69,12 @@ export function shouldRetryParcelLookup(failureCount: number, err: unknown): boo
   );
 }
 
+/** task-457 (RR-0456 Q5): the search retries a zero-second rate limit once, on the first failure only; everything else is shouldRetryParcelLookup. A zero-second wait is not a throttle the person must sit out, so the 429 guard above stays for every other wait. Once is the ruling and not a setting (RR-0392). */
+export function shouldRetryParcelSearch(failureCount: number, err: unknown): boolean {
+  if (err instanceof RateLimitError && err.retryAfterSeconds === 0) return failureCount === 0;
+  return shouldRetryParcelLookup(failureCount, err);
+}
+
 /**
  * Debounced typeahead search. Fires when the trimmed query is ≥ 3 chars (the server min).
  * The screen owns the ≥400ms debounce (Spec 100 §4); this hook just caches per query string.
@@ -81,7 +87,7 @@ export function useParcelSearch(q: string) {
     queryFn: () => fetchParcelLookup({ q: trimmed }),
     enabled: trimmed.length >= LOOKUP_MIN_QUERY_LEN && !!accessToken,
     staleTime: LOOKUP_STALE_MS,
-    retry: shouldRetryParcelLookup,
+    retry: shouldRetryParcelSearch,
   });
 }
 

@@ -18,7 +18,8 @@ import { SEMI_QUESTION_SLICE, semiQuestionData, semiQuestionProps } from '@/comp
 import { useAnswerParcelLookup, useParcelLookup, useSetParcelLookup, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
 import { useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
 import { SEMI_ANSWERS, type SemiAnswer } from '@/lib/lotForm';
-import { buildSemiQuestionSituation } from '@/lib/semiQuestion';
+import { buildSemiQuestionSituation, SEMI_CONTINUE_WAIT_MS } from '@/lib/semiQuestion';
+import { NetworkError } from '@/lib/errors';
 
 export default function SemiQuestionScreen() {
   const router = useRouter();
@@ -29,6 +30,8 @@ export default function SemiQuestionScreen() {
   const storeLookup = useSetParcelLookup();
   const { mutateAsync: answerLookup } = useAnswerParcelLookup();
   const [submitError, setSubmitError] = useState<unknown>(null);
+  // task-457 (RR-0456 Q4): the opening wait has a limit; past it the page shows the could-not-load notice with Try again. Data that arrives later replaces it.
+  const [waitError, setWaitError] = useState<unknown>(null);
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
   const mountedRef = useRef(true);
@@ -38,14 +41,21 @@ export default function SemiQuestionScreen() {
     return () => { mountedRef.current = false; };
   }, []);
 
-  const situation = useMemo(
-    () => buildSemiQuestionSituation({ parcelId: id, data, error: submitError ?? error, isFetching, schemaDrift: (submitError ?? error) instanceof ParcelLookupSchemaError, selected, submitting }),
-    [id, data, error, submitError, isFetching, selected, submitting],
-  );
+  const situation = useMemo(() => {
+    const shown = submitError ?? error ?? (data ? null : waitError);
+    return buildSemiQuestionSituation({ parcelId: id, data, error: shown, isFetching, schemaDrift: shown instanceof ParcelLookupSchemaError, selected, submitting });
+  }, [id, data, error, submitError, waitError, isFetching, selected, submitting]);
 
   // The redirect state (a lot that is not unsure) replaces this page once, on settled data, never on a background refetch.
   const markRedirected = useSettledRedirect(situation.navigate, isFetching);
   const goBack = useGoBack();
+
+  // task-457: the limit is the page's own wait (continue_wait_ms, the same bound Continue uses); it runs only while the page is loading and is cleared on leaving it.
+  useEffect(() => {
+    if (situation.state !== 'loading') return;
+    const t = setTimeout(() => setWaitError(new NetworkError('task-457: the semi page wait limit')), SEMI_CONTINUE_WAIT_MS);
+    return () => clearTimeout(t);
+  }, [situation.state]);
 
   // Continue: the answered lookup, stored under the report's key, then the report; never throws, a second press while it runs is ignored.
   // No lookup with an empty id (the hook above is guarded the same way); the wait is bounded so the latch cannot stick (task-361, LX-R2, LX-E1):
@@ -76,7 +86,7 @@ export default function SemiQuestionScreen() {
     () => ({
       change_input: () => undefined,
       set_input: () => undefined,
-      retry: () => { if (submitError != null) setSubmitError(null); else void refetch(); },
+      retry: () => { if (submitError != null) setSubmitError(null); else { setWaitError(null); void refetch(); } },
       // The renderer's `select` carries a string; here it is the answer (the descriptor's deviation entry).
       select: (answer: string) => {
         if ((SEMI_ANSWERS as readonly string[]).includes(answer)) setSelected(answer as SemiAnswer);

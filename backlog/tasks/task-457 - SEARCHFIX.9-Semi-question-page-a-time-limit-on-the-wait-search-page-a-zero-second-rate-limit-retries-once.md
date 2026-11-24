@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SFX7'
 created_date: '2026-11-24T17:29:00Z'
-updated_date: '2026-11-24T19:41:00Z'
+updated_date: '2026-11-24T19:43:00Z'
 labels:
   - SEARCHFIX-LATER
 milestone: m-1
@@ -245,4 +245,6 @@ rg#1 MED folded useParcelSearch serv
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-24 taken on the board at lane launch (lane BL-SFX7, worktree /Users/brettpreston_macmini/Buildo-wt-sfx7, branch wf2/inc1b-sfx7), RR-0240
+
+2026-11-24 built per PLAN-457-v1 steps 1-4 (no deviation in code). Tests written first: T1, T2 (semiQuestionPage.behaviour), T3, T4 (useParcelLookup.test), T5-T7 (useAnswerParcelLookup.hook.test). Red (lane file red.out, npx jest on the three files from mobile/, RR-0460 local phone run; the pre-commit related run does not reach phone tests): 5 failed, 40 passed of 45; T5 red on error not null, T6 red on 1 fetch not 2, T3 red on the missing export, T1 and T2 red on no notice after the limit. Deviation in test only: T2 also asserts the notice after the limit before data lands, so it is red before the change, not green before and after as the plan said. Green (green.out): 3 suites, 45 of 45. Mobile typecheck (tsc --noEmit in mobile/) exit 0. Full local phone run owed before the push (RR-0460).
 <!-- SECTION:NOTES:END -->
