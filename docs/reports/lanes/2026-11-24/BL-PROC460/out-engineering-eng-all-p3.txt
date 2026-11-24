@@ -1,18 +1,18 @@
-◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
-REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T19:25:28.054Z file_sha256=d1344c2bdfdd0e81f27259df6d723451271fd37304d88430416c62ac8e51faa7 prompt_sha256=e2dec78acf4347c72f3101efbfa156e28b4807e5c0f3e784e683000c79996605
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T19:47:35.533Z file_sha256=8970773aa56b933986e8385eba4138745d70ebaf9cdf7e0c3e3a519da1cebc87 prompt_sha256=c7f544c7b06db7c2512561b4c8b5b8831d13a7420464c964bb931da2bd95f10c
 🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC460/in-out-engineering-eng-all-p3.txt (model: deepseek-reasoner)
 
-```
-MET — 12.13 Mutation Testing — scripts/analysis/rule-lists.json:238 "output_off": ["five-words", "plan-protocol", "step-132", ... — none of the four mutation-target modules (cost-model.ts, distance.ts, record-lead-view.ts, builder-query.ts) or their test siblings is in the change, so the 50% floor and the mutation surface are untouched
-MET — 12.12 Property-Based Tests — scripts/analysis/rule-lists.mjs:196 "out: [...(code ? ['code-review'] : [])]," — the changed pure functions (lensSet, outputLists, validateTable) hold no arithmetic invariant of the four named classes (scoring formula, key normalizer, distance/unit conversion, cursor comparator), so no fast-check property is owed, and the example tests the rule still requires for paths and edges are added (T1 to T10)
-MET — 12.11 Footgun Lint Gate — scripts/analysis/backlog-lane.mjs:188 "task-460 (RR-0457, RR-0458, RR-0459): output_off names every list, so a build or fix brief asks no list run at output" — the new branch and template text sit in scripts/analysis, outside the rule's scoped paths (src/features/leads and rule-by-rule src/lib), and add no silent catch fallback, no process.env default and no new Pool(
-MET — 13.3 Backend Structured Logging — scripts/analysis/rule-lists.mjs:158 "task-460 (RR-0457, RR-0458, RR-0459): it may name any defined list (own keys of lists), not only every_task ids" — the new failure path pushes a validateTable message instead of swallowing an error, and the diff adds no catch block, no bare console.error and no API route
-MET — 12.8 SQL Linting & Migration Safety — src/tests/backlog/check-lane-close.logic.test.ts:1340 "describe('task-460: a build or fix lane closes with the code review, its records and plan evidence and no list outputs', () => {" — no migration file is among the nine changed paths, so sqlfluff, validate-migration.js, the DOWN block and the 12.10 *.db.test.ts duty are not engaged
-MET — 14 The Prevention Loop — docs/specs/00-architecture/08_agents.md:359 "Dated note 2026-11-24 (M-246, prior text kept; task-460 PROC.OUTSHAPE; RR-0457, RR-0458, RR-0459" — the behaviour-changing ruling lands in the same diff as its cited spec (§7 dated note), the lens firing table (.claude/review-templates/README.md:100 "plan and output (not at the output of a build or fix task: output_off, task-460)"), and the regenerated page, so no cited document is left stale
+REJECT — 12.12 Property-Based Tests — accused of owing a fast-check test for the changed output_off and lensSet logic — "scoring formulas, key normalizers, distance/unit conversions, cursor comparators" does not cover a config set-membership change, so no property test is owed
+REJECT — 12.11 Footgun Lint Gate — accused of introducing a banned silent-catch, silent-row-drop or comment-rot pattern — the added lines in scripts/analysis/rule-lists.mjs are string validation and Object.hasOwn checks, no catch, no "x is _ => x !== null" filter, no "never throws" comment
+REJECT — 12.8 SQL Linting & Migration Safety — accused of landing a new migration without sqlfluff or a DOWN block — "All NEW migration files must pass" no migrations path appears in this diff (paths are scripts/, docs/, src/tests/)
+REJECT — 13.3 Backend Structured Logging — accused of a bare console.error or a catch without logError — "NEVER bare console.error" no catch block and no console.* call is added in the diff
+REJECT — 13.5 Feature Flags — accused of shipping an unflagged user-facing feature — "Any new user-facing feature MUST be wrapped in a feature flag check at the route level" no route or UI surface is added
+MET — 12.12 Property-Based Tests — src/tests/backlog/rule-lists.logic.test.ts — "Example-based tests are still required for happy paths and explicit edge cases" satisfied by new T1 (unknown id refused, own-key only), T3 (out equals code-review across 12 Files lines), T9 (check task keeps every list)
+MET — 12.1 Biome — scripts/analysis/rule-lists.mjs — "ESLint (next lint) continues to run on scripts/ and the rest of src/. Do NOT replace ESLint repo-wide." lint scope and config untouched by this change
+
 VERDICT: PASS on the pasted engineering rules
-Clauses checked: 20   Unmet: 0
-```
+Clauses checked: 19   Unmet: 0
 
 ---
-⏱  83341ms (83.3s)
-📊 Tokens — total: 50048, input: 33725, output: 16323, reasoning: 15646
+⏱  41037ms (41.0s)
+📊 Tokens — total: 42270, input: 33759, output: 8511, reasoning: 8067

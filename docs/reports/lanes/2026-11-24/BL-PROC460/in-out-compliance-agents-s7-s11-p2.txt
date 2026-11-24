@@ -1,5 +1,5 @@
-LIST agents-s7-s11 sha256:730b7d29213130241e7129e6fda9e62a55077e34dbe7b7ba41e245df36f62950 material sha256:7f4131b86853cea693c3980d69421cd74b27dcf4e3d48d91e3f56ce2d081000c part 1 of 1 chunk 2 of 2
-RULE LIST agents-s7-s11 (docs/specs/00-architecture/08_agents.md, sections 7. Rules & economics; 11. Grounded Verification Protocol), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
+LIST agents-s7-s11 sha256:730b7d29213130241e7129e6fda9e62a55077e34dbe7b7ba41e245df36f62950 material sha256:1179a590214fdcac75113d8204f0e7833e7bad706be546a68d39d3591fd0309f part 1 of 1 chunk 2 of 2
+RULE LIST agents-s7-s11 (docs/specs/00-architecture/08_agents.md, sections 7. Rules & economics; 11. Grounded Verification Protocol), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/analysis/rule-lists.mjs","src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
 
 ## 7. Rules & economics
 
@@ -100,8 +100,50 @@ Operator source lines for this section (verbatim): "E2a, E4 as long as this isnt
 Dated note 2026-11-14 (M-246, prior text kept; McQueue · lane MQ; operator, verbatim: "a - let's do it but it needs to properly point to the tasks - it was too much work to bring them into a central location"): where every queue lives, the one-line status form and the queue rules (7-day expiry, DB lane, dated-note rulings, the weekly snapshot) are in Spec 137 (`docs/specs/00-architecture/137_mcqueue.md`). Nothing in §11.8 or §11.9 changes.
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/analysis/rule-lists.mjs b/scripts/analysis/rule-lists.mjs
+index 50ee4f903468c0cae167918548c901bb54913450..f49d353d7993ee99875853c8b9e65fd1427b29c3 100644
+--- a/scripts/analysis/rule-lists.mjs
++++ b/scripts/analysis/rule-lists.mjs
+@@ -157,8 +157,9 @@ export function validateTable(table, root) {
+   // V2.LIST (task-406): the always-attached lists cannot be switched off by leaving the keys out
+   if (!Array.isArray(table.every_task) || table.every_task.length === 0) bad.push('every_task: missing or empty (the lists every task gets: the plan protocol)');
+   else for (const id of table.every_task) if (!table.lists?.[id]) bad.push(`every_task: list ${id} is not defined`);
+-  // task-453 (RR-0440, RR-0450, RR-0452): output_off, when present, is a list of every_task ids (a typo fails closed, it never switches a list off silently)
+-  if (table.output_off !== undefined) { if (!Array.isArray(table.output_off)) bad.push('output_off: must be a list of every_task list ids'); else for (const id of table.output_off) if (!(table.every_task ?? []).includes(id)) bad.push(`output_off: list ${id} is not in every_task`); }
++  // task-453 (RR-0440, RR-0450, RR-0452): output_off, when present, is a list of list ids (a typo fails closed, it never switches a list off silently)
++  // task-460 (RR-0457, RR-0458, RR-0459): it may name any defined list (own keys of lists), not only every_task ids
++  if (table.output_off !== undefined) { if (!Array.isArray(table.output_off)) bad.push('output_off: must be a list of list ids'); else for (const id of table.output_off) if (!Object.hasOwn(table.lists ?? {}, id)) bad.push(`output_off: list ${id} is not defined`); }
+   for (const k of Object.keys(table.increment_docs ?? {})) {
+     const m = table.milestone_docs?.[k];
+     if (!Array.isArray(m) || m.length === 0) bad.push(`milestone_docs: increment letter ${k} has no milestone list`);
+@@ -183,6 +184,7 @@ export const filesText = (body) => /(?:^|\s)Files:[ \t]*(.*)$/m.exec(String(body
+ /**
+  * The lens set a task type calls for (Spec 08 section 7 rule 4, 08_agents.md:334; task-358): the compliance lens is separate (once per rule list).
+  * Plan and output lenses other than compliance, by task type and by the Files line. Shared by the launch brief and the close check.
++ * task-460 (RR-0457, RR-0458, RR-0459 MORNING-DECISIONS.md:2377): the output set of a build or fix task is the code review (no ux, no error-paths; no security, RR-0464 :2402, the grounder reads the sensitive files instead); the plan set is unchanged.
+  */
+ export function lensSet({ type, files }) {
+   const code = ['build', 'fix'].includes(String(type ?? '').toLowerCase());
+@@ -191,7 +193,7 @@ export function lensSet({ type, files }) {
+   return {
+     code,
+     plan: ['plan-review-deepseek', ...(code && surface ? ['ux'] : []), ...(code ? ['error-paths'] : []), ...(code && sec ? ['security'] : [])],
+-    out: [...(code ? ['code-review'] : []), ...(code && surface ? ['ux'] : []), ...(code ? ['error-paths'] : []), ...(code && sec ? ['security'] : [])],
++    out: [...(code ? ['code-review'] : [])],
+   };
+ }
+ /** The line a grounder restates for every lens output it ruled on: name, sha256 (12 hex) and BUG/DEFER count. */
+@@ -546,7 +548,7 @@ export function renderPage({ table, root }) {
+   const o = [];
+   o.push('<!-- GENERATED by scripts/analysis/rule-lists.mjs page --write from scripts/analysis/rule-lists.json and the documents it names. Do not edit; regenerate. -->', '');
+   o.push('# What each kind of work receives: the compliance review documents', '');
+-  o.push('Every task gets the every_task lists (the plan protocol; off for the output review of a build or fix task by output_off) and the objectives sections of its milestone; the rows add the specs that govern the touched paths. Characters are the text of the list as the review receives it; parts are the lens-input files for one list at a material of ' + fmtN(NOMINAL) + ' characters (a list is split by its own headings, never trimmed, when list plus material pass the review tool bound). A missing or shrunken document shows here as a changed row.', '');
++  o.push('Every task gets the every_task lists (the plan protocol) and the objectives sections of its milestone; the rows add the specs that govern the touched paths; the output review of a build or fix task receives none of the lists (output_off, task-460). Characters are the text of the list as the review receives it; parts are the lens-input files for one list at a material of ' + fmtN(NOMINAL) + ' characters (a list is split by its own headings, never trimmed, when list plus material pass the review tool bound). A missing or shrunken document shows here as a changed row.', '');
+   for (const k of table.kinds ?? []) {
+     const r = resolveTask({ table, root, body: `Files: ${k.files}`, type: k.type ?? 'build', letter: k.letter, tracked });
+     o.push(`## ${k.label}`, '');
 diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
-index 08e18774f348339a7e8d6fba1ffd1177df39a608..c070062a95f2daa4f80829f921868e558bb7ae5b 100644
+index 08e18774f348339a7e8d6fba1ffd1177df39a608..867dc78948f76e3b7dd952bd90487fe04215185b 100644
 --- a/src/tests/backlog/backlog-lane.logic.test.ts
 +++ b/src/tests/backlog/backlog-lane.logic.test.ts
 @@ -273,10 +273,10 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
@@ -212,7 +254,7 @@ index 08e18774f348339a7e8d6fba1ffd1177df39a608..c070062a95f2daa4f80829f921868e55
        expect(x, type).not.toContain('out-compliance-five-words');
      }
      expect(extraOf({ type: 'check' })).toContain('out-compliance-plan-protocol');
-@@ -1001,3 +1009,30 @@ describe('task-453: output_off in the brief, and the recovery lines after a fail
+@@ -1001,3 +1009,37 @@ describe('task-453: output_off in the brief, and the recovery lines after a fail
      expect(statusOf(f)).toBe('RUNNING');
    });
  });
@@ -241,6 +283,13 @@ index 08e18774f348339a7e8d6fba1ffd1177df39a608..c070062a95f2daa4f80829f921868e55
 +    expect(x).toContain('lens-compliance.md');
 +    expect(x).not.toContain('each changed descriptor');
 +    expect(x).not.toContain('exploit paths');
++  });
++  it('T11 (round 1 grounder, out-compliance-agents-s7-s11-p1#1): the layout sentence names the output lenses above, not error-paths, ux and security', () => {
++    for (const type of ['build', 'fix']) {
++      const x = extraOf({ type, files: 'mobile/src/app/x.tsx, scripts/analysis/x.mjs' });
++      expect(x, type).not.toContain('error-paths, ux and security lenses');
++      expect(x, type).toContain('the output lenses named above (the code review for a build or fix task)');
++    }
 +  });
 +});
 diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
@@ -316,7 +365,7 @@ index 54d0889a3194b94cbc20e0208002f723aa9505f7..ec8b75f91aa7e4648cefacb50fe51dde
 +  });
 +});
 diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
-index c3974cd241a4480851c62f461815586178c24570..3780c1bfd255b08d0f2ababa38c736cf859f565a 100644
+index c3974cd241a4480851c62f461815586178c24570..3e17328eb79dc826fa428658b77a6ab3a6c91702 100644
 --- a/src/tests/backlog/rule-lists.logic.test.ts
 +++ b/src/tests/backlog/rule-lists.logic.test.ts
 @@ -702,11 +702,11 @@ describe('D11b (task-375): the security lens fires for admin and PII paths, as R
@@ -397,7 +446,7 @@ index c3974cd241a4480851c62f461815586178c24570..3780c1bfd255b08d0f2ababa38c736cf
      expect(validateTable({ ...real(), output_off: 'plan-protocol' }, ROOT).join('|')).toMatch(/output_off: must be a list/);
      expect(validateTable(real(), ROOT)).toEqual([]);
    });
-@@ -1137,3 +1141,47 @@ describe('task-453: output_off and validate robustness', () => {
+@@ -1137,3 +1141,53 @@ describe('task-453: output_off and validate robustness', () => {
      expect(bad).toMatch(/rows\[\d+\]: not an object/);
    });
  });
@@ -443,6 +492,12 @@ index c3974cd241a4480851c62f461815586178c24570..3780c1bfd255b08d0f2ababa38c736cf
 +    expect(item5).not.toContain('out-security.txt'); // RR-0464
 +    expect(/^\| `lens-security\.md` .*\| plan \(task-460: not at output, RR-0464\) \|$/m.test(rd)).toBe(true);
 +    expect(s8.slice(at, s8.indexOf('\n', at))).toContain('RR-0464');
++  });
++  it('T4b (round 1 grounder, out-compliance-agents-s5-1to3#1): README item 5 guards the compliance and engineering files by task type (output_off)', () => {
++    const rd = fs.readFileSync(path.join(ROOT, '.claude/review-templates/README.md'), 'utf8');
++    const item5 = /^5\. \*\*At close\*\*.*$/m.exec(rd)?.[0] ?? '';
++    expect(item5).toContain('for a build or fix task, one per attached list that output_off leaves on');
++    expect(item5).toContain('that output_off leaves on (a build or fix task: none today, task-460) when the range base holds');
 +  });
 +});
 

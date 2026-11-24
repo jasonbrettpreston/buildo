@@ -1,28 +1,29 @@
 ◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
-REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T19:25:28.054Z file_sha256=cd5e64c337120432f46575019989ad7b389dffb3194cb19ebb3f341a6d1069d7 prompt_sha256=b43c98cc8bbf851473dba505e3eec0d734f8d2714fd66a085ba25069fe5dc8d6
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T19:47:35.536Z file_sha256=12f8aee74e1ccaa11fed6ff5194db1e80d53cb33b613273134c04db16e2a918c prompt_sha256=b092533755f755f763ce734a02226f3fbd43bd96498b147c93caebacb16950be
 🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC460/in-out-code-review-p1.txt (model: deepseek-reasoner)
 
-BUG severity=CRIT — none found
+BUG/DEFER findings only; quotes are from the material under review.
 
-DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts "const SEC = new Set(['src/components/report/, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json', ..." — the first element is two paths joined by ", ", so SEC.has(f) matches only a Files string that is exactly that concatenation; if no kinds entry carries that literal text the element is dead and "expect(FILES.filter((f) => SEC.has(f))).toHaveLength(5)" cannot hold (the other four entries cannot make five) — split the two paths into two Set entries, or quote the kinds files string verbatim and pin it.
+DEFER severity=MED — scripts/analysis/backlog-lane.mjs "none for this task (every list it resolves is off: output_off in scripts/analysis/rule-lists.json); make no out-compliance or out-engineering file." — the brief derives "off" from the table loaded now, while the close check reads output_off at the range base (task-460 Implementation Notes: "as the board table still requires (output_off [plan-protocol] at the range base, check-lane-close.mjs:855)"), so a brief regenerated after the fold tells the lane to make no compliance file that the close at that lane's base still refuses without — two sources for one decision — derive the off statement from the same revision the close reads, or add "unless the table at your range base still lists them".
 
-DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts "expect(FILES).toHaveLength(12);" — FILES is built from "(real() as unknown as { kinds: { files: string }[] }).kinds.map(...)" plus six literals, so this pins the count of kinds rows in scripts/analysis/rule-lists.json inside a lensSet test; adding a kind (a data-only change the page generator explicitly supports) turns this test red for a reason unrelated to the lens set — drop the 12 assertion or assert only over the literal paths you append.
+DEFER severity=LOW — scripts/analysis/backlog-lane.mjs "code && outLs.length === 0 && lists.length > 0" — when lists is empty the guard falls through to the per-list `per` text, which then prints "Files to produce, one per list: " with no ids and tells the lane to run one compliance lens per list it does not have — drop the lists.length term so an empty list set takes the `none` branch, or branch on lists.length === 0 explicitly.
 
-DEFER severity=LOW — src/tests/backlog/backlog-lane.logic.test.ts "expect(lensBrief('build', 'src/components/x.tsx')).not.toContain('lens-security.md');" — the B1 control now asserts the same negative as the case under test, so it can never fail on its own, while the positive half ("plan still fires security") lives only in rule-lists.logic.test.ts T3 — give this test a positive that still holds on a build brief, e.g. that the brief contains "exploit paths" for the API and src/lib lines and omits it for the component.
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts "expect(FILES).toHaveLength(12);" — the count pins kinds.length + 6, so adding or removing one kind row in rule-lists.json fails a test about the output lens set for a reason unrelated to it — assert the security paths are covered with expect.arrayContaining([...SEC]) and drop the hard 12.
 
-NIT — src/tests/backlog/check-lane-close.logic.test.ts "it('security joins the required set by the Files line, as the launch brief names it; task-460 T7: ...'" — the title claims security joins the required set while the body asserts "expect(noSec.status, noSec.stderr).toBe(0)" — retitle to what the case pins (no security, no ux, no error-paths closes).
+DEFER severity=LOW — src/tests/backlog/check-lane-close.logic.test.ts "it('security joins the required set by the Files line, as the launch brief names it; task-460 T7: a surface path closes with no out-ux (and no out-error-paths)'" — the title states security joins the required set, which the body now proves false (noSec.status === 0), so the name contradicts the assertion and misleads the next reader — retitle to "security does not join the required set at output (RR-0464)".
 
-NIT — scripts/analysis/backlog-lane.mjs "const per = code && outLs.length === 0 && lists.length > 0 ? none : ..." — the third conjunct never decides the branch: validateTable refuses an empty every_task ("every_task: missing or empty"), and every_task is attached to every task, so lists is never empty — drop "lists.length > 0" or state what makes an empty list set reachable.
+DEFER severity=LOW — src/tests/backlog/check-lane-close.logic.test.ts "const noUx = scenario({ files: 'src/a.ts, src/components/x.tsx', mutate: (l) => ({ ...l, 'out-error-paths.txt': null }) });" — with out = ['code-review'] for every build/fix Files line, deleting out-error-paths.txt is a no-op, so the mutation proves nothing about the change and hides which assertion carries the test — drop the mutate and let the unmutated scenario close, as the noSec case does.
 
-DEFER severity=LOW — scripts/analysis/backlog-lane.mjs "const tail = ` Commit each lens input beside its output ... The plan was ruled once, at the plan: the lane runs no plan lens.`;" — the same closing sentence is written twice, once through ${tail} in the none branch and once copied inline at the end of the per branch, so a later edit to one leaves the build brief and the check brief describing the close differently — build the per string from ${tail} plus only the extra "an out-compliance output per list (or the joined set)," clause.
+DEFER severity=NIT — scripts/analysis/backlog-lane.mjs "the output lenses named above (the code review for a build or fix task) whose prompt would pass the bound" — in a check or doc brief lensSet out is [], so no output lens is named above and the sentence still tells the lane to run "the code review for a build or fix task" under lens-<lens>.md — gate the clause on `code` so the layout text only names lenses the brief ordered.
 
-VERDICT: PASS on code correctness
+REJECT — scripts/analysis/backlog-lane.mjs "const ids = outLs.filter((l) => seatOf(l) === 'compliance').map((l) => l.id);" — it looks dead now that a build brief takes the `none` branch and discards ids/engIds — they are still consumed by the non-none branch of `per` (the joined/per-list sentences and the engineering clause), so nothing is unused.
 
+VERDICT: FAIL on code correctness
 Top 3 defects (if FAIL):
-- none (no CRIT or HIGH finding; the six items above are LOW/NIT test pinning and duplication)
-- src/tests/backlog/rule-lists.logic.test.ts SEC entry joins two paths in one Set element, verify against the kinds row
-- scripts/analysis/backlog-lane.mjs writes the brief's closing sentence twice, none branch and per branch can drift
+- The `none` instruction is derived from the loaded table while the close reads output_off at the range base, so the brief can forbid files the close demands.
+- The `lists.length > 0` guard sends an empty list set into the per-list sentence, which then names no list ids.
+- Test title for the security case states the opposite of what the body asserts, and the noUx/noSec mutations are now no-ops.
 
 ---
-⏱  83640ms (83.6s)
-📊 Tokens — total: 44716, input: 28581, output: 16135, reasoning: 15292
+⏱  127440ms (127.4s)
+📊 Tokens — total: 55428, input: 29272, output: 26156, reasoning: 25204

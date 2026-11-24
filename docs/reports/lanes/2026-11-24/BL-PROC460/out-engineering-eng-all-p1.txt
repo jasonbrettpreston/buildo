@@ -1,26 +1,26 @@
 ◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
-REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T19:25:28.054Z file_sha256=55aa422cbf281ce006b833e3d7c5a14f660732b75ed084c695d17a825cb08e23 prompt_sha256=d4a5da52a13112f129dbeca6c9411bd38dff049afbaf30beb1f90e7b5a1250fc
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T19:47:35.556Z file_sha256=057ee112badfafcea88131bc9d5b7548f0813cb7cc2044e378a72b4666fd2f0c prompt_sha256=920ac72ef4e836538c20df8547f92d218e85c75a311dc2a236b4a564ed47dc50
 🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC460/in-out-engineering-eng-all-p1.txt (model: deepseek-reasoner)
 
-DEFER severity=LOW — 8.2 "The project `tsconfig.json` targets **ES2017**." — scripts/analysis/rule-lists.mjs:161 "if (!Object.hasOwn(table.lists ?? {}, id)) bad.push(`output_off: list ${id} is not defined`);" — an ES2022 built-in is introduced into a script fixed to an ES2017 target, so any tsc/checkJs gate over scripts/ (or a lib that resolves to ES2017, as the rule's dotAll example warns) fails on this line — use Object.prototype.hasOwnProperty.call(table.lists ?? {}, id) or a local hasOwn helper so the own-key intent is kept on an ES2017 API.
+DEFER severity=MED — 5.2 Testing Standards (parity battery) "Two parallel implementations stay in sync ... Any dual-surface or generated artifact (drift guard)" — src/tests/backlog/backlog-lane.logic.test.ts:1024 "expect(x).toContain('out-compliance-');" — the check-stage control asserts a substring the joined-run clause ("one set out-compliance-rules[-pN].txt") also supplies, so nothing locks the check brief's file list to the close's, while T9 pins the close to "a check task with output_off naming every list is still asked every list" (src/tests/backlog/check-lane-close.logic.test.ts:1355) and the brief's ids come from the filtered outLs ("Files to produce, one per list: ${ids.map(...)}", scripts/analysis/backlog-lane.mjs:191) — add an assertion that a check brief under an all-off table names each out-compliance-<list id> the close demands, or a parity test comparing lensLine's ids with the check's required set — bounded blast radius: a check lane closes with a brief that names no file the close requires, caught only at close.
 
-MET — 2.3 — scripts/analysis/rule-lists.mjs:161 "Object.hasOwn(table.lists ?? {}, id)" — every nested access the diff adds is guarded with optional chaining or a nullish default (backlog-lane.mjs:187 "ruleTable?.base_ref ?? ''", :194 "task.fm.type ?? 'unknown'", rule-lists.logic.test.ts:1128 "exec(rd)?.[0] ?? ''") and no `!` assertion is added anywhere.
+MET — 5.3 Red-Green Test Cycle — pasted context, Implementation Notes "Red tests first: T1, T2, T3, T4, T6, T7, T8, T9, T10 written before any code edit." and "Red first: T4b (README item 5 guards the list files by task type) and T11" — both the feature change and the fix round record a failing test before the edit, in the mandated .logic.test.ts layer.
 
-MET — 5.3 — Implementation Notes "Red tests first: T1, T2, T3, T4, T6, T7, T8, T9, T10 written before any code edit." — the pure-logic change is pinned red-first in .logic.test.ts (rule-lists.logic.test.ts:1128 "expect(validateTable({ ...real(), output_off: ['step-132'] }, ROOT)).toEqual([])", backlog-lane.logic.test.ts:1013 "describe('task-460: the brief names the code review and the validating grounder'") before the edits, and the operator-answered security flip keeps its plan-side assertion (rule-lists.logic.test.ts:1136 "if (SEC.has(f)) expect(r.plan, ...).toContain('security')").
+MET — 2.3 Assumption Documentation — scripts/analysis/rule-lists.mjs:162 "if (!Object.hasOwn(table.lists ?? {}, id))" — the nested lookup is preceded by an isArray guard and the missing table is handled with "?? {}", no non-null assertion.
 
-MET — 5.2 — src/tests/backlog/rule-lists.logic.test.ts:1130 "expect(validateTable({ ...real(), output_off: ['constructor'] }, ROOT).join('|')).toMatch(/output_off: list constructor is not defined/)" — the changed pure functions (validateTable, lensSet, renderPage prose) are pinned in *.logic.test.ts and the close gate in check-lane-close.logic.test.ts, which is the layer 5.2 names for each.
+MET — 5.2 Testing Standards "generated doc ↔ its generator" — docs/reports/generated/rule-lists-by-kind.md:5 "the output review of a build or fix task receives none of the lists" matches scripts/analysis/rule-lists.mjs:551 verbatim, and the row counts move with the Spec 08 note (agents-s7-s11 46,314 to 47,357, total to 144,162), so the page was regenerated, not hand-edited.
 
-MET — 5.5 — docs/reports/generated/rule-lists-by-kind.md:73 "| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 47,357 | 1 |" with total 144,162 — the generated page's prose, row length and total move together with the generator line scripts/analysis/rule-lists.mjs:551 "the output review of a build or fix task receives none of the lists (output_off, task-460)" and the added Spec 08 note, so the drift guard's artifact still matches its generator.
+MET — 5.2 Test File Pattern — src/tests/backlog/rule-lists.logic.test.ts:1144 "describe('task-460: the output lens set is the code review (AC #2)" — the pure derivation (lensSet, outputLists, validateTable) is pinned in .logic.test.ts, the layer the table assigns to pure logic.
 
-MET — 5.1 — src/tests/backlog/check-lane-close.logic.test.ts:1344 "const dropLists = (l: Lane): Lane => Object.fromEntries(Object.entries(l).map(([n, t]) => [n, /^(in-)?out-compliance-/.test(n) ? null : t]));" — new fixtures are typed (Lane, Record<string, unknown>) or derived from the real table (rule-lists.logic.test.ts:1129 "{ ...real(), output_off: ['step-132'] }"), no untyped inline row mock is written.
+REJECT — 4.1 Route Guarding "All endpoints within src/app/api/ must be analyzed for protection" — the diff drops the security lens from the output set (scripts/analysis/rule-lists.mjs:193 "out: [...(code ? ['code-review'] : [])]") — 4.1's gate is "verifyAdminAuth(request) as the FIRST statement of the handler", locked by the source scan in src/tests/api.infra.test.ts and src/tests/admin-route-guard.infra.test.ts, none of which this diff edits; a review lens enforces nothing.
 
-REJECT — 1.1, 1.3 — accused of shipping non mobile-first UI — the diff touches no Tailwind, Pressable or component file (paths list: scripts, docs, tests only).
+REJECT — 2.1 The "Unhappy Path" Test Mandate — the change adds no error-path tests for the new brief text — the mandate is scoped to "When writing integration tests (.infra.test.ts)", and this change writes none; the new unhappy-path cases (unknown output_off id, inherited key) are in the layer 5.2 assigns them.
 
-REJECT — 2.2, 4.1, 6.1 — accused of a new unguarded API route or bare console.error — no src/app/api/** route.ts and no logging call is added; the only runtime edits are the two analysis scripts and their tests.
+REJECT — 5.1 Typed Factories Only — the new tests build table literals such as src/tests/backlog/rule-lists.logic.test.ts:1129 "validateTable({ ...real(), output_off: ['constructor'] }, ROOT)" — these spread the real table and are checked by validateTable's own signature, not untyped domain mocks of the cells factories.ts exists for, and the same shape is already accepted at task-453.
 
 VERDICT: PASS on the pasted engineering rules
-Clauses checked: 6   Unmet: 0
+Clauses checked: 7   Unmet: 1
 
 ---
-⏱  80272ms (80.3s)
-📊 Tokens — total: 48632, input: 32918, output: 15714, reasoning: 14759
+⏱  93600ms (93.6s)
+📊 Tokens — total: 51244, input: 33287, output: 17957, reasoning: 17012

@@ -1,28 +1,22 @@
-◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
-REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T19:25:28.054Z file_sha256=03489aa5c4e6650728aa9a4a9109ede803cafcbffe33141328360255ef56fd0c prompt_sha256=6cd6290945b17c7552f66cbd3d2937f133f0bbe3dd4d601ddfa78d24bac79bbb
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T19:47:35.546Z file_sha256=99ad96cdb06ced64f184f50cb88ec5e063eef95bea72a0c6a012df1c38b27ee8 prompt_sha256=fd9d525dda5e9158300aebc4d5844fb9ec245e9514d5daf861abf4e6112f35e8
 🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC460/in-out-engineering-eng-all-p2.txt (model: deepseek-reasoner)
 
-DEFER severity=LOW — 11 Pre-Review Self-Checklist "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests" — NONE — no lane self-skeptical PASS/FAIL checklist appears anywhere in the material, so this always-applies item is unproven at this review — confirm the PASS/FAIL list from the lane's GROUNDER.md / Final Summary before the close, since the diff cannot carry it
+BUG severity=HIGH — 8.2 TypeScript Target Gotchas "The project `tsconfig.json` targets **ES2017**. Be aware of these constraints:" — scripts/analysis/rule-lists.mjs:162 "if (!Object.hasOwn(table.lists ?? {}, id)) bad.push(`output_off: list ${id} is not defined`)" or NONE — clause unmet: the change introduces an ES2022 runtime API (`Object.hasOwn`) in a production module and an ES2019 one (`Object.fromEntries`, src/tests/backlog/check-lane-close.logic.test.ts:1347 `const dropLists = (l: Lane): Lane => Object.fromEntries(Object.entries(l).map(...))`), neither available under the stated ES2017 target if the typecheck covers these files, so `npm run typecheck` can fail the build — replace with `Object.prototype.hasOwnProperty.call(table.lists ?? {}, id)` and build the filtered object with a loop or `reduce`.
 
-REJECT — 9.1, 9.2, 9.3 "Pipeline scripts (`scripts/*.js`) that write to the database MUST wrap multi-row mutations in explicit transactions" — the diff is accused of DB writes without transactions, batch chunking or upsert — the changed scripts are `scripts/analysis/*.mjs` text emitters that open no pool and run no SQL ("const tail = ` Commit each lens input beside its output", scripts/analysis/backlog-lane.mjs:189), so no transaction, 65,535-param or idempotency duty attaches
+DEFER severity=MED — 11 Plan Compliance Checklist "generate a 5-10 item self-skeptical checklist from the spec section that governs the change" — NONE — clause unmet: the material carries no 5-10 item PASS/FAIL self-skeptical checklist (and no WF3 sibling-bug list), the task's Implementation Notes record only test ids, review rounds and fixes ("Red tests first: T1, T2, T3, T4, T6, T7, T8, T9, T10 written before any code edit"), so the always-applies item cannot be seen to have run — add the 5-10 item PASS/FAIL checklist for the Spec 08 section 7 governing text to the lane's Final Summary before Green Light.
 
-REJECT — 9.4 Pipeline SDK Mandate "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK (`scripts/lib/pipeline.js`)" — the diff is accused of modifying pipeline scripts with no `pipeline.run` / `emitSummary` — `scripts/analysis/rule-lists.mjs` and `scripts/analysis/backlog-lane.mjs` are read-only analysis/process tooling (they resolve a rule table and print brief text), not `scripts/*.js` DB pipeline scripts, so the SDK mandate does not bind them
+MET — 11 Plan Compliance Checklist (If Shared Logic Touched) — scripts/analysis/rule-lists.mjs:186 "Shared by the launch brief and the close check." — both dual consumers are updated in one change: the brief text at scripts/analysis/backlog-lane.mjs:190-194 and the close check's required set through `lensSet` (scripts/analysis/rule-lists.mjs:196 "out: [...(code ? ['code-review'] : [])]"), each pinned by tests in the same diff.
 
-REJECT — 10.2 Boundary Rules During Frontend Phase "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — the diff is accused of a frontend WF editing `scripts/` — task-460 is a ProcessImprovement process task, not a frontend WF, and the only `src/` files it touches are `src/tests/backlog/*.logic.test.ts` (no `src/features/`, no `src/app/`, no `src/lib/`)
+MET — 8.1 API Route Export Rule — .claude/review-templates/README.md:99 "| `lens-engineering.md` | Is it built to every pasted engineering rule? |" — no Next.js `route.ts` file appears among the changed paths (README, docs, scripts/analysis/*.mjs, three test files), so no non-handler export is added to a route file.
 
-REJECT — 11 Cross-Layer Contracts Check "Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files" — the diff is accused of duplicating the 120000 review-tool bound as a literal in brief prose — that bound is a review-tool prompt limit carried in `scripts/analysis/backlog-lane.mjs:191`, not a spec/SQL/Zod/migration threshold, so no `_contracts.json` row is owed and no `contracts.infra.test.ts` entry is required
+REJECT — 9.4 Pipeline SDK Mandate — accused: the changed scripts/analysis/backlog-lane.mjs and rule-lists.mjs use no `pipeline.run`, `emitSummary` or `emitMeta` — not a real issue: the rule binds `scripts/*.js` pipeline scripts that touch the database, and these are review-tooling modules under scripts/analysis/ with no pool and no write.
 
-MET — 11 If Shared Logic Touched — src/tests/backlog/rule-lists.logic.test.ts:733 "expect(r.out, `${type} ${f}`).toEqual(['code-review']);" — the shared classifier `lensSet` (JS, `scripts/analysis/rule-lists.mjs:196`) and its TS test consumers are updated in the same change, and the TS side is the pin the close check consults
+REJECT — 10.2 Boundary Rules During Frontend Phase — accused: the diff edits files under `scripts/` — not a real issue: this is a process tooling task (label ProcessImprovement, Files line scripts/analysis/*), not a frontend WF, and `scripts/lib/` and `migrations/` are untouched.
 
-MET — 10.1 Data Flow Direction "[Pipelines] → [Database] → [API Routes] → [Frontend]" — scripts/analysis/rule-lists.mjs:196 "out: [...(code ? ['code-review'] : [])]," — the change edits review-shape metadata only; nothing writes a pipeline table, reads frontend state or adds an API route, so the one-directional flow is untouched
-
-MET — 11 Database/Migration Check "New migration has DOWN block (§3.2, §12.8)" — NONE — no file under `migrations/` is added or changed by this diff, so no DOWN block, SQLFluff or `validate-migration.js` run is owed
-
-MET — 10.3 API Route Discipline "New API routes must define Request/Response TypeScript interfaces in a shared types file" — NONE — no route handler and no `src/lib/[feature]/types.ts` consumer is created or modified, so no envelope, projection or auth-first duty is triggered
-
-VERDICT: PASS on the pasted engineering rules
-Clauses checked: 10   Unmet: 0
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 12   Unmet: 2
 
 ---
-⏱  44844ms (44.8s)
-📊 Tokens — total: 40371, input: 31344, output: 9027, reasoning: 8080
+⏱  83187ms (83.2s)
+📊 Tokens — total: 42445, input: 32346, output: 10099, reasoning: 9332
