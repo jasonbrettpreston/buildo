@@ -1,7 +1,140 @@
-LIST step-132 sha256:afb955a72e76268120ff7d24fd0ec2e372a5aa8e0d4fb0c4ea09227cec4141c2 material sha256:fca1e1fa62bcd3c1dad6b994eb6f31d5a40a92113dac0de1bb6fecd2a100a581 part 2 of 3 chunk 1 of 1
-RULE LIST step-132 (docs/specs/01-pipeline/132_step_standard_handbook.md, sections 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check), part 2 of 3. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/specs/02-web-admin/89_parcel_cost_model_tool.md","docs/specs/03-mobile/100_mobile_parcel_cost_tool.md","scripts/surfaces/_schema/census/contracts.json","scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json","src/lib/admin/parcel-lookup.ts","src/tests/consumer-parcel-lookup.infra.test.ts","src/tests/parcel-lookup-resolution.logic.test.ts","src/tests/search-parser-guard.logic.test.ts"]
+LIST step-132 sha256:fd55bd73a0e903367880559db32efb654c391d8d1c2161720ce0112e8724c5e5 material sha256:6547697da3e97829d85cb320a734798679fc16adb311f8c67ed02fd15a1865ba part 2 of 4 chunk 1 of 1
+RULE LIST step-132 (docs/specs/01-pipeline/132_step_standard_handbook.md, sections 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check), part 2 of 4. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/specs/00-architecture/00_system_map.md","docs/specs/02-web-admin/89_parcel_cost_model_tool.md","docs/specs/03-mobile/100_mobile_parcel_cost_tool.md","scripts/surfaces/_schema/census/contracts.json","scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json","src/lib/admin/parcel-lookup.ts","src/tests/consumer-parcel-lookup.infra.test.ts","src/tests/parcel-lookup-resolution.logic.test.ts","src/tests/search-parser-guard.logic.test.ts"]
+
+## 3. By archetype
+
+The archetype comes from `identity.archetype` (see `step-archetype-census.json`); it selects the required fields, and `execution.shape` selects the phase (§1). Every line in section 2 applies too.
+
+### INGESTOR
+
+Acquires an outside source and writes it into its own tables.
+
+- **ingestor.1** Phases run acquire → validate → write → score. Every "before X" guarantee in the owner spec becomes a `pre_write` check carrying an `order_guarantee` whose anchor is a literal sentence of that spec.
+  *Why:* A FAIL reported after rows are already written is a guarantee broken.
+  Rules: `Rule-11` `GAP-G-3`
+
+- **ingestor.2** A source-version skip is taken only when the target is non-empty.
+  *Why:* Skipping on an unchanged hash over an empty table leaves it empty for good.
+  Rules: `R-DD`
+
+- **ingestor.3** Primaries: a `ckan_datastore` primary is first-class (null geometry, targetless, union groups, per-member truth); a PDF document set is an acquisition format.
+  *Why:* Each source form gets one library path instead of a per-step reader.
+  Rules: `R-BY` `R-DX`
+
+- **ingestor.4** Derived secondary targets are written from a runner-owned prior-state read inside the primary transaction; one may be non-fatal (`on_error: warn_row`) with a declared zero-bound WARN check.
+  *Why:* The derived write stays atomic with its source and a failure still shows up as a row.
+  Rules: `R-DM` `R-DY`
+
+- **ingestor.5** A `written:"seen"` column is a runner-clock column touched for every fed key and excluded from the guard; its target declares `idempotent_rerun: "declared_drift"`, and the rerun proof passes only when rewritten == touched exactly.
+  *Why:* The touch rewrites rows on every run by design, so `zero_writes` would be a false claim.
+  Rules: `R-DZ` `R-EX`
+
+- **ingestor.6** Worked examples (one step each): load_parcels replaces geometry only on a material change beyond a variable tolerance; close_stale_permits folds into load_permits' declared retraction; coa made its change-detection hash timezone-independent at the cost of one measured re-upsert.
+  *Why:* Shows how the general rules were applied where they were first needed.
+  Rules: `R-BS` `R-BX` `R-EN` `R-EV` `R-JB`
+
+### LINK
+
+Joins two populations and writes the link rows or columns.
+
+- **link.1** `mode_select` is `tri_state`, or `none` with a `full_rescan` invalidator (the mode gate itself is R-BH (i), on core.5). Crash posture is `force_full_on_next_run`, and an autonomous FULL run happens only on a chain whose `chain_args` declare `--full`.
+  *Why:* A destructive rescan must be chosen on purpose, never by accident after a crash.
+  Rules: `R-L`
+
+- **link.2** `runLinkPhase` (shape `link`) serves more than one LINK family through opt-in arms; counter names come from the match plan. Other LINK steps run their own phase: shape `link_keyed` (`runLinkKeyedPhase`), `link_column` (`runLinkColumnPhase`); a MATCHER runs `runCascadePhase` (shape `cascade`), which hosts any declared cascade target, link_coa among them (R-JY, from the bundled runner night). §1 table 1a lists which step uses which. A match plan may also declare a closed `extra_counters` set, summed per batch (R-IG, from the bundled RE-FREEZE night).
+  *Why:* One library path, not a copy per link step.
+  Rules: `R-EG` `R-IG` `R-JY`
+
+- **link.3** Worked examples: a link-rate floor's denominator is the entity population, not the source-row count (link_wsib); a full-rescan LINK may keep its junction current with a declared material-geometry trigger (`guards.requires`, link_parcel_abutments).
+  *Why:* Shows the rules applied where they were first needed.
+  Rules: `R-N` `R-CR`
+
+- **link.4** Open operator question Q-B1: a better neighbour front-setback estimator (`front_setback_est_m`; owed to the Spec 130 lane). Since 2026-10-19 (operator ruling; Spec 130:93, Spec 131 LC-58, Spec 69a M-205(1) dated note) averaging is evaluated: max(neighbour estimate + `fya_porch_allowance_m`, the zone default), always "needs survey"; Q-B1 stays open only for a better estimator. A reader must not read a parcel with no abutment pairs (deleted until the next run by R-CR's trigger) as "no neighbours". Separately, R-CR's trigger form is replaced by the fleet keyed-delete arm when that lands; that does not close Q-B1. (124a R-CR's own cell still says averaging stays `not_evaluated` until Q-B1; that cell is stale, owed to a ruling lane.)
+  *Why:* An unanswered question stays visible on its own line, next to the rule that raised it.
+  Rules: `Q-B1`
+
+### MATCHER
+
+A LINK whose join is a fuzzy, tiered match. Everything under LINK applies except the phase: a MATCHER declares shape `cascade` and runs `runCascadePhase`, not `runLinkPhase`.
+
+- **matcher.1** Accuracy is a sampled precision/recall against a before-image, recorded at each repair, never a self-consistent predicate.
+  *Why:* A matcher graded against itself always passes.
+  Rules: `R-O`
+
+### ENRICHER
+
+Adds derived columns to rows another step owns, in scoped passes.
+
+- **enricher.1** No Layer-1 skip: a legacy skip gate moves into the write scope as a declared deviation, or, if it has no runner home and no lineage column, is knowingly retired.
+  *Why:* An ENRICHER that skips whole runs hides rows that changed upstream.
+  Rules: `R-AR` `R-AR.1`
+
+- **enricher.2** `runEnrichPhase` is generic: hooks are optional `enrich_hooks` declarations and intervals come from config. Pass DML goes through `ctx.exec(writesRef, sql, params)`; scope-ledger hygiene DELETEs are library-owned, and a guard-suppressed hygiene action emits one WARN row. Updated counters belong to whichever mechanism wrote the rows this run. One per-batch transaction may carry a step's statements (`ctx.flushBatch([...])`, a SAVEPOINT per warn_row statement), and an ENRICHER may write derived rows (R-JZ, from the bundled runner night). (Dated note 2026-10-26, `2026-10-26-batch-m#CHAT-174.ENRICHER2-HELD-NOTE`: the ENRICHER derive arm is held by CHAT-167 until designed with CLP ②; validate refuses `derive` on an ENRICHER by name.) (Dated note 2026-10-26, `2026-10-26-batch-r#CHAT-189.CLPD-Q4`, `2026-10-26-batch-r#CHAT-189.CLPD-Q5`: the ENRICHER derive arm is ruled for CLP ②; the list form's SAVEPOINT per warn_row statement is retired (a named refusal; the savepoint is the runner's derived-history write), and in an ENRICHER that declares derived rows `ctx.exec`, `joinUpdate` and `retract` refuse its root and history tables.)
+  *Why:* Writes stay behind the runner seam, and counters are not double-counted.
+  Rules: `R-AK` `R-AT` `R-CI` `R-CJ` `R-CK` `R-JZ`
+
+- **enricher.3** `execution.maintenance` may declare a dead-tuple-ratio dynamic-target arm, measured once and shared.
+  *Why:* Vacuum decisions follow the table's real state, from one measurement.
+  Rules: `R-CG`
+
+### MATERIALIZER
+
+Rebuilds a derived table from tables other steps own.
+
+- **materializer.1** `recovery.reset` is not none. `materialize_form` is `insert_select` or `rows` (rows computed in JS; the runner owns reads, writes and transactions), or `replace` (the whole table replaced through the existing staging executor in one transaction; zero rows leave it untouched; R-JX, from the bundled runner night); batch size comes from config.
+  *Why:* Rebuilds must be resumable, and JS rows must not bring their own I/O.
+  Rules: `R-EH` `R-JG` `R-JX` · history: `Q-MZ`
+
+### BACKFILL
+
+Fills historical rows in batches.
+
+- **backfill.1** Batch size comes from config. A one-time backfill leaves its chain once a measured run inserts 0 rows (backfill_realtor_permit_trades).
+  *Why:* A finished backfill should stop costing a chain slot.
+  Rules: `R-EM`
+
+### ASSERT
+
+Measures data quality and writes nothing but its own run row.
+
+- **assert.1** `outputs`, `recovery` and `counters` are none. Compute may read `ctx.pool` read-only over declared relations (R-CA (i), on core.9, corrects older text that says no pool is reachable); vocabulary-coverage reads use a runner-owned READ ONLY snapshot.
+  *Why:* An ASSERT measures; it must not change what it measures.
+  Rules: `R-CH`
+
+- **assert.2** Worked example: assert_schema checks at chain start that every declared logic variable has a DB row.
+  *Why:* A missing variable is caught before any step reads it.
+  Rules: `R-D`
+
+### RECORDER
+
+Records a snapshot it exists to publish.
+
+- **recorder.1** A RECORDER's `outputs` is an object (never `none`) and its snapshot write is declared in `outputs.writes[]`. Either `runRecorderPhase` executes it (shape `recorder`), or the step declares no shape and compute returns a `write_plan` that the runner executes after compute (`runWritePlan`, R-CD). (`outputs.publish` was deleted at a RE-FREEZE; Spec 124 §3's Rule 7 table still names it.)
+  *Why:* The snapshot is the step's purpose, so it is declared, not hidden.
+  Rules: `R-CD`
+
+### EFFECTOR
+
+Acts on the outside world (sends, calls, notifies). Census only until its first RE-FREEZE; not yet in the step.schema.json enum.
+
+- **effector.1** Four gates: a kill switch or injected transport, an exactly-once ledger, captured intended effects, and a dry run. Outside calls are replayed from recorded responses.
+  *Why:* An effect on the outside world cannot be rolled back, so it must be switchable, counted once and rehearsable.
+  Rules: `R-EI`
+
+### RUNNER (a home, not an archetype)
+
+Concerns the runner owns for every step.
+
+- **runner.1** Reconcile runs as a step at the head of the sources chain. A slug whose concern the runner owns (`reconcile`, `observe_chain`) is a declared `runner_owned` exemption, not a conversion; a step is retired, not converted, only under a closed predicate.
+  *Why:* Every chained slug has exactly one honest status.
+  Rules: `R-AP` `R-EJ` `R-EK` `A3`
+
+- **runner.2** Seam validation and chain-end synthesis derive from declared step edges; a chain step row's status is derived from its verdict (PASS → completed, WARN → completed_with_warnings, a covered FAIL → completed_with_errors); a hard-coded `'completed'` is retired.
+  *Why:* A chain that says completed after a FAIL is lying.
+  Rules: `R-V` `R-CC` `Q-S1-a`
 
 ## 4. Cross-cutting
+
 
 ### Lifecycle stages
 
@@ -23,119 +156,28 @@ How a step moves from legacy script to converted.
   *Why:* Specs and registries stay in step with the code without anyone remembering to update them.
   Rules: `R-AF` `R-AN` `R-BB` `R-BE`
 
-### Captures, goldens and proof
-
-How a conversion proves it changed nothing it did not mean to.
-
-- **x-captures.1** Captures are reproducible from committed data alone: every capture has a `recapture.json` entry, and `node scripts/analysis/capture-step-golden.js --replay-all` prints the retake commands from those entries (plain and env captures first, then brackets; a ledger-gated step whose bracket recipe passes no force env has that bracket retaken before its standalone capture, CHAT-89); capture pairs follow the declared chain variance. Every harness run is ledgered as captured, never a baseline. PRE captures are committed before re-runs. A post witness trace with no golden capture and no `recapture.json` entry is an orphan: it is deleted by literal path only when a recipe-backed trace of the same slug witnesses a superset of its statement fingerprints, otherwise it gets a recipe and is retaken (R-IJ).
-  *Why:* A capture nobody can retake proves nothing.
-  Rules: `R-AC` `R-AI` `R-BQ` `R-CZ` `R-DQ` `R-IJ` `R-JP` `R-KC`
-
-- **x-captures.2** A forced-write table is proven by a bracket: a perturbation cohort (when a guard includes the step's own stamp), delete-and-reinsert (INSERT-only), or derived-status (derived targets), counted through gate G's `count_path`. A PRE taken with a retired input argv stands in only under a closed predicate.
-  *Why:* A rerun that writes nothing proves nothing about a guarded write path.
-  Rules: `R-AS` `R-BD` `R-BR` `R-DN` `R-DP` `R-ET` `R-GZ` `R-JH` `R-KA`
-
-- **x-captures.3** The golden differential is a mechanical fingerprint gate (G8, #38/#40). Every diff is explained only in `docs/reports/golden/<slug>/explained-diffs.json`, citing a Defect Ledger id; an unexplainable differential stops the work.
-  *Why:* A commit message saying "diff is fine" is not evidence.
-  Rules: `R-C` `R-DA` `K4` `G8` (SCORECARD-G8) `R-GR`
-
-- **x-captures.4** A step that calls a paid or outside API is captured and replayed from committed recorded responses.
-  *Why:* Tests and captures must not spend money or depend on someone else's uptime.
-  Rules: `R-EL`
-
-- **x-captures.5** A class-A behaviour (Spec 123 risk class A) is proven by a both-directions lock, shown red then green (scorecard G7; mutation testing is not a gate). Tests write before-images into a per-file sandbox, never the real golden tree. A live test proves its child process completed before asserting on its output.
-  *Why:* A test that cannot fail, or that reads output that never arrived, proves nothing.
-  Rules: `R-E` `R-CO` `R-CP` `G7` (SCORECARD-G7) · history: `M7` (SPEC121-M7)
-
-### Cross-step order
-
-How steps that share tables are ordered and checked.
-
-- **x-crossstep.1** A same-statement write guard is not a chain-order edge. ORDER rows with neither endpoint converted and unproduced reads whose inserter is unconverted are counted against a shrink-only ceiling, not hard. Gate D reads one converted-set view.
-  *Why:* The ledger stays strict for converted steps without blocking on legacy ones.
-  Rules: `R-BN` `R-BO` `R-BP` `R-EE`
-
-### step-validate and the scorecard
-
-The one command that grades a step.
-
-- **x-validate.1** One command grades a step: `node scripts/analysis/step-validate.mjs --step=<slug>` (or `--all`, `--staged`, `--fast`). It validates the DATA (descriptor, fast invariants) and the scorecard grades the PROCESS; it runs in the hooks, never as a separate track.
-  *Why:* One integrated answer, the same at the desk and in the hook.
-  Rules: `R-R` `Rule-13` `Rule-13-addendum-R-T`
-
-- **x-validate.2** The scorecard gates G0–G9 (Spec 123 §6; aliases SCORECARD-G0…SCORECARD-G9, not the Gate E purity codes): G0 boundary freeze, G1 archaeology, G2 churn × complexity, G3 Intent Ledger (only tables with a Disposition column are scored), G4 risk class, G5 seam map, G6 classification with Defect Ledger ids, G7 test adequacy, G8 differential, G9 §R Reflection. Ship bar: ≥14/17 with G6–G8 full; with E3 on it is 17/17. Markdown header and separator rows are never counted as data.
-  *Why:* The assessment is graded by machine, the same for every step.
-  Rules: `R-F` `R-FA` `G0` (SCORECARD-G0) `G1` (SCORECARD-G1) `G2` (SCORECARD-G2) `G3` (SCORECARD-G3) `G4` (SCORECARD-G4) `G5` (SCORECARD-G5) `G6` (SCORECARD-G6) `G9` (SCORECARD-G9) `SHIP-BAR` `R-FB` `R-JD` `R-KM` `R-LC`
-
-### The V3 label
-
-What `standard=V3` means and how it is enforced.
-
-- **x-v3.1** `standard=V3` prints only when all nine R-EY conditions hold, fail closed: (1) compute purity clean, (2) no gate-ledger allowance, (3) #44 PASS with nothing attributed, (4) no blocking registry failure, (5) no stage-gated red, (6) G0–G8 at max with no other hard stop, (7) the five words all PASS with nothing deferred, (8) no unmet `cutover_prereq`, (9) every exception naming the step cites a register id. Otherwise it prints `standard=V2 (fails: …)`. E1 (ratchet: a step that read V3 never drops) and E2 (cutover gate) are on; E3 (every converted step V3) is built off behind `gate_v3_hard_gate_enabled`. R-IH stage 1: `step-validate` prints an advisory `R-EY (9) why-only` line for each step with a deviation whose only register id is in `why`, plus a run total; no verdict changes until stage 3 reads `adjudicated_by` only.
-  *Why:* One list replaces the older "five words", "six parts" and "four conditions"; the label means the same thing everywhere.
-  Rules: `R-IH` `R-IK` `R-JC` `R-BA` `R-CN` `R-DT` `R-EY` `STD-VERSIONS`
-
-- **x-v3.2** An operator decision found only in a plan or assessment (a pilot plan's rulings, an accepted deviation) is recorded as a register row before a step can cite it: the V3 condition-9 backfill recorded 33 such decisions as rows R-FI…R-GO (124a §B21/§B22), and each exception entry they govern cites its row. A citation on a converted descriptor's `deviations[]` entry is appended on the bundled RE-FREEZE night, because the edit moves the capture fingerprint. That night is split (R-II): night 1 carries the citations, and the refresh_snapshot producer-read waits for its own RE-FREEZE at permits ③.
-  *Why:* Condition (9) needs a resolvable id on every exception, and a decision that lives only in a plan file is invisible to the gate.
-  Rules: `R-FI` `R-FJ` `R-FK` `R-FL` `R-FM` `R-FN` `R-FO` `R-FP` `R-FQ` `R-FR` `R-FS` `R-FT` `R-FU` `R-FV` `R-FW` `R-FX` `R-FY` `R-FZ` `R-GA` `R-GB` `R-GC` `R-GD` `R-GE` `R-GG` `R-GH` `R-GI` `R-GJ` `R-GK` `R-GL` `R-GM` `R-GN` `R-GO` `R-II` `R-KG` `R-KH` `R-KV` `R-KX` `R-LE` `R-LS` `R-LT` `R-LU` `R-LV` `R-LW` `R-LX` `R-LY` `R-LZ` `R-MA` `R-MB` `R-MC` · history: `R-GF`
-
-- **x-v3.3** An exception entry with no operator decision found (the condition-9 census class c) goes to the operator as a family ruling, recorded by decision log and register row like any other: the 2026-10-20 rulings are R-HN…R-HZ (V3 Exception Rulings page and chat CHAT-22) and the CoA cutover rulings R-IA…R-IF (R-IB and R-IC also cover enrich_permits' twin deviations, operator CHAT-24). A conversion retires a legacy audit row, `records_meta` key, constant row or log-only query only when the entry cites a consumer grep with zero readers or shows the counted mechanism is gone (R-HR, a named exception to Spec 123 §3.1); a legacy defect corrected inline is ratified per entry, never as a general rule (R-HQ). Citations on a fingerprint-locked descriptor ride the bundled RE-FREEZE night.
-  *Why:* Condition (9) needs every exception to cite a ruling, and a family ruling with its evidence condition stated once is cheaper to check than one ruling per entry.
-  Rules: `R-HN` `R-HO` `R-HP` `R-HQ` `R-HR` `R-HS` `R-HT` `R-HU` `R-HV` `R-HW` `R-HX` `R-HY` `R-HZ` `R-IA` `R-IB` `R-IC` `R-ID` `R-IE` `R-IF` `R-JE` `R-JK` `R-JL` `R-JM` `R-JU` `R-KE`
-
-### Rulings protocol and the resolution ladder
-
-What to do when the standard does not answer your question.
-
-- **x-rulings.1** When no rung answers, use the protocol: one pass discovers and proposes (closed Intent Ledger vocabulary); a different party adjudicates, named and dated; the ruling gets a dated register row in Spec 124 §5 (or a 124a LIVE REGISTER section) that answers the seven admission questions and names a lock; the same commit adds the both-directions test and amends the spec; a pilot-local defect becomes a ruling only if it will recur in another archetype; a document move is tool-performed and verified by a line-set diff. Cited ids must resolve.
-  *Why:* A rule without a lock is not a rule, and the person who found a problem does not get to rule on it.
-  Rules: `R-I` `R-J` `R-AA` `R-AM` `R-DF` `P4-1` `P4-2` `P4-3` `P4-4` `P4-5` `P4-6` `P4-7` `R-KO`
-
-- **x-rulings.2** Resolution ladder: ground the problem (query, grep, read; cite the owner spec from the system map); classify it CONTRACT / INCIDENTAL / DEFECT; resolve at the first fitting rung (descriptor, declared check, logic variable, library change, shape rule, new schema field); if none fits or two conflict, go to the protocol; add a both-directions test and re-run the golden capture; record a Defect Ledger id and a §R Reflection entry when it may recur. Route each learning to the most enforced artifact that can hold it.
-  *Why:* The cheapest enforced answer wins, and lessons are kept where a machine reads them.
-  Rules: `L7-0` `L7-1` `L7-2` `L7-3` `L7-4` `L7-5` · history: `M9` (SPEC121-M9) `M10` (SPEC121-M10)
-
-- **x-rulings.3** Where the standard is written: Spec 122 is the standard (the live schema and behaviour) and the Spec 124 register is the policy; on policy the register governs, on the schema and behaviour Spec 122 does. Spec 123 is the standard for the conversion procedure and its G0–G9 gates. This handbook is Spec 132, generated from both through the rule map; cite a line as `Spec 132 §<line id> (R-xx)`. Every spec opens with one role banner (authority register, standard, design, historical, generated handbook); a historical spec adds no rule id, so a new rule goes to the register.
-  *Why:* Each question has one home, and a reader knows from the first lines what a spec may decide.
-  Rules: `R-GU` `R-GV` `R-GW` `R-GX` `R-HH` `R-HI` `R-HJ` `R-IY`
-
-- **x-rulings.4** Operator decisions are transferred by generator, never by hand: each set of rulings (a review-page export or a chat ruling with its quote, and any later amendment with its quote) is committed verbatim as `docs/reports/decisions/<date>-<slug>.json`; `node scripts/analysis/decision-log.mjs --write` emits a register-row skeleton per approved decision, and every approved decision becomes a register row (Spec 124, Spec 69a or Spec 131 by subject) that cites `<log stem>#<decision id>`; `--check` at pre-commit fails on an uncovered decision or a citation of an unknown one. Each log is re-derived at `--check` from its raw record under `docs/reports/decisions/raw/`, so a hand-edited log fails. Rulings recorded this way for a step not yet built (resolve_bylaws, Spec 134) govern its plan; a report surface has one declaration (R-RS).
-  *Why:* A ruling transferred by hand is a ruling that can be forgotten; the log is the operator's own words and the check proves each one landed.
-  Rules: `R-GY` `R-HB` `R-HC` `R-HD` `R-HE` `R-HF` `R-HG` `R-HK` `R-HL` `R-HM` `R-IL` `R-IM` `R-IN` `R-IO` `R-IP` `R-IQ` `R-IR` `R-IS` `R-IT` `R-IU` `R-IV` `R-IW` `R-IX` `R-IZ` `R-JA` `R-JI` `R-JJ` `R-JN` `R-JO` `R-JR`
-
-### Verification before integration and acceptance
-
-What must be independently checked before work lands.
-
-- **x-verify.1** Before an integrate-N branch is built, a fresh lane that did not write the work verifies every landing lane's claims read-only (cited ids and quotes, red-first tests red on the parent, counts and exit codes reproduced). The report lives at `docs/reports/verification/<branch>.md` and every integrate commit cites it (`.husky/commit-msg`).
-  *Why:* Self-reported results are not evidence; an independent re-check is.
-  Rules: `R-EZ` · history: `M14` (SPEC121-M14)
-
-- **x-verify.2** Cloud acceptance runs are pinned to a commit sha, use partial `--only` / `--from` runs, and form one end-of-sources acceptance set; ceilings are never raised (resize instead); EP-PIN-D17 blocks every post-sources legacy slug. A chain is complete only when converted, with no ledger rows, LDG-10 complete, cloud accepted and tooling integrated.
-  *Why:* Acceptance grades the code that will ship, once, with nothing waved through.
-  Rules: `R-AB` `R-AL` `R-AQ` `R-AQ.1` `R-BC` `R-ED`
-
-### Tooling, hooks and commit form
-
-How the repo machinery runs.
-
-- **x-tooling.1** Pre-commit is file-only, staged-scoped and inside a pinned time budget (#52), and runs every generator `--check`. The full suite runs at pre-push (8 forks; pre-commit 4; never above 10). Tests needing Postgres are `*.db.test.ts` and run only under `npm run test:db`. Lanes serialise DB writers, full suites and landings on the host (R-CQ, a process rule; nothing enforces it). `migrate.js --only` applies chosen migrations in order, failing closed on dependencies.
-  *Why:* Commits stay fast and safe on the shared host; slow and DB work runs where it belongs.
-  Rules: `R-GQ` `R-AG` `R-CQ` `R-DH` `R-DJ` `R-DS` `R-EC` `R-EU` `R-KI` `R-KL` `R-KP` `R-KY` `R-LB` `R-LF` `R-LG` `R-LH` `R-LI` `R-LJ` `R-LK` `R-LL` `R-LM` `R-LN` `R-LO` `R-LP` `R-LQ` · history: `R-BV`
-
-- **x-tooling.2** Commit form: after two full-form conversions of an archetype, later ones may land compressed (three commits), and compressed is then the default; full form needs a stated reason in the assessment.
-  *Why:* Ceremony is spent where an archetype is still new.
-  Rules: `R-PACE-1` `R-AH`
-
-- **x-tooling.3** Programme promises are declared data in `programme-items.json`, generated and gated; a programme-gate precondition is locked both directions, never a printed count. A proposal to add a box states its measured read/write cost at production scale. Stop and redesign if a per-step override is needed.
-  *Why:* Promises that live only in prose get forgotten.
-  Rules: `R-T` `R-Z` `P3` `K2` `R-KK` `R-KQ` `R-KU` `R-LR` `R-KW` `R-KZ` `R-LD`
-
-- **x-tooling.4** This handbook's own success test: a new engineer can build, read and diagnose a step from it alone.
-  *Why:* Spec 120's test, kept from Spec 121 M2.
-  Rules: history: `M2` (SPEC121-M2)
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/specs/00-architecture/00_system_map.md b/docs/specs/00-architecture/00_system_map.md
+index fe589bb6d9ba835fe066dfeeb316b25d0cd275a9..6500051a06fe5da7e097aed2667a949a273f53a2 100644
+--- a/docs/specs/00-architecture/00_system_map.md
++++ b/docs/specs/00-architecture/00_system_map.md
+@@ -109,13 +109,13 @@
+ | 36 | `02-web-admin/36_flight_center_tool.md` | Flight Center Tool (Standalone Admin Watchlist) | `scripts/analysis/backfill-admin-watchlist.js`, `src/app/api/admin/leads/watchlist/**`, `src/app/admin/flight-center/**`, `src/components/admin/FlightCenterTool.tsx`, `src/components/admin/SearchPermitsModal.tsx`, `src/features/admin-flight-center/**`, `src/lib/admin/watchlist-schemas.ts`, `src/features/leads/lib/record-lead-view.ts` | — | ACTIVE |
+ | 76 | `02-web-admin/76_lead_feed_health_dashboard.md` | Admin Lead-Feed Tooling (Test Feed + Flight Center + Detail Inspectors) | `src/app/api/admin/leads/test-feed/route.ts`, `src/components/admin/TestFeedTool.tsx`, `src/lib/admin/test-feed-utils.ts`, `src/lib/admin/lead-id-inspector.ts`, `src/app/admin/lead-feed/page.tsx`, `src/app/admin/lead-feed/inspector/page.tsx`, `src/components/admin/LeadDetailInspector.tsx`, `src/components/admin/lead-inspector/CoaClassificationPanel.tsx`, `src/app/api/admin/leads/inspect/[id]/route.ts`, `src/lib/leads/lead-inspect-query.ts`, `src/app/api/admin/stats/route.ts`, `src/app/api/admin/leads/health/route.ts`, `src/lib/admin/lead-feed-health.ts`, `src/components/LeadFeedHealthDashboard.tsx`, `src/app/admin/lead-feed/flight-center/page.tsx`, `src/components/admin/FlightCenterTool.tsx`, `src/lib/admin/admin-uid.ts`, `src/components/admin/FlightJobDetailInspector.tsx` | `src/tests/test-feed.infra.test.ts`, `src/tests/test-feed-utils.logic.test.ts`, `src/tests/admin-detail-inspectors.ui.test.tsx`, `src/tests/admin-leads-inspect.infra.test.ts`, `src/tests/lead-inspect-query.infra.test.ts` | **CLOSED.** A `?user_type=` parameter is NOT a planned product feature. Realtors and tradespeople share Spec 91's feed/flight-board algorithm; differentiation flows through `trade_slug` (a parameter the admin Test Feed Tool already exposes), not through a separate `user_type` axis. Manufacturers are not customer-facing feed personas — they're admin-managed B2B accounts per Spec 94 §7. |
+ | 86 | `02-web-admin/86_control_panel.md` | 86 Master Configuration List: The "Control Panel" Schema | `src/lib/admin/control-panel.ts`, `src/app/api/admin/control-panel/configs/route.ts`, `src/app/api/admin/control-panel/resync/route.ts`, `src/features/admin-controls/**`, `src/app/admin/control-panel/page.tsx`, `src/app/admin/control-panel/error.tsx`, `src/app/admin/page.tsx`, `src/tests/factories.ts` | `src/tests/control-panel.*.test.{ts,tsx}`, `src/tests/db/pricing-tables.db.test.ts` | Done |
+-| 89 | `02-web-admin/89_parcel_cost_model_tool.md` | Parcel Cost Model Tool (web-admin) | `src/app/api/admin/parcels/lookup/types.ts`, `src/components/admin/ParcelCostTool.tsx`, `src/app/admin/page.tsx`, `src/lib/parcels/address.ts` | — | Active (WF1 2026-07-06) |
++| 89 | `02-web-admin/89_parcel_cost_model_tool.md` | Parcel Cost Model Tool (web-admin) | `src/app/api/admin/parcels/lookup/types.ts`, `src/components/admin/ParcelCostTool.tsx`, `src/app/admin/page.tsx`, `src/lib/parcels/address.ts` | `src/tests/search-parser-guard.logic.test.ts`, `src/tests/parcel-lookup-resolution.logic.test.ts`, `src/tests/consumer-parcel-lookup.infra.test.ts` | Active (WF1 2026-07-06) |
+ 
+ ## Mobile (Lead Feed)
+ 
+ | # | Spec File | Feature | Implementation | Tests | Status |
+ |---|-----------|---------|---------------|-------|--------|
+-| 100 | `03-mobile/100_mobile_parcel_cost_tool.md` | Mobile Parcel Cost Tool | `src/app/api/parcels/lookup/types.ts`, `src/lib/api/public-projections.ts`, `src/lib/admin/parcel-lookup.ts`, `src/lib/parcels/lot-map.ts`, `src/lib/parcels/display-rules.ts`, `src/lib/parcels/lot-form.ts`, `src/lib/parcels/consumer-lookup.ts`, `src/lib/parcels/report-page.ts`, `src/lib/parcels/report-compute.ts`, `src/app/api/parcels/lookup/route.ts`, `src/lib/auth/route-guard.ts`, `src/lib/parcels/address.ts` | `src/tests/consumer-parcel-lookup.infra.test.ts`, `src/tests/parcel-lookup-gate.infra.test.ts`, `src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts` | Active (WF1 2026-07-11) |
++| 100 | `03-mobile/100_mobile_parcel_cost_tool.md` | Mobile Parcel Cost Tool | `src/app/api/parcels/lookup/types.ts`, `src/lib/api/public-projections.ts`, `src/lib/admin/parcel-lookup.ts`, `src/lib/parcels/lot-map.ts`, `src/lib/parcels/display-rules.ts`, `src/lib/parcels/lot-form.ts`, `src/lib/parcels/consumer-lookup.ts`, `src/lib/parcels/report-page.ts`, `src/lib/parcels/report-compute.ts`, `src/app/api/parcels/lookup/route.ts`, `src/lib/auth/route-guard.ts`, `src/lib/parcels/address.ts` | `src/tests/consumer-parcel-lookup.infra.test.ts`, `src/tests/search-parser-guard.logic.test.ts`, `src/tests/parcel-lookup-resolution.logic.test.ts`, `src/tests/parcel-lookup-gate.infra.test.ts`, `src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts` | Active (WF1 2026-07-11) |
+ | 77 | `03-mobile/77_mobile_crm_flight_board.md` | Mobile CRM Flight Board (Pillar 2) | `src/lib/leads/flight-board-temporal.ts`, `src/app/api/leads/flight-board/route.ts`, `src/app/api/leads/flight-board/detail/[id]/types.ts`, `src/app/api/leads/flight-board/detail/[id]/route.ts`, `src/app/api/leads/save/route.ts`, `src/app/api/leads/feed/route.ts`, `src/lib/leads/parse-lead-id.ts` | `src/tests/flight-board.infra.test.ts`, `src/tests/flight-board-detail.infra.test.ts`, `src/tests/flight-board-temporal.logic.test.ts`, `src/tests/db/flight-board-roundtrip.db.test.ts` | Done |
+ | 90 | `03-mobile/90_mobile_engineering_protocol.md` | Mobile Engineering Protocol & Architecture (The Pivot) | `src/app/api/parcels/lookup/types.ts` | — | Done |
+ | 91 | `03-mobile/91_mobile_lead_feed.md` | Mobile Lead Feed (Discovery Engine) | `src/app/api/leads/detail/[id]/types.ts` | `src/tests/db/realtor-gating.db.test.ts` | ACTIVE (Mobile Pivot) |
 diff --git a/docs/specs/02-web-admin/89_parcel_cost_model_tool.md b/docs/specs/02-web-admin/89_parcel_cost_model_tool.md
 index dca78e306db7963600cabde310d720474c08fd7f..d94b49b027251271fade942bd64c792f0e29e68f 100644
 --- a/docs/specs/02-web-admin/89_parcel_cost_model_tool.md
@@ -413,7 +455,7 @@ index dfdc7a4bed4e9256d59b71afaa3f73f420d8caf4..da5e8c91aef1b5cf8b8d6a81f8a61bff
        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 (dated note 2026-11-11)"
      ],
 diff --git a/src/lib/admin/parcel-lookup.ts b/src/lib/admin/parcel-lookup.ts
-index 9b090a0eb48d0be1ffd3c672884728bd2af7688e..e028d2b2deaf8797343e76cebd0a67e8bc9d86c2 100644
+index 9b090a0eb48d0be1ffd3c672884728bd2af7688e..1a08e7db8a3ec6211e3f58527853073eeecd6010 100644
 --- a/src/lib/admin/parcel-lookup.ts
 +++ b/src/lib/admin/parcel-lookup.ts
 @@ -173,16 +173,32 @@ function stripTrailingUnit(s: string): string {
@@ -585,10 +627,10 @@ index 9b090a0eb48d0be1ffd3c672884728bd2af7688e..e028d2b2deaf8797343e76cebd0a67e8
      const exactG = guardByDirection(exact, exactTruncated ? null : typed); // a truncated window cannot prove a narrowed row is the only one: unchanged (output review r2 #2)
      if (exactG.conflict) return conflictList(exactG.rows);
      exact = exactG.rows;
-+    // SEARCHFIX.1 (A1, AC #3): "32 Fulham Dr" opens Fulham Dr, not the list with Fulham St; the same truncation rule as the direction guard.
++    // SEARCHFIX.1 (A1, AC #3): "32 Fulham Dr" opens Fulham Dr, not the list with Fulham St; same truncation rule as the direction guard, which is checked again on the narrowed row (RR-0166: "32 Fulham Dr E" over Fulham St W and Fulham Dr W is the list).
 +    const typeG = guardByType(exact, exactTruncated ? '' : typedType);
-+    if (typeG.conflict) return conflictList(typeG.rows);
 +    exact = typeG.rows;
++    if (typeG.conflict || guardByDirection(exact, exactTruncated ? null : typed).conflict) return conflictList(exact);
      if (exact.length === 1) {
        return {
 +        // exact.length === 1 was tested on the line above, so exact[0] exists (both `!` on the next line)
@@ -746,7 +788,7 @@ index 8b06c265f92f1ed4efb396a96d8f3e7674b45e8c..3a0f2829870e51e69611625f6eea4494
      rows([], [r('P1', '7 Oak Ave'), r('P2', '7 Oak Ave'), r('P3', '7 Oak Ave')]);
      const out = await resolveAddress('7 Oak');
 diff --git a/src/tests/search-parser-guard.logic.test.ts b/src/tests/search-parser-guard.logic.test.ts
-index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d21c7e8cb 100644
+index 536c148dea1fc7fb34b3617a6470df32deebdc05..2dcf60793b32d1a062c6d6dcaaaffc3b9534e9cf 100644
 --- a/src/tests/search-parser-guard.logic.test.ts
 +++ b/src/tests/search-parser-guard.logic.test.ts
 @@ -32,6 +32,10 @@ vi.mock('@/lib/db/client', () => ({
@@ -760,7 +802,7 @@ index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d
  
  const opts = { classifyUnlinked: true, matchMistyped: true } as const; // the consumer route's call
  const E = { parcel_id: 'E1', address: '100 Queen St E' };
-@@ -225,3 +229,140 @@ describe('A.4 the guard after the match (resolveAddress)', () => {
+@@ -225,3 +229,141 @@ describe('A.4 the guard after the match (resolveAddress)', () => {
      expect(out.candidates).toEqual([]);
    });
  });
@@ -770,8 +812,8 @@ index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d
 +//   RR-0443 c (:2284): "What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close"
 +// A lot opens (`unique`) only on an exact match: the exact read, or a one-row typeahead that is the typed address in full. Every other
 +// one-row leftover is the list. The fixtures are the rows the typed-address seat recorded on the local test stack
-+// (docs/reports/reviews/mcfixreborn-g3/SEAT-typed-addresses.md:66-95); where the seat recorded fewer rows than the window holds, the
-+// extra rows are placeholders and say so.
++// (docs/reports/reviews/mcfixreborn-g3/SEAT-typed-addresses.md:66-95); case 15 rows 5 to 10 and case 21's point were read on the local
++// test stack, read-only, 2026-11-24.
 +describe('SEARCHFIX.1 exact opens, the rest lists', () => {
 +  const row = (parcel_id: string, address: string) => ({ parcel_id, address });
 +  /** The first 10 typeahead rows for "Gerrard St" (no number), sorted by printed address, read on the local test stack (the window repeats two ids). */
@@ -839,8 +881,8 @@ index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d
 +  const CLAIR = { '2750|CLAIR AVE': [row('5260587', '2750 St Clair Ave E')] };
 +  const ELM12 = [
 +    row('5492668', '12 Elm Grove Ave'), row('5264433', '12 Elm Ridge Dr'), row('5510910', '12 Elma St'), row('5017163', '12 Elmartin Dr'),
-+    // placeholders: the seat recorded the first four of the ten rows only
-+    row('X5', '12 Elm X5 St'), row('X6', '12 Elm X6 St'), row('X7', '12 Elm X7 St'), row('X8', '12 Elm X8 St'), row('X9', '12 Elm X9 St'), row('X10', '12 Elm X10 St'),
++    row('5485279', '12 Elmcrest Rd'), row('5151946', '12 Elmdon Crt'), row('5396750', '12 Elmer Ave'), row('5281136', '12 Elmont Dr'),
++    row('5295373', '12 Elmsdale Rd'), row('5278777', '12 Elmsthorpe Ave'),
 +  ];
 +  const cases: [string, Case][] = [
 +    ['1 679 Queen St W', { q: '679 Queen St W', exact: Q679, resolution: 'unique', match: '5476455' }],
@@ -863,8 +905,7 @@ index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d
 +    ['18 123 Yongee St', { q: '123 Yongee St', fuzzy: Y123, resolution: 'text_candidates', match: null, candidates: ['5179889', '5464983'] }],
 +    ['19 2760 Yongee St', { q: '2760 Yongee St', fuzzy: Y2760, resolution: 'text_candidates', match: null, candidates: ['5229356'] }],
 +    ['20 78 Robert St', { q: '78 Robert St', exact: { '78|ROBERT': [row('5259138', '78 Robert St'), row('5438421', '78 Robert St')] }, resolution: 'multi_parcel', match: null, candidates: ['5259138', '5438421'] }],
-+    // case 21's latitude and longitude are placeholders (UNVERIFIED: the seat could not run it live); the test checks only the pin it was given
-+    ['21 2 Lake Cres', { q: '2 Lake Cres', unlinked: [{ address_point_id: 1, address: '2 Lake Cres', latitude: '43.6', longitude: '-79.5' }], resolution: 'unlinked', match: null }],
++    ['21 2 Lake Cres', { q: '2 Lake Cres', unlinked: [{ address_point_id: 30014230, address: '2 Lake Cres', latitude: '43.6074777', longitude: '-79.4880861' }], resolution: 'unlinked', match: null }],
 +    ['22 2750 St Clair Ave W', { q: '2750 St Clair Ave W', exact: CLAIR, resolution: 'text_candidates', match: null, candidates: ['5260587'] }],
 +    ['23 King and Bay', { q: 'King and Bay', resolution: 'no_match', match: null, candidates: [] }],
 +    ['25 123 Main St Mississauga', { q: '123 Main St Mississauga', resolution: 'no_match', match: null, candidates: [] }],
@@ -876,6 +917,8 @@ index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d
 +    ['extra 2e 679 Queen St. W', { q: '679 Queen St. W', exact: Q679, resolution: 'unique', match: '5476455' }],
 +    ['extra 2750 St. Clair Ave W', { q: '2750 St. Clair Ave W', exact: CLAIR, resolution: 'text_candidates', match: null, candidates: ['5260587'] }],
 +    ['extra 383 Elm St, one exact row printed Elm Rd', { q: '383 Elm St', exact: { '383|ELM': [row('5191692', '383 Elm Rd')] }, resolution: 'text_candidates', match: null, candidates: ['5191692'] }],
++    ['extra 32 Fulham Dr E, the type narrowing leaves a W row: the list', { q: '32 Fulham Dr E', exact: { '32|FULHAM': [row('5067128', '32 Fulham St W'), row('5514141', '32 Fulham Dr W')] }, resolution: 'text_candidates', match: null, candidates: ['5514141'] }],
++    ['extra 32 Fulham Dr W, same rows, the typed side opens (green both)', { q: '32 Fulham Dr W', exact: { '32|FULHAM': [row('5067128', '32 Fulham St W'), row('5514141', '32 Fulham Dr W')] }, resolution: 'unique', match: '5514141' }],
 +    ['extra 5 Elm St, a row with no printed type stops the narrowing', { q: '5 Elm St', exact: { '5|ELM': [row('P1', '5 Elm St'), row('P2', '')] }, resolution: 'text_candidates', match: null, candidates: ['P1', 'P2'] }],
 +    ['extra 123 Yonge St, Toronto ON', { q: '123 Yonge St, Toronto ON', exact: { '123|YONGE': Y123 }, resolution: 'unique', match: '5464983' }],
 +    ['extra 21 Langden Ave, a full address found only through its address point', { q: '21 Langden Ave', typeahead: [row('L1', '21 Langden Ave')], resolution: 'unique', match: 'L1' }],
@@ -893,7 +936,7 @@ index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d
 +    if (c.match !== undefined) expect(out.match?.parcelId ?? null).toBe(c.match);
 +    if (c.candidates) expect(out.candidates.map((x) => x.parcelId)).toEqual(c.candidates);
 +    if (c.count !== undefined) expect(out.candidates).toHaveLength(c.count);
-+    if (c.resolution === 'unlinked') expect(out.lotMap).toEqual({ kind: 'unlinked', address: '2 Lake Cres', pin: { lat: 43.6, lng: -79.5 } });
++    if (c.resolution === 'unlinked') expect(out.lotMap).toEqual({ kind: 'unlinked', address: '2 Lake Cres', pin: { lat: 43.6074777, lng: -79.4880861 } });
 +  });
 +
 +  it.each([['Suite 12 Elm St'], ['#12 Elm St']])('T5 extra: %s never parses to house number 2 (the leading-unit strip needs a separator)', (q) => {

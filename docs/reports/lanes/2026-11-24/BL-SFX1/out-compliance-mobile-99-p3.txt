@@ -1,19 +1,26 @@
-◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T15:59:39.513Z file_sha256=11694656213a29c9224d09a3697f420a9415cc40c12622053eaad997e24a3788 prompt_sha256=2de2d0ea0f878e98f90620a554dbc71d8bcc1d0e94b0789888ed3518d5d39b3b
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:28:22.121Z file_sha256=f89f3ada64eb69bab37d20b4e13c87adfcff689f0a75dee4655ea849d9209d0c prompt_sha256=8e6480d1e1580546d73baa934f7c75aae5c8389f9bf002c524203db847beefed
 🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-mobile-99-p3.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — AC #6 "The 29 typed-address cases of the seat record pass as tests" — src/tests/search-parser-guard.logic.test.ts "// Cases 24 (outside Toronto), 29 (two characters) and the phone half of 23 are existing phone tests (mobile/__tests__ parcelSearchMatch), cited, not re-written." — the T5 table carries seat cases 1 to 23 and 25 to 28 with case 27 split into 27a, 27b and 27c, so the tally of 29 comes from the split while seat cases 24 and 29 sit outside this material and cannot be seen — add case 24 and case 29 to the T5 table here, or name the exact mobile test titles that hold them in the comment.
-DEFER severity=LOW — RR-0392 "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "+      \"answer\": \"ledger\"," — the descriptor also flips emits from none to ledger with ledger_events property_view, drops the user_profiles row from outputs.tables and raises inputs.why from 6 to 7 tables, none of which the card's What changes paragraph or its folded finding list (ST1, 2a, G2 D1, G2 D6, G3 R1) names — record G3 R1 on the card as covering the descriptor corrections, or move them to their own card.
-DEFER severity=LOW — card "Dated notes owed: Spec 100 (:103, :144); objectives G.1 and A.3 of doc-2 through the backlog CLI; task-69; Spec 89 (after :34)." — NONE — the doc-2 G.1 and A.3 notes and the task-69 note appear nowhere in the material under review, only the Implementation Note "Notes owed landed: Spec 100 after :107 and :144, Spec 89 after :34, doc-2 G.1 and A.3 (backlog doc update), task-69 (append-notes)" claims them, and a note is a comment, not evidence — put the doc-2 and task-69 note diffs in this push or point at the commit that carries them.
-MET — Spec 99 §B1 query-key registry "Adding a new server query requires a row here" — src/lib/admin/parcel-lookup.ts:~463 — the new letter and dash fallback is a server-side statement inside the existing lookup, so no new TanStack query and no new query key appears and the registry needs no row.
-MET — card "Must not: add a new resolution value, or touch the report meter in the lookup route" — src/lib/admin/parcel-lookup.ts:~296 — every new branch returns through conflictList with resolution 'text_candidates', one of the five existing values, and no file under src/app/api/parcels/lookup/ is in the diff.
-MET — G2 D1 "The wildcard characters % and _ typed by a customer are escaped" — src/lib/admin/parcel-lookup.ts:~260 — likePrefix escapes backslash, % and _ and is passed to both prefix reads, and T3 pins both prefixes.
-MET — card "Files: ..." — docs/specs/02-web-admin/89_parcel_cost_model_tool.md:35 — the diff touches exactly the 8 paths the card names and no path it does not.
+DEFER severity=MED — task-449 AC #6 "The 29 typed-address cases of the seat record pass as tests" / Description "whose 29 typed-address cases with real addresses are this card's tests" — src/tests/search-parser-guard.logic.test.ts:366 "// Cases 24 (outside Toronto), 29 (two characters) and the phone half of 23 are existing phone tests (mobile/__tests__ parcelSearchMatch), cited, not re-written." — cases 24 and 29 are absent from the SEARCHFIX.1 case table and rest on a comment citing a file not in the material (cannot see it pass), so the "this card's tests" clause is not demonstrated by this change — add cases 24 and 29 to the case table so all 29 run here.
 
-VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 8   Unmet: 3
+MET — task-449 AC #2 "Gerrard St W with a full 10-row window returns a list, not the one W row" — src/lib/admin/parcel-lookup.ts:394 — "guardByDirection(typeahead, typeahead.length >= 10 ? null : typed)" leaves a full window unnarrowed, so it lists.
+MET — task-449 AC #1 "unless that row is the typed address in full ... which opens" — src/lib/admin/parcel-lookup.ts:399 — "if (!typeahead.every((r) => isTypedAddressInFull(r.address, num, streetName, typedType))) return conflictList(typeahead);" lists a one-row leftover that is not the typed address in full.
+MET — task-449 AC #3 "A full correct address with its street type opens the lot when the number is shared by another street type" — src/lib/admin/parcel-lookup.ts:334 — "const typeG = guardByType(exact, exactTruncated ? '' : typedType);" narrows exact rows by type and never empties the set.
+MET — task-449 AC #5 "A typed % or _ is escaped" — src/lib/admin/parcel-lookup.ts:389 — "[likePrefix(streetName), num || null]" with "likePrefix" escaping "[\\%_]" in the typeahead prefix.
+MET — RR-0166 "ONE-12 a" leading-unit rule — src/lib/admin/parcel-lookup.ts:181 — "const UNIT_HEAD = /^\s*(?:UNIT\s*#?|APT|APARTMENT|SUITE|STE|#)\s*\d{1,5}[A-Z]?(?:\s*,\s*|\s+)(?=\d)/i;" drops a leading word/# unit.
+MET — task-449 AC #4 dash/letter forms "reach the lot or the close-address list" — src/lib/admin/parcel-lookup.ts:466 — "const bare = keepPeriods ? null : (/^(\d+)[A-Z]$/.exec(num) ?? /^(\d+)-(\d+)[A-Z]?$/.exec(num));" lists the bare-number lots.
+MET — Spec 100 note "No `resolution` value is added" — src/lib/admin/parcel-lookup.ts:471 — "if (rows.length > 0) return conflictList(rows.slice(0, 10));" reuses the existing "text_candidates" value.
+
+REJECT — B1 query-key registry "Adding a new server query requires a row here" — change accused of adding a mobile server query / fragmenting the cache — the diff adds no query; the descriptor still states "It is called from 1 place: `mobile/src/hooks/useParcelLookup.ts`" and the registry row `['parcel-lookup', parcelId]` is untouched.
+REJECT — task-449 "Must not: add a new resolution value" — change accused of adding a resolution — the diff returns only the existing `unique` and `text_candidates`; no new literal is emitted.
+REJECT — task-449 "Must not ... touch the report meter in the lookup route" — change accused of altering the meter — `src/app/api/parcels/lookup/route.ts` is not in the diff; the descriptor `metering`/`emits` text restates the existing report-produced meter (RR-0278) as the folded G3 R1 counts, not a code change.
+REJECT — task-449 AC #1 "which opens as an exact match" — change accused of emitting matchType `typeahead` instead of `exact` — the 2026-11-24 note keeps "`typeahead` stays in the `matchType` enum" for that case and the resolution is `unique`, so the lot opens.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 30   Unmet: 1
 Rules met: none
 
 ---
-⏱  70342ms (70.3s)
-📊 Tokens — total: 48797, input: 34350, output: 14447, reasoning: 13629
+⏱  211800ms (211.8s)
+📊 Tokens — total: 78706, input: 34529, output: 44177, reasoning: 43138

@@ -1,9 +1,33 @@
-◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T15:59:39.478Z file_sha256=1dbf84a48670534c830399365cf8dd0fd22457190b72ecb4d14a3745a12f194d prompt_sha256=d8dea5cbd6ea9ec44d37b664f2b706dd8971fe8423687d23e830a214f6ab5432
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:28:22.077Z file_sha256=ec99d235ff18cb74dea310e6855bbaad09cb7bacf0ca04c90490755a00f8a3ca prompt_sha256=a771ed3dbaf22f8cfa16fcae34d997771d714b5abd8f114bbefa663f6256b30b
 🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-five-words.txt (model: deepseek-reasoner)
 
+DEFER severity=MED — card "Dated notes owed: Spec 100 (:103, :144); objectives G.1 and A.3 of doc-2 through the backlog CLI; task-69; Spec 89 (after :34)" — NONE (only the plan text line) "Notes owed landed: Spec 100 after :107 and :144, Spec 89 after :34, doc-2 G.1 and A.3 (backlog doc update), task-69 (append-notes)" — the doc-2 G.1/A.3 and task-69 notes are not in the material under review, only asserted in the implementation note, which is the "satisfied by prose only" case — produce the backlog CLI output or the note text in the reviewed material, or the Spec 100 note's claim about the doc-2 G.1/A.3 notes rests on nothing visible.
 
+DEFER severity=LOW — card RR-0392 "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)" — contract_parcels_lookup.descriptor.json outputs "why": "it writes 1 table(s) synchronously (the usage_events property_view row through openReport; the user_profiles insert of getCurrentUserContext runs only in dev mode for dev-user, src/lib/auth/get-user-context.ts:84)" — deleting the user_profiles outputs row is the one edit on this block that is not a count restatement (the pre-change "writes 2 table(s)" already matched its two rows), and the text of G3 R1, the only folded finding that could name it, is not pasted, so its basis cannot be seen — cite the G3 R1 line that names the removal, or restore the row.
+
+DEFER severity=LOW — Spec 100 note "A typed `%` or `_` is escaped in the prefix reads" — src/lib/admin/parcel-lookup.ts "if (opts.classifyUnlinked && num && !/[%_]/.test(streetName)) {" — the unlinked prefix read still refuses a wildcard-bearing street, so the likePrefix escape added at "[likePrefix(streetName), num]" never runs and the escaping clause holds for the typeahead read only, while the adjacent comment claims "the typeahead and this read also escape them (likePrefix, SEARCHFIX.1 D1, done)" — keep the skip and correct the comment, or drop the skip now that both prefixes are escaped.
+
+DEFER severity=LOW — RR-0442 "if its a semi potentially - you need to state that?" — NONE in the diff — the change implements the open-on-exact half of RR-0442 and routes the semi question nowhere: the only material sentence is the pre-existing "the semi=answered request key are the design of task-360 and task-319, not an operator ruling: RR-0278 does not rule the semi flag", which addresses RR-0278, not RR-0442 — name the task that answers the semi clause of RR-0442 so the ruling is not left without a home.
+
+REJECT — AC #1 "which opens as an exact match" — the change is accused of opening the in-full one-row typeahead with matchType 'typeahead' instead of 'exact' — the same dated note rules "typeahead stays in the matchType enum (additive_only) and is still emitted for that case", so the AC phrase does not override the note.
+
+REJECT — AC #6 "The 29 typed-address cases of the seat record pass as tests" — the change is accused of carrying 27 numbered cases plus extras, with cases 24 and 29 absent — the seat record is not pasted, and the file states "Cases 24 (outside Toronto), 29 (two characters) and the phone half of 23 are existing phone tests (mobile/__tests__ parcelSearchMatch), cited, not re-written".
+
+MET — AC #2 and the 10-row window note — src/lib/admin/parcel-lookup.ts "const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);" — a full 10-row window is left unnarrowed, a shorter window is narrowed.
+
+MET — AC #3 and "never to an empty set, and not when any row prints no type" — src/lib/admin/parcel-lookup.ts guardByType "if (types.some((t) => t === '')) return { rows, conflict: false };" and "if (same.length > 0) return { rows: same, conflict: false };" — narrowing only while every row prints a type and only to a non-empty subset.
+
+MET — AC #5 "A typed `%` or `_` is escaped" — src/lib/admin/parcel-lookup.ts "return s.replace(/[\\%_]/g, '\\$&') + '%';" used at "[likePrefix(streetName), num || null]".
+
+MET — AC #1 "a one-row typeahead is unique only when it is the typed address in full" — src/lib/admin/parcel-lookup.ts "if (!typeahead.every((r) => isTypedAddressInFull(r.address, num, streetName, typedType))) return conflictList(typeahead);".
+
+MET — must-not "add a new resolution value, or touch the report meter in the lookup route" — the diff adds no new resolution literal and src/app/api/parcels/lookup/route.ts is not among the changed paths.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 0
+Rules met: none
 
 ---
-⏱  308707ms (308.7s)
-📊 Tokens — total: 95975, input: 30439, output: 65536, reasoning: 65536
+⏱  191906ms (191.9s)
+📊 Tokens — total: 72420, input: 32783, output: 39637, reasoning: 38393

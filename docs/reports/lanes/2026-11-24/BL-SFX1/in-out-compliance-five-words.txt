@@ -1,5 +1,5 @@
-LIST five-words sha256:9ac37044b0deec3165ae2ad6e4c02aa48a6d8ede03c038b0c9178860b8f223a2 material sha256:fca1e1fa62bcd3c1dad6b994eb6f31d5a40a92113dac0de1bb6fecd2a100a581 part 1 of 1 chunk 1 of 1
-RULE LIST five-words (docs/specs/01-pipeline/132_step_standard_handbook.md, sections Glossary), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/specs/02-web-admin/89_parcel_cost_model_tool.md","docs/specs/03-mobile/100_mobile_parcel_cost_tool.md","scripts/surfaces/_schema/census/contracts.json","scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json","src/lib/admin/parcel-lookup.ts","src/tests/consumer-parcel-lookup.infra.test.ts","src/tests/parcel-lookup-resolution.logic.test.ts","src/tests/search-parser-guard.logic.test.ts"]
+LIST five-words sha256:9ac37044b0deec3165ae2ad6e4c02aa48a6d8ede03c038b0c9178860b8f223a2 material sha256:6547697da3e97829d85cb320a734798679fc16adb311f8c67ed02fd15a1865ba part 1 of 1 chunk 1 of 1
+RULE LIST five-words (docs/specs/01-pipeline/132_step_standard_handbook.md, sections Glossary), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/specs/00-architecture/00_system_map.md","docs/specs/02-web-admin/89_parcel_cost_model_tool.md","docs/specs/03-mobile/100_mobile_parcel_cost_tool.md","scripts/surfaces/_schema/census/contracts.json","scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json","src/lib/admin/parcel-lookup.ts","src/tests/consumer-parcel-lookup.infra.test.ts","src/tests/parcel-lookup-resolution.logic.test.ts","src/tests/search-parser-guard.logic.test.ts"]
 
 ## Glossary
 
@@ -33,6 +33,26 @@ RULE LIST five-words (docs/specs/01-pipeline/132_step_standard_handbook.md, sect
 - **†**: An id or code pointer that lands with another branch (rule-map `meta.pending_integration`).
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/specs/00-architecture/00_system_map.md b/docs/specs/00-architecture/00_system_map.md
+index fe589bb6d9ba835fe066dfeeb316b25d0cd275a9..6500051a06fe5da7e097aed2667a949a273f53a2 100644
+--- a/docs/specs/00-architecture/00_system_map.md
++++ b/docs/specs/00-architecture/00_system_map.md
+@@ -109,13 +109,13 @@
+ | 36 | `02-web-admin/36_flight_center_tool.md` | Flight Center Tool (Standalone Admin Watchlist) | `scripts/analysis/backfill-admin-watchlist.js`, `src/app/api/admin/leads/watchlist/**`, `src/app/admin/flight-center/**`, `src/components/admin/FlightCenterTool.tsx`, `src/components/admin/SearchPermitsModal.tsx`, `src/features/admin-flight-center/**`, `src/lib/admin/watchlist-schemas.ts`, `src/features/leads/lib/record-lead-view.ts` | — | ACTIVE |
+ | 76 | `02-web-admin/76_lead_feed_health_dashboard.md` | Admin Lead-Feed Tooling (Test Feed + Flight Center + Detail Inspectors) | `src/app/api/admin/leads/test-feed/route.ts`, `src/components/admin/TestFeedTool.tsx`, `src/lib/admin/test-feed-utils.ts`, `src/lib/admin/lead-id-inspector.ts`, `src/app/admin/lead-feed/page.tsx`, `src/app/admin/lead-feed/inspector/page.tsx`, `src/components/admin/LeadDetailInspector.tsx`, `src/components/admin/lead-inspector/CoaClassificationPanel.tsx`, `src/app/api/admin/leads/inspect/[id]/route.ts`, `src/lib/leads/lead-inspect-query.ts`, `src/app/api/admin/stats/route.ts`, `src/app/api/admin/leads/health/route.ts`, `src/lib/admin/lead-feed-health.ts`, `src/components/LeadFeedHealthDashboard.tsx`, `src/app/admin/lead-feed/flight-center/page.tsx`, `src/components/admin/FlightCenterTool.tsx`, `src/lib/admin/admin-uid.ts`, `src/components/admin/FlightJobDetailInspector.tsx` | `src/tests/test-feed.infra.test.ts`, `src/tests/test-feed-utils.logic.test.ts`, `src/tests/admin-detail-inspectors.ui.test.tsx`, `src/tests/admin-leads-inspect.infra.test.ts`, `src/tests/lead-inspect-query.infra.test.ts` | **CLOSED.** A `?user_type=` parameter is NOT a planned product feature. Realtors and tradespeople share Spec 91's feed/flight-board algorithm; differentiation flows through `trade_slug` (a parameter the admin Test Feed Tool already exposes), not through a separate `user_type` axis. Manufacturers are not customer-facing feed personas — they're admin-managed B2B accounts per Spec 94 §7. |
+ | 86 | `02-web-admin/86_control_panel.md` | 86 Master Configuration List: The "Control Panel" Schema | `src/lib/admin/control-panel.ts`, `src/app/api/admin/control-panel/configs/route.ts`, `src/app/api/admin/control-panel/resync/route.ts`, `src/features/admin-controls/**`, `src/app/admin/control-panel/page.tsx`, `src/app/admin/control-panel/error.tsx`, `src/app/admin/page.tsx`, `src/tests/factories.ts` | `src/tests/control-panel.*.test.{ts,tsx}`, `src/tests/db/pricing-tables.db.test.ts` | Done |
+-| 89 | `02-web-admin/89_parcel_cost_model_tool.md` | Parcel Cost Model Tool (web-admin) | `src/app/api/admin/parcels/lookup/types.ts`, `src/components/admin/ParcelCostTool.tsx`, `src/app/admin/page.tsx`, `src/lib/parcels/address.ts` | — | Active (WF1 2026-07-06) |
++| 89 | `02-web-admin/89_parcel_cost_model_tool.md` | Parcel Cost Model Tool (web-admin) | `src/app/api/admin/parcels/lookup/types.ts`, `src/components/admin/ParcelCostTool.tsx`, `src/app/admin/page.tsx`, `src/lib/parcels/address.ts` | `src/tests/search-parser-guard.logic.test.ts`, `src/tests/parcel-lookup-resolution.logic.test.ts`, `src/tests/consumer-parcel-lookup.infra.test.ts` | Active (WF1 2026-07-06) |
+ 
+ ## Mobile (Lead Feed)
+ 
+ | # | Spec File | Feature | Implementation | Tests | Status |
+ |---|-----------|---------|---------------|-------|--------|
+-| 100 | `03-mobile/100_mobile_parcel_cost_tool.md` | Mobile Parcel Cost Tool | `src/app/api/parcels/lookup/types.ts`, `src/lib/api/public-projections.ts`, `src/lib/admin/parcel-lookup.ts`, `src/lib/parcels/lot-map.ts`, `src/lib/parcels/display-rules.ts`, `src/lib/parcels/lot-form.ts`, `src/lib/parcels/consumer-lookup.ts`, `src/lib/parcels/report-page.ts`, `src/lib/parcels/report-compute.ts`, `src/app/api/parcels/lookup/route.ts`, `src/lib/auth/route-guard.ts`, `src/lib/parcels/address.ts` | `src/tests/consumer-parcel-lookup.infra.test.ts`, `src/tests/parcel-lookup-gate.infra.test.ts`, `src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts` | Active (WF1 2026-07-11) |
++| 100 | `03-mobile/100_mobile_parcel_cost_tool.md` | Mobile Parcel Cost Tool | `src/app/api/parcels/lookup/types.ts`, `src/lib/api/public-projections.ts`, `src/lib/admin/parcel-lookup.ts`, `src/lib/parcels/lot-map.ts`, `src/lib/parcels/display-rules.ts`, `src/lib/parcels/lot-form.ts`, `src/lib/parcels/consumer-lookup.ts`, `src/lib/parcels/report-page.ts`, `src/lib/parcels/report-compute.ts`, `src/app/api/parcels/lookup/route.ts`, `src/lib/auth/route-guard.ts`, `src/lib/parcels/address.ts` | `src/tests/consumer-parcel-lookup.infra.test.ts`, `src/tests/search-parser-guard.logic.test.ts`, `src/tests/parcel-lookup-resolution.logic.test.ts`, `src/tests/parcel-lookup-gate.infra.test.ts`, `src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts` | Active (WF1 2026-07-11) |
+ | 77 | `03-mobile/77_mobile_crm_flight_board.md` | Mobile CRM Flight Board (Pillar 2) | `src/lib/leads/flight-board-temporal.ts`, `src/app/api/leads/flight-board/route.ts`, `src/app/api/leads/flight-board/detail/[id]/types.ts`, `src/app/api/leads/flight-board/detail/[id]/route.ts`, `src/app/api/leads/save/route.ts`, `src/app/api/leads/feed/route.ts`, `src/lib/leads/parse-lead-id.ts` | `src/tests/flight-board.infra.test.ts`, `src/tests/flight-board-detail.infra.test.ts`, `src/tests/flight-board-temporal.logic.test.ts`, `src/tests/db/flight-board-roundtrip.db.test.ts` | Done |
+ | 90 | `03-mobile/90_mobile_engineering_protocol.md` | Mobile Engineering Protocol & Architecture (The Pivot) | `src/app/api/parcels/lookup/types.ts` | — | Done |
+ | 91 | `03-mobile/91_mobile_lead_feed.md` | Mobile Lead Feed (Discovery Engine) | `src/app/api/leads/detail/[id]/types.ts` | `src/tests/db/realtor-gating.db.test.ts` | ACTIVE (Mobile Pivot) |
 diff --git a/docs/specs/02-web-admin/89_parcel_cost_model_tool.md b/docs/specs/02-web-admin/89_parcel_cost_model_tool.md
 index dca78e306db7963600cabde310d720474c08fd7f..d94b49b027251271fade942bd64c792f0e29e68f 100644
 --- a/docs/specs/02-web-admin/89_parcel_cost_model_tool.md
@@ -310,7 +330,7 @@ index dfdc7a4bed4e9256d59b71afaa3f73f420d8caf4..da5e8c91aef1b5cf8b8d6a81f8a61bff
        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 (dated note 2026-11-11)"
      ],
 diff --git a/src/lib/admin/parcel-lookup.ts b/src/lib/admin/parcel-lookup.ts
-index 9b090a0eb48d0be1ffd3c672884728bd2af7688e..e028d2b2deaf8797343e76cebd0a67e8bc9d86c2 100644
+index 9b090a0eb48d0be1ffd3c672884728bd2af7688e..1a08e7db8a3ec6211e3f58527853073eeecd6010 100644
 --- a/src/lib/admin/parcel-lookup.ts
 +++ b/src/lib/admin/parcel-lookup.ts
 @@ -173,16 +173,32 @@ function stripTrailingUnit(s: string): string {
@@ -482,10 +502,10 @@ index 9b090a0eb48d0be1ffd3c672884728bd2af7688e..e028d2b2deaf8797343e76cebd0a67e8
      const exactG = guardByDirection(exact, exactTruncated ? null : typed); // a truncated window cannot prove a narrowed row is the only one: unchanged (output review r2 #2)
      if (exactG.conflict) return conflictList(exactG.rows);
      exact = exactG.rows;
-+    // SEARCHFIX.1 (A1, AC #3): "32 Fulham Dr" opens Fulham Dr, not the list with Fulham St; the same truncation rule as the direction guard.
++    // SEARCHFIX.1 (A1, AC #3): "32 Fulham Dr" opens Fulham Dr, not the list with Fulham St; same truncation rule as the direction guard, which is checked again on the narrowed row (RR-0166: "32 Fulham Dr E" over Fulham St W and Fulham Dr W is the list).
 +    const typeG = guardByType(exact, exactTruncated ? '' : typedType);
-+    if (typeG.conflict) return conflictList(typeG.rows);
 +    exact = typeG.rows;
++    if (typeG.conflict || guardByDirection(exact, exactTruncated ? null : typed).conflict) return conflictList(exact);
      if (exact.length === 1) {
        return {
 +        // exact.length === 1 was tested on the line above, so exact[0] exists (both `!` on the next line)
@@ -643,7 +663,7 @@ index 8b06c265f92f1ed4efb396a96d8f3e7674b45e8c..3a0f2829870e51e69611625f6eea4494
      rows([], [r('P1', '7 Oak Ave'), r('P2', '7 Oak Ave'), r('P3', '7 Oak Ave')]);
      const out = await resolveAddress('7 Oak');
 diff --git a/src/tests/search-parser-guard.logic.test.ts b/src/tests/search-parser-guard.logic.test.ts
-index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d21c7e8cb 100644
+index 536c148dea1fc7fb34b3617a6470df32deebdc05..2dcf60793b32d1a062c6d6dcaaaffc3b9534e9cf 100644
 --- a/src/tests/search-parser-guard.logic.test.ts
 +++ b/src/tests/search-parser-guard.logic.test.ts
 @@ -32,6 +32,10 @@ vi.mock('@/lib/db/client', () => ({
@@ -657,7 +677,7 @@ index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d
  
  const opts = { classifyUnlinked: true, matchMistyped: true } as const; // the consumer route's call
  const E = { parcel_id: 'E1', address: '100 Queen St E' };
-@@ -225,3 +229,140 @@ describe('A.4 the guard after the match (resolveAddress)', () => {
+@@ -225,3 +229,141 @@ describe('A.4 the guard after the match (resolveAddress)', () => {
      expect(out.candidates).toEqual([]);
    });
  });
@@ -667,8 +687,8 @@ index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d
 +//   RR-0443 c (:2284): "What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close"
 +// A lot opens (`unique`) only on an exact match: the exact read, or a one-row typeahead that is the typed address in full. Every other
 +// one-row leftover is the list. The fixtures are the rows the typed-address seat recorded on the local test stack
-+// (docs/reports/reviews/mcfixreborn-g3/SEAT-typed-addresses.md:66-95); where the seat recorded fewer rows than the window holds, the
-+// extra rows are placeholders and say so.
++// (docs/reports/reviews/mcfixreborn-g3/SEAT-typed-addresses.md:66-95); case 15 rows 5 to 10 and case 21's point were read on the local
++// test stack, read-only, 2026-11-24.
 +describe('SEARCHFIX.1 exact opens, the rest lists', () => {
 +  const row = (parcel_id: string, address: string) => ({ parcel_id, address });
 +  /** The first 10 typeahead rows for "Gerrard St" (no number), sorted by printed address, read on the local test stack (the window repeats two ids). */
@@ -736,8 +756,8 @@ index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d
 +  const CLAIR = { '2750|CLAIR AVE': [row('5260587', '2750 St Clair Ave E')] };
 +  const ELM12 = [
 +    row('5492668', '12 Elm Grove Ave'), row('5264433', '12 Elm Ridge Dr'), row('5510910', '12 Elma St'), row('5017163', '12 Elmartin Dr'),
-+    // placeholders: the seat recorded the first four of the ten rows only
-+    row('X5', '12 Elm X5 St'), row('X6', '12 Elm X6 St'), row('X7', '12 Elm X7 St'), row('X8', '12 Elm X8 St'), row('X9', '12 Elm X9 St'), row('X10', '12 Elm X10 St'),
++    row('5485279', '12 Elmcrest Rd'), row('5151946', '12 Elmdon Crt'), row('5396750', '12 Elmer Ave'), row('5281136', '12 Elmont Dr'),
++    row('5295373', '12 Elmsdale Rd'), row('5278777', '12 Elmsthorpe Ave'),
 +  ];
 +  const cases: [string, Case][] = [
 +    ['1 679 Queen St W', { q: '679 Queen St W', exact: Q679, resolution: 'unique', match: '5476455' }],
@@ -760,8 +780,7 @@ index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d
 +    ['18 123 Yongee St', { q: '123 Yongee St', fuzzy: Y123, resolution: 'text_candidates', match: null, candidates: ['5179889', '5464983'] }],
 +    ['19 2760 Yongee St', { q: '2760 Yongee St', fuzzy: Y2760, resolution: 'text_candidates', match: null, candidates: ['5229356'] }],
 +    ['20 78 Robert St', { q: '78 Robert St', exact: { '78|ROBERT': [row('5259138', '78 Robert St'), row('5438421', '78 Robert St')] }, resolution: 'multi_parcel', match: null, candidates: ['5259138', '5438421'] }],
-+    // case 21's latitude and longitude are placeholders (UNVERIFIED: the seat could not run it live); the test checks only the pin it was given
-+    ['21 2 Lake Cres', { q: '2 Lake Cres', unlinked: [{ address_point_id: 1, address: '2 Lake Cres', latitude: '43.6', longitude: '-79.5' }], resolution: 'unlinked', match: null }],
++    ['21 2 Lake Cres', { q: '2 Lake Cres', unlinked: [{ address_point_id: 30014230, address: '2 Lake Cres', latitude: '43.6074777', longitude: '-79.4880861' }], resolution: 'unlinked', match: null }],
 +    ['22 2750 St Clair Ave W', { q: '2750 St Clair Ave W', exact: CLAIR, resolution: 'text_candidates', match: null, candidates: ['5260587'] }],
 +    ['23 King and Bay', { q: 'King and Bay', resolution: 'no_match', match: null, candidates: [] }],
 +    ['25 123 Main St Mississauga', { q: '123 Main St Mississauga', resolution: 'no_match', match: null, candidates: [] }],
@@ -773,6 +792,8 @@ index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d
 +    ['extra 2e 679 Queen St. W', { q: '679 Queen St. W', exact: Q679, resolution: 'unique', match: '5476455' }],
 +    ['extra 2750 St. Clair Ave W', { q: '2750 St. Clair Ave W', exact: CLAIR, resolution: 'text_candidates', match: null, candidates: ['5260587'] }],
 +    ['extra 383 Elm St, one exact row printed Elm Rd', { q: '383 Elm St', exact: { '383|ELM': [row('5191692', '383 Elm Rd')] }, resolution: 'text_candidates', match: null, candidates: ['5191692'] }],
++    ['extra 32 Fulham Dr E, the type narrowing leaves a W row: the list', { q: '32 Fulham Dr E', exact: { '32|FULHAM': [row('5067128', '32 Fulham St W'), row('5514141', '32 Fulham Dr W')] }, resolution: 'text_candidates', match: null, candidates: ['5514141'] }],
++    ['extra 32 Fulham Dr W, same rows, the typed side opens (green both)', { q: '32 Fulham Dr W', exact: { '32|FULHAM': [row('5067128', '32 Fulham St W'), row('5514141', '32 Fulham Dr W')] }, resolution: 'unique', match: '5514141' }],
 +    ['extra 5 Elm St, a row with no printed type stops the narrowing', { q: '5 Elm St', exact: { '5|ELM': [row('P1', '5 Elm St'), row('P2', '')] }, resolution: 'text_candidates', match: null, candidates: ['P1', 'P2'] }],
 +    ['extra 123 Yonge St, Toronto ON', { q: '123 Yonge St, Toronto ON', exact: { '123|YONGE': Y123 }, resolution: 'unique', match: '5464983' }],
 +    ['extra 21 Langden Ave, a full address found only through its address point', { q: '21 Langden Ave', typeahead: [row('L1', '21 Langden Ave')], resolution: 'unique', match: 'L1' }],
@@ -790,7 +811,7 @@ index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d
 +    if (c.match !== undefined) expect(out.match?.parcelId ?? null).toBe(c.match);
 +    if (c.candidates) expect(out.candidates.map((x) => x.parcelId)).toEqual(c.candidates);
 +    if (c.count !== undefined) expect(out.candidates).toHaveLength(c.count);
-+    if (c.resolution === 'unlinked') expect(out.lotMap).toEqual({ kind: 'unlinked', address: '2 Lake Cres', pin: { lat: 43.6, lng: -79.5 } });
++    if (c.resolution === 'unlinked') expect(out.lotMap).toEqual({ kind: 'unlinked', address: '2 Lake Cres', pin: { lat: 43.6074777, lng: -79.4880861 } });
 +  });
 +
 +  it.each([['Suite 12 Elm St'], ['#12 Elm St']])('T5 extra: %s never parses to house number 2 (the leading-unit strip needs a separator)', (q) => {

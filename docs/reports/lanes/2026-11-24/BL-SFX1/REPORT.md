@@ -1,37 +1,36 @@
-# BL-SFX1 · task-449 SEARCHFIX.1 · lane report (stage 1, output round 1)
+# BL-SFX1 · task-449 SEARCHFIX.1 · lane report (stage 1, output round 2)
 
 Lane: BL-SFX1 · worktree /Users/brettpreston_macmini/Buildo-wt-sfx1 · branch wf2/inc1b-sfx1 · provider claude (Opus building seat; DeepSeek lenses)
-Plan: PLAN-449-v1 as written in the task (plan already ruled: GROUNDER-PLAN.md; no plan lens run, per the G1 ticket).
+Plan: PLAN-449-v1 as written in the task (plan already ruled: GROUNDER-PLAN.md; no plan lens run).
 
-## What landed (not pushed; no DB touched)
-- 079f76c30 fix(100_mobile_parcel_cost_tool): SEARCHFIX.1 a lot opens only on an exact match (Task: task-449, McFrontend-Task: MF-35, as task-376/378 filed the lookup descriptor).
-  Files-line paths only: src/lib/admin/parcel-lookup.ts, the three test files, census contracts.json row, the emitted lookup descriptor, Spec 100 (notes after :107 and :144), Spec 89 (note after :34), task-449 file, context-r2.md.
-- a997f8fb7 docs(100_mobile_parcel_cost_tool): generated files (127-surface-registry.md, 127-surface-review-queue.md, rule-lists-by-kind.md, 00_system_map.md) and the owed notes on doc-2 G.1/A.3 (backlog doc update) and task-69 (append-notes). Split out because check-task-files.mjs refuses paths outside the Files line in a commit that stages code; a docs-only commit is exempt by that hook's own rule (check-task-files.mjs:10).
-- The review-round commit (this report, context-r3.md, lens inputs and outputs, FINDINGS.md, TASK).
+## Commits (not pushed; no DB read or write by the lane; no full suite)
+- 079f76c30 fix: the work (code, tests, census row, emitted descriptor, Spec 100 and Spec 89 notes). Hooks green: 332 passed, 14 skipped.
+- a997f8fb7 docs only: regenerated registry, review queue, rule-lists page and system map; the notes on doc-2 G.1/A.3 and task-69. A separate commit because check-task-files.mjs refuses non-Files-line paths beside code (docs-only exempt, check-task-files.mjs:10).
+- 2bc72d9ca: round 1 review records.
+- ddc9e8a24 fix: round 1 fix (out-compliance-ms-S#1, MED): the direction guard is re-checked after the street-type narrowing, so "32 Fulham Dr E" over "32 Fulham St W" and "32 Fulham Dr W" is the list (RR-0166 ONE-12 a). Net zero lines; generate-surface-registry --check clean. Also: case 15 rows 5 to 10 and case 21's point are real rows (local test stack, read-only, 2026-11-24, read by the orchestrator); the task Files line gains docs/specs/00-architecture/00_system_map.md (grounder Q4).
+  - Red: red-r2.out, 1 failed / 94 passed (only the Dr E row; the Dr W row and the new fixtures passed). Green: green-r2.out, 9 files passed, 2 skipped (db); 334 passed, 14 skipped.
+- The round 2 records commit (this report, context-r4.md, 30 lens inputs and outputs, FINDINGS.md, TASK).
 
-## Code (src/lib/admin/parcel-lookup.ts)
-- typedText/typedBase: periods to spaces, one leading closed-form unit stripped (separator required); city cut and trailing-unit strip unchanged.
-- Raw-first run when a query holds a period and the raw key differs (exact, typeahead, unlinked only); stripped run on no_match.
-- guardByType on the exact rows after guardByDirection (not on a truncated window; a row with no printed type stops it; one-row conflict = conflictList).
-- Typeahead: no direction narrowing at 10 rows (ST1); one-row leftover opens only when isTypedAddressInFull, else conflictList (2a). matchType 'typeahead' kept.
-- likePrefix escape on the typeahead and unlinked $1 (D1).
-- Letter/dash fallback after the full miss: exact statement (readExact, same SQL) per bare number, deduped, capped at 10, text_candidates; not on the raw run.
-- Every `!` (10 left) carries a why-comment (D6). No resolution value added; route.ts, address.ts, types.ts and mobile/ unchanged (git diff ff3838a04..HEAD on those paths: 0 lines).
-
-## Tests (red then green, through the real hooks)
-- Red: refused commit attempt with only the test and task files staged: lane dir red.out, 25 failed / 144 passed (all new SEARCHFIX.1 cases; the green-both cases passed).
-- Green: the landed commit 079f76c30; hook related run 9 files passed, 2 skipped (db), 332 tests passed, 14 skipped (lane dir green.out). typecheck clean.
-- AC #1 T2, T5 12/13, extra 7 Oak, resolution-test partial; AC #2 T1 + 9-row boundary; AC #3 cases 10, 11; AC #4 27a/27b/27c, 2e, St. Clair, Gaspar; AC #5 T3; AC #6 T5 (cases 24, 29 and the phone half of 23 cited to existing phone tests).
+## Code summary (src/lib/admin/parcel-lookup.ts)
+- A lot opens only on an exact match. A one-row typeahead opens only when it is the typed address in full.
+- The exact rows are narrowed by the typed street type, and the direction is re-checked on the narrowed rows.
+- A 10-row typeahead window is not narrowed by direction (ST1).
+- A leading unit and a period are cleaned before the parse; the raw key is tried first.
+- A letter or dash number lists the lots at the bare numbers on a miss.
+- Typed % and _ are escaped (D1). Each of the 10 remaining `!` carries a why-comment (D6).
+- No resolution value added. route.ts, address.ts, types.ts and mobile/ unchanged.
 
 ## Deviations (recorded in Implementation Notes)
-1) fallback dedupes by parcel_id and caps at 10; 2) readExact helper (same SQL text); 3) the old :226 `!` became `?? ''` (10 `!` left); 4) no fallback/matcher on the raw run; 5) T6 is green today too (a lock with a red plant); 6) case 15 has 4 recorded rows + 6 placeholders, case 21's pin is a placeholder (UNVERIFIED); 7) the second (docs-only) commit above; 8) system map and rule-lists page regenerated (hooks required them).
+1) the fallback dedupes by parcel_id and caps at 10; 2) the readExact helper (same SQL text); 3) the old :226 `!` became `?? ''`; 4) no fallback or matcher on the raw-first run; 5) T6 is green before and after (a lock with a red plant); 6) case 15's ten rows and case 21's point are real rows (local test stack, read-only, 2026-11-24); 7) the docs-only commit a997f8fb7; 8) system map and rule-lists page regenerated (hooks required them).
 
-## Output review round 1
-- Context: docs/reports/reviews/task-449/context-r3.md (backlog-brief.mjs). Diff: launch commit ff3838a04..HEAD on the Files line (85,586 bytes).
-- 24 outputs in docs/reports/lanes/2026-11-24/BL-SFX1/: out-code-review-p1, out-ux-p1, out-error-paths-p1, out-security-p1, out-compliance-{step-132 p1-3, surface-136 p1-2, mobile-90, mobile-98, mobile-99 p1-5, five-words, plan-protocol, inc-S p1-2, ms-S}, out-engineering-eng-all p1-3, each beside its in- file.
-- FINDINGS.md: 91 finding ids: 7 BUG HIGH, 8 BUG MED, 28 DEFER MED, 44 DEFER LOW, 2 DEFER NIT. Not ruled by the lane (Spec 08 section 7 rule 4): GROUNDER OWED.
-- HIGH ids to note for the grounder: out-code-review-p1#1 (m[1] passed raw in isTypedAddressInFull; typechecks since normalizeAddressNumber accepts undefined), out-compliance-inc-S-p1#1 and out-engineering-eng-all-p3#1 (doc-2/task-69 notes not in the Files-line diff: they are in a997f8fb7), out-compliance-mobile-98#1 and out-compliance-surface-136-p2#1/#2 (case 15 placeholder rows, case 21 placeholder pin), out-compliance-ms-S#1 (direction/one-row rule).
+## Review round 1 (kept outside the repo folder)
+Review round 1: 91 ids, 17 CONFIRMED (1 MED, 15 LOW, 1 NIT), 74 REJECTED; grounder ~/Buildo-scratch/lanes-20261124/BL-SFX1/round1/GROUNDER.md; triage ~/Buildo-scratch/lanes-20261124/BL-SFX1/round1/TRIAGE.md (its FIX-SHA is ddc9e8a24). Round 1 lens files: ~/Buildo-scratch/lanes-20261124/BL-SFX1/round1/repo/.
+
+## Review round 2
+- Context: docs/reports/reviews/task-449/context-r4.md. Diff: ff3838a04..HEAD on the Files line, now including 00_system_map.md (9 files, 92,157 bytes).
+- 30 outputs, same base names, each beside its in- file, in docs/reports/lanes/2026-11-24/BL-SFX1/: code-review-p1, ux-p1, error-paths-p1, security-p1, compliance step-132 p1-4, surface-136 p1-3, mobile-90, mobile-98, mobile-99 p1-8, five-words, plan-protocol, inc-S p1-2, ms-S, engineering eng-all p1-4.
+- FINDINGS.md: 92 ids: 1 BUG HIGH (out-ux-p1#1: the letter and dash list is cut to 10 with no truncation flag; round 1 ruled this point REJECTED as ux-p1#1), 1 BUG MED (out-compliance-ms-S#1), 30 DEFER MED, 57 LOW, 2 NIT. Not ruled by the lane: GROUNDER OWED. Round 2 resolves CRITICAL and HIGH only (RR-0385).
 
 ## Status
-Task left RUNNING, "grounder owed". Not pushed. No DB read or write. No suite run.
-STATUS: blocked (waiting on the separate grounder for GROUNDER.md; then round-1 fixes and the close)
+Task RUNNING, grounder owed. Not closed. Not pushed.
+STATUS: blocked (round 2 grounder owed)

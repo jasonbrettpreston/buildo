@@ -1,23 +1,17 @@
-◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
-REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T15:59:39.480Z file_sha256=4691302247bbc1b60fe3c3867cdb084b6a5a6045bffee5707fab82395b1b9852 prompt_sha256=366eb5a34576162298271736e3984293b960b9ed13e6af4a16eb4211699b59ac
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T16:28:22.075Z file_sha256=6e93104e4295b7e81d29864554cfed8adc681f48c917952721fbac2c24bd53ee prompt_sha256=db18d48dc3e4d1df59cf631e5c980f542c486367e1dacb2c77ac332c3751a27f
 🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-code-review-p1.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — src/lib/admin/parcel-lookup.ts (isTypedAddressInFull) "return normalizeAddressNumber(m[1]) === num && parseLinearName(m[2] ?? '').street_name === streetName && !guardByType([{ address: printed }], typedType).conflict;" — on the same line m[2] is guarded with `?? ''` (and typedStreetType guards both m[1]/m[2]) but m[1] is passed raw, so under the file's strict index access (shown by the added `tokens[0]!` and "the `!` on the next two lines" comments) `m[1]` is `string | undefined` and this is a TS2345 type error to `normalizeAddressNumber` — Guard it the same way: `normalizeAddressNumber(m[1] ?? '')`.
+DEFER severity=MED — src/lib/admin/parcel-lookup.ts "export function parseFreeTextAddress(q: string, keepPeriods = false): { num: string; streetName: string } {" — the exported default now strips periods for every caller, and only `resolveAddress` compensates with its raw-first run, so any other caller (admin route, future import) silently loses the stored-key-with-period read it had before; `typedDirection` never honours the raw parse either — make `keepPeriods` explicit at the remaining call sites (or audit them) before merging, since I cannot see consumers outside this diff.
+DEFER severity=LOW — src/lib/admin/parcel-lookup.ts "+/** The exact read on the parcels normalized keys (idx_parcels_address); one statement, also read by the SEARCHFIX.1 letter and dash fallback. */" — this new one-line block is inserted directly under the old `resolveAddress` JSDoc that ends with "read the permit pipeline's address matcher (below). */", so that whole `opts.classifyUnlinked` / `opts.matchMistyped` contract now reads as the doc for `readExact`, which it does not describe — move the new `readExact` doc below the orphaned block and re-anchor the old block to `resolveAddress`.
+DEFER severity=LOW — src/tests/search-parser-guard.logic.test.ts "import { findUndocumentedBangs } from './non-null-assertion-comment.logic.test';" — importing a `.test.ts` module executes its top-level `describe`/`it` calls, so that file's suites are registered and run a second time under this file (duplicate results, doubled runtime, failures reported in two places) — export the helper from a non-test module (or move it beside the checker) and import that.
+NIT — src/lib/admin/parcel-lookup.ts "export function typedStreetType(q: string): string {" — every other new helper in this hunk (`typedText`, `typedBase`, `guardByType`, `isTypedAddressInFull`, `likePrefix`) is module-private and this export has no consumer in the diff, so it widens the module surface for nothing — drop `export` until a test or caller needs it.
 
-DEFER severity=MED — src/tests/search-parser-guard.logic.test.ts:36 "import { findUndocumentedBangs } from './non-null-assertion-comment.logic.test';" — importing a `*.logic.test` module executes that file's top-level `vi.mock`/`describe`/`it` inside this file's collection, so its suites register twice and its mocks can override this file's `@/lib/logger`/`@/lib/db/client` factories — move `findUndocumentedBangs` into a non-test helper module and import that instead.
-
-DEFER severity=LOW — src/lib/admin/parcel-lookup.ts "const d = trailingCompass(typedText(q, false));" and "const base = typedBase(q, false);" — `typedDirection`/`typedStreetType` hardcode `keepPeriods=false`, so on the raw-first run (keepPeriods=true) the reads use the raw period-kept key while the direction/type guards are computed from the stripped text — thread `keepPeriods` into the two helpers so the guards match the street key the reads actually used.
-
-DEFER severity=NIT — src/lib/admin/parcel-lookup.ts "if (opts.classifyUnlinked && num && !/[%_]/.test(streetName))" with the new comment "the typeahead and this read also escape them (likePrefix, SEARCHFIX.1 D1, done)" — the `%`/`_` branches of `likePrefix` are unreachable for this unlinked read because the guard still skips when streetName holds them, so the comment overstates what is exercised here — reword the comment to say the typeahead escapes and this read keeps its skip guard.
-
-REJECT — src/lib/admin/parcel-lookup.ts "for (const n of nums) for (const r of await readExact(n, streetName)) if (!seen.has(r.parcel_id))" — the nested `for..of await` can look like an un-awaited promise, but `await readExact(...)` is the iterated operand and both reads resolve before the push; sequential reads of at most two numbers are intentional.
-
-VERDICT: FAIL on code correctness
+VERDICT: PASS on code correctness
 Top 3 defects (if FAIL):
-- `normalizeAddressNumber(m[1])` passes a possibly-undefined index while the same line guards `m[2]`, a strict-index type error
-- importing a `.logic.test` file re-registers its suites and mocks inside search-parser-guard
-- raw-first run computes direction/type guards from the stripped text while reading the period-kept key
+- none, the four findings above are deferred (MED/LOW/NIT)
+
 
 ---
-⏱  203792ms (203.8s)
-📊 Tokens — total: 70244, input: 28754, output: 41490, reasoning: 40732
+⏱  230965ms (231.0s)
+📊 Tokens — total: 80344, input: 31098, output: 49246, reasoning: 48720

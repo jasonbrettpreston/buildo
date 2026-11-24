@@ -1,67 +1,136 @@
-LIST eng-all sha256:8163e8613c4f263d5109b034d895850def1e9b58a1f757da7adc584e34d2c042 material sha256:fca1e1fa62bcd3c1dad6b994eb6f31d5a40a92113dac0de1bb6fecd2a100a581 part 3 of 3 chunk 1 of 1
-RULE LIST eng-all (docs/specs/00_engineering_standards.md, whole file), part 3 of 3. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/specs/02-web-admin/89_parcel_cost_model_tool.md","docs/specs/03-mobile/100_mobile_parcel_cost_tool.md","scripts/surfaces/_schema/census/contracts.json","scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json","src/lib/admin/parcel-lookup.ts","src/tests/consumer-parcel-lookup.infra.test.ts","src/tests/parcel-lookup-resolution.logic.test.ts","src/tests/search-parser-guard.logic.test.ts"]
+LIST eng-all sha256:348b0b114fb269b62dfde953da24e18b66d16d11e2f42b7eece06ecad1c374bf material sha256:6547697da3e97829d85cb320a734798679fc16adb311f8c67ed02fd15a1865ba part 3 of 4 chunk 1 of 1
+RULE LIST eng-all (docs/specs/00_engineering_standards.md, whole file), part 3 of 4. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/specs/00-architecture/00_system_map.md","docs/specs/02-web-admin/89_parcel_cost_model_tool.md","docs/specs/03-mobile/100_mobile_parcel_cost_tool.md","scripts/surfaces/_schema/census/contracts.json","scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json","src/lib/admin/parcel-lookup.ts","src/tests/consumer-parcel-lookup.infra.test.ts","src/tests/parcel-lookup-resolution.logic.test.ts","src/tests/search-parser-guard.logic.test.ts"]
 
-## 📊 13. Observability Standards
+## 🛠️ 12. Frontend Foundation Tooling
 
-> **Status:** Adopted as of 2026-04-07. Building observability in from day one of the frontend rebuild — lessons learned from the painful retrofit on the backend pipeline.
+> **Status:** Adopted as of 2026-04-07 for the lead feed feature build (`src/features/leads/`). To be expanded to other frontend code as proven valuable.
 
-### 13.1 Product Telemetry (PostHog)
-- **Tool:** PostHog (self-hosted free tier covers 1M events/month)
-- **Wrapper:** All event capture goes through `src/lib/observability/capture.ts` exporting `captureEvent(name, properties)`. The wrapper handles SSR safety, type-safe event names, and provider abstraction.
-- **Type-safe event names:** Define a `EventName` union type. New events require adding to the union (catches typos at compile time).
-- **Mandatory coverage:** Every interactive handler in `src/features/leads/` (`onClick`, `onSubmit`, `onChange` for filters) MUST call `captureEvent()`. AST-grep enforces inside the leads feature.
-- **PII handling:** Never include user names, emails, addresses in event properties. Use Firebase UID (pseudonymous) for user identification.
+> Dated note 2026-11-22 (M-246, prior text kept; RR-0382 · task-435 · Backlog; operator, verbatim: "yes add"): §12.3 (React Hook Form) and §12.5 (Shadcn UI, Shadcn `<Drawer>`), and the same library names in the Frontend Foundation Check of §11, are superseded for the front end by Spec 126 §11b.4 "The libraries" (`docs/specs/02-web-admin/126_maxbld_surface_standard.md`; see also its dated note 2026-11-09, §5.4). This note rules nothing on §12.7 (Sonner): Spec 126 does not name a toast library, and `sonner` is installed and in use.
 
-### 13.2 Error Tracking (Sentry)
-- **Tool:** Sentry (free tier covers 5K events/month)
-- **Wiring:** All `app/[...]/error.tsx` route boundaries call `Sentry.captureException(error, { extra: { digest: error.digest } })` in their `useEffect`.
-- **Source maps:** Uploaded to Sentry on every production build via `@sentry/nextjs` plugin.
-- **Local dev:** Errors logged to console only (Sentry disabled in dev to preserve free tier).
+### 12.1 Biome (React Logic Linting)
+- **Rule:** Biome MUST pass on all files in `src/features/leads/` before commit. Initially scoped to leads; expand after 2-4 weeks of validation.
+- **Critical rules (never disable):** `useHookAtTopLevel`, `noFloatingPromises`, `useExhaustiveDependencies`, `useExhaustiveDependencies`, `noUnusedVariables`
+- **Why:** These three rules catch the React logic failures we want to prevent: hook ordering bugs, unawaited promises, stale closures
+- **Note:** ESLint (`next lint`) continues to run on `scripts/` and the rest of `src/`. Do NOT replace ESLint repo-wide.
 
-### 13.3 Backend Structured Logging (`logInfo` / `logWarn` / `logError`)
-- **Tool:** `src/lib/logger.ts` exports `logError`, `logWarn`, `logInfo`. Each emits a structured JSON line: `{ level, tag, event, timestamp, ...context }`.
-- **Rule:** API routes MUST emit at least one `logInfo` per successful request with `{user_id, duration_ms, ...key_params}` for observability.
-- **Rule:** All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`. ESLint enforces.
-- **Rule:** Pipeline scripts use `pipeline.log.info/warn/error` from the SDK, which routes to the same underlying logger.
+### 12.2 Server State (TanStack Query)
+- **Rule:** All API data fetching uses `useQuery` / `useMutation` / `useInfiniteQuery`. NEVER use `useEffect` for data fetching.
+- **Cache persistence:** Use `PersistQueryClientProvider` with IndexedDB (`idb-keyval`) for offline support. 24h `maxAge`.
+- **Query key normalization:** Round geographic coordinates to 3 decimals (~110m) before including in query keys to prevent GPS jitter from creating unbounded cache entries.
+- **Why:** Eliminates race conditions, automatic loading/error states, automatic background refetching, cache deduplication.
 
-### 13.4 Performance Monitoring (Lighthouse CI)
-- **Tool:** Lighthouse CI in GitHub Actions, runs on every PR.
-- **Hard budgets (CI fails below these):**
-  - Performance: ≥90 mobile (Moto G4 emulation)
-  - Accessibility: ≥95
-  - Best Practices: ≥90
-  - LCP: <2.5s
-  - CLS: <0.1
-  - TBT: <200ms
-- **Why:** Catches performance regressions before merge. Enforces the "right foundation" goal.
+### 12.3 Form Management (React Hook Form + Zod)
+- **Rule:** All forms use React Hook Form for state management and Zod for schema validation. Resolver: `@hookform/resolvers/zod`.
+- **Never:** Use local `useState` for form fields. Use uncontrolled inputs registered via RHF.
+- **Why:** RHF is uncontrolled, eliminating per-keystroke re-renders. Zod schemas double as TypeScript types.
 
-### 13.5 Feature Flags (PostHog Flags)
-- **Tool:** PostHog feature flags (included in free tier, integrated with telemetry)
-- **Rule:** Any new user-facing feature MUST be wrapped in a feature flag check at the route level. The lead feed launches behind `feature_lead_feed_v1`.
-- **Rollout pattern:** 0% → 10% (internal testing) → 25% → 50% → 100%. Each step gated on no-error-rate-spike in Sentry.
-- **Why:** Decouples deploy from release. Enables instant rollback without redeploy.
+### 12.4 Global State (Zustand, NOT React Context)
+- **Rule (scoped):** Inside `src/features/leads/`, NEVER use `React.createContext` or `useContext` for global state. Use Zustand stores. AST-grep enforces.
+- **Persistence:** Use `zustand/middleware` `persist` for filter state that should survive page reloads.
+- **Allowed Context exceptions:** 3rd-party providers (`QueryClientProvider`, `ThemeProvider`, etc.) are not in scope of this rule because they are wrappers, not application state.
+- **Why:** Context triggers re-renders on every consumer for any state change. Zustand subscribes per-selector, avoiding the cascade.
+
+### 12.5 UI Primitives (Shadcn UI + Mobile-First)
+- **Rule:** Use Shadcn UI for foundational primitives — Modals, Drawers, Dropdowns, Forms, Date Pickers. Run `npx shadcn@latest add [component]` to install each.
+- **Mobile rule:** On mobile viewports, NEVER use centered `<Dialog>` modals. Use Shadcn `<Drawer>` (powered by Vaul) for all popups, sheets, contextual menus, and forms.
+- **Why:** Shadcn provides accessible, touch-friendly primitives out of the box. Vaul provides iOS-grade gesture physics (`cubic-bezier(0.32, 0.72, 0, 1)`) that reaching the close button on a centered modal cannot match on mobile.
+
+### 12.6 List Virtualization (TanStack Virtual)
+- **Rule:** Any list/feed/grid expected to render more than 50 items MUST be wrapped in `useVirtualizer` from `@tanstack/react-virtual`.
+- **Why:** Rendering thousands of DOM nodes crashes mobile browsers and tanks frame rate. Virtualization renders only visible items + a small overscan buffer.
+
+### 12.7 Toast Notifications (Sonner)
+- **Rule:** Use Shadcn's Sonner integration for all success/error/info notifications. Use `toast.success()`, `toast.error()`, `toast.info()`.
+- **Never:** Build custom alert banners. Never use `alert()`, `confirm()`, or `prompt()` (they freeze the entire mobile browser).
+- **Why:** Sonner stacks neatly, supports swipe-to-dismiss, and never blocks the UI thread.
+
+### 12.8 SQL Linting & Migration Safety
+- **Rule:** All NEW migration files must pass `sqlfluff lint --dialect postgres`. Existing migrations (001-069) are grandfathered.
+- **Rule:** All NEW migrations must pass `scripts/validate-migration.js`, which catches:
+  - `DROP TABLE` or `DROP COLUMN` without explicit user confirmation comment
+  - `CREATE INDEX` (non-CONCURRENT) on tables with >100K rows
+  - Missing `-- DOWN` block
+  - `UPDATE` without `WHERE` clause (full-table scan risk)
+- **Rule:** All migrations must include a DOWN section that reverses the UP changes.
+- **Why:** Backwards compatibility, rollback safety, no production lock incidents.
+
+### 12.10 Real-DB Integration Tests (testcontainers + CI service)
+- **Status:** Adopted 2026-04-08 after the Phase 0+1+2 holistic review. Mocked-pool tests cannot catch SQL syntax errors, constraint violations, FK cascades, geography casts, or column-width truncation — that bug class accounted for ~40% of recent holistic-review findings.
+- **Rule:** Every NEW migration that adds a CHECK constraint, FK with cascade, or PostGIS expression MUST land with a `*.db.test.ts` file under `src/tests/db/` that exercises the constraint against a real Postgres.
+- **Local opt-in:** `BUILDO_TEST_DB=1 npm run test:db` spawns a container of the target engine image, `docs/specs/_contracts.json` `db_target.test_image` (`public.ecr.aws/supabase/postgres:17.6.1.167`: PG 17 / PostGIS 3.3, the image the local Supabase stack runs), via testcontainers, connects as the non-superuser `postgres` role, applies migrations 001..NNN via `scripts/migrate.js`, runs the suite, tears down. Requires Docker. The CI service container runs the same image. The pin is locked by T-PIN-1 (`src/tests/db-test-harness-target.infra.test.ts`) and T-PIN-2 (`src/tests/db/db-target-version.db.test.ts`) (WF3 PostGIS pin, 2026-10-03).
+- **CI:** `.github/workflows/db-tests.yml` provides a Postgres service container; runs on every PR that touches migrations, db client, or db tests.
+- **Skip semantics:** When neither `DATABASE_URL` nor `BUILDO_TEST_DB=1` is set, every `*.db.test.ts` self-skips via `describe.skipIf(!dbAvailable())`. The standard `npm run test` is unaffected.
+- **Target guard (WF3 2026-10-03):** the globalSetup picks its target with the pure `decideTestDbTarget(env)` in `src/tests/db/setup-testcontainer.ts`. An exported `DATABASE_URL` is migrated only when it is a disposable test DB: a loopback host with `CI=true` (the CI service container) or `BUILDO_TEST_DB_EXTERNAL=1`, or a non-loopback host with `BUILDO_TEST_DB_EXTERNAL=1`. The local Supabase dev stack (loopback port 54322) is never migrated, whatever flags are set. A qualifying URL wins over `BUILDO_TEST_DB=1` (CI runs `npm run test:db`, which always sets it). A URL that does not qualify is replaced by a testcontainer when `BUILDO_TEST_DB=1` is set; otherwise the suite aborts with a `REFUSING` error that names the target with the password redacted. Locked by `src/tests/test-db-setup-guard.logic.test.ts`.
+- **Why:** A real DB catches the bugs that locked our team into "reading SQL by eye" for 3+ phases. The migration 030 self-heal that this section's WF shipped removes the 1a blocker that was forcing the mock-only fallback.
+
+### 12.11 Footgun Lint Gate (AST-grep + grep)
+- **Status:** Adopted 2026-04-08. Five pattern bans wired into pre-commit + manual `npm run ast-grep:leads`. Initially scoped to `src/features/leads/` and (rule-by-rule) `src/lib/`. Expand per the §12 conservative model.
+- **Rules enforced** (each maps to a bug class the holistic reviews keep flagging):
+  1. **silent-catch-fallback** — bans `try/catch { return [] / null / emptyResult() }`. Caught Phase 2 holistic CRIT (`getLeadFeed` swallowing DB errors as 200 empty feeds, commit 0a3e680).
+  2. **env-default-in-lib** — bans `process.env.X || 'default'` inside `src/features/leads/`. A typo silently uses the default instead of failing loud. Suppressable per-line with justification.
+  3. **comment-rot** — grep heuristic: any file with `// never throws` / `// always returns` AND a `throw` statement is flagged. Caught Phase 0+1+2 holistic HIGH (stale "never throws" comment in feed/route.ts, commit 449fb2a).
+  4. **silent-row-drop** — grep heuristic: any file with `.filter((x): x is _ => x !== null)` AND no `logWarn` call is flagged. Caught Phase 0+1+2 holistic MED (`mapRow` silent null filter).
+  5. **pool-boundary** — bans `new Pool(` instantiation outside `src/lib/db/`, `src/tests/`, `scripts/`. Per CLAUDE.md Backend Mode rule 3.
+- **Suppression:** `// ast-grep-disable-next-line <rule-id>` with a one-line justification. Audited in code review.
+- **Files:** rule definitions live in `scripts/ast-grep-rules/*.yml`; the grep-based heuristics + runner live in `scripts/hooks/ast-grep-leads.sh`.
+
+### 12.12 Property-Based Tests (`fast-check`)
+- **Status:** Adopted 2026-04-08 after Phase 0+1+2 holistic review caught arithmetic-invariant violations (fit_score=23, buildLeadKey '0'/'00' drift) that example-based tests missed.
+- **Rule:** Pure functions with arithmetic invariants — scoring formulas, key normalizers, distance/unit conversions, cursor comparators — MUST have at least one `fast-check` property test asserting the invariant. Example-based tests are still required for happy paths and explicit edge cases.
+- **What counts as an invariant:** a property that holds for ALL inputs of the type. Examples: `forAll(input => relevance_score(input) <= 100)`, `forAll(input => buildLeadKey(input) === buildLeadKey(normalize(input)))`, `forAll(a < b => format(a) <= format(b))`.
+- **Files:** `src/tests/property/*.property.test.ts`. Run via `npm run test:property` or as part of the standard `npm run test`.
+- **Why:** A counterexample-finding test does the work that human review can't — it tries 100+ inputs and shrinks failures to a minimal reproduction. The Phase 0+1+2 buildLeadKey fix would have shipped 4 phases earlier with this in place.
+
+### 12.13 Mutation Testing (Stryker)
+- **Status:** Adopted 2026-04-08. **Automated** via `.github/workflows/mutation.yml` — runs weekly (Monday 12:00 UTC) AND on every PR that touches a mutation target file. **Not** manual: relying on humans to remember a weekly task is how the value gets lost.
+- **Rule:** The 4 high-stakes pure modules (`cost-model.ts`, `distance.ts`, `record-lead-view.ts`, `builder-query.ts`) and their `.test.ts` siblings are the mutation surface. Mutation score must stay ≥ 50% (script breaks below; CI job fails).
+- **What it catches:** "snapshot-style change-detector tests" where `expect(result).toBe(20)` locks the value but doesn't exercise it in any meaningful behavior assertion. Stryker injects mutations (flip `>=` to `>`, swap constants, remove conditionals, etc.) and watches for surviving mutants — every survivor is a test gap.
+- **Local usage:** `npm run test:mutation:dry` (verifies the runner setup, ~1 min) and `npm run test:mutation` (full run, ~3-5 min on 4 files / 439 mutants).
+- **CI usage:** Triggered by:
+  1. Weekly cron — Mondays 12:00 UTC, surfaces drift in test quality even when no PR is open
+  2. Per-PR — only when a target file or its test changed (path filter in the workflow)
+  3. Manual `workflow_dispatch` — one-off audits from the Actions tab
+- **Triage:** For each surviving mutant, EITHER add a focused test that kills it (preferred) OR add a `// stryker disable next-line <mutator>` with justification. Stryker HTML reports are uploaded as a build artifact for 30 days.
+- **Why not pre-commit:** Full runs take minutes. Pre-commit gates must be sub-second to avoid friction. CI absorbs the cost without blocking dev iteration.
+
+### 12.14 Semantic-Diff Narrator (Pre-Commit, Opt-In)
+- **Status:** Adopted 2026-04-08. Opt-in via `BUILDO_DIFF_NARRATOR=1`. Default OFF.
+- **Rule:** When enabled, every `git commit` runs the staged diff through Gemini and appends a 3-5 bullet summary to the commit message footer. Catches stale comments, contract drift, side effects in pure functions, and unexpected files in the diff BEFORE the commit lands.
+- **Critical:** **Fails open** on any error (missing key, network timeout, parse failure, empty diff). Never blocks a commit on its own. Test coverage in `src/tests/diff-narrator.logic.test.ts` locks the fail-open contract.
+- **Cost:** ~$0.0001 per commit, ~2-5s latency. Negligible for the value when enabled.
+- **Enable:** `echo 'export BUILDO_DIFF_NARRATOR=1' >> ~/.bashrc` (or your shell rc).
+- **Files:** `scripts/diff-narrator.js` (the Node script), `scripts/hooks/diff-narrator.sh` (the wrapper), `.husky/prepare-commit-msg` (the git hook).
+
+### 12.9 Animation & Gestures (Motion for React)
+- **Rule:** Use `motion` package (formerly Framer Motion) for swipe-to-delete, layout transitions, drag interactions, and button press animations.
+- **Spring config standard:** `{ type: 'spring', stiffness: 400, damping: 20, mass: 1 }` for button interactions. The Motion default (stiffness 1, damping 10) is intentionally weak and feels sluggish.
+- **Never:** Write custom CSS keyframes for complex interactions. Never animate layout properties (use `transform` / `opacity`).
+- **Why:** Hardware-accelerated, gesture-tracking, declarative.
 
 ---
 
 
-## 🛡️ 14. The Prevention Loop (findings → protocols → gates)
-
-Detection is not enough. **Every CRITICAL/HIGH review finding (Spec 08 roster) is triaged with a second question beyond "fix it": *"what standing rule would have prevented this whole CLASS, and where does it live?"*** The rule is placed here (or in the domain doc), and where deterministic, **promoted to a machine-read GATE** (husky footgun / ESLint / migration hook) — the strongest form: *a NO-GO the machine reads cannot be shipped past; a guideline eventually will* (operating-manual §2.4). This is the rule-oriented mirror of Spec 05's lesson-routing; the Roster Manager (Spec 08 §5.9) recommends new entries.
-
-**Registry (extracted from real findings — domain-tagged; promote guideline → gate as effort allows):**
-
-| Rule | Class it prevents | Domain | Form |
-|------|-------------------|--------|------|
-| Every `INSERT` provides all **NOT-NULL** columns; every `SELECT` feeding a typed client includes **every field the client type declares** | `lead_analytics` NOT-NULL crash; `DETAIL_COLUMNS` omission → dead UI | backend + admin | Schema-Fidelity agent → *candidate footgun* |
-| An `ON CONFLICT` INSERT **`GROUP BY`s the arbiter expression**, never the raw inputs it's derived from | the `21000` LPAD `lead_key` double-hit | backend | Schema-Fidelity → *candidate lint* |
-| Every **privileged mutation + its audit row** commit in ONE `withTransaction` (extends §R9 from `scripts/` to API routes) | reconcile/retry-cancel unaudited-mutation hole | admin + backend | guideline → *extend footgun* |
-| A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit** | period-end drift (Spec 95/97 stale vs code) | cross-cutting | Ground-truth/Compliance |
-| Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**; new couplings update **Cross-Spec Dependencies both directions** | traceability rot; stale cross-refs | cross-cutting | *candidate gate* (Spec 08 §5.10) |
-| A webhook/event that can arrive from a **superseded object** must match the CURRENT owning id before mutating state | the P26 stale-subscription downgrade | backend | guideline |
-
-**Domain protocol specs own their domain-tagged rows and point back here** (this §14 is the cross-cutting canonical registry): **Spec 47** (`docs/specs/01-pipeline/47_pipeline_script_protocol.md`, backend/pipeline), **Spec 34** (`docs/specs/02-web-admin/34_web_admin_testing_protocol.md`, admin), **Spec 90** (`docs/specs/03-mobile/90_mobile_engineering_protocol.md`, frontend/mobile).
-
 === MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/specs/00-architecture/00_system_map.md b/docs/specs/00-architecture/00_system_map.md
+index fe589bb6d9ba835fe066dfeeb316b25d0cd275a9..6500051a06fe5da7e097aed2667a949a273f53a2 100644
+--- a/docs/specs/00-architecture/00_system_map.md
++++ b/docs/specs/00-architecture/00_system_map.md
+@@ -109,13 +109,13 @@
+ | 36 | `02-web-admin/36_flight_center_tool.md` | Flight Center Tool (Standalone Admin Watchlist) | `scripts/analysis/backfill-admin-watchlist.js`, `src/app/api/admin/leads/watchlist/**`, `src/app/admin/flight-center/**`, `src/components/admin/FlightCenterTool.tsx`, `src/components/admin/SearchPermitsModal.tsx`, `src/features/admin-flight-center/**`, `src/lib/admin/watchlist-schemas.ts`, `src/features/leads/lib/record-lead-view.ts` | — | ACTIVE |
+ | 76 | `02-web-admin/76_lead_feed_health_dashboard.md` | Admin Lead-Feed Tooling (Test Feed + Flight Center + Detail Inspectors) | `src/app/api/admin/leads/test-feed/route.ts`, `src/components/admin/TestFeedTool.tsx`, `src/lib/admin/test-feed-utils.ts`, `src/lib/admin/lead-id-inspector.ts`, `src/app/admin/lead-feed/page.tsx`, `src/app/admin/lead-feed/inspector/page.tsx`, `src/components/admin/LeadDetailInspector.tsx`, `src/components/admin/lead-inspector/CoaClassificationPanel.tsx`, `src/app/api/admin/leads/inspect/[id]/route.ts`, `src/lib/leads/lead-inspect-query.ts`, `src/app/api/admin/stats/route.ts`, `src/app/api/admin/leads/health/route.ts`, `src/lib/admin/lead-feed-health.ts`, `src/components/LeadFeedHealthDashboard.tsx`, `src/app/admin/lead-feed/flight-center/page.tsx`, `src/components/admin/FlightCenterTool.tsx`, `src/lib/admin/admin-uid.ts`, `src/components/admin/FlightJobDetailInspector.tsx` | `src/tests/test-feed.infra.test.ts`, `src/tests/test-feed-utils.logic.test.ts`, `src/tests/admin-detail-inspectors.ui.test.tsx`, `src/tests/admin-leads-inspect.infra.test.ts`, `src/tests/lead-inspect-query.infra.test.ts` | **CLOSED.** A `?user_type=` parameter is NOT a planned product feature. Realtors and tradespeople share Spec 91's feed/flight-board algorithm; differentiation flows through `trade_slug` (a parameter the admin Test Feed Tool already exposes), not through a separate `user_type` axis. Manufacturers are not customer-facing feed personas — they're admin-managed B2B accounts per Spec 94 §7. |
+ | 86 | `02-web-admin/86_control_panel.md` | 86 Master Configuration List: The "Control Panel" Schema | `src/lib/admin/control-panel.ts`, `src/app/api/admin/control-panel/configs/route.ts`, `src/app/api/admin/control-panel/resync/route.ts`, `src/features/admin-controls/**`, `src/app/admin/control-panel/page.tsx`, `src/app/admin/control-panel/error.tsx`, `src/app/admin/page.tsx`, `src/tests/factories.ts` | `src/tests/control-panel.*.test.{ts,tsx}`, `src/tests/db/pricing-tables.db.test.ts` | Done |
+-| 89 | `02-web-admin/89_parcel_cost_model_tool.md` | Parcel Cost Model Tool (web-admin) | `src/app/api/admin/parcels/lookup/types.ts`, `src/components/admin/ParcelCostTool.tsx`, `src/app/admin/page.tsx`, `src/lib/parcels/address.ts` | — | Active (WF1 2026-07-06) |
++| 89 | `02-web-admin/89_parcel_cost_model_tool.md` | Parcel Cost Model Tool (web-admin) | `src/app/api/admin/parcels/lookup/types.ts`, `src/components/admin/ParcelCostTool.tsx`, `src/app/admin/page.tsx`, `src/lib/parcels/address.ts` | `src/tests/search-parser-guard.logic.test.ts`, `src/tests/parcel-lookup-resolution.logic.test.ts`, `src/tests/consumer-parcel-lookup.infra.test.ts` | Active (WF1 2026-07-06) |
+ 
+ ## Mobile (Lead Feed)
+ 
+ | # | Spec File | Feature | Implementation | Tests | Status |
+ |---|-----------|---------|---------------|-------|--------|
+-| 100 | `03-mobile/100_mobile_parcel_cost_tool.md` | Mobile Parcel Cost Tool | `src/app/api/parcels/lookup/types.ts`, `src/lib/api/public-projections.ts`, `src/lib/admin/parcel-lookup.ts`, `src/lib/parcels/lot-map.ts`, `src/lib/parcels/display-rules.ts`, `src/lib/parcels/lot-form.ts`, `src/lib/parcels/consumer-lookup.ts`, `src/lib/parcels/report-page.ts`, `src/lib/parcels/report-compute.ts`, `src/app/api/parcels/lookup/route.ts`, `src/lib/auth/route-guard.ts`, `src/lib/parcels/address.ts` | `src/tests/consumer-parcel-lookup.infra.test.ts`, `src/tests/parcel-lookup-gate.infra.test.ts`, `src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts` | Active (WF1 2026-07-11) |
++| 100 | `03-mobile/100_mobile_parcel_cost_tool.md` | Mobile Parcel Cost Tool | `src/app/api/parcels/lookup/types.ts`, `src/lib/api/public-projections.ts`, `src/lib/admin/parcel-lookup.ts`, `src/lib/parcels/lot-map.ts`, `src/lib/parcels/display-rules.ts`, `src/lib/parcels/lot-form.ts`, `src/lib/parcels/consumer-lookup.ts`, `src/lib/parcels/report-page.ts`, `src/lib/parcels/report-compute.ts`, `src/app/api/parcels/lookup/route.ts`, `src/lib/auth/route-guard.ts`, `src/lib/parcels/address.ts` | `src/tests/consumer-parcel-lookup.infra.test.ts`, `src/tests/search-parser-guard.logic.test.ts`, `src/tests/parcel-lookup-resolution.logic.test.ts`, `src/tests/parcel-lookup-gate.infra.test.ts`, `src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts` | Active (WF1 2026-07-11) |
+ | 77 | `03-mobile/77_mobile_crm_flight_board.md` | Mobile CRM Flight Board (Pillar 2) | `src/lib/leads/flight-board-temporal.ts`, `src/app/api/leads/flight-board/route.ts`, `src/app/api/leads/flight-board/detail/[id]/types.ts`, `src/app/api/leads/flight-board/detail/[id]/route.ts`, `src/app/api/leads/save/route.ts`, `src/app/api/leads/feed/route.ts`, `src/lib/leads/parse-lead-id.ts` | `src/tests/flight-board.infra.test.ts`, `src/tests/flight-board-detail.infra.test.ts`, `src/tests/flight-board-temporal.logic.test.ts`, `src/tests/db/flight-board-roundtrip.db.test.ts` | Done |
+ | 90 | `03-mobile/90_mobile_engineering_protocol.md` | Mobile Engineering Protocol & Architecture (The Pivot) | `src/app/api/parcels/lookup/types.ts` | — | Done |
+ | 91 | `03-mobile/91_mobile_lead_feed.md` | Mobile Lead Feed (Discovery Engine) | `src/app/api/leads/detail/[id]/types.ts` | `src/tests/db/realtor-gating.db.test.ts` | ACTIVE (Mobile Pivot) |
 diff --git a/docs/specs/02-web-admin/89_parcel_cost_model_tool.md b/docs/specs/02-web-admin/89_parcel_cost_model_tool.md
 index dca78e306db7963600cabde310d720474c08fd7f..d94b49b027251271fade942bd64c792f0e29e68f 100644
 --- a/docs/specs/02-web-admin/89_parcel_cost_model_tool.md
@@ -339,7 +408,7 @@ index dfdc7a4bed4e9256d59b71afaa3f73f420d8caf4..da5e8c91aef1b5cf8b8d6a81f8a61bff
        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 (dated note 2026-11-11)"
      ],
 diff --git a/src/lib/admin/parcel-lookup.ts b/src/lib/admin/parcel-lookup.ts
-index 9b090a0eb48d0be1ffd3c672884728bd2af7688e..e028d2b2deaf8797343e76cebd0a67e8bc9d86c2 100644
+index 9b090a0eb48d0be1ffd3c672884728bd2af7688e..1a08e7db8a3ec6211e3f58527853073eeecd6010 100644
 --- a/src/lib/admin/parcel-lookup.ts
 +++ b/src/lib/admin/parcel-lookup.ts
 @@ -173,16 +173,32 @@ function stripTrailingUnit(s: string): string {
@@ -511,10 +580,10 @@ index 9b090a0eb48d0be1ffd3c672884728bd2af7688e..e028d2b2deaf8797343e76cebd0a67e8
      const exactG = guardByDirection(exact, exactTruncated ? null : typed); // a truncated window cannot prove a narrowed row is the only one: unchanged (output review r2 #2)
      if (exactG.conflict) return conflictList(exactG.rows);
      exact = exactG.rows;
-+    // SEARCHFIX.1 (A1, AC #3): "32 Fulham Dr" opens Fulham Dr, not the list with Fulham St; the same truncation rule as the direction guard.
++    // SEARCHFIX.1 (A1, AC #3): "32 Fulham Dr" opens Fulham Dr, not the list with Fulham St; same truncation rule as the direction guard, which is checked again on the narrowed row (RR-0166: "32 Fulham Dr E" over Fulham St W and Fulham Dr W is the list).
 +    const typeG = guardByType(exact, exactTruncated ? '' : typedType);
-+    if (typeG.conflict) return conflictList(typeG.rows);
 +    exact = typeG.rows;
++    if (typeG.conflict || guardByDirection(exact, exactTruncated ? null : typed).conflict) return conflictList(exact);
      if (exact.length === 1) {
        return {
 +        // exact.length === 1 was tested on the line above, so exact[0] exists (both `!` on the next line)
@@ -672,7 +741,7 @@ index 8b06c265f92f1ed4efb396a96d8f3e7674b45e8c..3a0f2829870e51e69611625f6eea4494
      rows([], [r('P1', '7 Oak Ave'), r('P2', '7 Oak Ave'), r('P3', '7 Oak Ave')]);
      const out = await resolveAddress('7 Oak');
 diff --git a/src/tests/search-parser-guard.logic.test.ts b/src/tests/search-parser-guard.logic.test.ts
-index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d21c7e8cb 100644
+index 536c148dea1fc7fb34b3617a6470df32deebdc05..2dcf60793b32d1a062c6d6dcaaaffc3b9534e9cf 100644
 --- a/src/tests/search-parser-guard.logic.test.ts
 +++ b/src/tests/search-parser-guard.logic.test.ts
 @@ -32,6 +32,10 @@ vi.mock('@/lib/db/client', () => ({
@@ -686,7 +755,7 @@ index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d
  
  const opts = { classifyUnlinked: true, matchMistyped: true } as const; // the consumer route's call
  const E = { parcel_id: 'E1', address: '100 Queen St E' };
-@@ -225,3 +229,140 @@ describe('A.4 the guard after the match (resolveAddress)', () => {
+@@ -225,3 +229,141 @@ describe('A.4 the guard after the match (resolveAddress)', () => {
      expect(out.candidates).toEqual([]);
    });
  });
@@ -696,8 +765,8 @@ index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d
 +//   RR-0443 c (:2284): "What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close"
 +// A lot opens (`unique`) only on an exact match: the exact read, or a one-row typeahead that is the typed address in full. Every other
 +// one-row leftover is the list. The fixtures are the rows the typed-address seat recorded on the local test stack
-+// (docs/reports/reviews/mcfixreborn-g3/SEAT-typed-addresses.md:66-95); where the seat recorded fewer rows than the window holds, the
-+// extra rows are placeholders and say so.
++// (docs/reports/reviews/mcfixreborn-g3/SEAT-typed-addresses.md:66-95); case 15 rows 5 to 10 and case 21's point were read on the local
++// test stack, read-only, 2026-11-24.
 +describe('SEARCHFIX.1 exact opens, the rest lists', () => {
 +  const row = (parcel_id: string, address: string) => ({ parcel_id, address });
 +  /** The first 10 typeahead rows for "Gerrard St" (no number), sorted by printed address, read on the local test stack (the window repeats two ids). */
@@ -765,8 +834,8 @@ index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d
 +  const CLAIR = { '2750|CLAIR AVE': [row('5260587', '2750 St Clair Ave E')] };
 +  const ELM12 = [
 +    row('5492668', '12 Elm Grove Ave'), row('5264433', '12 Elm Ridge Dr'), row('5510910', '12 Elma St'), row('5017163', '12 Elmartin Dr'),
-+    // placeholders: the seat recorded the first four of the ten rows only
-+    row('X5', '12 Elm X5 St'), row('X6', '12 Elm X6 St'), row('X7', '12 Elm X7 St'), row('X8', '12 Elm X8 St'), row('X9', '12 Elm X9 St'), row('X10', '12 Elm X10 St'),
++    row('5485279', '12 Elmcrest Rd'), row('5151946', '12 Elmdon Crt'), row('5396750', '12 Elmer Ave'), row('5281136', '12 Elmont Dr'),
++    row('5295373', '12 Elmsdale Rd'), row('5278777', '12 Elmsthorpe Ave'),
 +  ];
 +  const cases: [string, Case][] = [
 +    ['1 679 Queen St W', { q: '679 Queen St W', exact: Q679, resolution: 'unique', match: '5476455' }],
@@ -789,8 +858,7 @@ index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d
 +    ['18 123 Yongee St', { q: '123 Yongee St', fuzzy: Y123, resolution: 'text_candidates', match: null, candidates: ['5179889', '5464983'] }],
 +    ['19 2760 Yongee St', { q: '2760 Yongee St', fuzzy: Y2760, resolution: 'text_candidates', match: null, candidates: ['5229356'] }],
 +    ['20 78 Robert St', { q: '78 Robert St', exact: { '78|ROBERT': [row('5259138', '78 Robert St'), row('5438421', '78 Robert St')] }, resolution: 'multi_parcel', match: null, candidates: ['5259138', '5438421'] }],
-+    // case 21's latitude and longitude are placeholders (UNVERIFIED: the seat could not run it live); the test checks only the pin it was given
-+    ['21 2 Lake Cres', { q: '2 Lake Cres', unlinked: [{ address_point_id: 1, address: '2 Lake Cres', latitude: '43.6', longitude: '-79.5' }], resolution: 'unlinked', match: null }],
++    ['21 2 Lake Cres', { q: '2 Lake Cres', unlinked: [{ address_point_id: 30014230, address: '2 Lake Cres', latitude: '43.6074777', longitude: '-79.4880861' }], resolution: 'unlinked', match: null }],
 +    ['22 2750 St Clair Ave W', { q: '2750 St Clair Ave W', exact: CLAIR, resolution: 'text_candidates', match: null, candidates: ['5260587'] }],
 +    ['23 King and Bay', { q: 'King and Bay', resolution: 'no_match', match: null, candidates: [] }],
 +    ['25 123 Main St Mississauga', { q: '123 Main St Mississauga', resolution: 'no_match', match: null, candidates: [] }],
@@ -802,6 +870,8 @@ index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d
 +    ['extra 2e 679 Queen St. W', { q: '679 Queen St. W', exact: Q679, resolution: 'unique', match: '5476455' }],
 +    ['extra 2750 St. Clair Ave W', { q: '2750 St. Clair Ave W', exact: CLAIR, resolution: 'text_candidates', match: null, candidates: ['5260587'] }],
 +    ['extra 383 Elm St, one exact row printed Elm Rd', { q: '383 Elm St', exact: { '383|ELM': [row('5191692', '383 Elm Rd')] }, resolution: 'text_candidates', match: null, candidates: ['5191692'] }],
++    ['extra 32 Fulham Dr E, the type narrowing leaves a W row: the list', { q: '32 Fulham Dr E', exact: { '32|FULHAM': [row('5067128', '32 Fulham St W'), row('5514141', '32 Fulham Dr W')] }, resolution: 'text_candidates', match: null, candidates: ['5514141'] }],
++    ['extra 32 Fulham Dr W, same rows, the typed side opens (green both)', { q: '32 Fulham Dr W', exact: { '32|FULHAM': [row('5067128', '32 Fulham St W'), row('5514141', '32 Fulham Dr W')] }, resolution: 'unique', match: '5514141' }],
 +    ['extra 5 Elm St, a row with no printed type stops the narrowing', { q: '5 Elm St', exact: { '5|ELM': [row('P1', '5 Elm St'), row('P2', '')] }, resolution: 'text_candidates', match: null, candidates: ['P1', 'P2'] }],
 +    ['extra 123 Yonge St, Toronto ON', { q: '123 Yonge St, Toronto ON', exact: { '123|YONGE': Y123 }, resolution: 'unique', match: '5464983' }],
 +    ['extra 21 Langden Ave, a full address found only through its address point', { q: '21 Langden Ave', typeahead: [row('L1', '21 Langden Ave')], resolution: 'unique', match: 'L1' }],
@@ -819,7 +889,7 @@ index 536c148dea1fc7fb34b3617a6470df32deebdc05..600bed1c8834140db5c6ea9bc28a004d
 +    if (c.match !== undefined) expect(out.match?.parcelId ?? null).toBe(c.match);
 +    if (c.candidates) expect(out.candidates.map((x) => x.parcelId)).toEqual(c.candidates);
 +    if (c.count !== undefined) expect(out.candidates).toHaveLength(c.count);
-+    if (c.resolution === 'unlinked') expect(out.lotMap).toEqual({ kind: 'unlinked', address: '2 Lake Cres', pin: { lat: 43.6, lng: -79.5 } });
++    if (c.resolution === 'unlinked') expect(out.lotMap).toEqual({ kind: 'unlinked', address: '2 Lake Cres', pin: { lat: 43.6074777, lng: -79.4880861 } });
 +  });
 +
 +  it.each([['Suite 12 Elm St'], ['#12 Elm St']])('T5 extra: %s never parses to house number 2 (the leading-unit strip needs a separator)', (q) => {

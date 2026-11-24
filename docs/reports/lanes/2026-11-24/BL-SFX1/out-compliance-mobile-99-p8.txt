@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:28:22.170Z file_sha256=635de0bcb0c711e9f9a23263c027f6d10e7ec6ec50bfbbe0a9500b9e702e1c31 prompt_sha256=8b2cc39916bb050065f3a1af01cc747886b2c2dcec2d6427e4d3f7ddff750a9d
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-mobile-99-p8.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — AC #6 "The 29 typed-address cases of the seat record pass as tests" — src/tests/search-parser-guard.logic.test.ts "Cases 24 (outside Toronto), 29 (two characters) and the phone half of 23 are existing phone tests (mobile/__tests__ parcelSearchMatch), cited, not re-written." — the array plays a case labeled "['25 123 Main St Mississauga', ...]" (the out-of-Toronto content the comment attributes to case 24) and carries no case 24 or 29 label, so the 29-case mapping cannot be reconciled from the diff — relabel the Mississauga case to 24, drop or keep it per the cited-not-rewritten rule, and state where seat cases 25 and 29 land
+DEFER severity=LOW — AC #1 "which opens as an exact match" — src/lib/admin/parcel-lookup.ts "match: { parcelId: typeahead[0]!.parcel_id, matchType: 'typeahead', address: typeahead[0]!.address }" — a one-row typeahead that is the typed address in full resolves 'unique' but its matchType stays 'typeahead', not 'exact' as the AC wording says, so a consumer keying on matchType='exact' does not see it — the Spec 100/89 dated note 2026-11-24 settles this (typeahead stays); confirm downstream reads resolution not matchType
+DEFER severity=LOW — card "Dated notes owed: Spec 100 (:103, :144); objectives G.1 and A.3 of doc-2 through the backlog CLI; task-69; Spec 89 (after :34)." — NONE — the diff shows the Spec 100 and Spec 89 dated notes but no doc-2 G.1/A.3 or task-69 note, and neither doc-2 nor task-69 file is in the changed paths, so their landing cannot be seen here — confirm the backlog-CLI notes are in pushed commit a997f8fb7
+DEFER severity=LOW — folded finding G3 R1 "its counts restate their own arrays" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "reads 7 table(s) directly" — the diff raises the count to 7 and lists logic_variables in data_story but shows no hunk adding logic_variables to inputs.tables, so the 7 rests on an array edit not visible in this chunk — cannot see; confirm inputs.tables.length is 7 (the T7 parity check asserts it)
+MET — AC #2 "Gerrard St W with a full 10-row window returns a list, not the one W row" — src/lib/admin/parcel-lookup.ts "const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);" — a full 10-row window skips direction narrowing, case 16 returns the list of 10
+MET — AC #3 "A full correct address with its street type opens the lot when the number is shared by another street type" — src/lib/admin/parcel-lookup.ts "const typeG = guardByType(exact, exactTruncated ? '' : typedType);" — typed street type narrows exact rows, a lone row of another type returns the list, never an empty set
+MET — AC #4 "Unit-first, dash-unit, letter-suffix and period forms reach the lot or the close-address list, never a dead end" — src/lib/admin/parcel-lookup.ts "const bare = keepPeriods ? null : (/^(\d+)[A-Z]$/.exec(num) ?? /^(\d+)-(\d+)[A-Z]?$/.exec(num));" with the UNIT_HEAD strip and typedText period handling — the four forms land on the lot or the list
+MET — AC #5 "A typed % or _ is escaped and returns no unrelated lots" — src/lib/admin/parcel-lookup.ts "function likePrefix(s: string): string { return s.replace(/[\\%_]/g, '\\$&') + '%'; }" — wildcards escaped in the typeahead and unlinked prefixes
+MET — "Must not: add a new resolution value" — src/lib/admin/parcel-lookup.ts "resolution: 'text_candidates'" and the dated note "No `resolution` value is added" — the five values (unique, text_candidates, multi_parcel, unlinked, no_match) are unchanged
+MET — "Must not: ... touch the report meter in the lookup route" — paths list has no src/app/api/parcels/lookup/route.ts — the metered route file is absent from the diff
+MET — Spec 99 §10 "any change to §3 (Field Ownership Matrix), §4 (Bridge Patterns), or §5 (Routing Authority Rules) requires a WF1 amendment" — NONE — no docs/specs/03-mobile/99_mobile_state_architecture.md file in the diff
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: none
+
+---
+⏱  90571ms (90.6s)
+📊 Tokens — total: 52437, input: 32369, output: 20068, reasoning: 18930

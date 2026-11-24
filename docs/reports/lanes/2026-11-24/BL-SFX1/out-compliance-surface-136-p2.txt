@@ -1,33 +1,25 @@
-◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T15:59:39.634Z file_sha256=9368c2b0530d8f247d6a2a6d74683f887cddb622251baf7675b9f38daf487db7 prompt_sha256=9f4d4acc28f2ca0c9c304939d49ed55755a30d74b8f2992d607fd6387be7f3a3
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:28:22.233Z file_sha256=1bbe400f6911c8e303a7dc56a55f1cc6bc882070efb34634b9006873bc762e25 prompt_sha256=56db5f3fc22df00230f110f937fce52e121f4e3f02aec69a3020fb1154005e29
 🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-surface-136-p2.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — AC #6 "The 29 typed-address cases of the seat record pass as tests" plus Description "whose 29 typed-address cases with real addresses are this card's tests" — "row('X5', '12 Elm X5 St'), row('X6', '12 Elm X6 St'), row('X7', '12 Elm X7 St'), row('X8', '12 Elm X8 St'), row('X9', '12 Elm X9 St'), row('X10', '12 Elm X10 St')" and count 10 — case 15 passes only because six fabricated rows pad the four recorded rows to ten, so the test verifies invented data, not the seat record; clause met only by the "placeholders: the seat recorded the first four" comment — record the six remaining 12 Elm rows from the seat, or assert on the four recorded rows and drop the fabricated ids from the acceptance data.
+DEFER severity=MED — fe.47 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" ("All tunables are data; zero thresholds in src.") — src/lib/admin/parcel-lookup.ts:393 "const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);" — the change adds two typed thresholds in src (this 10-row window boundary and "conflictList(rows.slice(0, 10))" at the new step 5), no pasted clause names a typed cap, and the card records only a deviation — register the window boundary and the candidate cap as a logic variable read here, or carry them on the fe.47 lock card.
+DEFER severity=MED — RR-0442 "It should open on an exact match and we have a different process for address mistakes, if the lot is shared by two parcels - you need to pick one - if its a semi potentially - you need to state that?" — src/tests/consumer-parcel-lookup.infra.test.ts:123 "const RR0442 = 'It should open on an exact match and we have a different process for address mistakes';" — the spec notes and this lock present a cut quote labelled "operator, verbatim", drop the ruling's parcel-pick and semi clauses, and the semi clause is recorded only as "the design of task-360 and task-319", never against RR-0442 — quote RR-0442 whole or mark the cut, and add the semi clause as an owed note naming RR-0442.
+DEFER severity=MED — card "Dated notes owed: Spec 100 (:103, :144); objectives G.1 and A.3 of doc-2 through the backlog CLI; task-69; Spec 89 (after :34)." — docs/specs/02-web-admin/89_parcel_cost_model_tool.md:35 "The doc-2 G.1 and A.3 notes keep \"unique goes straight to the report\" true for an exact match only." — both added Spec notes rest on doc-2 G.1 and A.3 notes (and a task-69 note) that are not in the material, so the cross-reference cannot be checked here — land the doc-2 G.1/A.3 and task-69 notes with this change, or cite their landed ids and dates in the note.
+DEFER severity=LOW — fe.56 "a lock never red against the defect it names is not a lock" — src/tests/consumer-parcel-lookup.infra.test.ts:147 "expect(story).not.toContain('24 fields');" — the count lock at the "every stated count equals the array it describes" case checks only the check's "pick-by-name of N field(s)" text, so the added data_story claim "the 80 names in inputs.field_whitelist" can drift and stay green — assert the data_story's own number against d.inputs.field_whitelist.length.
+DEFER severity=LOW — card "The 29 typed-address cases of the seat record pass as tests" — src/tests/search-parser-guard.logic.test.ts "// Cases 24 (outside Toronto), 29 (two characters) and the phone half of 23 are existing phone tests (mobile/__tests__ parcelSearchMatch), cited, not re-written." — two of the 29 named cases are satisfied only by citation, not by a case in the SEARCHFIX.1 suite — cite the existing assertions by file and test name in the case list, or add the two rows.
+MET — fe.36 — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:144 — the MF-35 note keeps "unique opens the lot" and only narrows what unique means, so the screen still moves by route on match type.
+MET — fe.38 — scripts/surfaces/_schema/census/contracts.json:22003 — the response stays "an explicit pick-by-name projection" over the same whitelist and this change touches no withheld legacy column or screen slot.
+MET — fe.39 — src/lib/admin/parcel-lookup.ts:403 — the typeahead branch keeps "matchType: 'typeahead'", no resolution value is added, and src/app/api/parcels/lookup/route.ts is not in the diff, so the report meter is untouched.
+MET — fe.45 — src/lib/admin/parcel-lookup.ts:466 — the type, period, unit and letter decisions are all computed on the server; the client receives candidates only.
+MET — fe.49 — src/lib/admin/parcel-lookup.ts:471 — the new fallback reads only parcels through readExact, no lead_parcels and no Spec 100 lead surface.
+MET — fe.53 — docs/specs/02-web-admin/89_parcel_cost_model_tool.md:35 — prior text is kept and the later dated note amends it, matching "the later operator ruling governs".
+MET — fe.55 — docs/specs/02-web-admin/89_parcel_cost_model_tool.md:35 — the admin tool is declared to call the same resolveAddress, no parallel admin data path.
+REJECT — fe.52 — that the new candidate and match payloads blend parcel_ref with parcel_pk — readExact selects "parcel_id, ${displayAddress} AS address FROM parcels", and parcels.parcel_id is the consumer parcelId per "the consumer API's parcelId = parcels.parcel_id = parcel_ref" (126:1238, §14), so nothing blends.
 
-BUG severity=HIGH — AC #6 "The 29 typed-address cases of the seat record pass as tests" — "// case 21's latitude and longitude are placeholders (UNVERIFIED: the seat could not run it live); the test checks only the pin it was given" with "expect(out.lotMap).toEqual({ kind: 'unlinked', address: '2 Lake Cres', pin: { lat: 43.6, lng: -79.5 } })" — the unlinked case asserts the very 43.6/-79.5 pin the mock injected, a tautology over unverified data; the clause is met only by a comment — run case 21 on the local test stack, record the real coordinates and assert those, or mark the case deferred rather than green.
-
-DEFER severity=MED — AC #6 "The 29 typed-address cases of the seat record pass as tests" — "// Cases 24 (outside Toronto), 29 (two characters) and the phone half of 23 are existing phone tests (mobile/__tests__ parcelSearchMatch), cited, not re-written." — 26 of the seat's labels (1-23, 25-28) are here, and 24 and 29 exist only by citation to a file not in the material — cannot see mobile/__tests__/parcelSearchMatch, so cite the exact test titles there or add cases 24 and 29 to this file.
-
-DEFER severity=LOW — RR-0392 "Nothing is added that the plan or a ruling does not name" — "import { findUndocumentedBangs } from './non-null-assertion-comment.logic.test';" and "importing that module registers its suites here too" — this file now depends on a test module that is not in the card's Files list (src/tests/non-null-assertion-comment.logic.test.ts) — cannot see whether that module pre-exists; confirm it does, and if this task creates it, add it to the card's Files.
-
-MET — AC #1 — "it('T1 boundary: the same window cut to 9 rows narrows to the W row, shown as a list of one (no number typed, so it never opens)'" and "['extra 21 Langden Ave, a full address found only through its address point', { q: '21 Langden Ave', typeahead: [row('L1', '21 Langden Ave')], resolution: 'unique', match: 'L1' }]" — a one-row leftover is a list unless the row is the typed address in full, which opens.
-
-MET — AC #2 — "it('T1 (ST1): "Gerrard St W" with a full 10-row window is the list of 10, not the one W row'" — asserts text_candidates with 10 candidates and null match.
-
-MET — AC #3 — "['10 32 Fulham Dr', { q: '32 Fulham Dr', exact: { '32|FULHAM': [row('5067128', '32 Fulham St'), row('5514141', '32 Fulham Dr')] }, resolution: 'unique', match: '5514141' }]" — the street-typed address opens when the number is shared by another street type.
-
-MET — AC #4 — "['27a Unit 4, 123 Yonge St', ... resolution: 'unique' ...]" and "['27b 2760-4 Yonge St', ... resolution: 'text_candidates' ...]" and "['extra 2750 St. Clair Ave W', ... resolution: 'text_candidates' ...]" — unit-first, dash-unit, letter-suffix and period forms reach a lot or a list, never no_match.
-
-MET — AC #5 — "it('T3 (D1): a typed _ is escaped in the typeahead prefix'" with "expect(typeaheadPrefix()).toBe('MA\\_N%')" — typed % and _ are escaped.
-
-MET — "Must not: add a new resolution value" — "resolution: string;" with expectations only 'unique', 'text_candidates', 'multi_parcel', 'unlinked', 'no_match' — no new resolution value is introduced.
-
-REJECT — fe.40 — that the inline cases array names its cases instead of using tests/e2e/scenarios.json — fe.40 governs the real-app layers run against the separate local test stack, not this mocked logic test.
-
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 8   Unmet: 2
-Rules met: none
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 0
+Rules met: fe.36, fe.38, fe.39, fe.45, fe.46, fe.49, fe.52, fe.53, fe.55
 
 ---
-⏱  65666ms (65.7s)
-📊 Tokens — total: 30086, input: 15896, output: 14190, reasoning: 13004
+⏱  152752ms (152.8s)
+📊 Tokens — total: 67917, input: 35140, output: 32777, reasoning: 31496

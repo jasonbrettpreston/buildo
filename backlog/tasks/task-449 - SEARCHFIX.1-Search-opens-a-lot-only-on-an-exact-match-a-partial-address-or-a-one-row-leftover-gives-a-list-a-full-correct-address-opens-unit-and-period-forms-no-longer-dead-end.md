@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SFX1'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T16:27:00Z'
+updated_date: '2026-11-24T16:33:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -307,4 +307,6 @@ rg#2 MED folded names what it amends
 2026-11-24 output review round 1 run (context-r3.md; 24 lens outputs and FINDINGS.md under docs/reports/lanes/2026-11-24/BL-SFX1/; 91 finding ids: 7 HIGH, 8 BUG MED, 28 DEFER MED, 44 LOW, 2 NIT). Grounder owed: the lane does not rule its own findings. Work commits 079f76c30 (code, hooks green: 332 passed) and a997f8fb7 (generated files, doc-2 and task-69 notes).
 
 2026-11-24 round 1 grounder (Cairn-Ground-O449): MED out-compliance-ms-S#1 confirmed; red-r2 then fix (direction re-checked after the type narrowing). Case 15 rows 5-10 and case 21's point now real (local test stack, read-only, 2026-11-24).
+
+2026-11-24 output review round 2 run on ddc9e8a24 (context-r4.md; 30 outputs; 92 ids: 1 HIGH, 1 BUG MED, 30 DEFER MED, 57 LOW, 2 NIT). Round 2 grounder owed.
 <!-- SECTION:NOTES:END -->

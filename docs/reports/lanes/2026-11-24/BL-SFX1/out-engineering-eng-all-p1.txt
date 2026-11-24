@@ -1,32 +1,36 @@
-◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
-REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T15:59:39.656Z file_sha256=df1a55e7a4e123c89d1b2b9dccd01304db3ed823edc6d94e628351875aa1162f prompt_sha256=4603a8e882ec73969cd76d54097953fbc4891fe093bac20baf315f72103576bb
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T16:28:22.253Z file_sha256=50eb6e0f498ca5793536194a37bd66de363718eb5ecba13b4704f3ec325d59b6 prompt_sha256=483842e4c2c001326aaed0847b0ac6b12dbf79bb25aecb03b537dfa3c4e51698
 🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-engineering-eng-all-p1.txt (model: deepseek-reasoner)
 
-BUG severity=<none> — none
+BUG severity=none — no CRIT/HIGH rule breach found, DEFERs only.
 
-DEFER severity=MED — 5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/search-parser-guard.logic.test.ts:238 "const row = (parcel_id: string, address: string) => ({ parcel_id, address });" — the ~40 new DB-row/pin fixtures (GERRARD, Q679, ELM12, the unlinked literal) are hand-built inline rather than imported from src/tests/factories.ts — add/extend a typed parcel-row factory in src/tests/factories.ts and build these fixtures from it
+DEFER severity=MED — 5.1 Typed Factories Only "You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/search-parser-guard.logic.test.ts "const row = (parcel_id: string, address: string) => ({ parcel_id, address });" and "unlinked: [{ address_point_id: 30014230, address: '2 Lake Cres', latitude: '43.6074777', longitude: '-79.4880861' }]" — the new SEARCHFIX.1 fixtures are locally built inline mocks (a local `row()` helper plus a literal address-point row), not typed factories imported from src/tests/factories.ts — replace `row()` and the inline literals with factories from src/tests/factories.ts, adding a parcel-row and address-point factory there if none exists.
 
-DEFER severity=MED — 2.1 "When writing integration tests (`.infra.test.ts`), you MUST include tests for error paths and silent failures." — src/tests/consumer-parcel-lookup.infra.test.ts:125 "it('parcel-lookup.ts holds exactly two `unique` returns: the exact read and the typed-address-in-full typeahead row', () => {" — the three added infra blocks are source-text and JSON scans; none forces the new reads (the raw-first rerun, the escaped prefix read, the up-to-two-read letter/dash fallback) to throw and prove safe degradation — add one unhappy-path case (a readExact/typeahead rejection) asserting the route still returns a safe envelope without leaking the raw message
+DEFER severity=MED — 2.1 The "Unhappy Path" Test Mandate "When writing integration tests (`.infra.test.ts`), you MUST include tests for error paths and silent failures." — src/tests/consumer-parcel-lookup.infra.test.ts "it('parcel-lookup.ts holds exactly two `unique` returns: the exact read and the typed-address-in-full typeahead row', () => {" — the SEARCHFIX.1 additions to the infra test are source-shape and JSON-parity locks only; the two new DB reads (the raw-first keepPeriods run, the letter/dash fallback loop over readExact) have no forced-failure test that proves the route degrades safely — add an infra test that makes the second readExact throw and asserts the safe status and that no raw err.message reaches the client.
 
-DEFER severity=NIT — 5.2 "`*.regression.test.ts` | Pin a load-bearing behavior a diff must NOT retire" — src/tests/consumer-parcel-lookup.infra.test.ts:126 "expect(uniqueReturns(fs.readFileSync(RESOLVER, 'utf8'))).toBe(2);" — the "only two places open a lot" fence is a source-text pin, which the pattern table assigns to the regression layer, not the infra layer — either move it to a `*.regression.test.ts` or state in the test header why the infra layer carries it
+DEFER severity=MED — 5.5 Test-Layer Map "`*.infra.test.ts` (no DB) | API envelope / query shape / error paths" — src/tests/search-parser-guard.logic.test.ts "expect(typeaheadPrefix()).toBe('\\%%');" — a bound-parameter (query shape) assertion is made in a *.logic.test.ts against a mocked db client, the layer §5.5 assigns to *.infra.test.ts, so the wildcard-escape proof sits in the wrong layer and gives false confidence — move or mirror the T3 prefix assertions into src/tests/consumer-parcel-lookup.infra.test.ts, where query shape is proven.
 
-MET — 2.3 — src/lib/admin/parcel-lookup.ts "const first = unlinked[0]!; // unlinked.length > 0 was tested on the line above, so unlinked[0] exists" — every added `!` (tokens[0], m[1], m[2], exact[0], typeahead[0], unlinked[0], split(',')[0]) carries an inline why-comment, and T4 locks it with findUndocumentedBangs
+DEFER severity=LOW — 5.2 Test File Pattern "`*.security.test.ts` | Negative/abuse, blocks malicious payloads and unauthorized users | Auth-guarded / externally-reachable surfaces" — src/tests/search-parser-guard.logic.test.ts "it('T3 (D1): a typed _ is escaped in the typeahead prefix', async () => {" — the ruled hardening against customer-typed `%` and `_` (G2 D1) is a malicious-payload block on an externally reachable lookup, and it is pinned only inside a logic test; cannot see any *.security.test.ts covering the lookup input — add the abuse cases to a *.security.test.ts for the lookup surface (or record why that file is not mandated here).
 
-MET — 4.2 — src/lib/admin/parcel-lookup.ts "return s.replace(/[\\%_]/g, '\\$&') + '%';" — the SQL text is unchanged and still bound as $1; the wildcard suffix/escaping happens in the parameter value
+MET — 2.3 Assumption Documentation — src/lib/admin/parcel-lookup.ts "return tokens.length >= 2 && /\d/.test(tokens[0]!) ? stripped : s; // tokens.length >= 2 is tested first, so tokens[0] exists" — every added or moved non-null assertion carries an inline why-comment, and T4 pins the whole file with findUndocumentedBangs.
 
-MET — 4.3 — src/lib/admin/parcel-lookup.ts "SELECT parcel_id, ${displayAddress} AS address" — explicit projection on every read, no SELECT *
+MET — 3.3 Pagination Enforcement — src/lib/admin/parcel-lookup.ts "ORDER BY parcel_id LIMIT 11" and "ORDER BY address, ap.address_point_id LIMIT 11" — every read the change adds or touches is LIMIT-bounded, and the fallback list is sliced to 10.
 
-MET — 3.3 — src/lib/admin/parcel-lookup.ts "ORDER BY address LIMIT 10" / "ORDER BY parcel_id LIMIT 11" — every read path (exact, typeahead, unlinked, the fallback's readExact) is bounded
+MET — 4.2 Parameterization — src/lib/admin/parcel-lookup.ts "function likePrefix(s: string): string { return s.replace(/[\\%_]/g, '\\$&') + '%'; }" with "[likePrefix(streetName), num || null]" — the search term stays a bound parameter, with LIKE wildcards escaped instead of concatenated into SQL text.
 
-MET — 8.2 — src/lib/admin/parcel-lookup.ts "const UNIT_HEAD = /^\s*(?:UNIT\s*#?|APT|APARTMENT|SUITE|STE|#)\s*\d{1,5}[A-Z]?(?:\s*,\s*|\s+)(?=\d)/i;" — new regexes use `\s`, no `s` flag, so the ES2017 target is respected
+MET — 4.3 Frontend Security — src/lib/admin/parcel-lookup.ts "SELECT parcel_id, ${displayAddress} AS address" — explicit projection, no SELECT *, in the new readExact helper.
 
-MET — 5.5 — src/tests/consumer-parcel-lookup.infra.test.ts "expect(census).toEqual(d);" — the generated census row is drift-locked to the emitted descriptor after both were edited
+MET — 5.3 Red-Green Test Cycle (Golden Rule) — Implementation Notes "tests written first (search-parser-guard SEARCHFIX.1 T1-T5, parcel-lookup-resolution one-row partial, consumer-parcel-lookup.infra T6-T8); red proven by the refused commit attempt" plus the added "RED plant: a source with a third `unique` return is caught" test — a failing test precedes the resolver code for the new outcomes.
 
-REJECT — 4.2 — that the change concatenates the search term into the SQL (likePrefix) — the concatenation happens on the bound parameter value with `\`, `%` and `_` escaped, so the statement text stays parameterized
+MET — 5.5 Test-Layer Map (parity battery) — src/tests/consumer-parcel-lookup.infra.test.ts "it('the census row equals the emitted descriptor', () => {" — the two generated artifacts are locked to each other, and the counts in their prose are pinned to their own arrays.
+
+REJECT — 5.4 Test Data Seeding — accused of not adding a scripts/seed-[scenario].js for the fixtures described as real rows — not a real issue: the rows live in an in-memory mocked db client, no database scenario is set up or needed, so the seeding rule does not bind.
+
+REJECT — 5.2 Test File Pattern — accused of importing a sibling test module so its suites register twice, in "import { findUndocumentedBangs } from './non-null-assertion-comment.logic.test';" — not a real issue under the pasted rules: §5.2 governs which layer a test lives in and does not bar importing a pure helper from another test module.
 
 VERDICT: PASS on the pasted engineering rules
-Clauses checked: 11   Unmet: 0
+Clauses checked: 18   Unmet: 4
 
 ---
-⏱  63787ms (63.8s)
-📊 Tokens — total: 47492, input: 34149, output: 13343, reasoning: 12394
+⏱  58790ms (58.8s)
+📊 Tokens — total: 47100, input: 34726, output: 12374, reasoning: 11047
