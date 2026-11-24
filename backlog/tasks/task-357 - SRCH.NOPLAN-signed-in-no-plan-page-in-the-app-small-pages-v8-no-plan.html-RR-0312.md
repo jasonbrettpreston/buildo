@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-19T22:02:00Z'
-updated_date: '2026-11-24T14:47:00Z'
+updated_date: '2026-11-24T17:29:00Z'
 labels:
   - S
   - plan:SRCH.A6
@@ -118,4 +118,6 @@ HELD (operator 2026-11-20 "4. Hold the three unbuilt pages until the pilot resul
 Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder, 2026-11-20 (the lane verifies each cited fact before building): build as a screens row of the page table (static-page.json) drawn by PageTableBinding.tsx, after the pilot is folded, serially with 391 to 393 (same file). Required for 1·B by RR-0312 (MD:1216). Open for the operator later, not blocking: the designed page has no sign-up link while his words ask for "a way to sign up".
 
 2026-11-24: absorbed by TASK-452 (SEARCHFIX.4) on the operator's ruling RR-0446 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2302, verbatim: "02 Agrred add to the plan."). No lane is launched for this card.
+
+2026-11-24 RR-0455 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2357): task 452 is split; the no-plan page returns to this card. The way to sign up waits for the buying work (RR-0454, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2352). The plan grounder's design ruling for the three screens is in docs/reports/reviews/task-452/QUESTIONS-RULED.md.
 <!-- SECTION:NOTES:END -->
