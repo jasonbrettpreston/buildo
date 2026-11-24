@@ -3,11 +3,11 @@ id: TASK-451
 title: >-
   SEARCHFIX.3 Lot card: "Not available" for an implausible lot size, "at the
   back", "or report it", screen-reader labels, plain-page header links
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-SFX3'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T17:30:00Z'
+updated_date: '2026-11-24T18:06:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -36,6 +36,8 @@ references:
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-24/BL-SFX3/REPORT.md
+  - docs/reports/lanes/2026-11-24/BL-SFX3/GROUNDER.md
+  - docs/reports/lanes/2026-11-24/BL-SFX3/TRIAGE.md
 type: fix
 ordinal: 150040
 ---
@@ -63,7 +65,7 @@ Files: src/lib/parcels/consumer-lookup.ts, mobile/src/components/surfaces/LotMap
 - [ ] #3 The no-lot line ends "or report it" and links to the wrong-lot help topic
 - [ ] #4 The screen-reader label contains the visible card text
 - [ ] #5 The lot-map smoke test renders the four error states as errors
-- [ ] #6 Objective C.3 carries a dated note: no neighbour lots
+- [x] #6 Objective C.3 carries a dated note: no neighbour lots
 <!-- AC:END -->
 
 ## Definition of Done
@@ -293,3 +295,11 @@ rg#6 MED folded this card's, uncondi
 
 2026-11-24 merge 182a28053 of wf2/board (fe88ecf71), ordered by the orchestrator; doc-2 conflict kept both sides, rule-lists page regenerated. Output review round 1 on the merged head: context-r3.md, 52 DeepSeek lens outputs (lens set per the board table: plan-protocol output_off; 9 compliance lists), 184 findings (HIGH 24, MED 72, LOW 82, NIT 4) in docs/reports/lanes/2026-11-24/BL-SFX3/FINDINGS.md. Grounder owed.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+SEARCHFIX.3 landed in 04c181564 (work; hooks GATE OK, POLICY CHECKS OK; pre-commit related run Test Files 17 passed | 1 skipped (18), Tests 419 passed | 7 skipped (426); red refused first with Test Files 7 failed, Tests 22 failed), 0e491221e (doc-2 dated notes incl. C.3 no neighbour lots, AC6 at doc-2 line 170), dd40a13d5 (task-336 dated note), merge 182a28053 of wf2/board, review records 63c96df49. Lot card: Not available for a size outside LOT_SIZE_PLAUSIBLE_M2, at the back for a lot with no fronting street, the no-lot line ends or report it linking the wrong-lot topic, the screen-reader label is the visible card text; plain pages get the header links; surface strings 427 to 436. Phone tests never run: AC4, AC5 and the phone halves of AC1 to AC3 are UNPROVEN until the Mobile CI job on the pushed tip shows lotMapPage.behaviour.test.tsx and lotMapScreens.golden.test.ts green and one device tap of report it is recorded. The card is not DONE and not called working. (The phone tests run only in the GitHub Mobile CI job after a push, not at the push station.)
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 4 pile; grounder docs/reports/lanes/2026-11-24/BL-SFX3/GROUNDER.md; triage docs/reports/lanes/2026-11-24/BL-SFX3/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->
