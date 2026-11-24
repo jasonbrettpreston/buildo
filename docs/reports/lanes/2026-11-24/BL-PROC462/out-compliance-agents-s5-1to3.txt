@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:20:04.186Z file_sha256=7cf790fd45d230bb479f341d37b5c9414a2da52d6142b9ef18738abf6b8fbd61 prompt_sha256=8127014fc95888b689e6a0a9fab70f3e78960abe22ad158c8ae311632ef1de0a
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC462/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #1 "A push station run shows the two new steps and then PASS, and the worktree is clean afterwards (no coverage folder)" — NONE, the pasted card records "R3 by hand from the worktree root (through guard.mjs --file): mobile-typecheck rc=0; mobile-tests 58/58 suites, 866/866 tests, rc=0" — the criterion names a push station run as the evidence and no station run is pasted, only a by-hand guard run — run one push through the station and paste its step listing and PASS, or record the criterion as reworded.
+DEFER severity=MED — Files "Files: .husky/pre-push-checks.sh, src/tests/hooks-composition.infra.test.ts, CLAUDE.md, docs/specs/03-mobile/98_mobile_testing_protocol.md" — pasted Notes "that generated path is not on the Files line, and check-task-files refuses it beside a code file" — the change also ships docs/reports/generated/rule-lists-by-kind.md, a path named by no Files line and no acceptance criterion, while the four-file Files line is what this review was cut from — name the generated page on the Files line as task-435 and task-446 did, or have the operator rule the docs commit out of scope.
+DEFER severity=LOW — AC #3 "A phone test made to fail stops the run before the web suite starts" — pasted Notes "the planted no-such-test-path run exits 1 (No tests found)" — a missing test path is a jest resolution error, not a phone test made to fail, so the criterion's own case is not shown — paste one run with one genuinely failing phone test and the chain stopping at mobile-tests.
+DEFER severity=LOW — RR-0429 "Keep notes short." — CLAUDE.md "+   Dated 2026-11-24 (task-462, RR-0462): pre-push also runs `mobile-typecheck` and `mobile-tests` ... To remove them: two lines in `.husky/pre-push-checks.sh` and two entries in `src/tests/hooks-composition.infra.test.ts`." — the one dated line runs to three sentences, past the operator's short-note ruling — cut it to the fact plus the one-line off switch.
+MET — AC #2 — src/tests/hooks-composition.infra.test.ts "+    'step mobile-typecheck npm --prefix mobile run typecheck &&'," and STEP_NAMES — the pin names both new lines and step names in LIST_LINES and STEP_NAMES.
+MET — AC #4 CLAUDE.md — CLAUDE.md "Dated 2026-11-24 (task-462, RR-0462): pre-push also runs `mobile-typecheck` and `mobile-tests`" — one dated line naming both steps.
+MET — AC #4 Spec 98 section 5 — docs/specs/03-mobile/98_mobile_testing_protocol.md "> Dated note 2026-11-24 (task-462, RR-0462, step 4 of the approved quick plan): the phone typecheck and phone tests also run before every push" — one dated line, placed before "## 6. Historical Context & Past Issues".
+MET — Description ordering — .husky/pre-push-checks.sh "step mobile-tests npm --prefix mobile run test:ci -- --coverage=false --silent &&" followed by "step suite ..." — the two steps sit after typecheck and before the web suite, as the Description requires.
+MET — Description no-writes — .husky/pre-push-checks.sh "-- --coverage=false --silent" — no coverage folder is written, matching "a command that writes nothing (no coverage folder)".
+MET — RR-0392 "no other infrastructure beyond this" — .husky/pre-push-checks.sh two added step lines only, "no switch file, no environment setting" — nothing beyond the two lines and their pin and notes was added.
+REJECT — RR-0462 "If a task has a dead label it should be the only label" — accused of a card carrying extra labels — the card carries only ProcessImprovement and no dead label, so the clause does not apply.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 4
+Rules met: none
+
+---
+⏱  51458ms (51.5s)
+📊 Tokens — total: 19635, input: 9276, output: 10359, reasoning: 9402

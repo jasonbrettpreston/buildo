@@ -9,4 +9,6 @@ step step-validate-staged node scripts/analysis/step-validate.mjs --staged --fas
 step step-validate-all node scripts/analysis/step-validate.mjs --all --fast &&
 step spec-split node scripts/analysis/spec-split-check.mjs --check &&
 step typecheck npm run typecheck &&
+step mobile-typecheck npm --prefix mobile run typecheck &&
+step mobile-tests npm --prefix mobile run test:ci -- --coverage=false --silent &&
 step suite env VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test $SUITE_ARGS

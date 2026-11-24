@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:20:04.186Z file_sha256=ece138a163efd7721601c5b3eb39f3115fe4f2483b37fec7fadbd7b51eef74ce prompt_sha256=80cd098e023566618196b3ef7a32d84f08e625001cb5dc2ab17ac5c12fe2b5ab
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC462/in-out-compliance-mobile-90.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC #1 "#1 A push station run shows the two new steps and then PASS, and the worktree is clean afterwards (no coverage folder)" — Implementation Notes "R3 by hand from the worktree root (through guard.mjs --file): mobile-typecheck rc=0; mobile-tests 58/58 suites, 866/866 tests, rc=0" — the only recorded run is by hand, not the push station the criterion names, so the station's clean-worktree refusal over phone artifacts (the exact reason coverage is off) is still unproven — run the push station once and paste the two step lines followed by PASS and a clean `git status`.
+DEFER severity=MED — Description Files line "Files: .husky/pre-push-checks.sh, src/tests/hooks-composition.infra.test.ts, CLAUDE.md, docs/specs/03-mobile/98_mobile_testing_protocol.md" — Implementation Notes "that generated path is not on the Files line, and check-task-files refuses it beside a code file" — a fifth path, docs/reports/generated/rule-lists-by-kind.md, lands under this card while the approved Files line still names four — add the generated page to the Description Files line (or route it as an optional path) before close.
+DEFER severity=LOW — AC #3 "#3 A phone test made to fail stops the run before the web suite starts" — Implementation Notes "R2: the planted no-such-test-path run exits 1 (No tests found)" — a missing test path is not "a phone test made to fail", so propagation of a genuine failing assertion through npm to the chain is inferred, not shown — plant one failing phone assertion once and paste its rc with the suite step absent.
+DEFER severity=NIT — RR-0429 "Keep notes short." — CLAUDE.md "+   Dated 2026-11-24 (task-462, RR-0462): pre-push also runs `mobile-typecheck` and `mobile-tests` ... To remove them: two lines in `.husky/pre-push-checks.sh` and two entries in `src/tests/hooks-composition.infra.test.ts`." — the dated line carries a removal runbook and a failure-mode sentence beyond naming the new steps — keep the line to the two step names and their position.
+REJECT — Spec 90 §10 "Minimum 80% coverage threshold." — that `--coverage=false` waives the phone coverage threshold — the threshold is a jest config value and this flag only suppresses report writing for this one gate run, which the approved plan text itself requires ("no coverage folder: the station refuses a worktree that changed during the run"), and Spec 98's new note keeps Mobile CI after the push.
+
+MET — plan step 4 "two plain step lines join the one pre-push list (.husky/pre-push-checks.sh), after the typecheck step and before the web suite" — .husky/pre-push-checks.sh — both lines sit between `step typecheck npm run typecheck &&` and `step suite env VITEST_MIN_FORKS=8 ...`.
+MET — plan "The test that pins the list (src/tests/hooks-composition.infra.test.ts, LIST_LINES and STEP_NAMES) is updated in the same commit" — src/tests/hooks-composition.infra.test.ts — LIST_LINES and STEP_NAMES both hold eight entries in list order, alongside the two step lines.
+MET — plan "no switch file, no environment setting" — .husky/pre-push-checks.sh — the diff adds no file, switch or env var.
+MET — Description "the phone unit tests run with a command that writes nothing (no coverage folder ...)" — .husky/pre-push-checks.sh — the step passes `--coverage=false`.
+MET — AC #2 "The gate-list test names the two new lines and step names and passes; it fails on the old six-step list" — src/tests/hooks-composition.infra.test.ts — T2 retitled to eight lines and the notes record the red run failing 6 vs 8 and FAIL_AT=mobile-typecheck.
+MET — AC #4 "CLAUDE.md and the phone testing spec section 5 each carry one dated line naming the new steps" — CLAUDE.md item 5 and docs/specs/03-mobile/98_mobile_testing_protocol.md:124 — each gains one dated 2026-11-24 line naming `mobile-typecheck` and `mobile-tests`.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 0
+Rules met: none
+
+---
+⏱  121814ms (121.8s)
+📊 Tokens — total: 23513, input: 9013, output: 14500, reasoning: 13495

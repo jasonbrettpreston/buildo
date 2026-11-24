@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:20:04.186Z file_sha256=21060fa60111edb1267dcf4e0bed627fba78a0668d9e934cba57faa817f5d95a prompt_sha256=16c77c4f1d381940336e42b533cd771d54d2c1d265e021fa78676fab3bb486a6
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC462/in-out-compliance-mobile-99.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings:
+
+DEFER severity=MED — card AC #1 "A push station run shows the two new steps and then PASS, and the worktree is clean afterwards (no coverage folder)" — NONE the pasted notes record only a hand run, "R3 by hand from the worktree root (through guard.mjs --file)" — the criterion asks for a push station run with a clean worktree and no pasted output shows one, so it is not evidenced — paste the station run showing the two new steps, then PASS, plus `git status` with no `mobile/coverage`.
+DEFER severity=LOW — card AC #3 "A phone test made to fail stops the run before the web suite starts" — NONE the proof is a discovery failure, "R2: the planted no-such-test-path run exits 1 (No tests found)" — a missing test path is not a failing phone test, so the exact clause is proven only by a proxy — plant a real failing assertion in one mobile test, run the chain, show the suite step not reached.
+DEFER severity=LOW — CLAUDE.md "`.husky/pre-push-checks.sh` (the one pre-push check list, run by `.husky/pre-push` and the push station) is the source of truth and `step-validate.mjs` parses its value" — NONE — nothing pasted shows the parser accepting two new step lines, and `step-validate-all` itself runs before them, so a rejected name would stop every push — run, or at least record, `step-validate` against the eight-line list in the lane notes.
+NIT severity=NIT — card Description "Off means removing the two lines (orchestrator's reading of the plan text, not the operator's words); no switch file, no environment setting" — CLAUDE.md "To remove them: two lines in `.husky/pre-push-checks.sh` and two entries in `src/tests/hooks-composition.infra.test.ts`" against the diff "it('T2 — the list holds exactly the eight chain lines, in order, each but the last ending in ` &&`, and the suite once'" — the removal recipe omits the two prose edits it also needs (the T2 title and the "eight non-interactive" block comment) — say three test-side edits, or move the recipe into the test comment where the prose lives.
+NIT severity=NIT — RR-0429 "Keep notes short." — CLAUDE.md "a worktree without the `mobile/node_modules` link stops at `mobile-typecheck`. To remove them: two lines in ..." — the dated line runs two sentences plus a removal recipe — trim to one sentence naming the two steps and their position, the rest already lives in the test and Spec 98 note.
+
+MET lines:
+
+MET — card Description "two plain step lines join the one pre-push list (.husky/pre-push-checks.sh), after the typecheck step and before the web suite" — `.husky/pre-push-checks.sh "step mobile-typecheck npm --prefix mobile run typecheck &&"` and `"step mobile-tests npm --prefix mobile run test:ci -- --coverage=false --silent &&"` — both added lines sit between `typecheck` and `step suite`, as named.
+MET — card Description "the phone unit tests run with a command that writes nothing (no coverage folder: the station refuses a worktree that changed during the run)" — `.husky/pre-push-checks.sh "step mobile-tests npm --prefix mobile run test:ci -- --coverage=false --silent &&"` — coverage explicitly disabled on the command line, `--silent` added.
+MET — card Description "The test that pins the list (src/tests/hooks-composition.infra.test.ts, LIST_LINES and STEP_NAMES) is updated in the same commit" — `src/tests/hooks-composition.infra.test.ts "'mobile-typecheck', 'mobile-tests'"` — both arrays carry the new entries, and the change lands in code commit 2.
+MET — card AC #2 "The gate-list test names the two new lines and step names and passes; it fails on the old six-step list" — `src/tests/hooks-composition.infra.test.ts "expect(lines).toEqual(LIST_LINES);"` — an exact-equality assertion over the eight-line LIST_LINES and STEP_NAMES falsifies on the six-line list by construction.
+MET — card AC #4 "CLAUDE.md and the phone testing spec section 5 each carry one dated line naming the new steps" — `CLAUDE.md "Dated 2026-11-24 (task-462, RR-0462): pre-push also runs `mobile-typecheck` and `mobile-tests`"` and `docs/specs/03-mobile/98_mobile_testing_protocol.md "as steps `mobile-typecheck` and `mobile-tests` of `.husky/pre-push-checks.sh`"` — one dated line in each, both naming the steps, the Spec 98 note sitting before `## 6. Historical Context`.
+MET — RR-0392 "one push for all four; no other infrastructure beyond this" — `.husky/pre-push-checks.sh` diff — two lines inside the existing list only, no new file, no new script, no env setting.
+MET — RR-0462 "Phone checks quick plan approved" — `docs/specs/03-mobile/98_mobile_testing_protocol.md "step 4 of the approved quick plan"` — the step the plan numbers is what the diff ships, and the note points to it.
+
+REJECT — §8.6 "Wiring it into `mobile-ci.yml` is Spec 126 §12 phase **P0b**" — accused of adding a mobile gate to pre-push while `mobile/scripts/check-spec99-matrix.mjs` still runs nowhere — the pasted clause assigns that wiring to `mobile-ci.yml` P0b, not to the pre-push list, so this change owes nothing there.
+
+VERDICT: PASS on compliance with the pasted clauses (one acceptance criterion, AC #1, lacks pasted run evidence and is deferred)
+Clauses checked: 13   Unmet: 1
+Rules met: none
+
+---
+⏱  66790ms (66.8s)
+📊 Tokens — total: 41201, input: 27895, output: 13306, reasoning: 11950

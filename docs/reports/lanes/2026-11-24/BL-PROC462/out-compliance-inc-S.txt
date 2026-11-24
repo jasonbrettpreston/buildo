@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:20:04.189Z file_sha256=211f1ba63d30e5b2c65f892dbe882eae8f51ae4b5456d35148c997643f456797 prompt_sha256=c343e5e89bedfd25939f0bc0273eedfa2ddd9ec6ea49f67c6803356a48d702e7
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC462/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+MET — plan: "two plain step lines join the one pre-push list ... after the typecheck step and before the web suite" — .husky/pre-push-checks.sh:12-13 "step mobile-typecheck npm --prefix mobile run typecheck &&" / "step mobile-tests npm --prefix mobile run test:ci -- --coverage=false --silent &&" — the two steps sit exactly between `step typecheck` and `step suite`, in that order.
+MET — plan: "the phone unit tests run with a command that writes nothing (no coverage folder: the station refuses a worktree that changed during the run)" — .husky/pre-push-checks.sh:13 "step mobile-tests npm --prefix mobile run test:ci -- --coverage=false --silent &&" — coverage is disabled and stdout is silenced, the station-clean requirement is met.
+MET — plan: "The test that pins the list (src/tests/hooks-composition.infra.test.ts, LIST_LINES and STEP_NAMES) is updated in the same commit" — src/tests/hooks-composition.infra.test.ts:551-552,556 "step mobile-typecheck ..." / "step mobile-tests ..." and STEP_NAMES "... 'typecheck', 'mobile-typecheck', 'mobile-tests', 'suite'" — both pinned arrays carry the two names in the one diff.
+MET — plan/AC#4: "One dated line in CLAUDE.md (the pre-push line) and one in the phone testing spec section 5 name the new steps" — CLAUDE.md:35 "Dated 2026-11-24 (task-462, RR-0462): pre-push also runs `mobile-typecheck` and `mobile-tests`..." and docs/specs/03-mobile/98_mobile_testing_protocol.md:125 "> Dated note 2026-11-24 (task-462, RR-0462 ...): the phone typecheck and phone tests also run before every push..." — both name the two steps, the spec note sits before "## 6. Historical Context".
+MET — plan: "Off means removing the two lines ... no switch file, no environment setting" — .husky/pre-push-checks.sh:12-13 — two plain `step` lines added, no switch file, env var or condition introduced.
+MET — plan: "No station.sh edit (it is outside the repo)" — diff a/.husky/pre-push-checks.sh b/.husky/pre-push-checks.sh "step suite env VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test $SUITE_ARGS" — the diff touches no station.sh path.
+MET — AC#2: "The gate-list test names the two new lines and step names and passes; it fails on the old six-step list" — src/tests/hooks-composition.infra.test.ts:558 "it('T2 — the list holds exactly the eight chain lines ..." — T2 asserts an eight-line list against the old six-line file, so the old list fails.
+MET — AC#3: "A phone test made to fail stops the run before the web suite starts" — .husky/pre-push-checks.sh:12-13 "step mobile-tests ... &&" followed by "step suite ..." — mobile-tests precedes the web suite inside the `&&` chain, so a non-zero phone exit stops before suite.
+
+VERDICT: PASS
+Clauses checked: 10   Unmet: 0
+Rules met: RR-0392, RR-0429, RR-0460, RR-0462
+
+---
+⏱  62819ms (62.8s)
+📊 Tokens — total: 25588, input: 12517, output: 13071, reasoning: 12287

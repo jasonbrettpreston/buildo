@@ -1,11 +1,11 @@
 ---
 id: TASK-462
 title: PROC.PHONEGATE Phone typecheck and phone tests join the push gate list
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-PROC462'
 created_date: '2026-11-24T18:43:00Z'
-updated_date: '2026-11-24T19:12:00Z'
+updated_date: '2026-11-24T19:34:00Z'
 labels:
   - ProcessImprovement
 milestone: m-1
@@ -26,6 +26,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-24/BL-PROC462/REPORT.md
+  - docs/reports/lanes/2026-11-24/BL-PROC462/GROUNDER.md
+  - docs/reports/lanes/2026-11-24/BL-PROC462/TRIAGE.md
 type: fix
 ordinal: 156210
 ---
@@ -45,9 +48,9 @@ Files: .husky/pre-push-checks.sh, src/tests/hooks-composition.infra.test.ts, CLA
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 A push station run shows the two new steps and then PASS, and the worktree is clean afterwards (no coverage folder)
-- [ ] #2 The gate-list test names the two new lines and step names and passes; it fails on the old six-step list
-- [ ] #3 A phone test made to fail stops the run before the web suite starts
-- [ ] #4 CLAUDE.md and the phone testing spec section 5 each carry one dated line naming the new steps
+- [x] #2 The gate-list test names the two new lines and step names and passes; it fails on the old six-step list
+- [x] #3 A phone test made to fail stops the run before the web suite starts
+- [x] #4 CLAUDE.md and the phone testing spec section 5 each carry one dated line naming the new steps
 <!-- AC:END -->
 
 ## Definition of Done
@@ -201,4 +204,22 @@ rg#2 MED folded (the station refuses
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-24 taken on the board at lane launch (lane BL-PROC462, worktree /Users/brettpreston_macmini/Buildo-wt-proc462, branch wf2/inc1b-proc462), RR-0240
+
+2026-11-24 R1 red: hooks-composition.infra.test.ts now pins the eight-line list (LIST_LINES + STEP_NAMES, plan 4.1); a commit attempt with only the test and task file staged, against the old six-line .husky/pre-push-checks.sh, is expected refused by the pre-commit related run (T2 6 vs 8 lines; T4 FAIL_AT=mobile-typecheck status 0).
+
+2026-11-24 R1 red proven: commit attempt refused by the pre-commit related run, 2 failed | 52 passed (T2 expected 6 to equal 8 lines; T4 FAIL_AT=mobile-typecheck expected 0 to be 1), red.out in the lane report dir. Build: plan 4.2-4.4 applied as written (two step lines after typecheck in .husky/pre-push-checks.sh; CLAUDE.md dated line after item 5; Spec 98 section 5 dated note). R3 by hand from the worktree root (through guard.mjs --file): mobile-typecheck rc=0; mobile-tests 58/58 suites, 866/866 tests, rc=0; git status shows no mobile/coverage. R2: the planted no-such-test-path run exits 1 (No tests found), so a phone failure propagates through npm and the chain (T4) stops before suite. No deviation from the plan.
+
+2026-11-24 deviation (recorded, not re-planned): the Spec 98 note grows the mobile-98 list, so the pre-commit rule-lists page --check (.husky/pre-commit) refuses the commit until docs/reports/generated/rule-lists-by-kind.md is regenerated (page --write: mobile-98 11,496 -> 11,801 characters, total 215,384 -> 215,689); that generated path is not on the Files line, and check-task-files refuses it beside a code file. The Description is not edited (brief: no Description edit); instead the work lands in two commits: (1) the docs commit (Spec 98 note, CLAUDE.md line, the regenerated page, context-r2.md; no code file, the case check-task-files exempts, as a997f8fb7 did for task-450's generated files), (2) the code commit (the list and its pin). The page sits under docs/reports/, an optional path for the close check. For the grounder: the plan missed this generated file (task-435 and task-446 declared it on their Files lines).
+
+2026-11-24 commit 1 (docs) 06811e273 landed through the real hooks. Commit 2 (code): the two step lines in .husky/pre-push-checks.sh and the eight-step pin in hooks-composition.infra.test.ts; green = this commit's pre-commit related run.
+
+2026-11-24 output review round 1 run (context-r3.md, diff base 4c79afacf head 5cccba960): 12 DeepSeek outputs, 43 findings (1 HIGH, rest MED/LOW/NIT) in docs/reports/lanes/2026-11-24/BL-PROC462/FINDINGS.md. Grounder owed: the lane does not rule its own findings. AC #1 station run owed by the orchestrator (plan section 5 R3).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+What landed: 06811e273 docs (Spec 98 section 5 dated note at :125, CLAUDE.md item 5 dated line at :34, regenerated rule-lists-by-kind.md), 5cccba960 code (two step lines mobile-typecheck and mobile-tests in .husky/pre-push-checks.sh:12-13, eight-step pin in hooks-composition.infra.test.ts); red proven (2 failed | 52 passed, red.out), hooks green (54/54, green.out); r3 by hand: mobile-typecheck rc=0, mobile-tests 58/58 suites 866/866 tests rc=0, no mobile/coverage. Acceptance line 1: the push station run is owed by the orchestrator after the fold (on the gate worktree), DONE needs it. Orchestrator record (not proof for this card): tip a12d535f5, without this card, was pushed today and its Mobile CI run succeeded (GitHub Actions run 45469556482).
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 1 pile; grounder docs/reports/lanes/2026-11-24/BL-PROC462/GROUNDER.md; triage docs/reports/lanes/2026-11-24/BL-PROC462/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->
