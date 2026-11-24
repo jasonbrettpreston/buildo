@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T18:00:08.721Z file_sha256=dbf4e333ee2896f73d652c15ebe8b15f59b6a0b581f935bb4e8e1f9492250fa8 prompt_sha256=84b64c4f916022160f3e71ca0a21f323a3c24273d1b3dcec31f257eb7b11cadd
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-ms-S-p3.txt (model: deepseek-reasoner)
+
+MET — Project objective "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" (~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md:3) — src/tests/surfaces/static-web-binding.ui.test.tsx:127 "expect(plant((p) => { p.sections[1].kind = 'banner'; }))" — the diff only shifts section indices and string counts for the card-named header change, no unnamed behaviour.
+MET — Increment objective "the 65 designed search elements ... E (web search pages), F (landing entry)" (doc-2:27 "| id | element | where | status | deliverers | built |") — src/tests/surfaces/static-web-binding.ui.test.tsx:193 "expect(header![1]).toMatch(/<a\b[^>]*href=\"\/login\"[^>]*>[\s\S]*?Log in[\s\S]*?<\/a>/)" — verifies the header wordmark / and /login Log in on the plain pages, serving landing entry.
+MET — Operator ruling RR-0446 "leave it as it is 02 Agrred add to the plan." (MORNING-DECISIONS.md:2302) — src/tests/surfaces/surface-conformance.logic.test.ts:262 "select.label retired" — the string diff retires only an unreachable select branch, no neighbour lots drawn.
+DEFER severity=LOW — AC6 "- #6 Objective C.3 carries a dated note: no neighbour lots" — NONE — the C.3 dated note is not present in this chunk's diff and the implementation notes place it in a separate commit — verification only, the doc-2 note lands outside chunk 3 so cannot see it here, safe to defer to that commit's review.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: none
+
+---
+⏱  46946ms (46.9s)
+📊 Tokens — total: 18765, input: 9870, output: 8895, reasoning: 8464

@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:21:37.088Z file_sha256=c51a8eee1da3e53dad7876608fc19f012860bcfefdbceefeb19b3192f01972fc prompt_sha256=ac041bcabdfe25d195f54a6ab8eefea9dee3d8f78042236f46233b0a1b82934d
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-inc-S-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — doc-2 C.9 dated note 'Frontage and zoning are still sent by the lookup (the map field whitelist) but are no longer shown or spoken' — docs/reports/generated/127-surface-registry.md:681 'listed as cards (area, frontage, zoning) under the map' — the registry still tells a reviewer the card shows frontage and zoning while the dated note three sentences later says it does not, and unlike the doc-2 C.3 note it never says the old words no longer describe the page — strike 'frontage, zoning' from that sentence (and the same sentence in docs/reports/generated/127-surface-review-queue.md:201) or add 'the words above no longer describe the page'.
+
+DEFER severity=MED — doc-2 B.8 row 'Faint tappable neighbour outlines on the unlinked state' with built 'BUILT' — docs/reports/generated/127-surface-registry.md:681 'An address found with no linked lot: the plain message "No lot linked yet", the pin and the faint neighbouring lots' — the same paragraph now also says 'no faint neighbouring lots on the unlinked state', so the registry states both that the built page draws the faint lots and that it does not, and a reviewer cannot tell which is current — reconcile the sentence with the note, or mark the sentence as prior text as the doc-2 C.3 note does.
+
+DEFER severity=MED — RR-0392 'Nothing is added that the plan or a ruling does not name' — docs/reports/generated/127-surface-registry.md:681 'no faint neighbouring lots on the unlinked state (B.8 removed; RR-0446, MORNING-DECISIONS.md:2302-2303: the several-lots map stays as built)' — B.8 removal is not in the card's change list or folded findings (ST3/2c, V1, V2, V3, L2, L7, R3, X1, X6, R5, B.7, H Q2, H Q4) and RR-0446 rules only the several-lots map ('04  leave it as it is'), so the unlinked state is declared changed with no ruling — drop the B.8 clause from both generated notes, or add the doc-2 dated note that records the ruling.
+
+MET — doc-2 C.7 dated note 'task-451 adds "at the back" for a lot with no fronting street' — .cursor/MCFRONTEND-QUEUE.md:418 — the new note supersedes the old '"at the back" is not data and is not used' and records the card reading 'Lot B · no building · at the back'.
+
+MET — doc-2 B.6/B.7 dated note 'with "report it" an inline link to Help & Support, topic wrong-lot' — .cursor/MCFRONTEND-QUEUE.md:418 — 'the no-lot message ends "Try a nearby address or report it." with "report it" an inline link to the same topic'.
+
+MET — doc-2 C.12 dated note 'task-451 points it at the topic wrong-lot' — .cursor/MCFRONTEND-QUEUE.md:418 — 'the Help page has the topic wrong-lot since task-450, so every link of the page opens it'.
+
+MET — doc-2 C.3 dated note / AC6 'the map draws no neighbour lots' — .cursor/MCFRONTEND-QUEUE.md:418 — 'The several-lots map stays as built: no neighbour lots.'
+
+MET — AC4 'The screen-reader label contains the visible card text' — .cursor/MCFRONTEND-QUEUE.md:418 — 'The card's screen-reader label is its visible text (lead line and area, no frontage or zoning)'.
+
+MET — AC1 'A lot size outside the plausible range reads "Not available"' — .cursor/MCFRONTEND-QUEUE.md:418 — 'an implausible lot size (outside LOT_SIZE_PLAUSIBLE_M2) is sent as a null area and reads "Not available"'.
+
+MET — RR-0446 '04  leave it as it is' — .cursor/MCFRONTEND-QUEUE.md:418 — 'The several-lots map stays as built: no neighbour lots.'
+
+MET — doc-2 C.9 dated note 'is sent as a null area' — mobile/__tests__/fixtures/lotMap.situations.json:287 — '"area": null' gives the golden the null area the note describes.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 2
+Rules met: none
+
+---
+⏱  379276ms (379.3s)
+📊 Tokens — total: 89659, input: 37623, output: 52036, reasoning: 51013

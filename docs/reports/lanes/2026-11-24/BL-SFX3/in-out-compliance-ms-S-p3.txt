@@ -1,0 +1,139 @@
+LIST ms-S sha256:88ee2c10fa967d62bb0523de27dbf207ca7b5fe36f2bf3616016f3b47b5c29bd material sha256:ee6ac7feb39e6114d6db1730a8c96c7ae544c9acc66914b7d66238cf75e717f5 part 1 of 1 chunk 3 of 3
+RULE LIST ms-S (backlog/milestones/m-1 - increment-1·b-search-[s].md, sections Project objectives; Increment objectives; Objectives), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/surfaces/static-web-binding.ui.test.tsx","src/tests/surfaces/surface-conformance.logic.test.ts","src/tests/surfaces/surface-validate.logic.test.ts"]
+
+## Project objectives
+- Objective: finish a completed project, a database that works and is ready (operator 2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "our objective is to finish a completed project ie a database that works and is ready"
+- The database exists to service the designed report, details and search page (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "the database is created to service the existing report and details as clairfied in the McFrontend. This includes the search page"
+- A task that serves neither a designed element nor a supporting function is most likely not relevant (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code"
+- Five principles, keep it simple, no scope creep (~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md:3) "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep"
+- One plan only (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "we need one plan - we can only execute one plan"
+
+## Increment objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion (docs/reports/plan-import/raw/2026-11-19/search-brief.json inc; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+- The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report; the semi calculation stays in Increment 7 (7.25) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796) "Maybe the search portion done now with the page."
+- What the customer sees: the 65 designed search elements A (search page), B (address confusion), C (lot confusion, lot map), D (semi question page), E (web search pages), F (landing entry), G (hand-off to the report) (backlog/docs/increments/doc-2 - Increment-S-requirements.md:27) "| id | element | where | status | deliverers | built |"
+
+## Objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion; most of it is already built (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "Operator, verbatim: "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/surfaces/static-web-binding.ui.test.tsx b/src/tests/surfaces/static-web-binding.ui.test.tsx
+index b94a84c76570275c65e0a564c3e9a4eb567c949b..02be1560ecbcd160192b4cdaf8f75348622b7dbb 100644
+--- a/src/tests/surfaces/static-web-binding.ui.test.tsx
++++ b/src/tests/surfaces/static-web-binding.ui.test.tsx
+@@ -14,6 +14,9 @@
+ //       data-topic); with none the server's keepValued leaves them out; the prefill island adds the cleaned, encoded fragment values as the body of
+ //       the fragment topic's link only (a CR/LF bcc payload stays inside the body); RED: a mailto without its value, a topic outside the list, a
+ //       topic on a paragraph throw.
++//   (e) dated 2026-11-24 (SEARCHFIX.3, task-451; H Q2 and H Q4, GROUNDER-QUESTIONS.md:75, :77; help.html and terms-privacy.html:262 "MaxBLD home -> /; Log in -> /login";
++//       plan ruling 8.5: both states of the error page): every plain page draws the header with the links / "MaxBLD" and /login "Log in" and keeps the
++//       narrow column; RED: a title-less hero with any other part still throws.
+ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+ import fs from 'node:fs';
+ import path from 'node:path';
+@@ -99,6 +102,7 @@ describe('(b) the one action', () => {
+ });
+ 
+ describe('(c) RED: planted defects throw', () => {
++  // SEARCHFIX.3 (task-451, dated 2026-11-24): web_help gains the header section first (H Q2), so its prose and footer move from sections[0], [1] to [1], [2].
+   const base = (): { page: StaticPage; content: Record<string, string> } => clone(staticPage('web_help', 'static'));
+   it('an unknown component and an unknown action throw at render', () => {
+     const { page, content } = base();
+@@ -107,7 +111,8 @@ describe('(c) RED: planted defects throw', () => {
+     (bad.children[0] as StaticNode).component = 'Card';
+     expect(() => ssr(bad, content)).toThrow('StaticBinding: unmapped component "Card"');
+     const act = staticWebTree(clone(staticPage('web_maxbld_error', 'error')).page);
+-    const prose = (act.children[0] as StaticNode).children[0] as StaticNode;
++    // SEARCHFIX.3 (task-451, dated 2026-11-24): the error page opens with the header section (H Q4, ruling 8.5), so its prose moves from children[0] to [1].
++    const prose = (act.children[0] as StaticNode).children[1] as StaticNode;
+     (prose.children[2] as StaticNode).props.onClick = { action: 'push', route: '/x' };
+     expect(() => ssr(act, STATIC_CONTENT.web_maxbld_error as Record<string, string>)).toThrow('StaticBinding: unknown action');
+   });
+@@ -121,15 +126,15 @@ describe('(c) RED: planted defects throw', () => {
+   });
+   it('a number as a part content, an unknown kind, a role outside its kind, a link with no href or an off-origin href throw in the tree', () => {
+     const plant = (f: (p: Json) => void): (() => StaticNode) => { const { page } = base(); f(page as unknown as Json); return () => staticWebTree(page); };
+-    expect(plant((p) => { p.sections[0].parts[1].content = 9.99; })).toThrow('is not a content key');
++    expect(plant((p) => { p.sections[1].parts[1].content = 9.99; })).toThrow('is not a content key');
+     // MF-76 (dated 2026-11-11): hero is a landing kind now; the planted unknown kind is one no row has added.
+-    expect(plant((p) => { p.sections[0].kind = 'banner'; })).toThrow('unknown section kind "banner"');
+-    expect(plant((p) => { p.sections[0].parts[1].role = 'link'; p.sections[0].parts[1].href = '/help'; })).toThrow('role "link" is not a prose role');
+-    expect(plant((p) => { delete p.sections[1].parts[0].href; })).toThrow('href undefined is not allowed here');
+-    expect(plant((p) => { p.sections[1].parts[0].href = '//evil.com'; })).toThrow('href "//evil.com" is not allowed here');
+-    expect(plant((p) => { p.sections[1].parts[0].href = 'https://evil.com'; })).toThrow('is not allowed here');
+-    expect(plant((p) => { p.sections[0].parts[1].href = '/help'; })).toThrow('href "/help" is not allowed here');
+-    expect(plant((p) => { p.sections[0].extra = 1; })).toThrow('unknown key "extra"');
++    expect(plant((p) => { p.sections[1].kind = 'banner'; })).toThrow('unknown section kind "banner"');
++    expect(plant((p) => { p.sections[1].parts[1].role = 'link'; p.sections[1].parts[1].href = '/help'; })).toThrow('role "link" is not a prose role');
++    expect(plant((p) => { delete p.sections[2].parts[0].href; })).toThrow('href undefined is not allowed here');
++    expect(plant((p) => { p.sections[2].parts[0].href = '//evil.com'; })).toThrow('href "//evil.com" is not allowed here');
++    expect(plant((p) => { p.sections[2].parts[0].href = 'https://evil.com'; })).toThrow('is not allowed here');
++    expect(plant((p) => { p.sections[1].parts[1].href = '/help'; })).toThrow('href "/help" is not allowed here');
++    expect(plant((p) => { p.sections[1].extra = 1; })).toThrow('unknown key "extra"');
+     expect(plant((p) => { p.sections = []; })).toThrow('at least one section');
+   });
+ });
+@@ -162,8 +167,31 @@ describe('(d) the Help & Support mail links (MF-46 follow-up, dated 2026-11-12)'
+     const { page, content } = staticPage('web_help', 'static');
+     expect(() => ssr(staticWebTree(page), content, { values: {} })).toThrow('StaticBinding: no server value "support_inbox"');
+     const plant = (f: (p: Json) => void): (() => StaticNode) => { const p = clone(page) as unknown as Json; f(p); return () => staticWebTree(p as unknown as StaticPage); };
+-    expect(plant((p) => { p.sections[0].parts[2].topic = 'sales'; })).toThrow('a mailto has a listed topic');
+-    expect(plant((p) => { p.sections[0].parts[1].topic = 'general'; })).toThrow('no other part has a topic');
+-    expect(plant((p) => { p.sections[0].parts[2].value = 'other'; })).toThrow('a mailto has a listed topic and the read support_inbox');
++    expect(plant((p) => { p.sections[1].parts[2].topic = 'sales'; })).toThrow('a mailto has a listed topic');
++    expect(plant((p) => { p.sections[1].parts[1].topic = 'general'; })).toThrow('no other part has a topic');
++    expect(plant((p) => { p.sections[1].parts[2].value = 'other'; })).toThrow('a mailto has a listed topic and the read support_inbox');
++  });
++});
++
++describe('(e) the plain pages carry the header links (SEARCHFIX.3 H Q2, H Q4; task-451)', () => {
++  const PLAIN: Array<[string, string]> = [['web_help', 'static'], ['web_terms', 'static'], ['web_privacy', 'static'], ['web_maxbld_error', 'error'], ['web_maxbld_error', 'miss']];
++  it.each(PLAIN)('%s %s: a <header> with / "MaxBLD" and /login "Log in", before the page content; the narrow column is kept', (id, state) => {
++    const { page, content } = staticPage(id, state);
++    const html = ssr(staticWebTree(page), content, { actions: { retry: () => undefined } });
++    const header = /<header\b[^>]*>([\s\S]*?)<\/header>/.exec(html);
++    expect(header).not.toBeNull();
++    expect(header![1]).toMatch(/<a\b[^>]*href="\/"[^>]*>[\s\S]*?MaxBLD[\s\S]*?<\/a>/);
++    expect(header![1]).toMatch(/<a\b[^>]*href="\/login"[^>]*>[\s\S]*?Log in[\s\S]*?<\/a>/);
++    expect([content['nav.home'], content['nav.sign_in']]).toEqual(['MaxBLD', 'Log in']);
++    expect(html.indexOf('<header')).toBeLessThan(html.indexOf('data-testid="static-footer"'));
++    expect(html).toContain('max-w-2xl');
++    expect(html).not.toContain('max-w-6xl');
++    expect(html.match(/<h1\b/g)?.length ?? 0).toBeLessThanOrEqual(1);
++    expect(errors).toEqual([]);
++  });
++  it('RED: a title-less hero with a tagline (or any part but the wordmark and nav) still throws', () => {
++    const { page } = clone(staticPage('web_help', 'static'));
++    (page.sections[0] as unknown as Json).parts.push({ role: 'tagline', content: 'help.intro' });
++    expect(() => staticWebTree(page)).toThrow('a hero has a title');
+   });
+ });
+diff --git a/src/tests/surfaces/surface-conformance.logic.test.ts b/src/tests/surfaces/surface-conformance.logic.test.ts
+index 8f5965f7382c7fa997eaf1e23e2d8062b18c8f46..6e662a6a9783746e2c52fa202b1217560ba4b424 100644
+--- a/src/tests/surfaces/surface-conformance.logic.test.ts
++++ b/src/tests/surfaces/surface-conformance.logic.test.ts
+@@ -259,7 +259,8 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
+     // SRCH.C12 (task-321; dated 2026-11-19; operator RR-0299 "C12 - is a fake email address until launch"): 422 -> 424 strings: +2 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (help.lot.prompt, help.address.link, lines 25-26); measured with surface-validate --check before (422) and after (424).
+     // SRCH.LOTMAP-2 (task-362; dated 2026-11-19; design small-pages-v8 choose-lot.html:278 "Pick a lot on the map or in the list."): 425 -> 426 strings: +1 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (select.hint); goldens unchanged (100); measured with surface-validate --check before (425) and after (426).
+     // SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings: +1 in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json (help.mailto.wrong_lot); goldens unchanged (100); measured with surface-validate --check before (426) and after (427).
+-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 100 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 427 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
++    // SEARCHFIX.3 (task-451; dated 2026-11-24; H Q2/H Q4 GROUNDER-QUESTIONS.md:75, :77; doc-2 B.6 (doc-2:48); plan rulings 8.1 b and 8.3): 427 -> 436 strings: +8 nav strings (nav.home "MaxBLD" and nav.sign_in "Log in" in web_help, web_terms, web_privacy and web_maxbld_error .content.json, the plain-page header links) and +1 net in mobile_parcel_disambiguation_map.content.json (unlinked.report and unlinked.stop added, select.label retired); goldens unchanged (100); measured with surface-validate --check before (427) and after (436).
++    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 100 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 436 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
+   });
+   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
+     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
+diff --git a/src/tests/surfaces/surface-validate.logic.test.ts b/src/tests/surfaces/surface-validate.logic.test.ts
+index 348152fd8d4312ead5bad40b23002a09b633dfb4..16f1b2fcdbe830393f7490a274cd70d4a079765e 100644
+--- a/src/tests/surfaces/surface-validate.logic.test.ts
++++ b/src/tests/surfaces/surface-validate.logic.test.ts
+@@ -89,7 +89,8 @@ describe('FE-13 surface-validate gate: real tree', () => {
+     // SRCH.C12 (task-321; dated 2026-11-19; operator RR-0299 "C12 - is a fake email address until launch"): 422 -> 424 strings: +2 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (help.lot.prompt, help.address.link, lines 25-26); measured with surface-validate --check before (422) and after (424).
+     // SRCH.LOTMAP-2 (task-362; dated 2026-11-19; design small-pages-v8 choose-lot.html:278 "Pick a lot on the map or in the list."): 425 -> 426 strings: +1 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (select.hint); goldens unchanged (100); measured with surface-validate --check before (425) and after (426).
+     // SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings: +1 in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json (help.mailto.wrong_lot, the topic "Wrong address or lot"); goldens unchanged (100); measured with surface-validate --check before (426) and after (427).
+-    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 427 strings) · S-page ok (1 of 1 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
++    // SEARCHFIX.3 (task-451; dated 2026-11-24; H Q2/H Q4 GROUNDER-QUESTIONS.md:75, :77; doc-2 B.6 (doc-2:48); plan rulings 8.1 b and 8.3): 427 -> 436 strings: +8 nav strings (nav.home "MaxBLD" and nav.sign_in "Log in" in web_help, web_terms, web_privacy and web_maxbld_error .content.json, the plain-page header links) and +1 net in mobile_parcel_disambiguation_map.content.json (unlinked.report and unlinked.stop added, select.label retired); goldens unchanged (100); measured with surface-validate --check before (427) and after (436).
++    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 436 strings) · S-page ok (1 of 1 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
+     expect(r.stdout.startsWith('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · ')).toBe(true);
+     expect(r.stdout).toContain('S-desc ok (examined 33 in scope:');
+   });
+

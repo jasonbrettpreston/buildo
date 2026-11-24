@@ -24,6 +24,7 @@ import {
 } from '@/app/api/parcels/lookup/types';
 import type { LotMapRows } from '@/lib/parcels/lot-map';
 import { areaSqftM2Dot, len1 } from '@/lib/parcels/display-rules';
+import { LOT_SIZE_PLAUSIBLE_M2 } from '@/lib/report-projection/project';
 
 type LotOutline = NonNullable<ConsumerLotMap['lots'][number]['outline']>;
 
@@ -76,8 +77,9 @@ const CONSUMER_COMPARABLE_FIELDS = [
 
 const MAX_COMPARABLE_EXAMPLES = 12;
 
+// SEARCHFIX.3 L2 (task-451; FOLD-PLAN.md:56): an empty string is no value (null), never Number('') = 0. A defensive guard: no stored column holds ''.
 const num = (v: unknown): number | null => {
-  if (v == null) return null;
+  if (v == null || v === '') return null;
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
 };
@@ -218,13 +220,21 @@ export function fitOf(outlines: Array<LotOutline | null>, pin: { lat: number; ln
   return { north, south, east, west };
 }
 
+/** SEARCHFIX.3 ST3 (task-451; RR-0444 2c, MORNING-DECISIONS.md:2291 "The lot card shows "Not available" for an implausible area"): the map lot's area is
+ * sent only when the stored size lies inside the one plausible window (LOT_SIZE_PLAUSIBLE_M2, inclusive, the same test as the report's lot_size_implausible);
+ * outside it, or not a number, the area is null and the card shows its null value. */
+const plausibleSize = (v: unknown): boolean => {
+  const n = num(v);
+  return n !== null && n >= LOT_SIZE_PLAUSIBLE_M2.min && n <= LOT_SIZE_PLAUSIBLE_M2.max;
+};
+
 export function assembleLotMap(rows: LotMapRows): ConsumerLotMap {
   const lots = rows.lots.map((l) => {
     const lat = num(l.centroid_lat);
     const lng = num(l.centroid_lng);
     return {
       parcelId: String(l.parcel_id),
-      area: areaSqftM2Dot(l.lot_size_sqm),
+      area: plausibleSize(l.lot_size_sqm) ? areaSqftM2Dot(l.lot_size_sqm) : null,
       frontage: len1(l.frontage_m),
       zoning: l.zoning_zn_string == null || l.zoning_zn_string === '' ? null : String(l.zoning_zn_string),
       centroid: lat !== null && lng !== null ? { lat, lng } : null,

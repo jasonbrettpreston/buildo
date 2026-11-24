@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:23:50.144Z file_sha256=5ca92d7f1eaead4d81d5ff61661b4ced9189698d6db02326a3a7ca782a9b295c prompt_sha256=6469e9cdd429baca2c55987d0d40ddc57c90c67230867523d3ca6f88c1655ab5
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-mobile-99-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — card AC6 "Objective C.3 carries a dated note: no neighbour lots" — `docs/reports/generated/127-surface-registry.md` "Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept)" is the only dated note visible in this chunk, none on C.3 — AC6 cannot see: the Implementation Notes claim "The doc-2 dated notes (AC6 C.3, C.7, C.12, B.6/B.7, C.9) ... land in their own commit", a path outside this chunk — verify the C.3 dated note exists before merge, do not close AC6 on the note alone.
+
+MET — Spec 99 §1 "Adding a new Zustand store, a new MMKV blob, a new hydration bridge, or a new routing `useEffect` requires either matching an existing pattern in §3-§5 or amending this spec." — `.cursor/MCFRONTEND-QUEUE.md` "+  - Dated note 2026-11-24 (M-246, prior text kept; MF-53 · McFrontend queue · lane BL-SFX3, task-451 SEARCHFIX.3" — this chunk adds one queue note and one generated registry entry, no store, blob, bridge or router effect.
+
+MET — Spec 99 §3 "Adding a field to the mobile app requires adding a row here." — `docs/reports/generated/127-surface-registry.md` "| reads | `user_profiles` | `user_id` · `trade_slug` · `display_name`" — the ownership-relevant columns are unchanged, no mobile field is added or re-owned in this chunk.
+
+MET — Spec 99 §4 B1 "Adding a new server query requires a row here." — `docs/reports/generated/127-surface-registry.md` "through the same query the search page already filled (['parcel-search', q])" — the lookup still rides existing registered keys; the added SEARCHFIX.1 note states "No `resolution` value is added and the meter is unchanged", so the query-key registry needs no new row.
+
+MET — Spec 99 §B5 "All in-memory Zustand stores MUST be enumerated in `clearLocalSessionState()`." — `docs/reports/generated/127-surface-registry.md` "+**What it reads and writes.** It reads 7 tables through inputs.tables" — a server-side read-count change, no new Zustand store, so no `.reset()` enumeration change is owed here.
+
+MET — Spec 99 §5.1 "Other layouts ... MUST NOT have routing `useEffect`s." — `docs/reports/generated/127-surface-registry.md` "The no-lot message ends \"Try a nearby address or report it.\", with \"report it\" a link to the Help topic wrong-lot" — the added affordance is a link, not a routing effect on any layout.
+
+MET — card AC3 "The no-lot line ends \"or report it\" and links to the wrong-lot help topic" — `docs/reports/generated/127-surface-registry.md` "with \"report it\" a link to the Help topic wrong-lot" — the clause is stated in both the queue note and the registry entry.
+
+MET — card AC2 "A lot with no fronting street reads \"at the back\"" — `.cursor/MCFRONTEND-QUEUE.md` "a lot with no fronting street reads \"Lot B · no building · at the back\" or \"Lot A · has the house · at the back\"" — stated as the card rule in both files.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: none
+
+---
+⏱  53558ms (53.6s)
+📊 Tokens — total: 45053, input: 34341, output: 10712, reasoning: 9891

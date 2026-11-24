@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:24:02.208Z file_sha256=75dd9af96841a93bff0eb2075966487f411585e1c87d08141249917d3b114410 prompt_sha256=9e5ab9ccdecdb9c7d13e703c69525fc24e8cfde458eb635add70a82a6c22a819
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-mobile-99-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC2 "A lot with no fronting street reads 'at the back'" — mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json "\"lead\": { \"text\": { \"content\": \"lot.letter\" }, \"vars\": { \"letter\": { \"derived\": \"letter.2\" } } }" — the third lot of multi_parcel_3plus (whose response lacks the street fields per the lane note) renders a bare "Lot C" with no "at the back", so AC2 is not met for that lot — give lot C the "no building" or "has the house" lead ending "at the back", or add a test assertion covering lot C.
+
+DEFER severity=LOW — AC1 "A lot size outside the plausible range reads 'Not available' on the card and in its screen-reader label" — mobile/__tests__/fixtures/lotMap.situations.json "\"area\": null," — the fixture and goldens exercise a missing area (null), not an out of range stored lot size, so AC1's "outside the plausible range" condition is not demonstrated in this chunk (the size to null conversion is consumer-lookup, not pasted here) — add a fixture lot with an out of range lot_size_sqm asserting "Not available", or cite the consumer-lookup test that proves the conversion.
+
+DEFER severity=LOW — AC6 "Objective C.3 carries a dated note: no neighbour lots" — docs/reports/generated/127-surface-review-queue.md "(B.8 removed; RR-0446, MORNING-DECISIONS.md:2302-2303: the several-lots map stays as built)" — the dated note present in this chunk sits on the review-queue page, not on Objective C.3, and the lane note defers the C.3 note to a separate commit not present here, so AC6 is not shown satisfied in this chunk (cannot see the C.3 note) — confirm the Objective C.3 dated note lands before merge.
+
+DEFER severity=LOW — RR-0392 "Nothing is added that the plan or a ruling does not name" — docs/reports/generated/127-surface-review-queue.md "-| writes | `user_profiles` | `user_id` · `trade_slug` · `display_name` |" — the diff drops the write declaration for the admin-notifications surface (owner docs/specs/02-web-admin/102_admin_notifications_tool.md), which no task-451 ruling names, an unexplained regeneration change bundled into this task — confirm the deleted write row is the intended emitter output and not a stale drop before merge.
+
+MET — AC3 — mobile/__tests__/lotMapScreens.golden.test.ts "expect(LOT_MAP_SLICE.content['unlinked.body']).toBe(\"We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address or \");" plus the parcel-lotmap-report link to wrong-lot — the no-lot line ends "or report it." and links the wrong-lot topic.
+
+MET — AC4 — mobile/__tests__/lotMapPage.behaviour.test.tsx "expect(labelA).toBe('Lot A · has the house · faces Dunmore Lane, 3,052 sq ft · 284 m²');" — the card screen-reader label is the lead line plus the area, the visible text, with no frontage or zoning.
+
+MET — AC5 — mobile/__tests__/lotMapPage.behaviour.test.tsx "it.each([['error', 'parcel-lotmap-error', true], ['rate_limited', 'parcel-lotmap-ratelimit', false], ['unauthorized', 'parcel-lotmap-entitlement', false], ['schema_drift', 'parcel-lotmap-error', false]] as const)" — the four error inputs render their own notices as errors, only unexpected offers Retry.
+
+VERDICT: PASS on compliance with the pasted clauses (no CRIT or HIGH; MED and LOW deferred)
+Clauses checked: 7   Unmet: 4
+Rules met: none
+
+---
+⏱  81209ms (81.2s)
+📊 Tokens — total: 51669, input: 33899, output: 17770, reasoning: 16869

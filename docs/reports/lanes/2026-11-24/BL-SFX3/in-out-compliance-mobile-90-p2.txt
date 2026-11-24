@@ -1,0 +1,1336 @@
+LIST mobile-90 sha256:a35f6359cce4cf196797496385e86ef15014b73d358a929c0d82c26ee37fe1e2 material sha256:b5ce3e3c1a6b3880b5ca990dd2e85cd238294ab784cfab54ce9751c20a20cccc part 1 of 1 chunk 2 of 3
+RULE LIST mobile-90 (docs/specs/03-mobile/90_mobile_engineering_protocol.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json","mobile/__tests__/lotMapPage.behaviour.test.tsx","mobile/__tests__/lotMapScreens.golden.test.ts","mobile/src/components/surfaces/LotMapBinding.tsx","mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json","scripts/analysis/lot-map-data-check.mjs","scripts/surfaces/_schema/census/mobile-product.json","scripts/surfaces/_schema/static-page.json","scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json","scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json","scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json","scripts/surfaces/parcel_product/F06/surfaces/web_maxbld_error.content.json","scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json","scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json","src/components/surfaces/web/StaticBinding.tsx","src/lib/parcels/consumer-lookup.ts"]
+
+# Spec 90 — Mobile Engineering Protocol & Architecture (The Pivot)
+
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 2** of `.cursor/active_task.md`.
+
+> **Prevention loop (frontend/mobile home):** the frontend-tagged rows of the prevention registry (`docs/specs/00_engineering_standards.md` §14) live here. New CRITICAL/HIGH review findings (Spec 08 roster — incl. the User-Advocate/UX lens) that yield a *mobile* rule become protocol requirements in this spec and, where deterministic, a gate.
+
+## 1. Goal & User Story
+**Goal:** Build a truly native Expo application for tradespeople, relying on the Next.js backend for all heavy lifting. This establishes the foundation for offline reliability, native push notifications, and elite list performance. *Note: Push infrastructure is a cross-domain dependency requiring coordination with the Next.js backend for token registration and payload triggering.*
+**User Story:** As a tradesperson standing in a concrete basement with poor cell service, I need my Lead Feed to open instantly without crashing, allow me to scroll through thousands of local permits flawlessly, and ping my lock-screen the second a high-value job changes phases.
+
+## 2. Platform & Device Matrix
+This single Expo codebase targets three environments (Minimum OS requirements: iOS 16+ / Android 10+):
+1. **Mobile (iOS/Android):** Primary target. UI must accommodate notches, dynamic islands, and safe areas.
+2. **Tablet (iPad/Android):** UI must be responsive. Use NativeWind breakpoints (e.g., `md:flex-row`) to convert stacked mobile cards into side-by-side or grid layouts.
+3. **Web (Expo Web):** Compiles to a PWA. *Fallback constraint:* `@shopify/flash-list` does not support Web. You must implement a standard `<FlatList>` or TanStack Virtual fallback for the web target.
+
+> Dated note 2026-11-09 (M-246, prior text kept; spec review R-8, `~/Buildo-scratch/mcfrontend/PROGRAMME/SPEC-REVIEW-mobile-web.md`): descriptor-governed web surfaces render as Next.js RSC (Spec 126 §5.3; Spec 128 R-22); the MaxBLD web pages use the web library of Spec 126 §11b.4. The Expo Web build target is unruled.
+
+**Theme Constraint:** The app must natively support System Dark Mode. NativeWind `dark:` variants are required for all UI components.
+
+> Dated note 2026-11-09 (MF-42 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions"): measured at `ffb6b0610`, no `.tsx` file under `mobile/src` or `mobile/app` uses a `dark:` class, and the brand-primary surfaces are dark-mode-only (Spec 117 §3.4). How the React Native Reusables components carry their dark values is MF-35's to rule (coordinator direction, pending operator confirmation). Measured fact only; no rule changes.
+
+## 3. The Prime Directive: "Dumb Glass" Architecture
+You are an expert React Native / Expo developer. You are operating strictly in the **Mobile Domain**. 
+This mobile application is a "Dumb Glass" client. It **MUST NOT** perform complex data mutation, geographic PostGIS math, or algorithmic sorting. All heavy computational lifting is handled entirely by the Next.js API Backend. 
+
+The mobile app's sole responsibility is:
+1. Capturing device state (GPS coordinates, push tokens).
+2. Fetching pre-calculated JSON from the backend.
+3. Rendering the UI at 60fps.
+
+*Clarification:* This prohibits server-authoritative computed state. Ephemeral **optimistic UI state** (e.g., toggling a "Save" icon instantly before the server confirms) is highly encouraged and expected.
+
+## 4. The Tech Stack Constraints
+You must strictly adhere to the following stack:
+* **Framework:** Expo SDK (React Native) utilizing Expo Router.
+* **Core Native UI:** `react-native-reanimated` v3 and `react-native-gesture-handler` (required for 60fps animations and swipe gestures).
+* **Styling:** NativeWind v4 (Tailwind CSS for React Native).
+> ⚠️ **AMENDMENT 2026-09-15 (WF1 "Spec 126/127/128 surface standard") — two measured prose-vs-code drifts in this section. Additive; the original lines are retained below, unedited.**
+>
+> 1. **Auth is Supabase, not Firebase.** Measured: `mobile/package.json` declares `@supabase/supabase-js 2.110.7` and **no `@react-native-firebase/*` dependency at all**. The "Firebase Auth via `@react-native-firebase/auth`" line below predates the Supabase migration (Spec 113) and was never updated. Token persistence via Keychain/Keystore is still accurate in substance — it is the provider that is wrong.
+> 2. **There is no monorepo and no `packages/shared-types`.** Measured: no workspace of that name exists in either tree. Zod schemas are **transcribed per tree** today, which is precisely the defect Spec 126 §5.2 closes by *generating* the mobile mirror from the CONTRACT descriptor — the parcel cost contract is currently declared at **four** sites and locked at **one**, and the two Zod declarations disagree in strictness (`src/app/api/parcels/lookup/types.ts` uses `.strict()` six times; `mobile/src/lib/schemas.ts` uses `.passthrough()`/`z.record` five times — the client is looser than the server it mirrors).
+>
+> **§3's "Dumb Glass" prime directive is unaffected and is reinforced** — Spec 126 §5.3 makes it enforceable rather than merely stated, and preserves its optimistic-UI carve-out verbatim.
+
+* **Auth:** Firebase Auth via `@react-native-firebase/auth` (native module). Native Keychain (iOS) / Keystore (Android) handles token persistence; Play Integrity (Android) and APN silent-push (iOS) handle phone-auth bot prevention — no JS-rendered reCAPTCHA. Native dev build required (Spec 98); Expo Go is not supported.
+* **Server State:** `@tanstack/react-query` (v5).
+* **Client State:** `zustand` v5.
+* **Local Persistence:** `react-native-mmkv` (Synchronous C++ storage).
+* **Hardware:** `expo-location`, `expo-notifications`, `expo-haptics`.
+* **Infrastructure:** EAS (Expo Application Services) for CI/CD builds (`eas build`) and Over-The-Air updates (`eas update`).
+
+## 5. Strict Anti-Patterns (NEVER DO THESE)
+If you attempt to use any of the following web paradigms in this project, you have failed:
+* **NO HTML/DOM:** Never use `<div>`, `<span>`, `<a>`, `<p>`, or `<button>`. 
+* **NO Web Libraries:** Never import `shadcn/ui`, `@tremor/react`, `framer-motion`, or `lucide-react`. 
+* **NO DOM APIs:** Never use `window`, `document`, `localStorage`, `navigator.geolocation`.
+* **NO `useEffect` for Fetching:** Never fetch API data inside a `useEffect`. Always use TanStack Query.
+* **NO Inline `renderItem`:** Never pass an inline arrow function to a FlashList/FlatList `renderItem`. Always use `useCallback` or extract the function.
+* **NO standard `<Image>`:** Never use the base React Native `<Image>` for external URLs.
+
+## 6. The Component Philosophy: React Native Reusables
+We do not npm-install generic UI components. We use **React Native Reusables** (via `npx rn-reusables add [component]`). The code lives inside our repository, giving us full ownership of Tailwind styling and native dependency adjustments without version conflicts.
+
+> Dated note 2026-11-09 (MF-42 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions"): the command named above is not the CLI's package name: the CLI is `@react-native-reusables/cli` (version 0.7.1, registry `nativewind`; measured by the MF-42 plan lane), recorded in `scripts/surfaces/_schema/vendor-rnr.manifest.json`, with `mobile/components.json` aliases into the protected vendor dir `mobile/src/vendor/rnr/` (Spec 126 §11b.4). MF-35 runs it.
+
+> Dated note 2026-11-09 (McFrontend Phase 2; M-246, prior text kept; operator, verbatim: "D-0-D-4 approved D-3 we should used our existing components and approach as detailed in the mobile build specs"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9"): React Native Reusables is confirmed as the mobile library for MaxBLD pages (D-3). The CLI output is generated and never edited; it is vendored unmodified under a protected manifest (the vendor folder and its rule: Spec 126 §11b.4). It is installed by MF-35.
+
+## 7. State & Data Flow Protocol
+* **The API Contract:** The Next.js `src/app/api/*` routes are the absolute source of truth.
+* **Validation (Monorepo):** Zod schemas are shared via a `packages/shared-types` monorepo workspace to guarantee the mobile app and Next.js backend are never out of sync.
+* **Offline Mutation Queue:** Mutations (like saving a lead) made while offline MUST be queued using TanStack Query's offline mutation cache, backed by MMKV, ensuring they flush to the server upon reconnection.
+* **State Architecture & Ownership:** All Zustand stores, MMKV blobs, TanStack Query keys, and cross-layer bridges MUST conform to **Spec 99 — Mobile State Architecture & Ownership Protocol** (`docs/specs/03-mobile/99_mobile_state_architecture.md`). Adding a new field, store, or bridge requires either matching an existing pattern in Spec 99 §3-§5 or a Spec 99 amendment. Three render-loop incidents in 2026-05-02 traced to dual-source-of-truth violations precipitated this requirement.
+
+## 8. Hardware & Geolocation Protocol
+1. **Foreground Only:** Request ONLY foreground location (`requestForegroundPermissionsAsync()`). Background location invokes heavy App Store privacy scrutiny and is unnecessary for this feature.
+2. **App Store Compliance:** Ensure `NSLocationWhenInUseUsageDescription` is explicitly defined in `app.json` under `expo.ios.infoPlist`.
+3. **Debounce Map Pan:** Do not fire a TanStack Query refetch on every millimeter of map movement; wait for a 500ms pause.
+
+## 9. UI & Styling Rules
+* Touch targets for all interactive elements MUST be a minimum of `44px` by `44px`.
+* Use the established design system tokens from **Spec 74** (e.g., `bg-bg-feed`, `text-amber-hardhat`). 
+* **Font Loading:** Use `expo-font` to load custom fonts, keeping the Splash Screen visible until fonts are ready to prevent FOIT (Flash of Unstyled Text).
+* Accommodate device Safe Areas using `react-native-safe-area-context`.
+
+## 10. Testing Mandate
+* **E2E / UI Testing (Maestro):** Specs are written in YAML and run directly against the iOS Simulator/Android Emulator. *Operational Note: Maestro Cloud will be used for CI to avoid the 10x cost premium of macOS GitHub Action runners.*
+* **Unit Testing (Jest):** Jest + React Native Testing Library for logic hooks. Minimum 80% coverage threshold.
+* **Offline Resilience Test:** Maestro flows MUST include a step that executes `toggleAirplaneMode` to verify the MMKV offline cache and empty states render without crashing.
+
+## 11. Best-in-Class: Observability
+* **Native Crash Reporting:** `@sentry/react-native`. *Critical:* Sentry source maps MUST be uploaded automatically during EAS Build using the `@sentry/react-native/app-plugin` in `app.json`.
+* **Product Telemetry:** `posthog-react-native`. Track funnel events (`lead_viewed`, `job_claimed`). **Strip all PII**.
+
+## 12. Best-in-Class: Scaling & Performance
+* **FlashList Mastery:** Use `@shopify/flash-list` for native GPU memory recycling.
+  * **v1 (legacy):** required an explicit `estimatedItemSize` prop for the recycler to pre-size cells.
+  * **v2 (current — `^2.3.1` per `mobile/package.json`, since Spring 2026):** `estimatedItemSize` is **removed from the public API**. The new render engine auto-measures item heights at first render and reuses the measurements; passing the prop is now a TypeScript error (`Property 'estimatedItemSize' does not exist on type 'FlashListProps'`). Per-item-type recycling is still preserved via `getItemType` (e.g., `flight-board.tsx` tags 'header' vs 'card'). If a future version reintroduces the prop or exposes a `_estimatedItemSize` measurement override, this section becomes the canonical site to update.
+  * **Use the typed `AnimatedFlashList` wrapper** (`mobile/app/(app)/index.tsx` + `flight-board.tsx`) so generic narrowing survives `Animated.createAnimatedComponent` (resolved 2026-04-30 by H4 commit `21520d9`).
+* **Image Caching:** You MUST use `expo-image` for aggressive disk caching (SDWebImage/Glide).
+* **Cache Management:** Configure TanStack Query with strict timeouts. Recommended: `gcTime: 86400000` (24h) and `staleTime: 300000` (5m) for the main feed. The MMKV persister requires `@tanstack/query-async-storage-persister`.
+* **Bundle Optimization:** `react-native-maps` adds ~15MB. Use Expo's `metro.config.js` to exclude Apple Maps bundles from Android builds.
+
+## 13. Best-in-Class: Bug Prevention
+* **EAS Update (Over-The-Air Patches):** The ultimate bug prevention. JavaScript bundle fixes will bypass App Store review via Expo Application Services (EAS), allowing us to fix logical bugs in production in minutes.
+* **The Zod Boundary:** Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema before hitting the UI to prevent fatal native app crashes from API drift.
+* **TypeScript Strictness:** `"strict": true` and `"noImplicitAny": true`. 
+
+## 14. Best-in-Class: User Experience (The "Native" Feel)
+* **Pull-to-Refresh:** Standard mobile expectation. Use `RefreshControl` combined with `queryClient.invalidateQueries()`.
+* **Empty States:** A new user in a low-permit area must see a "No leads in your area" state with an "Expand radius" CTA button.
+* **Optimistic Updates:** When a user taps "Save Lead", use `onMutate` to flip the UI instantly. Rollback on failure.
+* **Instant Rehydration:** Use `react-native-mmkv` to cache the feed. On cold boot, the app must paint page 1 from cache instantly, then fetch fresh data in the background silently.
+* **Tactile Feedback:** Use `expo-haptics` on major interactions.
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json b/mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json
+index 0270587f27aaad29c97407fa95b84143f1e5c7e5..c81dd17e57665ee1a0628cc41fe29d5097bcec95 100644
+--- a/mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json
++++ b/mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json
+@@ -1,5 +1,5 @@
+ {
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha ffc21a6ec7f45d43)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 288d11e4c76cf6b3)",
+   "surface": "mobile_parcel_disambiguation_map",
+   "goldens": {
+     "error": {
+@@ -167,8 +167,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -309,7 +309,7 @@
+                       "accessibilityRole": "link",
+                       "onPress": {
+                         "action": "open_help",
+-                        "topic": "address_match",
++                        "topic": "wrong-lot",
+                         "q": {
+                           "derived": "query"
+                         }
+@@ -338,8 +338,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -488,8 +488,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -811,17 +811,21 @@
+                           "content": "lot.label"
+                         },
+                         "vars": {
+-                          "letter": {
+-                            "derived": "letter.0"
++                          "lead": {
++                            "text": {
++                              "content": "lot.lead.house_faces"
++                            },
++                            "vars": {
++                              "letter": {
++                                "derived": "letter.0"
++                              },
++                              "street": {
++                                "contract": "contract_parcels_lookup.map.lots.0.frontageStreet"
++                              }
++                            }
+                           },
+                           "area": {
+                             "contract": "contract_parcels_lookup.map.lots.0.area"
+-                          },
+-                          "frontage": {
+-                            "contract": "contract_parcels_lookup.map.lots.0.frontage"
+-                          },
+-                          "zoning": {
+-                            "contract": "contract_parcels_lookup.map.lots.0.zoning"
+                           }
+                         }
+                       },
+@@ -902,17 +906,18 @@
+                           "content": "lot.label"
+                         },
+                         "vars": {
+-                          "letter": {
+-                            "derived": "letter.1"
++                          "lead": {
++                            "text": {
++                              "content": "lot.lead.no_building"
++                            },
++                            "vars": {
++                              "letter": {
++                                "derived": "letter.1"
++                              }
++                            }
+                           },
+                           "area": {
+                             "contract": "contract_parcels_lookup.map.lots.1.area"
+-                          },
+-                          "frontage": {
+-                            "contract": "contract_parcels_lookup.map.lots.1.frontage"
+-                          },
+-                          "zoning": {
+-                            "content": "lot.null"
+                           }
+                         }
+                       },
+@@ -987,7 +992,7 @@
+                         "disabled": true
+                       },
+                       "accessibilityLabel": {
+-                        "content": "select.label"
++                        "content": "select.none"
+                       },
+                       "accessibilityHint": {
+                         "content": "select.hint"
+@@ -1052,7 +1057,7 @@
+                           "accessibilityRole": "link",
+                           "onPress": {
+                             "action": "open_help",
+-                            "topic": "lot_match",
++                            "topic": "wrong-lot",
+                             "q": {
+                               "derived": "query"
+                             }
+@@ -1083,8 +1088,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -1491,17 +1496,18 @@
+                           "content": "lot.label"
+                         },
+                         "vars": {
+-                          "letter": {
+-                            "derived": "letter.0"
++                          "lead": {
++                            "text": {
++                              "content": "lot.lead.house"
++                            },
++                            "vars": {
++                              "letter": {
++                                "derived": "letter.0"
++                              }
++                            }
+                           },
+                           "area": {
+                             "contract": "contract_parcels_lookup.map.lots.0.area"
+-                          },
+-                          "frontage": {
+-                            "contract": "contract_parcels_lookup.map.lots.0.frontage"
+-                          },
+-                          "zoning": {
+-                            "contract": "contract_parcels_lookup.map.lots.0.zoning"
+                           }
+                         }
+                       },
+@@ -1579,17 +1585,21 @@
+                           "content": "lot.label"
+                         },
+                         "vars": {
+-                          "letter": {
+-                            "derived": "letter.1"
++                          "lead": {
++                            "text": {
++                              "content": "lot.lead.no_building_faces"
++                            },
++                            "vars": {
++                              "letter": {
++                                "derived": "letter.1"
++                              },
++                              "street": {
++                                "contract": "contract_parcels_lookup.map.lots.1.frontageStreet"
++                              }
++                            }
+                           },
+                           "area": {
+                             "contract": "contract_parcels_lookup.map.lots.1.area"
+-                          },
+-                          "frontage": {
+-                            "contract": "contract_parcels_lookup.map.lots.1.frontage"
+-                          },
+-                          "zoning": {
+-                            "contract": "contract_parcels_lookup.map.lots.1.zoning"
+                           }
+                         }
+                       },
+@@ -1680,17 +1690,18 @@
+                           "content": "lot.label"
+                         },
+                         "vars": {
+-                          "letter": {
+-                            "derived": "letter.2"
++                          "lead": {
++                            "text": {
++                              "content": "lot.letter"
++                            },
++                            "vars": {
++                              "letter": {
++                                "derived": "letter.2"
++                              }
++                            }
+                           },
+                           "area": {
+-                            "contract": "contract_parcels_lookup.map.lots.2.area"
+-                          },
+-                          "frontage": {
+-                            "contract": "contract_parcels_lookup.map.lots.2.frontage"
+-                          },
+-                          "zoning": {
+-                            "contract": "contract_parcels_lookup.map.lots.2.zoning"
++                            "content": "lot.null"
+                           }
+                         }
+                       },
+@@ -1742,7 +1753,7 @@
+                                 },
+                                 "children": [
+                                   {
+-                                    "contract": "contract_parcels_lookup.map.lots.2.area"
++                                    "content": "lot.null"
+                                   }
+                                 ]
+                               }
+@@ -1765,7 +1776,14 @@
+                         "disabled": false
+                       },
+                       "accessibilityLabel": {
+-                        "content": "select.label"
++                        "text": {
++                          "content": "select.lot"
++                        },
++                        "vars": {
++                          "letter": {
++                            "derived": "letter.1"
++                          }
++                        }
+                       },
+                       "onPress": {
+                         "action": "push",
+@@ -1824,7 +1842,7 @@
+                           "accessibilityRole": "link",
+                           "onPress": {
+                             "action": "open_help",
+-                            "topic": "lot_match",
++                            "topic": "wrong-lot",
+                             "q": {
+                               "derived": "query"
+                             }
+@@ -1855,8 +1873,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -2002,8 +2020,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -2119,8 +2137,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -2259,8 +2277,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -2401,7 +2419,7 @@
+                       "accessibilityRole": "link",
+                       "onPress": {
+                         "action": "open_help",
+-                        "topic": "address_match",
++                        "topic": "wrong-lot",
+                         "q": {
+                           "derived": "query"
+                         }
+@@ -2430,8 +2448,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -2570,8 +2588,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     },
+@@ -2717,6 +2735,38 @@
+                                 "contract": "contract_parcels_lookup.map.address"
+                               }
+                             }
++                          },
++                          {
++                            "component": "Text",
++                            "props": {
++                              "key": "unlinked-report",
++                              "testID": "parcel-lotmap-report",
++                              "className": "text-xs font-semibold text-report-ink underline",
++                              "accessibilityRole": "link",
++                              "onPress": {
++                                "action": "open_help",
++                                "topic": "wrong-lot",
++                                "q": {
++                                  "derived": "query"
++                                }
++                              }
++                            },
++                            "children": [
++                              {
++                                "content": "unlinked.report"
++                              }
++                            ]
++                          },
++                          {
++                            "component": "Text",
++                            "props": {
++                              "key": "unlinked-stop"
++                            },
++                            "children": [
++                              {
++                                "content": "unlinked.stop"
++                              }
++                            ]
+                           }
+                         ]
+                       }
+@@ -2732,7 +2782,7 @@
+                       "accessibilityRole": "link",
+                       "onPress": {
+                         "action": "open_help",
+-                        "topic": "address_match",
++                        "topic": "wrong-lot",
+                         "q": {
+                           "derived": "query"
+                         }
+@@ -2806,8 +2856,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "1aa41a4704fba2ef",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "e9f025aab26de1f3"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json": "b1527229eb743328",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json": "96346cc7c1f57792"
+         }
+       }
+     }
+diff --git a/mobile/__tests__/lotMapPage.behaviour.test.tsx b/mobile/__tests__/lotMapPage.behaviour.test.tsx
+index 1c6e450fe42826615452020149e8d0af7a56b20e..2694a950046a4a2023da6793284dcd0b78216fd3 100644
+--- a/mobile/__tests__/lotMapPage.behaviour.test.tsx
++++ b/mobile/__tests__/lotMapPage.behaviour.test.tsx
+@@ -47,6 +47,8 @@ const { LOT_MAP_SLICE, lotMapData, lotMapProps } = require('@/components/surface
+ // eslint-disable-next-line @typescript-eslint/no-require-imports
+ const { buildLotMapSituation } = require('@/lib/lotMap') as typeof import('@/lib/lotMap');
+ // eslint-disable-next-line @typescript-eslint/no-require-imports
++const { ApiError, RateLimitError } = require('@/lib/errors') as typeof import('@/lib/errors');
++// eslint-disable-next-line @typescript-eslint/no-require-imports
+ const Page = require('../app/(app)/parcel-tool/disambiguate').default as React.ComponentType;
+ 
+ type Input = { query: string; data?: unknown; error?: string; isFetching?: boolean; selectedParcelId?: string | null };
+@@ -55,6 +57,12 @@ const input = (k: string): Input => fixture.inputs[k]!;
+ // Dated 2026-11-20 (task-354; Mobile CI run 44741125636): + open_help. Since d20ddec5e (2026-11-19, SRCH.C12) the help link of the lot map is the action
+ // open_help, and SurfaceRenderer throws on an action the host does not list (SurfaceRenderer.tsx:113); the real mount lists it (disambiguate.tsx:51).
+ const actions = () => ({ change_input: jest.fn(), set_input: jest.fn(), retry: jest.fn(), select: jest.fn(), push: jest.fn(), back: jest.fn(), open_help: jest.fn() });
++/** SEARCHFIX.3 X1 (task-451; GROUNDER-F :93, GROUNDER-G :83): the same error construction as lotMapScreens.golden.test.ts errorOf (and
++ * scripts/surfaces/lotmap-golden-capture.ts), so the smoke renders the four error inputs as errors, not as the redirect tree. */
++const errorOf = (kind: string | undefined, name: string): unknown =>
++  kind === 'rate_limited' ? new RateLimitError(name === 'rate_limited_zero' ? 0 : 30)
++    : kind === 'entitlement' ? new ApiError(403, 'forbidden')
++      : kind === 'unexpected' || kind === 'schema_drift' ? new Error('boom') : null;
+ const parts = (name: string) => screen.UNSAFE_root.findAll((n: { props: Record<string, unknown>; type: unknown }) => n.props.rnmPart === name && typeof n.type !== 'string');
+ 
+ beforeEach(() => {
+@@ -67,11 +75,21 @@ beforeEach(() => {
+ describe('render smoke (FE-33 mobile LIST case): every golden situation renders through SurfaceRenderer', () => {
+   it.each(['multi_parcel_2', 'multi_parcel_3plus', 'unlinked', 'too_many_lots', 'intersection', 'loading', 'error', 'rate_limited', 'unauthorized', 'schema_drift'])('%s', (k) => {
+     const i = input(k);
+-    const s = buildLotMapSituation({ query: i.query, data: i.data as never, error: null, isFetching: i.isFetching ?? false, schemaDrift: false, selectedParcelId: i.selectedParcelId ?? null });
++    // SEARCHFIX.3 X1 (task-451, dated 2026-11-24; prior text passed error: null and schemaDrift: false for every input, so the four error inputs rendered the redirect tree).
++    const s = buildLotMapSituation({ query: i.query, data: i.data as never, error: errorOf(i.error, k), isFetching: i.isFetching ?? false, schemaDrift: i.error === 'schema_drift', selectedParcelId: i.selectedParcelId ?? null });
+     render(<SurfaceRenderer tree={lotMapProps(s) as never} content={LOT_MAP_SLICE.content} data={lotMapData(s)} actions={actions()} />);
+     expect(screen.getByTestId('parcel-lotmap-screen')).toBeTruthy();
+     expect(screen.getByTestId('parcel-lotmap-query').props.children).toEqual([i.query]);
+   });
++  // SEARCHFIX.3 X1 (task-451 AC5): each error input renders its own notice; only the unexpected error offers Retry (schema drift is our problem, retry will not help).
++  it.each([['error', 'parcel-lotmap-error', true], ['rate_limited', 'parcel-lotmap-ratelimit', false], ['unauthorized', 'parcel-lotmap-entitlement', false], ['schema_drift', 'parcel-lotmap-error', false]] as const)('%s renders as an error (%s)', (k, id, retry) => {
++    const i = input(k);
++    const s = buildLotMapSituation({ query: i.query, data: i.data as never, error: errorOf(i.error, k), isFetching: i.isFetching ?? false, schemaDrift: i.error === 'schema_drift', selectedParcelId: i.selectedParcelId ?? null });
++    expect([k, s.state]).toEqual([k, 'error']);
++    render(<SurfaceRenderer tree={lotMapProps(s) as never} content={LOT_MAP_SLICE.content} data={lotMapData(s)} actions={actions()} />);
++    expect(screen.getByTestId(id)).toBeTruthy();
++    expect([k, screen.queryByTestId('parcel-lotmap-retry') !== null]).toEqual([k, retry]);
++  });
+   // Dated 2026-11-20 (task-354): the title said "dark props". The map is light since fdb6cd266 (2026-11-19, SRCH.DAYLIGHT: userInterfaceStyle 'light', LotMapBinding.tsx);
+   // the same commit removed the card facts line (C.9), so the frontage and zoning facts reach the screen through the card's accessibility label, and the card title
+   // is the lead line the card reads since 56e96eed5 (SRCH.LOTCARD, RR-0289: "Lot A · has the house · faces Dunmore Lane", "Lot B · no building").
+@@ -87,11 +105,24 @@ describe('render smoke (FE-33 mobile LIST case): every golden situation renders
+     const frame = screen.getByTestId('parcel-lotmap-map', { includeHiddenElements: true });
+     expect([frame.props.importantForAccessibility, frame.props.accessibilityElementsHidden]).toEqual(['no-hide-descendants', true]);
+     expect(screen.getByText('Lot A · has the house · faces Dunmore Lane')).toBeTruthy();
+-    expect(screen.getByText('Lot B · no building')).toBeTruthy();
++    // SEARCHFIX.3 V1 (task-451 AC2, dated 2026-11-24; MD:776 and doc-2 C.7 "Lot B · no building · at the back"; prior text: 'Lot B · no building'): a lot with no fronting street reads "at the back".
++    expect(screen.getByText('Lot B · no building · at the back')).toBeTruthy();
+     expect(screen.getByText('3,052 sq ft · 284 m²')).toBeTruthy();
+-    expect(screen.getByTestId('parcel-lotmap-card-PCL-A1').props.accessibilityLabel).toBe('Lot A, 3,052 sq ft · 284 m², frontage 7.6 m, zoning RD (f12.0; a370)');
+-    expect(screen.getByTestId('parcel-lotmap-card-PCL-B2').props.accessibilityLabel).toBe('Lot B, 2,153 sq ft · 200 m², frontage 6.1 m, zoning —'); // a null zoning shows the null value
++    // SEARCHFIX.3 V3 (task-451 AC4, dated 2026-11-24; GROUNDER-H D1 "the spoken name is the visible text"; prior labels: 'Lot A, 3,052 sq ft · 284 m², frontage 7.6 m,
++    // zoning RD (f12.0; a370)' and 'Lot B, 2,153 sq ft · 200 m², frontage 6.1 m, zoning —'): the label is the card's lead line and its area, nothing the card does not show.
++    const labelA = screen.getByTestId('parcel-lotmap-card-PCL-A1').props.accessibilityLabel as string;
++    const labelB = screen.getByTestId('parcel-lotmap-card-PCL-B2').props.accessibilityLabel as string;
++    expect(labelA).toBe('Lot A · has the house · faces Dunmore Lane, 3,052 sq ft · 284 m²');
++    expect(labelB).toBe('Lot B · no building · at the back, 2,153 sq ft · 200 m²');
++    for (const l of [labelA, labelB]) expect(l).not.toMatch(/frontage|zoning/i);
+     expect(screen.getByText('Choose a lot')).toBeTruthy();
++    expect(screen.getByTestId('parcel-lotmap-continue').props.accessibilityLabel).toBe('Choose a lot'); // the spoken name is the visible text
++  });
++  it('SEARCHFIX.3 V1 (task-451 AC2): 3 lots: a house with no fronting street reads "at the back"; a lot that faces a street keeps "faces"', () => {
++    const s = buildLotMapSituation({ query: '5 Elm St', data: input('multi_parcel_3plus').data as never, error: null, isFetching: false, schemaDrift: false, selectedParcelId: null });
++    render(<SurfaceRenderer tree={lotMapProps(s) as never} content={LOT_MAP_SLICE.content} data={lotMapData(s)} actions={actions()} />);
++    expect(screen.getByText('Lot A · has the house · at the back')).toBeTruthy();
++    expect(screen.getByText('Lot B · no building · faces Dunmore Lane')).toBeTruthy();
+   });
+   it('the polygon and the card both call select with the lot id; the clear button calls back', () => {
+     const a = actions();
+@@ -116,6 +147,7 @@ describe('the real mount (disambiguate.tsx)', () => {
+     expect(mockPush).not.toHaveBeenCalled();
+     fireEvent.press(screen.getByTestId('parcel-lotmap-card-PCL-B2'));
+     expect(screen.getByText('Continue with Lot B')).toBeTruthy();
++    expect(screen.getByTestId('parcel-lotmap-continue').props.accessibilityLabel).toBe('Continue with Lot B'); // SEARCHFIX.3 V3: the label follows the visible text
+     fireEvent.press(screen.getByTestId('parcel-lotmap-continue'));
+     expect(mockPush.mock.calls).toEqual([['/(app)/parcel-tool/PCL-B2']]);
+     expect(mockReplace).not.toHaveBeenCalled();
+@@ -132,7 +164,10 @@ describe('the real mount (disambiguate.tsx)', () => {
+     mockHook = { data: input('unlinked').data, isFetching: false, error: null, refetch: jest.fn() };
+     render(<Page />);
+     expect(screen.getByText('No lot linked yet')).toBeTruthy();
+-    expect(screen.getByText("We found 12 Laneway Rear, but the City's data doesn't link it to a lot yet. Try a nearby address.")).toBeTruthy();
++    // SEARCHFIX.3 V2 (task-451 AC3, dated 2026-11-24; doc-2 B.6 "Try a nearby address or report it."; prior text ended "Try a nearby address."): the body, the link, the stop.
++    expect(screen.getByText("We found 12 Laneway Rear, but the City's data doesn't link it to a lot yet. Try a nearby address or report it.")).toBeTruthy();
++    fireEvent.press(screen.getByTestId('parcel-lotmap-report'));
++    expect(mockOpenBrowser.mock.calls).toEqual([['https://maxbld.ca/help#topic=wrong-lot&q=12%20Laneway%20Rear']]);
+     // Dated 2026-11-20 (task-354; Mobile CI run 44741125636): the unlinked state draws no Continue since fdb6cd266 (2026-11-19, SRCH.DAYLIGHT, B.8 removed); nothing
+     // is picked and there is nothing to press. The Help link is drawn (SRCH.C12).
+     expect(screen.queryByTestId('parcel-lotmap-continue')).toBeNull();
+@@ -181,11 +216,12 @@ describe('the real mount (disambiguate.tsx)', () => {
+     expect(screen.queryByText('Pick a lot on the map or in the list.')).toBeNull();
+     expect(screen.getByTestId('parcel-lotmap-continue').props.accessibilityHint).toBeUndefined();
+   });
+-  it('task-362 AC1, AC5: Get help with an address opens Help in the in-app browser sheet with the lot_match topic and the typed address', () => {
++  // SEARCHFIX.3 B.7 (task-451, dated 2026-11-24; doc-2 B.7 "to /help?topic=wrong-lot"; prior title and URL: "with the lot_match topic", topic=lot_match).
++  it('task-362 AC1, AC5: Get help with an address opens Help in the in-app browser sheet with the wrong-lot topic and the typed address', () => {
+     mockParams = { q: '5 Elm St' };
+     mockHook = { data: input('multi_parcel_2').data, isFetching: false, error: null, refetch: jest.fn() };
+     render(<Page />);
+     fireEvent.press(screen.getByTestId('parcel-lotmap-help'));
+-    expect(mockOpenBrowser.mock.calls).toEqual([['https://maxbld.ca/help#topic=lot_match&q=5%20Elm%20St']]);
++    expect(mockOpenBrowser.mock.calls).toEqual([['https://maxbld.ca/help#topic=wrong-lot&q=5%20Elm%20St']]);
+   });
+ });
+diff --git a/mobile/__tests__/lotMapScreens.golden.test.ts b/mobile/__tests__/lotMapScreens.golden.test.ts
+index 230aff48ceea15f1e90672e5aa5a5f5091ff3b27..04beedbd08be839e164d7478f87854bf40577be2 100644
+--- a/mobile/__tests__/lotMapScreens.golden.test.ts
++++ b/mobile/__tests__/lotMapScreens.golden.test.ts
+@@ -201,7 +201,48 @@ describe('the page rules (named cases)', () => {
+   it('the ruled message texts are verbatim', () => {
+     expect(LOT_MAP_SLICE.content['state.intersection']).toBe('That looks like an intersection. Type a house number to see the lots.');
+     expect(LOT_MAP_SLICE.content['unlinked.heading']).toBe('No lot linked yet');
+-    expect(LOT_MAP_SLICE.content['unlinked.body']).toBe("We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address.");
++    // SEARCHFIX.3 V2 (task-451 AC3, dated 2026-11-24; ruling source doc-2 B.6 (doc-2:48) "Try a nearby address or report it." and B.7 (doc-2:49) "report it inside
++    // the no-lot message"; plan ruling 8.1 b; prior pin: "... Try a nearby address."): the line is the body, the link "report it", then the full stop.
++    expect(LOT_MAP_SLICE.content['unlinked.body']).toBe("We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address or ");
++    expect([LOT_MAP_SLICE.content['unlinked.report'], LOT_MAP_SLICE.content['unlinked.stop']]).toEqual(['report it', '.']);
++  });
++  it('SEARCHFIX.3 V2 (task-451 AC3): the no-lot message holds the "report it" link to the wrong-lot help topic, then the stop', () => {
++    for (const k of ['unlinked', 'unlinked_no_pin']) {
++      const desc = nodes(byTestID(lotMapProps(situation(k)), 'parcel-lotmap-unlinked')!).find((n) => n.component === 'AlertDescription')!;
++      const [body, link, stop] = desc.children as [unknown, PropsNode, PropsNode];
++      expect([k, body]).toEqual([k, { text: { content: 'unlinked.body' }, vars: { address: { contract: 'contract_parcels_lookup.map.address' } } }]);
++      expect([k, link.component, link.props.key, link.props.testID, link.props.accessibilityRole, link.props.onPress, link.children]).toEqual([
++        k, 'Text', 'unlinked-report', 'parcel-lotmap-report', 'link', { action: 'open_help', topic: 'wrong-lot', q: { derived: 'query' } }, [{ content: 'unlinked.report' }]]);
++      expect([k, stop.component, stop.props.key, stop.children]).toEqual([k, 'Text', 'unlinked-stop', [{ content: 'unlinked.stop' }]]);
++    }
++  });
++  it('SEARCHFIX.3 B.7 (task-451; doc-2:49 "to /help?topic=wrong-lot ... under every notice"): every help link of the page opens the wrong-lot topic', () => {
++    const topics = ALL.flatMap((k) => nodes(lotMapProps(situation(k))).filter((n) => (n.props.onPress as Json | null | undefined)?.action === 'open_help').map((n) => (n.props.onPress as Json).topic));
++    expect(topics.length).toBeGreaterThan(0);
++    expect([...new Set(topics)]).toEqual(['wrong-lot']);
++  });
++  it('SEARCHFIX.3 ST3 (task-451 AC1; RR-0444 MD:2290-2291 2c): the null area reads "Not available" on the card and in its label', () => {
++    expect(LOT_MAP_SLICE.content['lot.null']).toBe('Not available');
++    const card = byTestID(lotMapProps(situation('lot_facts_null')), 'parcel-lotmap-card-PCL-A1')!;
++    const area = nodes(card).find((n) => n.props.key === 'card-area')!;
++    expect(area.children).toEqual([{ content: 'lot.null' }]);
++    const label = card.props.accessibilityLabel as { text: unknown; vars: Json };
++    expect([label.text, label.vars.area]).toEqual([{ content: 'lot.label' }, { content: 'lot.null' }]);
++  });
++  it('SEARCHFIX.3 V3 (task-451 AC4; GROUNDER-H D1): the card label is the lead line and the area (no frontage, no zoning); Continue speaks its visible text', () => {
++    for (const k of ['multi_parcel_2', 'multi_parcel_3plus', 'multi_parcel_2_lot_b', 'lot_facts_null']) {
++      const t = lotMapProps(situation(k));
++      for (const card of nodes(t).filter((n) => n.props.role === 'radio')) {
++        const label = card.props.accessibilityLabel as { text: unknown; vars: Json };
++        const title = nodes(card).find((n) => n.props.key === 'card-title')!.children[0];
++        const area = nodes(card).find((n) => n.props.key === 'card-area')!.children[0];
++        expect([k, label.text, Object.keys(label.vars).sort(), label.vars.lead, label.vars.area]).toEqual([k, { content: 'lot.label' }, ['area', 'lead'], title, area]);
++      }
++      const cont = byTestID(t, 'parcel-lotmap-continue')!;
++      expect([k, cont.props.accessibilityLabel]).toEqual([k, (cont.children[0] as PropsNode).children[0]]);
++    }
++    expect(LOT_MAP_SLICE.content['lot.label']).toBe('{lead}, {area}');
++    expect('select.label' in LOT_MAP_SLICE.content).toBe(false);
+   });
+   it('null lot facts show the content null value, never "0"; an outline-less lot draws no polygon but keeps its card', () => {
+     const s = situation('lot_facts_null');
+diff --git a/mobile/src/components/surfaces/LotMapBinding.tsx b/mobile/src/components/surfaces/LotMapBinding.tsx
+index 2b8aa69c1858389ee3cd1b5748ace545b0e876ed..3e89663cc1ec3f8f677ba173f4bcc9bd1217d3b4 100644
+--- a/mobile/src/components/surfaces/LotMapBinding.tsx
++++ b/mobile/src/components/surfaces/LotMapBinding.tsx
+@@ -38,7 +38,8 @@ const content = (key: string): Ref => ({ content: key });
+ const contract = (p: string): Ref => ({ contract: `${CONTRACT}.${p}` });
+ const derived = (name: string): Ref => ({ derived: name });
+ const node = (component: string, props: Record<string, unknown>, children: Child[] = []): PropsNode => ({ component, props, children });
+-/** A lot fact that may be null: the contract value, else the content null value "—" (never "0", never blank). */
++/** A lot fact that may be null: the contract value, else the content null value (never "0", never blank). SEARCHFIX.3 (task-451, RR-0444 2c): the null value
++ *  reads "Not available"; the server sends a null area for an implausible lot size (src/lib/parcels/consumer-lookup.ts, LOT_SIZE_PLAUSIBLE_M2). */
+ const fact = (value: string | null, path: string): Ref => (value === null ? content('lot.null') : contract(path));
+ 
+ const pill = (): PropsNode =>
+@@ -85,23 +86,37 @@ const errorNotices = (s: LotMapSituation): PropsNode[] => [
+     : []),
+ ];
+ 
++/** The Help & Support topic of every link on this page (doc-2 B.7, "to /help?topic=wrong-lot"; the Help page has it since task-450). */
++const HELP_TOPIC = 'wrong-lot';
++
++// SEARCHFIX.3 V2 (task-451; doc-2 B.6 "Try a nearby address or report it." and B.7 "report it inside the no-lot message", choose-lot-states.html:277): the
++// line is the body, an inline "report it" link (a nested Text: the vendored AlertDescription is the RN Text, so the press is the native nested-Text press), then the stop.
+ const unlinkedNotice = (): PropsNode =>
+   notice('unlinked', 'MapPin', L.noticeIconNeutral, [
+     node('Text', { key: 'unlinked-heading', className: L.noticeHeading, role: 'header' }, [content('unlinked.heading')]),
+     node('AlertDescription', { key: 'unlinked-text', className: L.noticeTextNeutral }, [
+       { text: content('unlinked.body'), vars: { address: contract('map.address') } },
++      node('Text', {
++        key: 'unlinked-report',
++        testID: 'parcel-lotmap-report',
++        className: L.helpLinkText,
++        accessibilityRole: 'link',
++        onPress: { action: 'open_help', topic: HELP_TOPIC, q: derived('query') },
++      }, [content('unlinked.report')]),
++      node('Text', { key: 'unlinked-stop' }, [content('unlinked.stop')]),
+     ]),
+   ]);
+ 
+-/** SRCH.C12 / B.7: the v8 link to Help & Support, prefilled with the typed query (the existing action open_help). */
+-const helpLink = (topic: 'lot_match' | 'address_match'): PropsNode =>
++/** SRCH.C12 / B.7: the v8 link to Help & Support, prefilled with the typed query (the existing action open_help). SEARCHFIX.3 (task-451): every link takes
++ *  the topic wrong-lot (doc-2 B.7); the old topics lot_match and address_match stay on the Help page. */
++const helpLink = (): PropsNode =>
+   node('Button', {
+     key: 'help',
+     testID: 'parcel-lotmap-help',
+     variant: 'link',
+     className: L.helpLink,
+     accessibilityRole: 'link',
+-    onPress: { action: 'open_help', topic, q: derived('query') },
++    onPress: { action: 'open_help', topic: HELP_TOPIC, q: derived('query') },
+   }, [node('Text', { key: 'help-text', className: L.helpLinkText }, [content('help.address.link')])]);
+ 
+ /** C.11 (task-362; choose-lot.html:278): "Pick a lot on the map or in the list." under the disabled Choose a lot button. */
+@@ -112,7 +127,7 @@ const pickHint = (): PropsNode =>
+ const helpRow = (): PropsNode =>
+   node('View', { key: 'help-row', testID: 'parcel-lotmap-help-row', className: L.helpRow }, [
+     node('Text', { key: 'help-prompt', className: L.helpPrompt }, [content('help.lot.prompt')]),
+-    helpLink('lot_match'),
++    helpLink(),
+   ]);
+ 
+ const polygon = (key: string, coords: string, holes: string, stroke: string, fill: string, width: number, parcelPath: string): PropsNode =>
+@@ -168,17 +183,16 @@ const cards = (s: LotMapSituation): PropsNode[] =>
+     const lot = s.map!.lots[i]!;
+     const checked = l.parcelId === s.selectedParcelId;
+     const area = fact(lot.area, `map.lots.${i}.area`);
+-    const frontage = fact(lot.frontage, `map.lots.${i}.frontage`);
+-    const zoning = fact(lot.zoning, `map.lots.${i}.zoning`);
+     // C.7 (RR-0284; RR-0289, MORNING-DECISIONS.md:1117, massing is reliable for presence only): a footprint says "has the house", none says
+-    // "no building" (choose-lot.html:306); the street phrase when the street is populated. A response without the field (an older server or a
+-    // cached one) says neither: the plain lot letter.
++    // "no building" (choose-lot.html:306); "faces {street}" when the street is populated, else "at the back" (SEARCHFIX.3 V1, task-451; MD:776, doc-2 C.7).
++    // A response without the footprint field (an older server or a cached one) says neither: the plain lot letter.
+     const known = lot.hasFootprint !== undefined;
+     const house = lot.hasFootprint === true;
+     const street = typeof lot.frontageStreet === 'string' && lot.frontageStreet.trim() !== '';
+     const leadKey = !known ? 'lot.letter'
+       : house ? (street ? 'lot.lead.house_faces' : 'lot.lead.house')
+         : street ? 'lot.lead.no_building_faces' : 'lot.lead.no_building';
++    const lead: Child = { text: content(leadKey), vars: { letter: derived(`letter.${i}`), ...(known && street ? { street: contract(`map.lots.${i}.frontageStreet`) } : {}) } };
+     return node('Button', {
+       key: `card-${l.parcelId}`,
+       testID: `parcel-lotmap-card-${l.parcelId}`,
+@@ -186,11 +200,12 @@ const cards = (s: LotMapSituation): PropsNode[] =>
+       className: checked ? L.cardChecked : L.card,
+       role: 'radio',
+       accessibilityState: { checked },
+-      accessibilityLabel: { text: content('lot.label'), vars: { letter: derived(`letter.${i}`), area, frontage, zoning } },
++      // SEARCHFIX.3 V3 (task-451; GROUNDER-H D1 "the spoken name is the visible text"): the label is the lead line and the area, the card's own text.
++      accessibilityLabel: { text: content('lot.label'), vars: { lead, area } },
+       onPress: { action: 'select', parcelId: contract(`map.lots.${i}.parcelId`) },
+     }, [node('View', { key: 'card-row', className: L.cardRow }, [
+       node('View', { key: 'card-text' }, [
+-        node('Text', { key: 'card-title', className: L.cardTitle }, [{ text: content(leadKey), vars: { letter: derived(`letter.${i}`), ...(known && street ? { street: contract(`map.lots.${i}.frontageStreet`) } : {}) } }]),
++        node('Text', { key: 'card-title', className: L.cardTitle }, [lead]),
+         node('Text', { key: 'card-area', className: L.cardArea }, [area]),
+       ]),
+       ...(checked ? [node('Icon', { key: 'check', icon: 'Check', size: Z.icon, color: H.check })] : []),
+@@ -200,12 +215,12 @@ const cards = (s: LotMapSituation): PropsNode[] =>
+ /** Nothing picked yet: Choose a lot is disabled and its hint shows (one predicate for both; choose-lot.html:278). */
+ const awaitingPick = (s: LotMapSituation): boolean => s.route === null;
+ 
++// SEARCHFIX.3 V3 (task-451): a non-null route always has a picked letter (lotMap.ts builds the route from the picked lot), so the label is "Choose a lot" or
++// "Continue with Lot X"; the button speaks its visible text (GROUNDER-H D1), and the generic "open the report" label is retired.
+ const continueButton = (s: LotMapSituation): PropsNode => {
+   const label: Child = s.route === null
+     ? content('select.none')
+-    : s.selectedLetter === null
+-      ? content('select.label')
+-      : { text: content('select.lot'), vars: { letter: derived(`letter.${s.lots.findIndex((l) => l.parcelId === s.selectedParcelId)}`) } };
++    : { text: content('select.lot'), vars: { letter: derived(`letter.${s.lots.findIndex((l) => l.parcelId === s.selectedParcelId)}`) } };
+   return node('Button', {
+     key: 'continue',
+     testID: 'parcel-lotmap-continue',
+@@ -214,7 +229,7 @@ const continueButton = (s: LotMapSituation): PropsNode => {
+     disabled: awaitingPick(s),
+     accessibilityRole: 'button',
+     accessibilityState: { disabled: awaitingPick(s) },
+-    accessibilityLabel: content('select.label'),
++    accessibilityLabel: label,
+     // aria-describedby="pick-hint" of the mock: the hint line travels with the disabled button.
+     ...(awaitingPick(s) ? { accessibilityHint: content('select.hint') } : {}),
+     onPress: s.route === null ? null : { action: 'push', route: s.route },
+@@ -231,13 +246,13 @@ const body = (s: LotMapSituation): PropsNode[] => {
+     case 'error':
+       return errorNotices(s);
+     case 'intersection':
+-      return [notice('intersection', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'intersection-text', className: L.noticeTextNeutral }, [content('state.intersection')])]), helpLink('address_match')];
++      return [notice('intersection', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'intersection-text', className: L.noticeTextNeutral }, [content('state.intersection')])]), helpLink()];
+     case 'too_many_lots':
+-      return [notice('too-many', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'too-many-text', className: L.noticeTextNeutral }, [content('state.too_many')])]), helpLink('address_match')];
++      return [notice('too-many', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'too-many-text', className: L.noticeTextNeutral }, [content('state.too_many')])]), helpLink()];
+     case 'unlinked_no_pin':
+-      return [unlinkedNotice(), helpLink('address_match')];
++      return [unlinkedNotice(), helpLink()];
+     case 'unlinked':
+-      return [unlinkedNotice(), helpLink('address_match'), ...mapView(s)];
++      return [unlinkedNotice(), helpLink(), ...mapView(s)];
+     case 'multi_parcel':
+       return [
+         node('View', { key: 'list-header', testID: 'parcel-lotmap-header', className: L.listHeader }, [
+diff --git a/mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json b/mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json
+index c12d952815490ab7120622df7dc639ff0b8f48bf..2795947907097c8726d89fae40b8f3f199c622e5 100644
+--- a/mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json
++++ b/mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json
+@@ -1,24 +1,25 @@
+ {
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 244e810f9da12a9f)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 6573a522bea3fc40)",
+   "surface": "mobile_parcel_disambiguation_map",
+   "config": {},
+   "content": {
+     "map.heading": "This address covers {count} lots. Which one do you mean?",
+     "map.clear.label": "Back to search",
+     "lot.letter": "Lot {letter}",
+-    "lot.lead.house": "Lot {letter} · has the house",
+-    "lot.lead.no_building": "Lot {letter} · no building",
++    "lot.lead.house": "Lot {letter} · has the house · at the back",
++    "lot.lead.no_building": "Lot {letter} · no building · at the back",
+     "lot.lead.no_building_faces": "Lot {letter} · no building · faces {street}",
+     "lot.lead.house_faces": "Lot {letter} · has the house · faces {street}",
+-    "lot.null": "—",
+-    "lot.label": "Lot {letter}, {area}, frontage {frontage}, zoning {zoning}",
++    "lot.null": "Not available",
++    "lot.label": "{lead}, {area}",
+     "select.none": "Choose a lot",
+     "select.lot": "Continue with Lot {letter}",
+-    "select.label": "Open the report for the chosen lot",
+     "select.hint": "Pick a lot on the map or in the list.",
+     "state.intersection": "That looks like an intersection. Type a house number to see the lots.",
+     "unlinked.heading": "No lot linked yet",
+-    "unlinked.body": "We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address.",
++    "unlinked.body": "We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address or ",
++    "unlinked.report": "report it",
++    "unlinked.stop": ".",
+     "state.too_many": "This address has many lots. Add a unit number or pick a nearby address.",
+     "state.loading": "Searching",
+     "state.error": "Couldn’t reach the lot service. Check your connection and try again.",
+diff --git a/scripts/analysis/lot-map-data-check.mjs b/scripts/analysis/lot-map-data-check.mjs
+index d8fc032571bb7ab8ef7648a3a92e0d6ebfd6242d..dab93753817b69891f726793024605e146743f8b 100644
+--- a/scripts/analysis/lot-map-data-check.mjs
++++ b/scripts/analysis/lot-map-data-check.mjs
+@@ -25,16 +25,32 @@ FROM parcels p
+ WHERE p.parcel_id = ANY($1::text[])
+ ORDER BY p.parcel_id`;
+ 
++// SEARCHFIX.3 L7 (task-451; GROUNDER-G item 2): a flag whose value is missing or is the next flag sets `error` (main prints the usage and exits 2),
++// so "--parcels --url x" is never read as parcels "--url" and a URL of "x".
++const valueAfter = (argv, i) => {
++  const v = argv[i + 1];
++  return v === undefined || v.startsWith('--') ? null : v;
++};
++
+ export function parseArgs(argv) {
+-  const o = { dryRun: argv.includes('--dry-run'), url: null, parcels: [...SAMPLE_PARCELS] };
++  const o = { dryRun: argv.includes('--dry-run'), url: null, parcels: [...SAMPLE_PARCELS], error: undefined };
+   const u = argv.indexOf('--url');
+-  if (u >= 0) o.url = argv[u + 1] ?? null;
++  if (u >= 0) {
++    o.url = valueAfter(argv, u);
++    if (o.url === null) o.error = '--url needs a value';
++  }
+   const p = argv.indexOf('--parcels');
+-  if (p >= 0) o.parcels = [...SAMPLE_PARCELS, ...String(argv[p + 1] ?? '').split(',').map((s) => s.trim()).filter(Boolean)];
++  if (p >= 0) {
++    const v = valueAfter(argv, p);
++    if (v === null) o.error = '--parcels needs a value';
++    else o.parcels = [...SAMPLE_PARCELS, ...v.split(',').map((s) => s.trim()).filter(Boolean)];
++  }
+   o.parcels = [...new Set(o.parcels)];
+   return o;
+ }
+ 
++const USAGE = 'Usage: node scripts/analysis/lot-map-data-check.mjs --dry-run | --url <rehearsal stack URL> [--parcels 1,2]';
++
+ /** Returns null when the URL is the rehearsal stack, else the reason it is refused. */
+ export function refuse(url) {
+   let u;
+@@ -54,6 +70,7 @@ export function summarise(rows) {
+ 
+ async function main() {
+   const o = parseArgs(process.argv.slice(2));
++  if (o.error) { console.error(`${o.error}. ${USAGE}`); process.exitCode = 2; return; }
+   if (o.dryRun) {
+     console.log(`-- BEGIN READ ONLY; parameters: $1 = ${JSON.stringify(o.parcels)}\n${SQL};\n-- ROLLBACK;`);
+     return;
+diff --git a/scripts/surfaces/_schema/census/mobile-product.json b/scripts/surfaces/_schema/census/mobile-product.json
+index 4a4c42bc359dc4fd00a3fced4c11e029f78fd349..d260577d2762ea79fb3a508c6f6619327bb6c902 100644
+--- a/scripts/surfaces/_schema/census/mobile-product.json
++++ b/scripts/surfaces/_schema/census/mobile-product.json
+@@ -6626,7 +6626,7 @@
+     "kind": "SURFACE",
+     "status": "generated",
+     "docs": {
+-      "purpose": "The \"choose your lot\" page (MF-53): where the search lands when an address does not resolve to exactly one lot, and its honest message states. One address over several lots: the lots are outlined on a map with a letter each, listed as cards (area, frontage, zoning) under the map, and the chosen lot opens its report. An address found with no linked lot: the plain message \"No lot linked yet\", the pin and the faint neighbouring lots, never a silent nearest-lot pick. Several such addresses: the message only. More than 10 lots on one address: \"This address has many lots. Add a unit number or pick a nearby address.\" An intersection: \"That looks like an intersection. Type a house number to see the lots.\" (the map version is MF-60). Nothing is selected when the page opens.",
++      "purpose": "The \"choose your lot\" page (MF-53): where the search lands when an address does not resolve to exactly one lot, and its honest message states. One address over several lots: the lots are outlined on a map with a letter each, listed as cards (area, frontage, zoning) under the map, and the chosen lot opens its report. An address found with no linked lot: the plain message \"No lot linked yet\", the pin and the faint neighbouring lots, never a silent nearest-lot pick. Several such addresses: the message only. More than 10 lots on one address: \"This address has many lots. Add a unit number or pick a nearby address.\" An intersection: \"That looks like an intersection. Type a house number to see the lots.\" (the map version is MF-60). Nothing is selected when the page opens. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the card is the lead line (Lot letter, \"has the house\" or \"no building\", then \"faces {street}\" or \"at the back\") and the area; an implausible area reads \"Not available\" (RR-0444 2c). There is no frontage or zoning on the card (C.9, removed by the design) and no faint neighbouring lots on the unlinked state (B.8 removed; RR-0446, MORNING-DECISIONS.md:2302-2303: the several-lots map stays as built). The no-lot message ends \"Try a nearby address or report it.\", with \"report it\" a link to the Help topic wrong-lot.",
+       "data_story": "It reads one contract, GET /api/parcels/lookup?q= (C-001), through the same query the search page already filled (['parcel-search', q]), so the normal flow makes no extra request. The server names the outcome (`resolution`) and, only for multi_parcel and unlinked, sends the `map` block: lot outlines (parcels.geom), area (parcels.lot_size_sqm, the report's area rule), frontage (parcels.frontage_m), zoning (parcels.zoning_zn_string), marker points (parcels.centroid_lat/lng), the address pin (address_points.latitude/longitude), a start view and the faint neighbour outlines. It emits **no analytics event**.",
+       "under_126": "**CONVERTED (MF-53)** — LIST with `render.projection: map`, rendered by the shared mobile binding (LotMapBinding.tsx props, SurfaceRenderer.tsx parts) from this descriptor and its content file. The map is react-native-maps' own MapView, Polygon and Marker configured by props; it owns no component (`owns.components[]` is empty)."
+     },
+@@ -6678,7 +6678,7 @@
+       "spec_version": "0-draft",
+       "versioning": {
+         "answer": "none",
+-        "why": "It reads the lookup response as sent; `resolution` and `map` are optional in the mobile mirror, so a payload from an older server still parses and falls back to the client derivation.",
++        "why": "It reads the lookup response as sent; `resolution` and `map` are optional in the mobile mirror, so a payload from an older server still parses and falls back to the client derivation. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the client derivation is deleted (task-450 Q19), so a payload without `resolution` reads as no_match and goes back to search.",
+         "evidence": [
+           "mobile/src/lib/schemas.ts — ConsumerParcelLookupResultSchema (resolution, map optional)"
+         ]
+@@ -6733,7 +6733,7 @@
+           "producing_steps": [
+             "parcels"
+           ],
+-          "chain_position": "sources[1]",
++          "chain_position": "sources[4]",
+           "owner_spec": "docs/specs/01-pipeline/55_source_parcels.md",
+           "evidence": [
+             "src/lib/parcels/lot-map.ts — resolveLotMap (the lot statement)",
+@@ -6772,7 +6772,7 @@
+           "producing_steps": [
+             "link_parcel_addresses"
+           ],
+-          "chain_position": "sources[3]",
++          "chain_position": "sources[8]",
+           "owner_spec": "docs/specs/01-pipeline/56_link_parcel_addresses.md",
+           "evidence": [
+             "src/lib/parcels/lot-map.ts — the pin statement"
+@@ -6786,7 +6786,7 @@
+           "producing_steps": [
+             "link_massing"
+           ],
+-          "chain_position": "sources[4]",
++          "chain_position": "sources[15]",
+           "owner_spec": "docs/specs/01-pipeline/56_source_massing.md",
+           "evidence": [
+             "src/lib/parcels/lot-map.ts — the lot statement's has_footprint EXISTS (SRCH.LOTCARD, RR-0284): footprint presence only, no geometry"
+@@ -6860,7 +6860,7 @@
+       "breakpoints": "mobile_first",
+       "export": "none",
+       "list": {
+-        "item_archetype": "lot card (Lot letter, area, frontage • zoning) under the map; on the map a polygon and a letter marker per lot",
++        "item_archetype": "lot card (Lot letter, area, frontage • zoning) under the map; on the map a polygon and a letter marker per lot Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the card reads the lead line and the area only; its screen-reader label is that same text.",
+         "pagination": "none",
+         "recycling": "none — at most 10 lots by the contract"
+       }
+@@ -7034,7 +7034,7 @@
+     "deviations": [
+       {
+         "from": "Spec 126 §11a.1 closed binding set (content, contract, ...): no source for client-reshaped map values",
+-        "why": "P35-D14 a form: the query text, the lot count, the lot letters, the start view as a map region, the pin, the dark map style (the app's existing DARK_MAP_STYLE, mobile/src/constants/tokens.ts) and the polygons (GeoJSON reshaped to react-native-maps coordinates and holes) are derived on the client by mobile/src/lib/lotMap.ts and bind as {\"derived\": name}. Closed list: query, lot_count, region, pin, map_style, letter.<i>, lots.<i>.marker, lots|neighbours.<i>.polygons.<j>.coordinates|holes (LOT_MAP_DERIVED_NAMES in LotMapBinding.tsx; the mobile golden test refuses any other).",
++        "why": "P35-D14 a form: the query text, the lot count, the lot letters, the start view as a map region, the pin, the dark map style (the app's existing DARK_MAP_STYLE, mobile/src/constants/tokens.ts) and the polygons (GeoJSON reshaped to react-native-maps coordinates and holes) are derived on the client by mobile/src/lib/lotMap.ts and bind as {\"derived\": name}. Closed list: query, lot_count, region, pin, map_style, letter.<i>, lots.<i>.marker, lots|neighbours.<i>.polygons.<j>.coordinates|holes (LOT_MAP_DERIVED_NAMES in LotMapBinding.tsx; the mobile golden test refuses any other). Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the map style is light (userInterfaceStyle light, SRCH.DAYLIGHT), not dark; neighbours.<i>.polygons are no longer drawn (no neighbour lots, RR-0446).",
+         "adjudicated_by": "operator 2026-11-09, Wave 1 decision batch item 13 (\"P35-D14 (a) deviation\"), applied to this page by MF-53 plan v4 (operator 2026-11-11: \"\\\"choose your lot\\\" and \\\"address issues\\\" screens should be built now\")",
+         "date": "2026-11-11"
+       },
+@@ -7068,7 +7068,7 @@
+         "check_id": "parceldisambig_intersection_deferred"
+       },
+       {
+-        "what": "The map is hidden from screen readers; the lot cards are the accessible list of the same lots. Faint neighbours (no linked lot) are map-only: a screen-reader user gets the message and its \"Try a nearby address.\" line.",
++        "what": "The map is hidden from screen readers; the lot cards are the accessible list of the same lots. Faint neighbours (no linked lot) are map-only: a screen-reader user gets the message and its \"Try a nearby address.\" line. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): no neighbours are drawn (RR-0446); a screen-reader user gets the message, now \"Try a nearby address or report it.\" with the link \"report it\".",
+         "measured": "mobile/src/components/surfaces/LotMapBinding.tsx — map-frame importantForAccessibility no-hide-descendants",
+         "check_id": "parceldisambig_no_silent_fallback"
+       }
+diff --git a/scripts/surfaces/_schema/static-page.json b/scripts/surfaces/_schema/static-page.json
+index d49e207b7bf753c31ecacf192162a632dab5a80f..b41d5f385c080205671096d2d3c45f9e1188a9bd 100644
+--- a/scripts/surfaces/_schema/static-page.json
++++ b/scripts/surfaces/_schema/static-page.json
+@@ -1,9 +1,25 @@
+ {
+- "$comment": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2 and section 12 folds 16, 18, 22; v1 section 3.2 and folds 4, 8): THE page table of the STATIC web pages, one page per surface per declared state, sections in screen order. Contract: static-page.schema.json (closed kinds prose and footer). Every part names a content key of the surface's own content file beside its descriptor (scripts/surfaces/parcel_product/F06/surfaces/<id>.content.json); a link names a same-origin path on the host table (src/lib/auth/host-policy.ts). The footer is the same on every page (Terms, Privacy, Help & Support, the short legal line, ruling L-R3 \"This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.\"), pinned equal across the content files by src/tests/surfaces/static-page.logic.test.ts. Help & Support has no mail link yet: the support inbox is ONE admin setting (Spec 126 section 11b.7 dated note 2026-11-11 item 3) that does not exist on the tip; the link lands with it. Read by src/lib/surfaces/maxbld-static.ts and the golden builder src/tests/surfaces/surface-goldens.ts. Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a), D-2 (a), D-3 (a) \"3 y\", D-6 (a) and the all-scenarios ruling; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 sections 3.5, 12, 13a, 13b): web_landing, the MaxBLD landing on maxbld.ca /, in two states: static (the stored citywide row read) and degraded (it is missing, zero or its reader threw: the citywide figures and the processing demo are left out, never a 500). Value parts name the declared server reads of src/lib/surfaces/maxbld-landing.ts; a read that fails leaves its part out on the server. The plan prices, the trial length, the Pro allowance and the post-trial line are not in the page until their readers exist (MF-47 Stripe price reader and parcel_tool_trial_months, MF-45 Pro limit): no typed value. The footer is the plain pages' footer, the same section. Dated note 2026-11-20 (PAGE.TABLE, task-390): `screens` holds the INTERACTIVE pages as rows (contract: static-page.schema.json, `screens`); the first is the phone semi question page. Rows name content keys of the surface's own content file; the `when` flags are the closed list SEMI_QUESTION_FLAG_NAMES of its binding.",
++ "$comment": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2 and section 12 folds 16, 18, 22; v1 section 3.2 and folds 4, 8): THE page table of the STATIC web pages, one page per surface per declared state, sections in screen order. Contract: static-page.schema.json (closed kinds prose and footer). Every part names a content key of the surface's own content file beside its descriptor (scripts/surfaces/parcel_product/F06/surfaces/<id>.content.json); a link names a same-origin path on the host table (src/lib/auth/host-policy.ts). The footer is the same on every page (Terms, Privacy, Help & Support, the short legal line, ruling L-R3 \"This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.\"), pinned equal across the content files by src/tests/surfaces/static-page.logic.test.ts. Help & Support has no mail link yet: the support inbox is ONE admin setting (Spec 126 section 11b.7 dated note 2026-11-11 item 3) that does not exist on the tip; the link lands with it. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R5; prior sentence kept): the sentence before is stale: Help & Support has its mail links (the role mailto, one per topic, reading the one setting support_inbox through src/lib/surfaces/maxbld-support.ts, MF-46 follow-up 2026-11-12); a link is left out only while the setting is unset. Read by src/lib/surfaces/maxbld-static.ts and the golden builder src/tests/surfaces/surface-goldens.ts. Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a), D-2 (a), D-3 (a) \"3 y\", D-6 (a) and the all-scenarios ruling; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 sections 3.5, 12, 13a, 13b): web_landing, the MaxBLD landing on maxbld.ca /, in two states: static (the stored citywide row read) and degraded (it is missing, zero or its reader threw: the citywide figures and the processing demo are left out, never a 500). Value parts name the declared server reads of src/lib/surfaces/maxbld-landing.ts; a read that fails leaves its part out on the server. The plan prices, the trial length, the Pro allowance and the post-trial line are not in the page until their readers exist (MF-47 Stripe price reader and parcel_tool_trial_months, MF-45 Pro limit): no typed value. The footer is the plain pages' footer, the same section. Dated note 2026-11-20 (PAGE.TABLE, task-390): `screens` holds the INTERACTIVE pages as rows (contract: static-page.schema.json, `screens`); the first is the phone semi question page. Rows name content keys of the surface's own content file; the `when` flags are the closed list SEMI_QUESTION_FLAG_NAMES of its binding. Dated note 2026-11-24 (SEARCHFIX.3, task-451; H Q2 and H Q4, docs/reports/reviews/mcfixreborn-g3/GROUNDER-QUESTIONS.md:75, :77; small-pages-v8 help.html and terms-privacy.html:262 \"MaxBLD home -> /; Log in -> /login\"; plan ruling 8.5): every plain page (web_help, web_terms, web_privacy, and both states of web_maxbld_error) opens with a header section, kind hero with only the wordmark (nav.home, /) and one nav link (nav.sign_in \"Log in\", /login); the binding draws a hero with no title as the header alone and keeps the narrow column.",
+  "pages": {
+   "web_help": {
+    "static": {
+     "sections": [
++     {
++      "kind": "hero",
++      "id": "top",
++      "parts": [
++       {
++        "role": "wordmark",
++        "content": "nav.home",
++        "href": "/"
++       },
++       {
++        "role": "nav",
++        "content": "nav.sign_in",
++        "href": "/login"
++       }
++      ]
++     },
+      {
+       "kind": "prose",
+       "id": "help",
+@@ -85,6 +101,22 @@
+   "web_terms": {
+    "static": {
+     "sections": [
++     {
++      "kind": "hero",
++      "id": "top",
++      "parts": [
++       {
++        "role": "wordmark",
++        "content": "nav.home",
++        "href": "/"
++       },
++       {
++        "role": "nav",
++        "content": "nav.sign_in",
++        "href": "/login"
++       }
++      ]
++     },
+      {
+       "kind": "prose",
+       "id": "terms",
+@@ -330,6 +362,22 @@
+   "web_privacy": {
+    "static": {
+     "sections": [
++     {
++      "kind": "hero",
++      "id": "top",
++      "parts": [
++       {
++        "role": "wordmark",
++        "content": "nav.home",
++        "href": "/"
++       },
++       {
++        "role": "nav",
++        "content": "nav.sign_in",
++        "href": "/login"
++       }
++      ]
++     },
+      {
+       "kind": "prose",
+       "id": "privacy",
+@@ -539,6 +587,22 @@
+   "web_maxbld_error": {
+    "error": {
+     "sections": [
++     {
++      "kind": "hero",
++      "id": "top",
++      "parts": [
++       {
++        "role": "wordmark",
++        "content": "nav.home",
++        "href": "/"
++       },
++       {
++        "role": "nav",
++        "content": "nav.sign_in",
++        "href": "/login"
++       }
++      ]
++     },
+      {
+       "kind": "prose",
+       "id": "error",
+@@ -586,6 +650,22 @@
+    },
+    "miss": {
+     "sections": [
++     {
++      "kind": "hero",
++      "id": "top",
++      "parts": [
++       {
++        "role": "wordmark",
++        "content": "nav.home",
++        "href": "/"
++       },
++       {
++        "role": "nav",
++        "content": "nav.sign_in",
++        "href": "/login"
++       }
++      ]
++     },
+      {
+       "kind": "prose",
+       "id": "not_found",
+diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json
+index 2b49a488408a2c9941fd887f454a8692738a8edb..1fe2b475ecc38cfdc42e5d8167a053a30d82956e 100644
+--- a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json
++++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json
+@@ -2,19 +2,20 @@
+   "map.heading": "This address covers {count} lots. Which one do you mean?",
+   "map.clear.label": "Back to search",
+   "lot.letter": "Lot {letter}",
+-  "lot.lead.house": "Lot {letter} · has the house",
+-  "lot.lead.no_building": "Lot {letter} · no building",
++  "lot.lead.house": "Lot {letter} · has the house · at the back",
++  "lot.lead.no_building": "Lot {letter} · no building · at the back",
+   "lot.lead.no_building_faces": "Lot {letter} · no building · faces {street}",
+   "lot.lead.house_faces": "Lot {letter} · has the house · faces {street}",
+-  "lot.null": "—",
+-  "lot.label": "Lot {letter}, {area}, frontage {frontage}, zoning {zoning}",
++  "lot.null": "Not available",
++  "lot.label": "{lead}, {area}",
+   "select.none": "Choose a lot",
+   "select.lot": "Continue with Lot {letter}",
+-  "select.label": "Open the report for the chosen lot",
+   "select.hint": "Pick a lot on the map or in the list.",
+   "state.intersection": "That looks like an intersection. Type a house number to see the lots.",
+   "unlinked.heading": "No lot linked yet",
+-  "unlinked.body": "We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address.",
++  "unlinked.body": "We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address or ",
++  "unlinked.report": "report it",
++  "unlinked.stop": ".",
+   "state.too_many": "This address has many lots. Add a unit number or pick a nearby address.",
+   "state.loading": "Searching",
+   "state.error": "Couldn’t reach the lot service. Check your connection and try again.",
+diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json
+index 706e60c4bbaeb5c3b15dd23c725d84d7f1f7ac55..3fe6b6d37d25b216f9c0871e3f1d89bc5f21593d 100644
+--- a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json
++++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json
+@@ -2,7 +2,7 @@
+   "kind": "SURFACE",
+   "status": "generated",
+   "docs": {
+-    "purpose": "The \"choose your lot\" page (MF-53): where the search lands when an address does not resolve to exactly one lot, and its honest message states. One address over several lots: the lots are outlined on a map with a letter each, listed as cards (area, frontage, zoning) under the map, and the chosen lot opens its report. An address found with no linked lot: the plain message \"No lot linked yet\", the pin and the faint neighbouring lots, never a silent nearest-lot pick. Several such addresses: the message only. More than 10 lots on one address: \"This address has many lots. Add a unit number or pick a nearby address.\" An intersection: \"That looks like an intersection. Type a house number to see the lots.\" (the map version is MF-60). Nothing is selected when the page opens.",
++    "purpose": "The \"choose your lot\" page (MF-53): where the search lands when an address does not resolve to exactly one lot, and its honest message states. One address over several lots: the lots are outlined on a map with a letter each, listed as cards (area, frontage, zoning) under the map, and the chosen lot opens its report. An address found with no linked lot: the plain message \"No lot linked yet\", the pin and the faint neighbouring lots, never a silent nearest-lot pick. Several such addresses: the message only. More than 10 lots on one address: \"This address has many lots. Add a unit number or pick a nearby address.\" An intersection: \"That looks like an intersection. Type a house number to see the lots.\" (the map version is MF-60). Nothing is selected when the page opens. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the card is the lead line (Lot letter, \"has the house\" or \"no building\", then \"faces {street}\" or \"at the back\") and the area; an implausible area reads \"Not available\" (RR-0444 2c). There is no frontage or zoning on the card (C.9, removed by the design) and no faint neighbouring lots on the unlinked state (B.8 removed; RR-0446, MORNING-DECISIONS.md:2302-2303: the several-lots map stays as built). The no-lot message ends \"Try a nearby address or report it.\", with \"report it\" a link to the Help topic wrong-lot.",
+     "data_story": "It reads one contract, GET /api/parcels/lookup?q= (C-001), through the same query the search page already filled (['parcel-search', q]), so the normal flow makes no extra request. The server names the outcome (`resolution`) and, only for multi_parcel and unlinked, sends the `map` block: lot outlines (parcels.geom), area (parcels.lot_size_sqm, the report's area rule), frontage (parcels.frontage_m), zoning (parcels.zoning_zn_string), marker points (parcels.centroid_lat/lng), the address pin (address_points.latitude/longitude), a start view and the faint neighbour outlines. It emits **no analytics event**.",
+     "under_126": "**CONVERTED (MF-53)** — LIST with `render.projection: map`, rendered by the shared mobile binding (LotMapBinding.tsx props, SurfaceRenderer.tsx parts) from this descriptor and its content file. The map is react-native-maps' own MapView, Polygon and Marker configured by props; it owns no component (`owns.components[]` is empty)."
+   },
+@@ -54,7 +54,7 @@
+     "spec_version": "0-draft",
+     "versioning": {
+       "answer": "none",
+-      "why": "It reads the lookup response as sent; `resolution` and `map` are optional in the mobile mirror, so a payload from an older server still parses and falls back to the client derivation.",
++      "why": "It reads the lookup response as sent; `resolution` and `map` are optional in the mobile mirror, so a payload from an older server still parses and falls back to the client derivation. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the client derivation is deleted (task-450 Q19), so a payload without `resolution` reads as no_match and goes back to search.",
+       "evidence": [
+         "mobile/src/lib/schemas.ts — ConsumerParcelLookupResultSchema (resolution, map optional)"
+       ]
+@@ -109,7 +109,7 @@
+         "producing_steps": [
+           "parcels"
+         ],
+-        "chain_position": "sources[1]",
++        "chain_position": "sources[4]",
+         "owner_spec": "docs/specs/01-pipeline/55_source_parcels.md",
+         "evidence": [
+           "src/lib/parcels/lot-map.ts — resolveLotMap (the lot statement)",
+@@ -148,7 +148,7 @@
+         "producing_steps": [
+           "link_parcel_addresses"
+         ],
+-        "chain_position": "sources[3]",
++        "chain_position": "sources[8]",
+         "owner_spec": "docs/specs/01-pipeline/56_link_parcel_addresses.md",
+         "evidence": [
+           "src/lib/parcels/lot-map.ts — the pin statement"
+@@ -162,7 +162,7 @@
+         "producing_steps": [
+           "link_massing"
+         ],
+-        "chain_position": "sources[4]",
++        "chain_position": "sources[15]",
+         "owner_spec": "docs/specs/01-pipeline/56_source_massing.md",
+         "evidence": [
+           "src/lib/parcels/lot-map.ts — the lot statement's has_footprint EXISTS (SRCH.LOTCARD, RR-0284): footprint presence only, no geometry"
+@@ -236,7 +236,7 @@
+     "breakpoints": "mobile_first",
+     "export": "none",
+     "list": {
+-      "item_archetype": "lot card (Lot letter, area, frontage • zoning) under the map; on the map a polygon and a letter marker per lot",
++      "item_archetype": "lot card (Lot letter, area, frontage • zoning) under the map; on the map a polygon and a letter marker per lot Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the card reads the lead line and the area only; its screen-reader label is that same text.",
+       "pagination": "none",
+       "recycling": "none — at most 10 lots by the contract"
+     }
+@@ -410,7 +410,7 @@
+   "deviations": [
+     {
+       "from": "Spec 126 §11a.1 closed binding set (content, contract, ...): no source for client-reshaped map values",
+-      "why": "P35-D14 a form: the query text, the lot count, the lot letters, the start view as a map region, the pin, the dark map style (the app's existing DARK_MAP_STYLE, mobile/src/constants/tokens.ts) and the polygons (GeoJSON reshaped to react-native-maps coordinates and holes) are derived on the client by mobile/src/lib/lotMap.ts and bind as {\"derived\": name}. Closed list: query, lot_count, region, pin, map_style, letter.<i>, lots.<i>.marker, lots|neighbours.<i>.polygons.<j>.coordinates|holes (LOT_MAP_DERIVED_NAMES in LotMapBinding.tsx; the mobile golden test refuses any other).",
++      "why": "P35-D14 a form: the query text, the lot count, the lot letters, the start view as a map region, the pin, the dark map style (the app's existing DARK_MAP_STYLE, mobile/src/constants/tokens.ts) and the polygons (GeoJSON reshaped to react-native-maps coordinates and holes) are derived on the client by mobile/src/lib/lotMap.ts and bind as {\"derived\": name}. Closed list: query, lot_count, region, pin, map_style, letter.<i>, lots.<i>.marker, lots|neighbours.<i>.polygons.<j>.coordinates|holes (LOT_MAP_DERIVED_NAMES in LotMapBinding.tsx; the mobile golden test refuses any other). Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the map style is light (userInterfaceStyle light, SRCH.DAYLIGHT), not dark; neighbours.<i>.polygons are no longer drawn (no neighbour lots, RR-0446).",
+       "adjudicated_by": "operator 2026-11-09, Wave 1 decision batch item 13 (\"P35-D14 (a) deviation\"), applied to this page by MF-53 plan v4 (operator 2026-11-11: \"\\\"choose your lot\\\" and \\\"address issues\\\" screens should be built now\")",
+       "date": "2026-11-11"
+     },
+@@ -444,7 +444,7 @@
+       "check_id": "parceldisambig_intersection_deferred"
+     },
+     {
+-      "what": "The map is hidden from screen readers; the lot cards are the accessible list of the same lots. Faint neighbours (no linked lot) are map-only: a screen-reader user gets the message and its \"Try a nearby address.\" line.",
++      "what": "The map is hidden from screen readers; the lot cards are the accessible list of the same lots. Faint neighbours (no linked lot) are map-only: a screen-reader user gets the message and its \"Try a nearby address.\" line. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): no neighbours are drawn (RR-0446); a screen-reader user gets the message, now \"Try a nearby address or report it.\" with the link \"report it\".",
+       "measured": "mobile/src/components/surfaces/LotMapBinding.tsx — map-frame importantForAccessibility no-hide-descendants",
+       "check_id": "parceldisambig_no_silent_fallback"
+     }
+diff --git a/scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json b/scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json
+index add8f5192306c4d96a1c1adbbf0a25989a6b46fa..21c8d90592d9cc242e027af18d3528a8c685fda4 100644
+--- a/scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json
++++ b/scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json
+@@ -10,5 +10,7 @@
+   "help.mailto.general": "Email support",
+   "help.mailto.lot_match": "Report incorrect lot match",
+   "help.mailto.wrong_lot": "Wrong address or lot",
+-  "help.title": "Help & Support"
++  "help.title": "Help & Support",
++  "nav.home": "MaxBLD",
++  "nav.sign_in": "Log in"
+ }
+diff --git a/scripts/surfaces/parcel_product/F06/surfaces/web_maxbld_error.content.json b/scripts/surfaces/parcel_product/F06/surfaces/web_maxbld_error.content.json
+index 3dc63092626dfc61ac107cbede9659ce0ed72d68..6318d80809e3c89ae5935b44eb33cd492c2ec443 100644
+--- a/scripts/surfaces/parcel_product/F06/surfaces/web_maxbld_error.content.json
++++ b/scripts/surfaces/parcel_product/F06/surfaces/web_maxbld_error.content.json
+@@ -6,6 +6,8 @@
+   "footer.legal": "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.",
+   "footer.privacy": "Privacy Policy",
+   "footer.terms": "Terms of Service",
++  "nav.home": "MaxBLD",
++  "nav.sign_in": "Log in",
+   "not_found.body": "There is no MaxBLD page at this address.",
+   "not_found.title": "Page not found"
+ }
+diff --git a/scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json b/scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json
+index d11c3e7eaa7487f1dbb1d5c25bd74cce21b98d48..82322ba55283d2b0e3db612915a21443ee1541d0 100644
+--- a/scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json
++++ b/scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json
+@@ -3,6 +3,8 @@
+   "footer.legal": "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.",
+   "footer.privacy": "Privacy Policy",
+   "footer.terms": "Terms of Service",
++  "nav.home": "MaxBLD",
++  "nav.sign_in": "Log in",
+   "privacy.intro": "This policy explains what personal information MaxBLD collects, why, who we share it with, and how you can delete it or ask to see it. It covers the website at maxbld.ca and the MaxBLD app for iOS and Android.",
+   "privacy.s1.account": "Account.",
+   "privacy.s1.account.1": "Your name and email.",
+diff --git a/scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json b/scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json
+index b9a33390972f970f797a677c8c801f5dc8838f7f..6f39587eca813562545fb041e5efe2665129351c 100644
+--- a/scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json
++++ b/scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json
+@@ -3,6 +3,8 @@
+   "footer.legal": "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.",
+   "footer.privacy": "Privacy Policy",
+   "footer.terms": "Terms of Service",
++  "nav.home": "MaxBLD",
++  "nav.sign_in": "Log in",
+   "terms.intro": "These terms are an agreement between you and MaxBLD (\"we\", \"us\"). They cover the MaxBLD website at maxbld.ca and the MaxBLD app for iOS and Android. By creating an account you agree to these terms. If you do not agree, do not use MaxBLD.",
+   "terms.s1.basis": "Reports are based on public City of Toronto data and our reading of it.",
+   "terms.s1.changes": "Changes to the service. We may change, add or remove features.",
+diff --git a/src/components/surfaces/web/StaticBinding.tsx b/src/components/surfaces/web/StaticBinding.tsx
+index ed219085a18758532112a2a7ee280baaee59ab18..f78f281672e08e7093164c90e2be36a49820458a 100644
+--- a/src/components/surfaces/web/StaticBinding.tsx
++++ b/src/components/surfaces/web/StaticBinding.tsx
+@@ -216,6 +216,11 @@ const heroNode = (s: StaticSection): StaticNode => {
+       media.push(textNode(p, { key, testID: 'landing-caption', className: L.caption }));
+     }
+   });
++  // SEARCHFIX.3 H Q2, H Q4 (task-451, dated 2026-11-24; GROUNDER-QUESTIONS.md:75, :77): a hero of only the wordmark and nav links is a plain page's header:
++  // the nav alone, as the <header>. Any other title-less hero still throws.
++  if (title === null && s.parts.every((p) => p.role === 'wordmark' || p.role === 'nav')) {
++    return node('Group', { key: s.id, testID: `static-${s.id}`, id: s.id, component: 'header', className: L.nav }, [...nav, node('Group', { key: `${s.id}-links`, className: L.navLinks }, links)]);
++  }
+   if (title === null) fail(`${s.id}: a hero has a title`);
+   return node('Stack', { key: s.id, testID: `static-${s.id}`, id: s.id, component: 'header', className: L.hero }, [
+     node('Group', { key: `${s.id}-nav`, component: 'nav', className: L.nav }, [...nav, node('Group', { key: `${s.id}-links`, className: L.navLinks }, links)]),
+@@ -325,7 +330,8 @@ export function staticWebTree(page: StaticPage): StaticNode {
+     if (!Array.isArray(s.parts) || s.parts.length === 0) fail(`${at}: no parts`);
+     return { kind: s.kind, id: s.id, parts: (s.parts as unknown[]).map((p, j) => checkPart(p, s.kind as string, `${at} part ${j}`)) };
+   });
+-  const landing = sections.some((s) => s.kind === 'hero');
++  // SEARCHFIX.3 (task-451): the landing is a page with a titled hero; a plain page's header hero keeps the narrow column.
++  const landing = sections.some((s) => s.kind === 'hero' && s.parts.some((p) => p.role === 'title'));
+   return node('Stack', { key: 'page', testID: 'static-page', component: 'main', className: L.screen }, [
+     node('Stack', { key: 'column', className: landing ? L.wide : L.column }, sections.map((s) => (KIND_NODES[s.kind] as (x: StaticSection) => StaticNode)(s))),
+   ]);
+diff --git a/src/lib/parcels/consumer-lookup.ts b/src/lib/parcels/consumer-lookup.ts
+index 75df3042051b3eb1aabb9b27cc1e0ab590399d9b..a2ae0cf7ea48eedac0aa7563d308ed64157d2f17 100644
+--- a/src/lib/parcels/consumer-lookup.ts
++++ b/src/lib/parcels/consumer-lookup.ts
+@@ -24,6 +24,7 @@ import {
+ } from '@/app/api/parcels/lookup/types';
+ import type { LotMapRows } from '@/lib/parcels/lot-map';
+ import { areaSqftM2Dot, len1 } from '@/lib/parcels/display-rules';
++import { LOT_SIZE_PLAUSIBLE_M2 } from '@/lib/report-projection/project';
+ 
+ type LotOutline = NonNullable<ConsumerLotMap['lots'][number]['outline']>;
+ 
+@@ -76,8 +77,9 @@ const CONSUMER_COMPARABLE_FIELDS = [
+ 
+ const MAX_COMPARABLE_EXAMPLES = 12;
+ 
++// SEARCHFIX.3 L2 (task-451; FOLD-PLAN.md:56): an empty string is no value (null), never Number('') = 0. A defensive guard: no stored column holds ''.
+ const num = (v: unknown): number | null => {
+-  if (v == null) return null;
++  if (v == null || v === '') return null;
+   const n = Number(v);
+   return Number.isFinite(n) ? n : null;
+ };
+@@ -218,13 +220,21 @@ export function fitOf(outlines: Array<LotOutline | null>, pin: { lat: number; ln
+   return { north, south, east, west };
+ }
+ 
++/** SEARCHFIX.3 ST3 (task-451; RR-0444 2c, MORNING-DECISIONS.md:2291 "The lot card shows "Not available" for an implausible area"): the map lot's area is
++ * sent only when the stored size lies inside the one plausible window (LOT_SIZE_PLAUSIBLE_M2, inclusive, the same test as the report's lot_size_implausible);
++ * outside it, or not a number, the area is null and the card shows its null value. */
++const plausibleSize = (v: unknown): boolean => {
++  const n = num(v);
++  return n !== null && n >= LOT_SIZE_PLAUSIBLE_M2.min && n <= LOT_SIZE_PLAUSIBLE_M2.max;
++};
++
+ export function assembleLotMap(rows: LotMapRows): ConsumerLotMap {
+   const lots = rows.lots.map((l) => {
+     const lat = num(l.centroid_lat);
+     const lng = num(l.centroid_lng);
+     return {
+       parcelId: String(l.parcel_id),
+-      area: areaSqftM2Dot(l.lot_size_sqm),
++      area: plausibleSize(l.lot_size_sqm) ? areaSqftM2Dot(l.lot_size_sqm) : null,
+       frontage: len1(l.frontage_m),
+       zoning: l.zoning_zn_string == null || l.zoning_zn_string === '' ? null : String(l.zoning_zn_string),
+       centroid: lat !== null && lng !== null ? { lat, lng } : null,
+

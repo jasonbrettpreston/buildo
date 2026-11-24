@@ -1,0 +1,929 @@
+LIST step-132 sha256:24c4c710133ae4b359d5152281d799c142397c8c546c1c93f43d0a8d33033cc1 material sha256:1d2597164eefc4f48e60c2eb8f075d019354a42ee927725425ba039c03c7d712 part 1 of 1 chunk 5 of 5
+RULE LIST step-132 (docs/specs/01-pipeline/132_step_standard_handbook.md, sections 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 5 of 5 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/lib/parcels/consumer-lookup.ts","src/tests/consumer-parcel-lookup.infra.test.ts","src/tests/surfaces/lot-map-help-link.logic.test.ts","src/tests/surfaces/search-follow-ups.logic.test.ts","src/tests/surfaces/static-page.logic.test.ts","src/tests/surfaces/static-web-binding.ui.test.tsx","src/tests/surfaces/surface-conformance.logic.test.ts","src/tests/surfaces/surface-validate.logic.test.ts"]
+
+## 2. Every step
+
+What every step declares and does, whatever its archetype.
+
+- **core.1** A step is three files: a descriptor (data only), a compute module and a thin shell that exports `pipeline.step(descriptor, compute)`. File names are hyphenated and need not match the slug; §1 table 1b lists every step's real paths. `scripts/steps/_schema/step.schema.json` is the vocabulary; prose never adds a field. Behaviour lives in descriptor data, a declared check, a shape rule or (last resort) a new schema field, never only in code (Rule 1).
+  *Why:* One place says what a step is, and the schema, not a reviewer, decides what is valid.
+  Rules: `Rule-1` `A1` `R2` · history: `P1` `GAP-G-1`
+
+- **core.2** All 20 categories are present and every field is answered; write `"none"` (with a why where the schema asks) instead of leaving a field out. Declare at least one check.
+  *Why:* An omitted field cannot be told apart from a forgotten one; "none" is a decision someone made.
+  Rules: `Rule-5` `Rule-6` · history: `R-Y` `K1`
+
+- **core.3** Use the closed vocabulary: full-word archetypes; a lock id unique across manifest, one-time and backfill scripts; `guards.schema_drift` none/propagate/pause (rule id V3, alias SPEC122A-V3, which is not the V3 standard); staleness as scope × trigger; typed `empty_source`; and the cross-step majority forms (`batch`, `spec_version`, terminal ids, flat emits with every declared emit present on every run and an empty cursor reading 0 (CHAT-90), notes keys). The old `outputs.writes[].replay` / `append_unsafe` field is deleted (V4, now history).
+  *Why:* Shared names let one library, one gate and one admin page read every step the same way.
+  Rules: `R-DE` `V1` (SPEC122A-V1) `V2` (SPEC122A-V2) `V3` (SPEC122A-V3) `V5` (SPEC122A-V5) `V6` (SPEC122A-V6) · history: `V4` (SPEC122A-V4)
+
+- **core.4** Take the archetype from the code: PH-0 derives it, and the census (`step-archetype-census.json`) must agree with the descriptor (#25). The archetype selects the required and forbidden categories. A step whose only write is a snapshot it exists to record is a RECORDER, not an ASSERT with a hidden write.
+  *Why:* The archetype drives which fields are required, so a wrong label silently drops checks.
+  Rules: `R-AE` `R-AO` `Rule-7`
+
+- **core.5** Where a machine can derive a descriptor value, it is gated rather than trusted: `mode_select` per archetype and emit types that match the captures (#47).
+  *Why:* A value the machine can check should never be the author's word alone.
+  Rules: `R-BH`
+
+- **core.6** The verdict comes only from check rows. Each row is PASS, WARN (through `warn_limit` / `warn_limit_from_config`) or its declared severity. `checks_failed` counts FAIL rows and `checks_warned` counts WARN rows. A metric that is never zero is WARN with a stated retighten condition; INFO is only for a purely descriptive counter. A uniqueness invariant is a check row, not a throw. A legacy exclusive ceiling becomes an inclusive `ceiling_max` with a declared deviation.
+  *Why:* A parallel boolean or a severity chosen to dodge red hides failures from the run row and the admin page.
+  Rules: `R-H` `R-Q` `R-AD` `R-CL` `Rule-10` `Rule-10-addendum-R-H` `GAP-G-5` `R-FD` `R-JV` `R-KD` · history: `W4A-R2`
+
+- **core.7** A rule kept inside compute is still written down: as a check's `why`, or as an Intent Ledger row naming where it lives, never only as a code comment (`checkPreservedInComputeHasWhy`).
+  *Why:* Nothing about a step's behaviour may live only in code.
+  Rules: `Rule-4` · history: `P5` `GAP-G-2`
+
+- **core.8** EXTERNALIZED. Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero. Step variables are named `<slug>_<name>`; a name shared by two or more steps comes only from the closed `SHARED_LOGIC_VARIABLES` map, and legacy shared names are renamed by migration with values carried. Unit constants and definitional windows are pinned (min = max). Runner and gate numbers are pinned `step_*` / `gate_*` / `tooling_*` variables. A missing `logic_variables` row fails the run; `on_invalid` is `fail` for any verdict- or write-affecting variable. A variable is retired by a `config.retired[]` declaration, never deleted. A model constant ratified elsewhere becomes a variable with its existing value as default.
+  *Why:* The operator tunes the system from the admin page; a literal in code is a setting nobody can see or change.
+  Rules: `R-A` `R-G` `R-AW` `R-CV` `R-DR` `R-EB` `Rule-3` `R-FC` `R-FE` `R-JW` `R-KN` `R-KR` `R-LA` · history: `R-AU` `Rule-3-addendum-R-AU` `P4` `GAP-G-4` `W4A-R1` `W4A-R3` `Q-C3`
+
+- **core.9** Compute is pure. It receives `ctx` (config with `$meta`, clock, catalog, descriptor, `withinLimit`), reports every check value through `ctx.report(id, value)` and returns rows, a `write_plan` or `records_meta`. The runner owns every read set-up, write, transaction, session GUC (`execution.read_gucs`), catalog probe (`guards.requires` / `ctx.catalog`), calendar date (`ctx.clock` in `pipeline_timezone`) and the verdict. An ASSERT may read `ctx.pool` read-only over declared relations (R-CA (i)). Compute never branches on PostGIS; it never reads `logic_variables` SQL; a config value aliased inside a check body still counts as compute deciding (PURITY-G7). Gate E purity codes PURITY-G0…PURITY-G13 must read zero for a new conversion; the escape-hatch ban is an ast-grep rule.
+  *Why:* Pure compute can be tested with plain inputs, replayed from captures and reviewed without a database.
+  Rules: `R-W` `R-BZ` `R-CA` `R-CE` `R-CF` `R-CM` `R-CX` `R-CY` `R-DC` `Rule-2` `Rule-2-addendum-R-W` `A2` `K3` `R-KF` `R-KJ` `R-KT` · history: `P2`
+
+- **core.10** Compute reads the `ctx` shape the runner's dispatch for its descriptor actually builds (a multi-primary INGESTOR gets `acquired.primaries[id]` and `written.by_target.<table>`, not the flat shape), and its compute lock builds that ctx through the real dispatch, stubbing only DB and network answers.
+  *Why:* A hand-built ctx in a test can pass while the real run reads zeros.
+  Rules: `R-EW` `R-FG`
+
+- **core.11** Output is observable. `emits[]` equals what the captures emit and stays flat; dynamic-keyed telemetry rides a check row's `detail`, capped by a variable. A step that can skip declares a `when:"pre"` check; one that can scope-defer also declares a `deferred_to_full` terminal. Every run row carries the propagated `chain_run_id`.
+  *Why:* A skipped or deferred run must say why in its own audit table, and runs correlate by id, not by time window.
+  Rules: `R-P` `R-U` `R-BU` `R-EP` `R-KS` · history: `Q-W4G-3`
+
+- **core.12** Declare write discipline per write target, never per step: mechanic ⊥ guard ⊥ scope ⊥ retract. A banned write shape ships only with a dated, SHA-anchored `grandfathered.json` entry naming its why; guard `none` needs a why. A target on an RLS-enabled table declares `guards.requires: rls_bypass_or_policy`. One upsert binds at most 65,535 parameters, so the batch keeps the measured worst case under it.
+  *Why:* Write safety differs per table; a per-step answer is wrong for at least one target.
+  Rules: `R-CT` `R-CU` `Rule-8` `Rule-9` `V7` (SPEC122A-V7) `R-KB`
+
+- **core.13** A destructive retraction declares a truthful crash posture (`recovery.interrupted`) and a `recovery.before_image`; the library writes the before-image before retracting, and the runner forces FULL after an interrupted run.
+  *Why:* A run killed half-way must never leave a half-retracted table that the next run calls unchanged.
+  Rules: `R-B` `R-M` `Rule-12`
+
+- **core.14** Declared equals witnessed. Acquisition reads go in `inputs.reads`; measurement reads (check SQL, emits) in `checks[].reads`; per-mode statement counts in `outputs.write_inventory.by_mode`; version pins in `staleness.pins`; invalidators in `outputs.invalidates[]` with a closed `by`. Fast invariant #44 traces what the step really runs and fails any gap; an unresolved invalidator fails (#44 (i)); a pin on a producer still awaiting captures prints OWED. Prior-run baselines accept only completed/completed_with_warnings runs.
+  *Why:* The cross-step ledger is only true if it is measured, never re-typed.
+  Rules: `R-BF` `R-BG` `R-BJ` `R-BK` `R-BL` `R-BM` `R-BW` `R-CB` `R-CW` `R-DB` `R-DG` `R-DI` `R-DO` `R-EA` `R-ER` `R-ES` `R-FF` `R-GP` `R-HA` `R-JF` · history: `W4A-R4`
+
+- **core.15** Every frozen enum value and every `execution.*` declaration has a disposition in its registry: executed (with a named executor or check), descriptive, or retired.
+  *Why:* A field that looks enforced but has no executor is a promise nobody keeps.
+  Rules: `R-X` `R-AJ` `R-AX` · history: `M4` (SPEC121-M4)
+
+- **core.16** The step is admin-verifiable: its registry, description, table-map and telemetry entries are derived from the descriptor (#51); range badges come from declared check bounds; each logic variable shows whether it is in effect (#53).
+  *Why:* The operator checks a step's output on the admin page, so the page must be derived, not hand-kept.
+  Rules: `R-DL` `R-DV` `R-DW` `R-EO`
+
+- **core.17** A priced or modelled output declares the population it is for, as a query bound on the producing step.
+  *Why:* A number without its population cannot be checked or compared.
+  Rules: `R-AY` `R-BT`
+
+- **core.18** Overrides are honest: `override.dry_run` is `"none"` unless the step honours it, and per-invocation row caps (`--limit=N`) are retired by deviation.
+  *Why:* A dry run that writes, or a cap that hides rows, makes the run report false.
+  Rules: `R-AV` `R-AZ` `R-GS` `R-GT`
+
+## 3. By archetype
+
+The archetype comes from `identity.archetype` (see `step-archetype-census.json`); it selects the required fields, and `execution.shape` selects the phase (§1). Every line in section 2 applies too.
+
+### INGESTOR
+
+Acquires an outside source and writes it into its own tables.
+
+- **ingestor.1** Phases run acquire → validate → write → score. Every "before X" guarantee in the owner spec becomes a `pre_write` check carrying an `order_guarantee` whose anchor is a literal sentence of that spec.
+  *Why:* A FAIL reported after rows are already written is a guarantee broken.
+  Rules: `Rule-11` `GAP-G-3`
+
+- **ingestor.2** A source-version skip is taken only when the target is non-empty.
+  *Why:* Skipping on an unchanged hash over an empty table leaves it empty for good.
+  Rules: `R-DD`
+
+- **ingestor.3** Primaries: a `ckan_datastore` primary is first-class (null geometry, targetless, union groups, per-member truth); a PDF document set is an acquisition format.
+  *Why:* Each source form gets one library path instead of a per-step reader.
+  Rules: `R-BY` `R-DX`
+
+- **ingestor.4** Derived secondary targets are written from a runner-owned prior-state read inside the primary transaction; one may be non-fatal (`on_error: warn_row`) with a declared zero-bound WARN check.
+  *Why:* The derived write stays atomic with its source and a failure still shows up as a row.
+  Rules: `R-DM` `R-DY`
+
+- **ingestor.5** A `written:"seen"` column is a runner-clock column touched for every fed key and excluded from the guard; its target declares `idempotent_rerun: "declared_drift"`, and the rerun proof passes only when rewritten == touched exactly.
+  *Why:* The touch rewrites rows on every run by design, so `zero_writes` would be a false claim.
+  Rules: `R-DZ` `R-EX`
+
+- **ingestor.6** Worked examples (one step each): load_parcels replaces geometry only on a material change beyond a variable tolerance; close_stale_permits folds into load_permits' declared retraction; coa made its change-detection hash timezone-independent at the cost of one measured re-upsert.
+  *Why:* Shows how the general rules were applied where they were first needed.
+  Rules: `R-BS` `R-BX` `R-EN` `R-EV` `R-JB`
+
+### LINK
+
+Joins two populations and writes the link rows or columns.
+
+- **link.1** `mode_select` is `tri_state`, or `none` with a `full_rescan` invalidator (the mode gate itself is R-BH (i), on core.5). Crash posture is `force_full_on_next_run`, and an autonomous FULL run happens only on a chain whose `chain_args` declare `--full`.
+  *Why:* A destructive rescan must be chosen on purpose, never by accident after a crash.
+  Rules: `R-L`
+
+- **link.2** `runLinkPhase` (shape `link`) serves more than one LINK family through opt-in arms; counter names come from the match plan. Other LINK steps run their own phase: shape `link_keyed` (`runLinkKeyedPhase`), `link_column` (`runLinkColumnPhase`); a MATCHER runs `runCascadePhase` (shape `cascade`), which hosts any declared cascade target, link_coa among them (R-JY, from the bundled runner night). §1 table 1a lists which step uses which. A match plan may also declare a closed `extra_counters` set, summed per batch (R-IG, from the bundled RE-FREEZE night).
+  *Why:* One library path, not a copy per link step.
+  Rules: `R-EG` `R-IG` `R-JY`
+
+- **link.3** Worked examples: a link-rate floor's denominator is the entity population, not the source-row count (link_wsib); a full-rescan LINK may keep its junction current with a declared material-geometry trigger (`guards.requires`, link_parcel_abutments).
+  *Why:* Shows the rules applied where they were first needed.
+  Rules: `R-N` `R-CR`
+
+- **link.4** Open operator question Q-B1: a better neighbour front-setback estimator (`front_setback_est_m`; owed to the Spec 130 lane). Since 2026-10-19 (operator ruling; Spec 130:93, Spec 131 LC-58, Spec 69a M-205(1) dated note) averaging is evaluated: max(neighbour estimate + `fya_porch_allowance_m`, the zone default), always "needs survey"; Q-B1 stays open only for a better estimator. A reader must not read a parcel with no abutment pairs (deleted until the next run by R-CR's trigger) as "no neighbours". Separately, R-CR's trigger form is replaced by the fleet keyed-delete arm when that lands; that does not close Q-B1. (124a R-CR's own cell still says averaging stays `not_evaluated` until Q-B1; that cell is stale, owed to a ruling lane.)
+  *Why:* An unanswered question stays visible on its own line, next to the rule that raised it.
+  Rules: `Q-B1`
+
+### MATCHER
+
+A LINK whose join is a fuzzy, tiered match. Everything under LINK applies except the phase: a MATCHER declares shape `cascade` and runs `runCascadePhase`, not `runLinkPhase`.
+
+- **matcher.1** Accuracy is a sampled precision/recall against a before-image, recorded at each repair, never a self-consistent predicate.
+  *Why:* A matcher graded against itself always passes.
+  Rules: `R-O`
+
+### ENRICHER
+
+Adds derived columns to rows another step owns, in scoped passes.
+
+- **enricher.1** No Layer-1 skip: a legacy skip gate moves into the write scope as a declared deviation, or, if it has no runner home and no lineage column, is knowingly retired.
+  *Why:* An ENRICHER that skips whole runs hides rows that changed upstream.
+  Rules: `R-AR` `R-AR.1`
+
+- **enricher.2** `runEnrichPhase` is generic: hooks are optional `enrich_hooks` declarations and intervals come from config. Pass DML goes through `ctx.exec(writesRef, sql, params)`; scope-ledger hygiene DELETEs are library-owned, and a guard-suppressed hygiene action emits one WARN row. Updated counters belong to whichever mechanism wrote the rows this run. One per-batch transaction may carry a step's statements (`ctx.flushBatch([...])`, a SAVEPOINT per warn_row statement), and an ENRICHER may write derived rows (R-JZ, from the bundled runner night). (Dated note 2026-10-26, `2026-10-26-batch-m#CHAT-174.ENRICHER2-HELD-NOTE`: the ENRICHER derive arm is held by CHAT-167 until designed with CLP ②; validate refuses `derive` on an ENRICHER by name.) (Dated note 2026-10-26, `2026-10-26-batch-r#CHAT-189.CLPD-Q4`, `2026-10-26-batch-r#CHAT-189.CLPD-Q5`: the ENRICHER derive arm is ruled for CLP ②; the list form's SAVEPOINT per warn_row statement is retired (a named refusal; the savepoint is the runner's derived-history write), and in an ENRICHER that declares derived rows `ctx.exec`, `joinUpdate` and `retract` refuse its root and history tables.)
+  *Why:* Writes stay behind the runner seam, and counters are not double-counted.
+  Rules: `R-AK` `R-AT` `R-CI` `R-CJ` `R-CK` `R-JZ`
+
+- **enricher.3** `execution.maintenance` may declare a dead-tuple-ratio dynamic-target arm, measured once and shared.
+  *Why:* Vacuum decisions follow the table's real state, from one measurement.
+  Rules: `R-CG`
+
+### MATERIALIZER
+
+Rebuilds a derived table from tables other steps own.
+
+- **materializer.1** `recovery.reset` is not none. `materialize_form` is `insert_select` or `rows` (rows computed in JS; the runner owns reads, writes and transactions), or `replace` (the whole table replaced through the existing staging executor in one transaction; zero rows leave it untouched; R-JX, from the bundled runner night); batch size comes from config.
+  *Why:* Rebuilds must be resumable, and JS rows must not bring their own I/O.
+  Rules: `R-EH` `R-JG` `R-JX` · history: `Q-MZ`
+
+### BACKFILL
+
+Fills historical rows in batches.
+
+- **backfill.1** Batch size comes from config. A one-time backfill leaves its chain once a measured run inserts 0 rows (backfill_realtor_permit_trades).
+  *Why:* A finished backfill should stop costing a chain slot.
+  Rules: `R-EM`
+
+### ASSERT
+
+Measures data quality and writes nothing but its own run row.
+
+- **assert.1** `outputs`, `recovery` and `counters` are none. Compute may read `ctx.pool` read-only over declared relations (R-CA (i), on core.9, corrects older text that says no pool is reachable); vocabulary-coverage reads use a runner-owned READ ONLY snapshot.
+  *Why:* An ASSERT measures; it must not change what it measures.
+  Rules: `R-CH`
+
+- **assert.2** Worked example: assert_schema checks at chain start that every declared logic variable has a DB row.
+  *Why:* A missing variable is caught before any step reads it.
+  Rules: `R-D`
+
+### RECORDER
+
+Records a snapshot it exists to publish.
+
+- **recorder.1** A RECORDER's `outputs` is an object (never `none`) and its snapshot write is declared in `outputs.writes[]`. Either `runRecorderPhase` executes it (shape `recorder`), or the step declares no shape and compute returns a `write_plan` that the runner executes after compute (`runWritePlan`, R-CD). (`outputs.publish` was deleted at a RE-FREEZE; Spec 124 §3's Rule 7 table still names it.)
+  *Why:* The snapshot is the step's purpose, so it is declared, not hidden.
+  Rules: `R-CD`
+
+### EFFECTOR
+
+Acts on the outside world (sends, calls, notifies). Census only until its first RE-FREEZE; not yet in the step.schema.json enum.
+
+- **effector.1** Four gates: a kill switch or injected transport, an exactly-once ledger, captured intended effects, and a dry run. Outside calls are replayed from recorded responses.
+  *Why:* An effect on the outside world cannot be rolled back, so it must be switchable, counted once and rehearsable.
+  Rules: `R-EI`
+
+### RUNNER (a home, not an archetype)
+
+Concerns the runner owns for every step.
+
+- **runner.1** Reconcile runs as a step at the head of the sources chain. A slug whose concern the runner owns (`reconcile`, `observe_chain`) is a declared `runner_owned` exemption, not a conversion; a step is retired, not converted, only under a closed predicate.
+  *Why:* Every chained slug has exactly one honest status.
+  Rules: `R-AP` `R-EJ` `R-EK` `A3`
+
+- **runner.2** Seam validation and chain-end synthesis derive from declared step edges; a chain step row's status is derived from its verdict (PASS → completed, WARN → completed_with_warnings, a covered FAIL → completed_with_errors); a hard-coded `'completed'` is retired.
+  *Why:* A chain that says completed after a FAIL is lying.
+  Rules: `R-V` `R-CC` `Q-S1-a`
+
+## 4. Cross-cutting
+
+### Lifecycle stages
+
+How a step moves from legacy script to converted.
+
+- **x-stages.1** A step's stage is declared data in `converted.json` `pending[]`: `red_suite` → `descriptor_only` → `compute_ported` → `runner_wired` → `shape_clean` (or `shape_clean_pending_recapture`) → converted. Red tests are declared there, never a code skip. The declared stage alone decides which gates cannot yet be answered (`stageAwaitsCaptures`); a pending row with no descriptor file does not block whole-registry selection.
+  *Why:* Progress is visible and a half-built step is graded for what it is.
+  Rules: `R-K` `R-K.1` `R-DU` `R-EF` `R-K.2` · history: `M5` (SPEC121-M5)
+
+- **x-stages.2** The commits are ① red suite + descriptor, ② compute + runner (the shell swap), ③ cutover into `converted[]`. A pending step lands ② at `compute_ported` with its legacy shell live, and may swap its shell before ③ only once every declared upstream (`inputs.reads.steps`) is converted, or pending past ② and not awaiting captures (`stageAwaitsCaptures`); fast invariant #54 checks this, and an unregistered or unknown upstream fails.
+  *Why:* A downstream step never runs on a converted shell before its producer.
+  Rules: `R-EQ` `Q-R-EQ-1` `R-FH` `R-JQ` · history: `W4A-R6`
+
+- **x-stages.3** A net-new step (no legacy predecessor) has no PRE capture; its G8 reference is its committed POST. It is accepted as net-new only with the full R-DK evidence set: census `legacy: "none"`, no git history of the script before its descriptor, no `legacy_citation`, a `recapture.json` entry with `via` bracket or env, a red-evidence artifact (gate K) and a rerun-zero proof on every POST. Otherwise fast invariant #22 refuses it by name, and any PRE file on an accepted slug is RED.
+  *Why:* There is nothing older to compare against.
+  Rules: `R-DK` · history: `R-CS`
+
+- **x-stages.4** A cutover stages every owner spec named in the system map, or declares `Spec-diff: N-A` (#43). Target Files are generated into the owner spec; every spec that names a chained step classifies it; fleet counts are derived from registries, never retyped.
+  *Why:* Specs and registries stay in step with the code without anyone remembering to update them.
+  Rules: `R-AF` `R-AN` `R-BB` `R-BE`
+
+### Captures, goldens and proof
+
+How a conversion proves it changed nothing it did not mean to.
+
+- **x-captures.1** Captures are reproducible from committed data alone: every capture has a `recapture.json` entry, and `node scripts/analysis/capture-step-golden.js --replay-all` prints the retake commands from those entries (plain and env captures first, then brackets; a ledger-gated step whose bracket recipe passes no force env has that bracket retaken before its standalone capture, CHAT-89); capture pairs follow the declared chain variance. Every harness run is ledgered as captured, never a baseline. PRE captures are committed before re-runs. A post witness trace with no golden capture and no `recapture.json` entry is an orphan: it is deleted by literal path only when a recipe-backed trace of the same slug witnesses a superset of its statement fingerprints, otherwise it gets a recipe and is retaken (R-IJ).
+  *Why:* A capture nobody can retake proves nothing.
+  Rules: `R-AC` `R-AI` `R-BQ` `R-CZ` `R-DQ` `R-IJ` `R-JP` `R-KC`
+
+- **x-captures.2** A forced-write table is proven by a bracket: a perturbation cohort (when a guard includes the step's own stamp), delete-and-reinsert (INSERT-only), or derived-status (derived targets), counted through gate G's `count_path`. A PRE taken with a retired input argv stands in only under a closed predicate.
+  *Why:* A rerun that writes nothing proves nothing about a guarded write path.
+  Rules: `R-AS` `R-BD` `R-BR` `R-DN` `R-DP` `R-ET` `R-GZ` `R-JH` `R-KA`
+
+- **x-captures.3** The golden differential is a mechanical fingerprint gate (G8, #38/#40). Every diff is explained only in `docs/reports/golden/<slug>/explained-diffs.json`, citing a Defect Ledger id; an unexplainable differential stops the work.
+  *Why:* A commit message saying "diff is fine" is not evidence.
+  Rules: `R-C` `R-DA` `K4` `G8` (SCORECARD-G8) `R-GR`
+
+- **x-captures.4** A step that calls a paid or outside API is captured and replayed from committed recorded responses.
+  *Why:* Tests and captures must not spend money or depend on someone else's uptime.
+  Rules: `R-EL`
+
+- **x-captures.5** A class-A behaviour (Spec 123 risk class A) is proven by a both-directions lock, shown red then green (scorecard G7; mutation testing is not a gate). Tests write before-images into a per-file sandbox, never the real golden tree. A live test proves its child process completed before asserting on its output.
+  *Why:* A test that cannot fail, or that reads output that never arrived, proves nothing.
+  Rules: `R-E` `R-CO` `R-CP` `G7` (SCORECARD-G7) · history: `M7` (SPEC121-M7)
+
+### Cross-step order
+
+How steps that share tables are ordered and checked.
+
+- **x-crossstep.1** A same-statement write guard is not a chain-order edge. ORDER rows with neither endpoint converted and unproduced reads whose inserter is unconverted are counted against a shrink-only ceiling, not hard. Gate D reads one converted-set view.
+  *Why:* The ledger stays strict for converted steps without blocking on legacy ones.
+  Rules: `R-BN` `R-BO` `R-BP` `R-EE`
+
+### step-validate and the scorecard
+
+The one command that grades a step.
+
+- **x-validate.1** One command grades a step: `node scripts/analysis/step-validate.mjs --step=<slug>` (or `--all`, `--staged`, `--fast`). It validates the DATA (descriptor, fast invariants) and the scorecard grades the PROCESS; it runs in the hooks, never as a separate track.
+  *Why:* One integrated answer, the same at the desk and in the hook.
+  Rules: `R-R` `Rule-13` `Rule-13-addendum-R-T`
+
+- **x-validate.2** The scorecard gates G0–G9 (Spec 123 §6; aliases SCORECARD-G0…SCORECARD-G9, not the Gate E purity codes): G0 boundary freeze, G1 archaeology, G2 churn × complexity, G3 Intent Ledger (only tables with a Disposition column are scored), G4 risk class, G5 seam map, G6 classification with Defect Ledger ids, G7 test adequacy, G8 differential, G9 §R Reflection. Ship bar: ≥14/17 with G6–G8 full; with E3 on it is 17/17. Markdown header and separator rows are never counted as data.
+  *Why:* The assessment is graded by machine, the same for every step.
+  Rules: `R-F` `R-FA` `G0` (SCORECARD-G0) `G1` (SCORECARD-G1) `G2` (SCORECARD-G2) `G3` (SCORECARD-G3) `G4` (SCORECARD-G4) `G5` (SCORECARD-G5) `G6` (SCORECARD-G6) `G9` (SCORECARD-G9) `SHIP-BAR` `R-FB` `R-JD` `R-KM` `R-LC`
+
+### The V3 label
+
+What `standard=V3` means and how it is enforced.
+
+- **x-v3.1** `standard=V3` prints only when all nine R-EY conditions hold, fail closed: (1) compute purity clean, (2) no gate-ledger allowance, (3) #44 PASS with nothing attributed, (4) no blocking registry failure, (5) no stage-gated red, (6) G0–G8 at max with no other hard stop, (7) the five words all PASS with nothing deferred, (8) no unmet `cutover_prereq`, (9) every exception naming the step cites a register id. Otherwise it prints `standard=V2 (fails: …)`. E1 (ratchet: a step that read V3 never drops) and E2 (cutover gate) are on; E3 (every converted step V3) is built off behind `gate_v3_hard_gate_enabled`. R-IH stage 1: `step-validate` prints an advisory `R-EY (9) why-only` line for each step with a deviation whose only register id is in `why`, plus a run total; no verdict changes until stage 3 reads `adjudicated_by` only.
+  *Why:* One list replaces the older "five words", "six parts" and "four conditions"; the label means the same thing everywhere.
+  Rules: `R-IH` `R-IK` `R-JC` `R-BA` `R-CN` `R-DT` `R-EY` `STD-VERSIONS`
+
+- **x-v3.2** An operator decision found only in a plan or assessment (a pilot plan's rulings, an accepted deviation) is recorded as a register row before a step can cite it: the V3 condition-9 backfill recorded 33 such decisions as rows R-FI…R-GO (124a §B21/§B22), and each exception entry they govern cites its row. A citation on a converted descriptor's `deviations[]` entry is appended on the bundled RE-FREEZE night, because the edit moves the capture fingerprint. That night is split (R-II): night 1 carries the citations, and the refresh_snapshot producer-read waits for its own RE-FREEZE at permits ③.
+  *Why:* Condition (9) needs a resolvable id on every exception, and a decision that lives only in a plan file is invisible to the gate.
+  Rules: `R-FI` `R-FJ` `R-FK` `R-FL` `R-FM` `R-FN` `R-FO` `R-FP` `R-FQ` `R-FR` `R-FS` `R-FT` `R-FU` `R-FV` `R-FW` `R-FX` `R-FY` `R-FZ` `R-GA` `R-GB` `R-GC` `R-GD` `R-GE` `R-GG` `R-GH` `R-GI` `R-GJ` `R-GK` `R-GL` `R-GM` `R-GN` `R-GO` `R-II` `R-KG` `R-KH` `R-KV` `R-KX` `R-LE` `R-LS` `R-LT` `R-LU` `R-LV` `R-LW` `R-LX` `R-LY` `R-LZ` `R-MA` `R-MB` `R-MC` · history: `R-GF`
+
+- **x-v3.3** An exception entry with no operator decision found (the condition-9 census class c) goes to the operator as a family ruling, recorded by decision log and register row like any other: the 2026-10-20 rulings are R-HN…R-HZ (V3 Exception Rulings page and chat CHAT-22) and the CoA cutover rulings R-IA…R-IF (R-IB and R-IC also cover enrich_permits' twin deviations, operator CHAT-24). A conversion retires a legacy audit row, `records_meta` key, constant row or log-only query only when the entry cites a consumer grep with zero readers or shows the counted mechanism is gone (R-HR, a named exception to Spec 123 §3.1); a legacy defect corrected inline is ratified per entry, never as a general rule (R-HQ). Citations on a fingerprint-locked descriptor ride the bundled RE-FREEZE night.
+  *Why:* Condition (9) needs every exception to cite a ruling, and a family ruling with its evidence condition stated once is cheaper to check than one ruling per entry.
+  Rules: `R-HN` `R-HO` `R-HP` `R-HQ` `R-HR` `R-HS` `R-HT` `R-HU` `R-HV` `R-HW` `R-HX` `R-HY` `R-HZ` `R-IA` `R-IB` `R-IC` `R-ID` `R-IE` `R-IF` `R-JE` `R-JK` `R-JL` `R-JM` `R-JU` `R-KE`
+
+### Rulings protocol and the resolution ladder
+
+What to do when the standard does not answer your question.
+
+- **x-rulings.1** When no rung answers, use the protocol: one pass discovers and proposes (closed Intent Ledger vocabulary); a different party adjudicates, named and dated; the ruling gets a dated register row in Spec 124 §5 (or a 124a LIVE REGISTER section) that answers the seven admission questions and names a lock; the same commit adds the both-directions test and amends the spec; a pilot-local defect becomes a ruling only if it will recur in another archetype; a document move is tool-performed and verified by a line-set diff. Cited ids must resolve.
+  *Why:* A rule without a lock is not a rule, and the person who found a problem does not get to rule on it.
+  Rules: `R-I` `R-J` `R-AA` `R-AM` `R-DF` `P4-1` `P4-2` `P4-3` `P4-4` `P4-5` `P4-6` `P4-7` `R-KO`
+
+- **x-rulings.2** Resolution ladder: ground the problem (query, grep, read; cite the owner spec from the system map); classify it CONTRACT / INCIDENTAL / DEFECT; resolve at the first fitting rung (descriptor, declared check, logic variable, library change, shape rule, new schema field); if none fits or two conflict, go to the protocol; add a both-directions test and re-run the golden capture; record a Defect Ledger id and a §R Reflection entry when it may recur. Route each learning to the most enforced artifact that can hold it.
+  *Why:* The cheapest enforced answer wins, and lessons are kept where a machine reads them.
+  Rules: `L7-0` `L7-1` `L7-2` `L7-3` `L7-4` `L7-5` · history: `M9` (SPEC121-M9) `M10` (SPEC121-M10)
+
+- **x-rulings.3** Where the standard is written: Spec 122 is the standard (the live schema and behaviour) and the Spec 124 register is the policy; on policy the register governs, on the schema and behaviour Spec 122 does. Spec 123 is the standard for the conversion procedure and its G0–G9 gates. This handbook is Spec 132, generated from both through the rule map; cite a line as `Spec 132 §<line id> (R-xx)`. Every spec opens with one role banner (authority register, standard, design, historical, generated handbook); a historical spec adds no rule id, so a new rule goes to the register.
+  *Why:* Each question has one home, and a reader knows from the first lines what a spec may decide.
+  Rules: `R-GU` `R-GV` `R-GW` `R-GX` `R-HH` `R-HI` `R-HJ` `R-IY`
+
+- **x-rulings.4** Operator decisions are transferred by generator, never by hand: each set of rulings (a review-page export or a chat ruling with its quote, and any later amendment with its quote) is committed verbatim as `docs/reports/decisions/<date>-<slug>.json`; `node scripts/analysis/decision-log.mjs --write` emits a register-row skeleton per approved decision, and every approved decision becomes a register row (Spec 124, Spec 69a or Spec 131 by subject) that cites `<log stem>#<decision id>`; `--check` at pre-commit fails on an uncovered decision or a citation of an unknown one. Each log is re-derived at `--check` from its raw record under `docs/reports/decisions/raw/`, so a hand-edited log fails. Rulings recorded this way for a step not yet built (resolve_bylaws, Spec 134) govern its plan; a report surface has one declaration (R-RS).
+  *Why:* A ruling transferred by hand is a ruling that can be forgotten; the log is the operator's own words and the check proves each one landed.
+  Rules: `R-GY` `R-HB` `R-HC` `R-HD` `R-HE` `R-HF` `R-HG` `R-HK` `R-HL` `R-HM` `R-IL` `R-IM` `R-IN` `R-IO` `R-IP` `R-IQ` `R-IR` `R-IS` `R-IT` `R-IU` `R-IV` `R-IW` `R-IX` `R-IZ` `R-JA` `R-JI` `R-JJ` `R-JN` `R-JO` `R-JR`
+
+### Verification before integration and acceptance
+
+What must be independently checked before work lands.
+
+- **x-verify.1** Before an integrate-N branch is built, a fresh lane that did not write the work verifies every landing lane's claims read-only (cited ids and quotes, red-first tests red on the parent, counts and exit codes reproduced). The report lives at `docs/reports/verification/<branch>.md` and every integrate commit cites it (`.husky/commit-msg`).
+  *Why:* Self-reported results are not evidence; an independent re-check is.
+  Rules: `R-EZ` · history: `M14` (SPEC121-M14)
+
+- **x-verify.2** Cloud acceptance runs are pinned to a commit sha, use partial `--only` / `--from` runs, and form one end-of-sources acceptance set; ceilings are never raised (resize instead); EP-PIN-D17 blocks every post-sources legacy slug. A chain is complete only when converted, with no ledger rows, LDG-10 complete, cloud accepted and tooling integrated.
+  *Why:* Acceptance grades the code that will ship, once, with nothing waved through.
+  Rules: `R-AB` `R-AL` `R-AQ` `R-AQ.1` `R-BC` `R-ED`
+
+### Tooling, hooks and commit form
+
+How the repo machinery runs.
+
+- **x-tooling.1** Pre-commit is file-only, staged-scoped and inside a pinned time budget (#52), and runs every generator `--check`. The full suite runs at pre-push (8 forks; pre-commit 4; never above 10). Tests needing Postgres are `*.db.test.ts` and run only under `npm run test:db`. Lanes serialise DB writers, full suites and landings on the host (R-CQ, a process rule; nothing enforces it). `migrate.js --only` applies chosen migrations in order, failing closed on dependencies.
+  *Why:* Commits stay fast and safe on the shared host; slow and DB work runs where it belongs.
+  Rules: `R-GQ` `R-AG` `R-CQ` `R-DH` `R-DJ` `R-DS` `R-EC` `R-EU` `R-KI` `R-KL` `R-KP` `R-KY` `R-LB` `R-LF` `R-LG` `R-LH` `R-LI` `R-LJ` `R-LK` `R-LL` `R-LM` `R-LN` `R-LO` `R-LP` `R-LQ` · history: `R-BV`
+
+- **x-tooling.2** Commit form: after two full-form conversions of an archetype, later ones may land compressed (three commits), and compressed is then the default; full form needs a stated reason in the assessment.
+  *Why:* Ceremony is spent where an archetype is still new.
+  Rules: `R-PACE-1` `R-AH`
+
+- **x-tooling.3** Programme promises are declared data in `programme-items.json`, generated and gated; a programme-gate precondition is locked both directions, never a printed count. A proposal to add a box states its measured read/write cost at production scale. Stop and redesign if a per-step override is needed.
+  *Why:* Promises that live only in prose get forgotten.
+  Rules: `R-T` `R-Z` `P3` `K2` `R-KK` `R-KQ` `R-KU` `R-LR` `R-KW` `R-KZ` `R-LD`
+
+- **x-tooling.4** This handbook's own success test: a new engineer can build, read and diagnose a step from it alone.
+  *Why:* Spec 120's test, kept from Spec 121 M2.
+  Rules: history: `M2` (SPEC121-M2)
+
+## 6. Rules with no or partial machine check (80 in force)
+
+"A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 50 have no check and 30 are partial; 20 more entries are retired ids kept so the seed count reconciles.
+
+Enforcement across all 444 mapped ids: 296 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 80 none (see the glossary).
+
+| Rule | Class | Line | Reason |
+|---|---|---|---|
+| R-H | partial | core.6 | partial: skip-row WARN locked (skipRecordsMeta); the INFO-vs-WARN choice itself is unchecked (GAP G-5, 124:137) |
+| R-J | none | x-rulings.1 | no machine check: document governance |
+| R-N | none | link.3 | no lock named (commit e01cad11) |
+| R-O | none | matcher.1 | no machine check: assessment-report narrative only |
+| R-AB | partial | x-verify.2 | partial: chain-sources-workflow.infra warns that an unpinned run is "NOT valid as an R-AB acceptance run"; acceptance-set completeness unchecked |
+| R-BT | none | core.17 | no lock: "no lock yet — PLANNED with the step" (124a:237) |
+| R-BY | partial | ingestor.3 | partial: ingest-prereq-pdf-acquire.logic (not named in row) |
+| R-CJ | partial | enricher.2 | partial: purity-s3-exec-seam.logic (scope_retire_lock_held; not named in row) |
+| R-CT | partial | core.12 | partial: per-step locks only (steps/coa/violations D3 and the classify_coa_* violations assert their targets declare rls_bypass_or_policy); write.js assertWritePrivileges checks declared tables at runtime; fleet gate owed (V3 lane C1) |
+| R-CU | partial | core.12 | partial: generator-locked execution.batch (INGESTOR); library split owed (V3 lane C2) |
+| R-DF | partial | x-rulings.1 | partial: spec124-register-locks.logic now reads every register row (widened 2026-10-20, observe-1), but 101 unlabelled and 15 lockless pre-R-CX rows sit on its shrink-only grandfather lists |
+| R-EL | partial | x-captures.4 | partial: c6-rulings.infra; live-call FAIL owed (PIN C6-6-RECORDED) |
+| R-EW | partial | core.10 | partial: src/tests/steps/coa/dispatch.logic.test.ts locks (i) for coa only; (ii) every other converted step's compute lock built through the real dispatch is not asserted (older hand-built locks on the closed list PIN R-EW-LOCKS) |
+| R-EX | partial | ingestor.5 | partial: src/tests/capture-rerun-proof.logic.test.ts locks the seen_drift proof (rewritten == touched, row delta 0, projected hash) and the zero_writes FAIL; no static check that every seen-column target declares declared_drift (caught only when the POST proof runs) |
+| Rule-11 | partial | ingestor.1 | partial: checkOrderGuaranteesCited (declared half only; GAP G-3 open) |
+| Rule-10-addendum-R-H | none | core.6 | no machine check for INFO-vs-WARN (GAP G-5) |
+| P4-1 | none | x-rulings.1 | no machine check: procedural |
+| P4-2 | none | x-rulings.1 | no machine check except R-EZ commit-msg citation for integrate branches |
+| P4-4 | partial | x-rulings.1 | partial: spec124-register-locks.logic names-a-lock arm covers every row, with 15 lockless pre-R-CX rows grandfathered (shrink-only) |
+| P4-6 | none | x-rulings.1 | no machine check: G9 checks the Reflection section exists |
+| L7-0 | none | x-rulings.2 | no machine check found (consolidate-1 inventory) |
+| L7-3 | none | x-rulings.2 | no machine check found (consolidate-1 inventory) |
+| K2 | none | x-tooling.3 | no machine check: programme stop criterion; UNCERTAIN who checks |
+| GAP-G-3 | none | ingestor.1 | no machine check: completeness half open |
+| GAP-G-5 | none | core.6 | no machine check: author judgment |
+| R-FD | none | core.6 | no machine check: assert-coa-freshness.infra locks the two bounds' externalization, not the inclusive form or the retired fail>warn refusal (moved from W4A-R2, whose register row R-FD is) |
+| Q-B1 | none | link.4 | no machine check: an open operator question; its interim constraint (averaging not_evaluated) is prose in the 124a R-CR row |
+| Rule-1 | partial | core.1 | partial: step-conformance.infra — compute-shape rules fire on the known-bad fixture (the compute slice of Rule 1 only) |
+| Rule-5 | partial | core.2 | partial: step-schema.logic — checks may never be "none" (checks:[] minItems not fixture-tested) |
+| V6 | partial | core.3 | partial: s4-empty-source-guard-real-descriptors.logic — typed empty_source string and array forms halt end-to-end (illegal form rejection untested) |
+| R-AW | partial | core.8 | partial: logic-var-parity.logic — seed/code literal parity for the founding instance only; no fleet check |
+| R-FC | partial | core.8 | partial: r-de-vocabulary.logic — <slug>_<name> end-state naming; migration with values carried not asserted (moved from W4A-R1, whose register row R-FC is) |
+| R-CF | partial | core.9 | partial: refresh-snapshot-query-consolidation.logic — one step declares execution.read_gucs and sets no GUC in compute; runner issuing the GUC not asserted |
+| Rule-8 | partial | core.12 | partial: step-schema.logic — per-target guard_why if/then fires; step-level discipline refusal untested |
+| R-FF | none | core.14 | no machine check: classify-coa-scope.infra asserts the legacy script contract, not the by:"pin" watermark form; only the reader side is locked (R-DO/R-ER) (moved from W4A-R4, whose register row R-FF is) |
+| R-AY | partial | core.17 | partial: steps/compute_parcel_cost_estimates/violations — founding step's population bound only; not required fleet-wide |
+| R-EV | partial | ingestor.6 | partial: steps/coa/compute.logic — TZ-independent data_hash; admission conditions (a)-(d) not asserted |
+| R-CR | partial | link.3 | partial: migration-255-parcel-abutments.infra — trigger installed; guards.requires declaration not asserted |
+| R-CI | partial | enricher.2 | partial: purity-s3-exec-seam.logic — undeclared writesRef refused; library-owned hygiene DELETEs not asserted |
+| R-AI | partial | x-captures.1 | partial: step-conformance.infra — indirect: step-validate self-test (expectedCaptureChains fixtures) passes |
+| R-CP | partial | x-captures.5 | partial: gate-score-floor.infra — notLookedReasons locked both ways; not that every live test calls it |
+| Rule-13 | partial | x-validate.1 | partial: step-conformance.infra — scorecard block staleness only |
+| Rule-13-addendum-R-T | partial | x-validate.1 | partial: step-library.logic — invariants/plausibility EVERY_RUN executor rows; DATA-vs-PROCESS split not asserted |
+| P4-3 | partial | x-rulings.1 | partial: spec124-register-locks.logic — register rows parse with unique ids; statement/amends columns unchecked |
+| L7-2 | none | x-rulings.2 | no machine check: rung ordering is a judgement call; no test (verify-12 N1 re-audit) |
+| R-AQ | partial | x-verify.2 | partial: run-chain-selection.logic — --only/--from partial-run mechanism; "one acceptance set" not asserted |
+| R-AH | partial | x-tooling.2 | partial: step-conformance.infra — indirect: step-validate self-test (checkCompressedFormDefault fixtures) passes |
+| R-KF | none | core.9 | OWED MB-31: step-closure.logic.test.ts (recorded 2026-10-30-batch-aj, lock not yet built) |
+| R-KI | none | x-tooling.1 | OWED MB-68: hook arms; hooks-composition.infra (MB-68) (recorded 2026-10-30-batch-aj, lock not yet built) |
+| R-KJ | none | core.9 | OWED MB-31: the R4-09 input-allowlist test (step-closure.logic.test.ts) (recorded 2026-10-30-batch-aj, lock not yet built) |
+| R-KK | none | x-tooling.3 | OWED MB-67: mcbylaws-queue-check.mjs (MB-67) (recorded 2026-10-30-batch-aj, lock not yet built) |
+| R-KQ | none | x-tooling.3 | OWED MB-73: mcbylaws-promises.logic.test.ts (MB-73) (recorded 2026-10-30-batch-aj, lock not yet built) |
+| R-KS | none | core.11 | OWED MB-31: trace test in catalogue lock (MB-31) (recorded 2026-10-30-batch-ak, lock not yet built) |
+| R-KT | none | core.9 | OWED MB-31: step-closure.logic.test.ts input allowlist (MB-31) (recorded 2026-10-30-batch-ak, lock not yet built) |
+| R-KU | none | x-tooling.3 | OWED MB-73: mcbylaws-promises.logic.test.ts red fixtures (MB-73) (recorded 2026-10-30-batch-ak, lock not yet built) |
+| R-LR | none | x-tooling.3 | OWED MB-67: gate arm (MB-67) refuses any McBylaws script or night whose database target is not 127.0.0.1:54322, red fixture a remote target (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-KW | none | x-tooling.3 | OWED MB-67: mcbylaws-queue-check.mjs on temp repos Q1..Q5 (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-KX | none | x-v3.2 | OWED MB-67: hold.mjs H1..H7 per-commit parent-tree check (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LB | none | x-tooling.1 | OWED MB-67: precommit-budget.mjs --measure with a re-pinned evidence file (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LG | none | x-tooling.1 | OWED MB-68: loop-gate record schema tests (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LH | none | x-tooling.1 | OWED MB-68: loop-gate regression-ratchet and oracle-first red fixtures (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LI | none | x-tooling.1 | OWED MB-68: loop-gate oracle-first red fixtures, split-commit and glob-miss cases (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LJ | none | x-tooling.1 | OWED MB-68: loop-gate one-increment fixtures (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LK | none | x-tooling.1 | OWED MB-68: loop-gate floor_fell fixture on an OWED line (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LL | none | x-tooling.1 | OWED MB-68: loop-gate --mode ci prints "external groups: not run in CI" (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LM | none | x-tooling.1 | OWED MB-68: loop-gate canary fixture (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LN | none | x-tooling.1 | OWED MB-68: hooks-composition.infra: the loop arm is wired by MB-67 only (MB-67, MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LO | none | x-tooling.1 | OWED MB-68: loop-gate verify --json prints rounds_since_thresholds (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LP | none | x-tooling.1 | OWED MB-68: loop-gate fast-set and full-set runs (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LQ | none | x-tooling.1 | OWED MB-68: loop-gate reason-length red fixtures (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LS | none | x-v3.2 | OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LT | none | x-v3.2 | OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LU | none | x-v3.2 | OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LV | none | x-v3.2 | OWED MB-68: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LW | none | x-v3.2 | OWED MB-68: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LX | none | x-v3.2 | OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LY | none | x-v3.2 | OWED MB-67: the gate tests do not yet name R-LY (recorded 2026-10-31-batch-an) |
+| R-LZ | none | x-v3.2 | OWED MB-79: no test names R-LZ yet (recorded 2026-10-31-batch-an) |
+| R-MB | none | x-v3.2 | OWED MB-84: the lock is the gate exceptions test and the MB-84 push-gate run (recorded 2026-11-03-batch-av) |
+| R-MC | none | x-v3.2 | OWED MB-79 (f): no test names R-MC yet (recorded 2026-11-03-batch-aw) |
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/lib/parcels/consumer-lookup.ts b/src/lib/parcels/consumer-lookup.ts
+index 75df3042051b3eb1aabb9b27cc1e0ab590399d9b..a2ae0cf7ea48eedac0aa7563d308ed64157d2f17 100644
+--- a/src/lib/parcels/consumer-lookup.ts
++++ b/src/lib/parcels/consumer-lookup.ts
+@@ -24,6 +24,7 @@ import {
+ } from '@/app/api/parcels/lookup/types';
+ import type { LotMapRows } from '@/lib/parcels/lot-map';
+ import { areaSqftM2Dot, len1 } from '@/lib/parcels/display-rules';
++import { LOT_SIZE_PLAUSIBLE_M2 } from '@/lib/report-projection/project';
+ 
+ type LotOutline = NonNullable<ConsumerLotMap['lots'][number]['outline']>;
+ 
+@@ -76,8 +77,9 @@ const CONSUMER_COMPARABLE_FIELDS = [
+ 
+ const MAX_COMPARABLE_EXAMPLES = 12;
+ 
++// SEARCHFIX.3 L2 (task-451; FOLD-PLAN.md:56): an empty string is no value (null), never Number('') = 0. A defensive guard: no stored column holds ''.
+ const num = (v: unknown): number | null => {
+-  if (v == null) return null;
++  if (v == null || v === '') return null;
+   const n = Number(v);
+   return Number.isFinite(n) ? n : null;
+ };
+@@ -218,13 +220,21 @@ export function fitOf(outlines: Array<LotOutline | null>, pin: { lat: number; ln
+   return { north, south, east, west };
+ }
+ 
++/** SEARCHFIX.3 ST3 (task-451; RR-0444 2c, MORNING-DECISIONS.md:2291 "The lot card shows "Not available" for an implausible area"): the map lot's area is
++ * sent only when the stored size lies inside the one plausible window (LOT_SIZE_PLAUSIBLE_M2, inclusive, the same test as the report's lot_size_implausible);
++ * outside it, or not a number, the area is null and the card shows its null value. */
++const plausibleSize = (v: unknown): boolean => {
++  const n = num(v);
++  return n !== null && n >= LOT_SIZE_PLAUSIBLE_M2.min && n <= LOT_SIZE_PLAUSIBLE_M2.max;
++};
++
+ export function assembleLotMap(rows: LotMapRows): ConsumerLotMap {
+   const lots = rows.lots.map((l) => {
+     const lat = num(l.centroid_lat);
+     const lng = num(l.centroid_lng);
+     return {
+       parcelId: String(l.parcel_id),
+-      area: areaSqftM2Dot(l.lot_size_sqm),
++      area: plausibleSize(l.lot_size_sqm) ? areaSqftM2Dot(l.lot_size_sqm) : null,
+       frontage: len1(l.frontage_m),
+       zoning: l.zoning_zn_string == null || l.zoning_zn_string === '' ? null : String(l.zoning_zn_string),
+       centroid: lat !== null && lng !== null ? { lat, lng } : null,
+diff --git a/src/tests/consumer-parcel-lookup.infra.test.ts b/src/tests/consumer-parcel-lookup.infra.test.ts
+index 5df8e0b6f7baf99c28043b792a2f2668f53867a2..979c6952c45355496605d5b12d32f06de2af71ae 100644
+--- a/src/tests/consumer-parcel-lookup.infra.test.ts
++++ b/src/tests/consumer-parcel-lookup.infra.test.ts
+@@ -114,6 +114,61 @@ describe('route source-shape locks (Spec 100 §3)', () => {
+   });
+ });
+ 
++// SEARCHFIX.1 (task-449; RR-0442, MORNING-DECISIONS.md:2276, operator verbatim "It should open on an exact match and we have a different process
++// for address mistakes"; RR-0443 c, :2284, "What happens with a partial address? Similar to an address mistake they need to select from the
++// available addresses that are close"). T6: only two places in the resolver may open a lot. T7 (G3 R1): the lookup contract text says so, and
++// its counts restate their own arrays. T8: Spec 100 carries the dated note (the noteIn pattern of spec-notes-1b.logic.test.ts).
++const RESOLVER = path.resolve(__dirname, '../lib/admin/parcel-lookup.ts');
++const uniqueReturns = (src: string): number => (src.match(/resolution: 'unique'/g) ?? []).length;
++const RR0442 = 'It should open on an exact match and we have a different process for address mistakes';
++const RR0443C = 'What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close';
++const SFX_MARK = 'Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449';
++type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- descriptor JSON
++const readJson = (rel: string): Json => JSON.parse(fs.readFileSync(path.resolve(__dirname, '../..', rel), 'utf8'));
++
++describe('SEARCHFIX.1 T6: a lot opens only on an exact match (two unique returns in the resolver)', () => {
++  it('parcel-lookup.ts holds exactly two `unique` returns: the exact read and the typed-address-in-full typeahead row', () => {
++    expect(uniqueReturns(fs.readFileSync(RESOLVER, 'utf8'))).toBe(2);
++  });
++  it('RED plant: a source with a third `unique` return is caught', () => {
++    expect(uniqueReturns("a = { resolution: 'unique' }; b = { resolution: 'unique' }; c = { resolution: 'unique' };")).not.toBe(2);
++  });
++});
++
++describe('SEARCHFIX.1 T7 (G3 R1): the lookup contract says exact opens and its counts match its arrays', () => {
++  const d = readJson('scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json');
++  const census = (Object.values(readJson('scripts/surfaces/_schema/census/contracts.json')) as Json[]).find((x) => x?.identity?.id === d.identity.id);
++  it('the census row equals the emitted descriptor', () => {
++    expect(census).toEqual(d);
++  });
++  it('data_story carries the exact-opens dated note and no "24 fields"', () => {
++    const story = d.docs.data_story as string;
++    expect(story).toContain('exact match opens; a typeahead, a street type or direction conflict, a unit, letter or dash form, and a mistype list');
++    expect(story).not.toContain('24 fields');
++  });
++  it('every stated count equals the array it describes', () => {
++    expect(Number(/It reads (\d+) tables/.exec(d.docs.data_story)?.[1])).toBe(d.inputs.tables.length);
++    expect(Number(/reads (\d+) table\(s\)/.exec(d.inputs.why)?.[1])).toBe(d.inputs.tables.length);
++    expect(Number(/writes (\d+) table\(s\)/.exec(d.outputs.why)?.[1])).toBe(d.outputs.tables.length);
++    const parity = d.checks.find((c: Json) => /field_whitelist_parity$/.test(c.id));
++    expect(Number(/pick-by-name of (\d+) field/.exec(parity.why)?.[1])).toBe(d.inputs.field_whitelist.length);
++  });
++  it('emits names the property_view ledger write on this metered surface (surface.schema.json: "none" on a metered surface is a rule-9 violation)', () => {
++    expect([d.metering.answer, d.emits.answer, d.emits.ledger_events]).toEqual(['metered', 'ledger', ['property_view']]);
++  });
++});
++
++describe('SEARCHFIX.1 T8: Spec 100 carries the exact-match dated note', () => {
++  it('the note quotes RR-0442 and RR-0443 c verbatim', () => {
++    const spec = fs.readFileSync(path.resolve(__dirname, '../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md'), 'utf8');
++    const at = spec.indexOf(SFX_MARK);
++    expect(at, 'the SEARCHFIX.1 note is missing').toBeGreaterThan(-1);
++    const end = spec.indexOf('\n', at);
++    const note = spec.slice(at, end === -1 ? spec.length : end);
++    for (const words of [RR0442, RR0443C, 'RR-0442', 'RR-0443 c']) expect(note).toContain(words);
++  });
++});
++
+ describe('log hygiene — the raw q is NEVER logged (Spec 100 §2.8)', () => {
+   it('the logInfo payload carries outcome/parcelId/matchType/duration but no q', () => {
+     const src = route();
+@@ -323,3 +378,40 @@ describe('MF-53 a neighbour without a drawable outline is dropped (OUTPUT panel
+     expect(map.neighbours.map((n) => n.parcelId)).toEqual(['N3']);
+   });
+ });
++
++// SEARCHFIX.3 (task-451; RR-0444, MORNING-DECISIONS.md:2290-2291 2c "The lot card shows "Not available" for an implausible area"; FOLD-PLAN.md task 3 ST3):
++// the map lot's area is sent only when the stored size lies inside the one plausible window, LOT_SIZE_PLAUSIBLE_M2 (project.ts:79, 50 to 5,000 m²,
++// inclusive as project.ts lot_size_implausible tests it); outside it, or not a number, the area is null and the card shows the content null value.
++describe('SEARCHFIX.3 ST3: the map area is null outside LOT_SIZE_PLAUSIBLE_M2', () => {
++  const areaOf = (size: unknown): string | null => assembleLotMap({ address: null, pin: null, truncated: false, neighbours: [],
++    lots: [{ parcel_id: 'P1', lot_size_sqm: size as string | null, frontage_m: null, zoning_zn_string: null, centroid_lat: null, centroid_lng: null, primary_frontage_street_name: null, has_footprint: false, outline: null }] }).lots[0]!.area;
++  it('a placeholder size, one under the window and one over it give null', () => {
++    expect(['123456789', 49, 5001, '49.99', '5000.01'].map(areaOf)).toEqual([null, null, null, null, null]);
++  });
++  it('the two bounds are inside (inclusive) and a plausible size keeps its text', () => {
++    expect([areaOf(50) !== null, areaOf(5000) !== null, areaOf('50') !== null]).toEqual([true, true, true]);
++    expect(areaOf('283.5')).toBe('3,052 sq ft · 284 m²');
++    expect([areaOf(null), areaOf(''), areaOf('abc')]).toEqual([null, null, null]);
++  });
++  it('the lib reads the window from the one home and types no bound', () => {
++    expect(lib()).toMatch(/import \{ LOT_SIZE_PLAUSIBLE_M2 \} from '@\/lib\/report-projection\/project';/);
++    expect(lib()).not.toMatch(/\b(50|5000|5_000)\b/);
++  });
++});
++
++// SEARCHFIX.3 L2 (FOLD-PLAN.md:56; a defensive guard, no stored row holds ''): an empty string reads null through the shared num, never 0.
++describe('SEARCHFIX.3 L2: an empty string is null, never 0', () => {
++  it('the headline area, the comparable-build numbers and the neighbourhood stats read null for ""', () => {
++    const { payload } = assembleConsumerPayload({ parcel_id: 'E1', lot_size_sqm: '', max_build_fsi: '', comp_count: '', comp_build_ratio_p50: '', comp_fsi_p50: '', neighbourhood_id: '',
++      comparable_builds: [{ address: '5 Elm', lot_sqm: '', permit_fsi: '' }] }, []);
++    expect([payload.areas.lot_size_sqm, payload.areas.max_build_fsi]).toEqual([null, null]);
++    const s = payload.neighbourhood.compStats;
++    expect([s.compCount, s.compBuildRatioP50, s.compFsiP50, s.neighbourhoodId]).toEqual([null, null, null, null]);
++    const cb = payload.neighbourhood.comparableBuilds![0]!;
++    expect([cb.lot_sqm, cb.permit_fsi]).toEqual([null, null]);
++  });
++  it('a real zero is still 0 (only the empty string changes)', () => {
++    const { payload } = assembleConsumerPayload({ parcel_id: 'E2', comp_count: 0, neighbourhood_id: '0' }, []);
++    expect([payload.neighbourhood.compStats.compCount, payload.neighbourhood.compStats.neighbourhoodId]).toEqual([0, 0]);
++  });
++});
+diff --git a/src/tests/surfaces/lot-map-help-link.logic.test.ts b/src/tests/surfaces/lot-map-help-link.logic.test.ts
+index 421d3c5b620ed0a14896fd4fc85a8944ef7af0af..631bbcacb716eb0a3708a7a0eb539a0133bff357 100644
+--- a/src/tests/surfaces/lot-map-help-link.logic.test.ts
++++ b/src/tests/surfaces/lot-map-help-link.logic.test.ts
+@@ -8,6 +8,8 @@
+ //         intersection, no lot linked, many lots.
+ // Every link opens Help & Support through the existing action `open_help` (mobile/src/lib/maxbldHelp.ts) with the built Help topic (lot_match on the lot map, address_match under the notices; v8 names wrong-lot) and the typed query. Operator RR-0299 (MORNING-DECISIONS.md:1155): the support address is a placeholder until launch;
+ // this page reads no setting and writes none. Root test: reads committed files as text, no DB, no network, no mobile import.
++// Dated 2026-11-24 (SEARCHFIX.3, task-451; doc-2 B.7 (doc-2:49) "to /help?topic=wrong-lot"; prior text above kept): every link of the page now opens the
++// topic wrong-lot, which the Help page has since task-450 (web_help, "Wrong address or lot"); the old topics lot_match and address_match stay on the Help page.
+ import { describe, expect, it } from 'vitest';
+ import fs from 'node:fs';
+ import path from 'node:path';
+@@ -39,7 +41,9 @@ const column = (g: Json): Json[] => allByTestId(g.props, 'parcel-lotmap-column')
+ const HELP = 'parcel-lotmap-help';
+ // The built Help topics are the binding (orchestrator reading under build-with-existing-bindings; v8 names wrong-lot, which the Help page lacks):
+ // the lot map link is lot_match ("Report incorrect lot match"), the address-notice links are address_match (web_help.content.json:7, :11).
++// Dated 2026-11-24 (SEARCHFIX.3, task-451; prior reading above kept): the Help page has the topic wrong-lot since task-450, so every link takes it (doc-2:49).
+ const openHelp = (topic: string) => ({ action: 'open_help', topic, q: { derived: 'query' } });
++const TOPIC = 'wrong-lot';
+ 
+ describe('SRCH.C12: the two v8 strings', () => {
+   it('the content file and the generated slice carry the v8 text under help.lot.prompt and help.address.link', () => {
+@@ -69,7 +73,7 @@ describe('SRCH.C12 C.12: the multi-lot state ends with "Not sure which lot? Get
+   it('the two multi-lot goldens are exactly the nothing-picked and the picked case', () => {
+     expect([...NOTHING_PICKED, ...PICKED].sort()).toEqual([...WITH_ROW].sort());
+   });
+-  it.each(WITH_ROW)('%s: the help row follows the button (and its hint line when shown): the prompt text and the link button to Help with topic lot_match', (name) => {
++  it.each(WITH_ROW)('%s: the help row follows the button (and its hint line when shown): the prompt text and the link button to Help with topic wrong-lot', (name) => {
+     const col = column(golden(name));
+     const at = col.findIndex((c) => c.props?.testID === 'parcel-lotmap-continue');
+     expect(at).toBeGreaterThan(-1);
+@@ -82,7 +86,7 @@ describe('SRCH.C12 C.12: the multi-lot state ends with "Not sure which lot? Get
+     expect(link!.component).toBe('Button');
+     expect(link!.props.testID).toBe(HELP);
+     expect([link!.props.variant, link!.props.accessibilityRole]).toEqual(['link', 'link']);
+-    expect(link!.props.onPress).toEqual(openHelp('lot_match'));
++    expect(link!.props.onPress).toEqual(openHelp(TOPIC));
+     expect(link!.children[0].children).toEqual([{ content: 'help.address.link' }]);
+     expect(allByTestId(golden(name).props, HELP)).toHaveLength(1);
+   });
+@@ -97,7 +101,7 @@ describe('SRCH.C12 B.7: the link under each address-confusion notice', () => {
+     expect(link.component).toBe('Button');
+     expect(link.props.testID).toBe(HELP);
+     expect([link.props.variant, link.props.accessibilityRole]).toEqual(['link', 'link']);
+-    expect(link.props.onPress).toEqual(openHelp('address_match'));
++    expect(link.props.onPress).toEqual(openHelp(TOPIC));
+     expect(link.children[0].children).toEqual([{ content: 'help.address.link' }]);
+     expect(allByTestId(golden(name).props, HELP)).toHaveLength(1);
+     expect(allByTestId(golden(name).props, 'parcel-lotmap-help-row')).toEqual([]);
+@@ -112,6 +116,14 @@ describe('SRCH.C12 B.7: the link under each address-confusion notice', () => {
+   });
+ });
+ 
++describe('SEARCHFIX.3 B.7: the map topic is a Help page topic (task-451)', () => {
++  it('wrong-lot is a mailto topic of web_help in the page table, so the link lands on a listed topic', () => {
++    const table = rj('scripts/surfaces/_schema/static-page.json');
++    const topics = (table.pages.web_help.static.sections as Json[]).flatMap((s) => (s.parts as Json[]).filter((p) => p.role === 'mailto').map((p) => p.topic));
++    expect(topics).toContain(TOPIC);
++  });
++});
++
+ describe('SRCH.C12: the host passes the action, and the page reads and writes nothing new', () => {
+   it('disambiguate.tsx hands open_help (the existing openHelp) to the renderer', () => {
+     const src = fs.readFileSync(path.join(ROOT, 'mobile/app/(app)/parcel-tool/disambiguate.tsx'), 'utf8');
+diff --git a/src/tests/surfaces/search-follow-ups.logic.test.ts b/src/tests/surfaces/search-follow-ups.logic.test.ts
+index 6d390f78e8a10551b1c7439fd35c0448ddb3f849..9bf4cdca0c1fa03af00d50dd7a9470721d9a7d6f 100644
+--- a/src/tests/surfaces/search-follow-ups.logic.test.ts
++++ b/src/tests/surfaces/search-follow-ups.logic.test.ts
+@@ -141,14 +141,20 @@ describe('GAP.13: the dated notes on the parent queue rows (M-246, prior text ke
+ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map and C.7 the card lead (choose-lot.html:306)', () => {
+   const LEADS = {
+     'lot.letter': 'Lot {letter}',
+-    'lot.lead.house': 'Lot {letter} · has the house',
+-    'lot.lead.no_building': 'Lot {letter} · no building',
++    // SEARCHFIX.3 V1 (task-451, dated 2026-11-24; MD:776 "'at the back' when it has none", doc-2 C.7, FOLD-PLAN.md:57; prior values 'Lot {letter} · has the house'
++    // and 'Lot {letter} · no building'): a lot with no fronting street reads "at the back".
++    'lot.lead.house': 'Lot {letter} · has the house · at the back',
++    'lot.lead.no_building': 'Lot {letter} · no building · at the back',
+     'lot.lead.no_building_faces': 'Lot {letter} · no building · faces {street}',
+     'lot.lead.house_faces': 'Lot {letter} · has the house · faces {street}',
+   };
+-  it('lead keys carry the v8 words (choose-lot.html:306) in the content file and the slice; "at the back" is not data and is not used (RR-0289, MORNING-DECISIONS.md:1117)', () => {
++  // SEARCHFIX.3 V1 (task-451 AC2, dated 2026-11-24): the prior title said '"at the back" is not data and is not used (RR-0289, MORNING-DECISIONS.md:1117)' and its
++  // assertion was that no content value holds "at the back". RR-0289 rules massing presence only; "at the back" is the v8 phrase for a lot with no fronting street
++  // (MD:776, doc-2 C.7, FOLD-PLAN.md:57), so the lock is now on where the phrase may and may not appear.
++  it('lead keys carry the v8 words (choose-lot.html:306) in the content file and the slice; "at the back" ends only the two no-street leads', () => {
+     for (const [k, v] of Object.entries(LEADS)) expect([k, mapContent[k], mapSlice[k]]).toEqual([k, v, v]);
+-    expect(Object.values(mapContent).filter((v) => /at the back/.test(v))).toEqual([]);
++    for (const k of ['lot.lead.house', 'lot.lead.no_building']) expect([k, mapContent[k]!.endsWith(' · at the back')]).toEqual([k, true]);
++    for (const k of ['lot.lead.house_faces', 'lot.lead.no_building_faces', 'lot.letter']) expect([k, /at the back/.test(mapContent[k]!)]).toEqual([k, false]);
+   });
+   const leadKey = (name: string, i: number): { key: string; street: unknown } => {
+     const g = rj(`${GOLD}/${MAP}/${name}.mobile.json`);
+@@ -158,7 +164,8 @@ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map an
+     const street = /"street":(\{[^}]*\})/.exec(text)?.[1] ?? null;
+     return { key: refs[0]!, street: street && JSON.parse(street) };
+   };
+-  it('two lots: A has a footprint and a street (house and faces), B has no footprint and no street ("no building" only)', () => {
++  // SEARCHFIX.3 (task-451, dated 2026-11-24; prior title ended '("no building" only)'): the key is unchanged; its text now ends "at the back".
++  it('two lots: A has a footprint and a street (house and faces), B has no footprint and no street ("no building · at the back")', () => {
+     expect(leadKey('multi_parcel_2', 0)).toEqual({ key: 'lot.lead.house_faces', street: { contract: 'contract_parcels_lookup.map.lots.0.frontageStreet' } });
+     expect(leadKey('multi_parcel_2', 1)).toEqual({ key: 'lot.lead.no_building', street: null });
+   });
+@@ -196,6 +203,17 @@ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map an
+     expect(src).toContain('55322');
+     expect(src).not.toMatch(/\b(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE)\b/);
+   });
++  // SEARCHFIX.3 L7 (task-451; GROUNDER-G item 2): a flag with no value, or with the next flag as its value, is an error (usage, exit 2), never a silent read.
++  it('SEARCHFIX.3 L7: --url or --parcels with a missing value or a flag as its value sets an error; a real value does not', async () => {
++    const parseArgs = (await import('../../../scripts/analysis/lot-map-data-check.mjs')).parseArgs as unknown as (argv: string[]) => { error?: string };
++    expect(parseArgs(['--parcels', '--url', 'x']).error).toBeTruthy();
++    expect(parseArgs(['--url']).error).toBeTruthy();
++    expect(parseArgs(['--url', '--dry-run']).error).toBeTruthy();
++    expect(parseArgs(['--parcels']).error).toBeTruthy();
++    expect(parseArgs(['--parcels', '1,2']).error).toBeUndefined();
++    expect(parseArgs(['--url', 'postgres://u@127.0.0.1:55322/db']).error).toBeUndefined();
++    expect(parseArgs(['--dry-run']).error).toBeUndefined();
++  });
+   it('the data-check guard refuses every host, port, scheme and query override but the rehearsal stack', async () => {
+     const { refuse } = await import('../../../scripts/analysis/lot-map-data-check.mjs');
+     expect(refuse('postgres://u:p@127.0.0.1:55322/db')).toBeNull();
+diff --git a/src/tests/surfaces/static-page.logic.test.ts b/src/tests/surfaces/static-page.logic.test.ts
+index c46c926fd9bb128d302ff52d8b162e7bcfe64ad7..fafda8ba54c1da9f720a0b17c4a8cefdbffdd37e 100644
+--- a/src/tests/surfaces/static-page.logic.test.ts
++++ b/src/tests/surfaces/static-page.logic.test.ts
+@@ -51,21 +51,22 @@ describe('T1 the page table against the contract', () => {
+     expect(pagesOf().length).toBe(7);
+   });
+   it('RED: each planted defect is refused', () => {
++    // SEARCHFIX.3 (task-451, dated 2026-11-24): web_help gains the header section first (H Q2), so its prose and footer move from [0], [1] to [1], [2].
+     const plants: Array<[string, (t: Json) => void]> = [
+-      ['a number as content', (t) => { t.pages.web_help.static.sections[0].parts[1].content = 9.99; }],
++      ['a number as content', (t) => { t.pages.web_help.static.sections[1].parts[1].content = 9.99; }],
+       // MF-76 (dated 2026-11-11): hero is a landing kind now, so the planted unknown kind is one no row has added.
+-      ['an unknown kind', (t) => { t.pages.web_help.static.sections[0].kind = 'banner'; }],
+-      ['a role outside its kind', (t) => { t.pages.web_help.static.sections[1].parts[3].role = 'paragraph'; }],
+-      ['a link with no href', (t) => { delete t.pages.web_help.static.sections[1].parts[0].href; }],
+-      ['an off-origin href', (t) => { t.pages.web_help.static.sections[1].parts[0].href = '//evil.com'; }],
+-      ['an href on a paragraph', (t) => { t.pages.web_help.static.sections[0].parts[1].href = '/help'; }],
+-      ['a value typed into a part', (t) => { t.pages.web_help.static.sections[0].parts[1].text = 'Hello'; }],
++      ['an unknown kind', (t) => { t.pages.web_help.static.sections[1].kind = 'banner'; }],
++      ['a role outside its kind', (t) => { t.pages.web_help.static.sections[2].parts[3].role = 'paragraph'; }],
++      ['a link with no href', (t) => { delete t.pages.web_help.static.sections[2].parts[0].href; }],
++      ['an off-origin href', (t) => { t.pages.web_help.static.sections[2].parts[0].href = '//evil.com'; }],
++      ['an href on a paragraph', (t) => { t.pages.web_help.static.sections[1].parts[1].href = '/help'; }],
++      ['a value typed into a part', (t) => { t.pages.web_help.static.sections[1].parts[1].text = 'Hello'; }],
+       // MF-46 follow-up (dated 2026-11-12): the mailto role (parts 2-6 of web_help).
+-      ['a mailto without a topic', (t) => { delete t.pages.web_help.static.sections[0].parts[2].topic; }],
+-      ['a mailto topic outside the list', (t) => { t.pages.web_help.static.sections[0].parts[2].topic = 'sales'; }],
+-      ['a mailto reading another value', (t) => { t.pages.web_help.static.sections[0].parts[2].value = 'other'; }],
+-      ['a mailto with an href', (t) => { t.pages.web_help.static.sections[0].parts[2].href = '/help'; }],
+-      ['a topic on a paragraph', (t) => { t.pages.web_help.static.sections[0].parts[1].topic = 'general'; }],
++      ['a mailto without a topic', (t) => { delete t.pages.web_help.static.sections[1].parts[2].topic; }],
++      ['a mailto topic outside the list', (t) => { t.pages.web_help.static.sections[1].parts[2].topic = 'sales'; }],
++      ['a mailto reading another value', (t) => { t.pages.web_help.static.sections[1].parts[2].value = 'other'; }],
++      ['a mailto with an href', (t) => { t.pages.web_help.static.sections[1].parts[2].href = '/help'; }],
++      ['a topic on a paragraph', (t) => { t.pages.web_help.static.sections[1].parts[1].topic = 'general'; }],
+       // PAGE.TABLE (task-390): the interactive screens; sections of mobile_parcel_semi_question: 0 bar, 1 status, 2-4 notices, 5 text, 6 choices, 7 button.
+       ['a screen section of an unknown kind', (t) => { t.screens.mobile_parcel_semi_question.sections[1].kind = 'banner'; }],
+       ['a number as screen content', (t) => { t.screens.mobile_parcel_semi_question.sections[1].content = 9.99; }],
+@@ -141,21 +142,43 @@ describe('T3 one footer, one legal line', () => {
+ });
+ 
+ describe('T4 every link is a public host-table route with a page behind it', () => {
+-  it('each href is a public maxbld.ca row rewritten to an existing internal page; none is scope D', () => {
++  // SEARCHFIX.3 H Q2, H Q4 (task-451, dated 2026-11-24; GROUNDER-QUESTIONS.md:75, :77; help.html and terms-privacy.html:262 "MaxBLD home -> /; Log in -> /login"):
++  // the plain pages gain the header links / and /login. Prior text: one list ['/help', '/privacy', '/terms'], each internal /parcel-tool + href under the
++  // (static) mount, which / (internal /parcel-tool/home) and /login (a page outside (static)) cannot meet. Now two pinned sets: the footer set keeps the strict
++  // check; the header set is checked as public host rows whose internal page exists (the pageExists reading of web-landing.logic.test.ts T5).
++  const PAGES_ROOT = 'src/app/(maxbld)/parcel-tool';
++  const pageExists = (internal: string): boolean => {
++    const rel = internal.replace(/^\/parcel-tool/, '');
++    return [path.join(ROOT, PAGES_ROOT, rel, 'page.tsx'), path.join(ROOT, PAGES_ROOT, '(static)', rel, 'page.tsx')].some((f) => fs.existsSync(f));
++  };
++  const hrefsOf = (kind: string): string[] => [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.filter((s: Json) => s.kind === kind).flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))].sort();
++  it('each footer href is a public maxbld.ca row rewritten to an existing internal page under (static); none is scope D', () => {
+     // MF-76 (dated 2026-11-11): the plain pages only; the landing's links (in-page anchors, /login, /signup with a plan, the help topic) are pinned
+     // by src/tests/surfaces/web-landing.logic.test.ts T5 against the same host table.
+-    const hrefs = [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))];
+-    expect(hrefs.sort()).toEqual(['/help', '/privacy', '/terms']);
++    const hrefs = hrefsOf('footer');
++    expect(hrefs).toEqual(['/help', '/privacy', '/terms']);
+     for (const h of hrefs) {
+       const row = matchMaxbldRoute(h);
+       expect([h, row?.routeClass, row?.internal]).toEqual([h, 'public', `/parcel-tool${h}`]);
+       expect([h, fs.existsSync(path.join(ROOT, `${MOUNTS}${h}/page.tsx`))]).toEqual([h, true]);
+     }
+   });
++  it('each header href is a public maxbld.ca row whose internal page exists; the plain pages hold no other link', () => {
++    expect(hrefsOf('hero')).toEqual(['/', '/login']);
++    const all = [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))].sort();
++    expect(all).toEqual(['/', '/help', '/login', '/privacy', '/terms']);
++    for (const h of hrefsOf('hero')) {
++      const row = matchMaxbldRoute(h);
++      expect([h, row?.routeClass, typeof row?.internal === 'string' && pageExists(row.internal)]).toEqual([h, 'public', true]);
++    }
++  });
+ });
+ 
+ describe('T5 the plain pages are public (no gate)', () => {
+-  const gateImports = (text: string): string[] => text.split('\n').filter((l) => /^\s*import\b/.test(l) && /require-parcel-tool-page|requireParcelToolPage/.test(l));
++  // SEARCHFIX.3 X6 static half (task-451, dated 2026-11-24; prior text: a per-line filter of import lines, which a wrapped multi-line import or a bare call
++  // slipped past): the gate module or its call anywhere in the comment-stripped text.
++  const strip = (text: string): string => text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
++  const gateImports = (text: string): string[] => [...strip(text).matchAll(/require-parcel-tool-page|requireParcelToolPage\s*\(/g)].map((m) => m[0]);
+   it('no mount under (static) imports the parcel-tool page gate', () => {
+     const files = fs.readdirSync(path.join(ROOT, MOUNTS), { recursive: true }).map(String).filter((f) => f.endsWith('.tsx'));
+     // Dated 2026-11-11 (MF-46, plan v1 fold 4): + refused/page.tsx, the internal target of a refused maxbld.ca page path (it only calls notFound()).
+@@ -167,6 +190,11 @@ describe('T5 the plain pages are public (no gate)', () => {
+   it('RED: a planted gate import is caught', () => {
+     expect(gateImports("import { requireParcelToolPage } from '@/lib/auth/require-parcel-tool-page';\n// requireParcelToolPage in a comment")).toHaveLength(1);
+   });
++  it('RED (SEARCHFIX.3 X6): a wrapped three-line import and a bare call are caught; a comment-only mention is not', () => {
++    expect(gateImports("import {\n  requireParcelToolPage,\n} from '@/lib/auth/require-parcel-tool-page';").length).toBeGreaterThan(0);
++    expect(gateImports('export default async function P() { await requireParcelToolPage(); }').length).toBeGreaterThan(0);
++    expect(gateImports('// requireParcelToolPage() and require-parcel-tool-page in a comment\n/* requireParcelToolPage() */\nexport const x = 1;')).toEqual([]);
++  });
+ });
+ 
+ describe('T6 legal text parity (plan v3 §12 fold 22) and the support inbox ruling', () => {
+diff --git a/src/tests/surfaces/static-web-binding.ui.test.tsx b/src/tests/surfaces/static-web-binding.ui.test.tsx
+index b94a84c76570275c65e0a564c3e9a4eb567c949b..02be1560ecbcd160192b4cdaf8f75348622b7dbb 100644
+--- a/src/tests/surfaces/static-web-binding.ui.test.tsx
++++ b/src/tests/surfaces/static-web-binding.ui.test.tsx
+@@ -14,6 +14,9 @@
+ //       data-topic); with none the server's keepValued leaves them out; the prefill island adds the cleaned, encoded fragment values as the body of
+ //       the fragment topic's link only (a CR/LF bcc payload stays inside the body); RED: a mailto without its value, a topic outside the list, a
+ //       topic on a paragraph throw.
++//   (e) dated 2026-11-24 (SEARCHFIX.3, task-451; H Q2 and H Q4, GROUNDER-QUESTIONS.md:75, :77; help.html and terms-privacy.html:262 "MaxBLD home -> /; Log in -> /login";
++//       plan ruling 8.5: both states of the error page): every plain page draws the header with the links / "MaxBLD" and /login "Log in" and keeps the
++//       narrow column; RED: a title-less hero with any other part still throws.
+ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+ import fs from 'node:fs';
+ import path from 'node:path';
+@@ -99,6 +102,7 @@ describe('(b) the one action', () => {
+ });
+ 
+ describe('(c) RED: planted defects throw', () => {
++  // SEARCHFIX.3 (task-451, dated 2026-11-24): web_help gains the header section first (H Q2), so its prose and footer move from sections[0], [1] to [1], [2].
+   const base = (): { page: StaticPage; content: Record<string, string> } => clone(staticPage('web_help', 'static'));
+   it('an unknown component and an unknown action throw at render', () => {
+     const { page, content } = base();
+@@ -107,7 +111,8 @@ describe('(c) RED: planted defects throw', () => {
+     (bad.children[0] as StaticNode).component = 'Card';
+     expect(() => ssr(bad, content)).toThrow('StaticBinding: unmapped component "Card"');
+     const act = staticWebTree(clone(staticPage('web_maxbld_error', 'error')).page);
+-    const prose = (act.children[0] as StaticNode).children[0] as StaticNode;
++    // SEARCHFIX.3 (task-451, dated 2026-11-24): the error page opens with the header section (H Q4, ruling 8.5), so its prose moves from children[0] to [1].
++    const prose = (act.children[0] as StaticNode).children[1] as StaticNode;
+     (prose.children[2] as StaticNode).props.onClick = { action: 'push', route: '/x' };
+     expect(() => ssr(act, STATIC_CONTENT.web_maxbld_error as Record<string, string>)).toThrow('StaticBinding: unknown action');
+   });
+@@ -121,15 +126,15 @@ describe('(c) RED: planted defects throw', () => {
+   });
+   it('a number as a part content, an unknown kind, a role outside its kind, a link with no href or an off-origin href throw in the tree', () => {
+     const plant = (f: (p: Json) => void): (() => StaticNode) => { const { page } = base(); f(page as unknown as Json); return () => staticWebTree(page); };
+-    expect(plant((p) => { p.sections[0].parts[1].content = 9.99; })).toThrow('is not a content key');
++    expect(plant((p) => { p.sections[1].parts[1].content = 9.99; })).toThrow('is not a content key');
+     // MF-76 (dated 2026-11-11): hero is a landing kind now; the planted unknown kind is one no row has added.
+-    expect(plant((p) => { p.sections[0].kind = 'banner'; })).toThrow('unknown section kind "banner"');
+-    expect(plant((p) => { p.sections[0].parts[1].role = 'link'; p.sections[0].parts[1].href = '/help'; })).toThrow('role "link" is not a prose role');
+-    expect(plant((p) => { delete p.sections[1].parts[0].href; })).toThrow('href undefined is not allowed here');
+-    expect(plant((p) => { p.sections[1].parts[0].href = '//evil.com'; })).toThrow('href "//evil.com" is not allowed here');
+-    expect(plant((p) => { p.sections[1].parts[0].href = 'https://evil.com'; })).toThrow('is not allowed here');
+-    expect(plant((p) => { p.sections[0].parts[1].href = '/help'; })).toThrow('href "/help" is not allowed here');
+-    expect(plant((p) => { p.sections[0].extra = 1; })).toThrow('unknown key "extra"');
++    expect(plant((p) => { p.sections[1].kind = 'banner'; })).toThrow('unknown section kind "banner"');
++    expect(plant((p) => { p.sections[1].parts[1].role = 'link'; p.sections[1].parts[1].href = '/help'; })).toThrow('role "link" is not a prose role');
++    expect(plant((p) => { delete p.sections[2].parts[0].href; })).toThrow('href undefined is not allowed here');
++    expect(plant((p) => { p.sections[2].parts[0].href = '//evil.com'; })).toThrow('href "//evil.com" is not allowed here');
++    expect(plant((p) => { p.sections[2].parts[0].href = 'https://evil.com'; })).toThrow('is not allowed here');
++    expect(plant((p) => { p.sections[1].parts[1].href = '/help'; })).toThrow('href "/help" is not allowed here');
++    expect(plant((p) => { p.sections[1].extra = 1; })).toThrow('unknown key "extra"');
+     expect(plant((p) => { p.sections = []; })).toThrow('at least one section');
+   });
+ });
+@@ -162,8 +167,31 @@ describe('(d) the Help & Support mail links (MF-46 follow-up, dated 2026-11-12)'
+     const { page, content } = staticPage('web_help', 'static');
+     expect(() => ssr(staticWebTree(page), content, { values: {} })).toThrow('StaticBinding: no server value "support_inbox"');
+     const plant = (f: (p: Json) => void): (() => StaticNode) => { const p = clone(page) as unknown as Json; f(p); return () => staticWebTree(p as unknown as StaticPage); };
+-    expect(plant((p) => { p.sections[0].parts[2].topic = 'sales'; })).toThrow('a mailto has a listed topic');
+-    expect(plant((p) => { p.sections[0].parts[1].topic = 'general'; })).toThrow('no other part has a topic');
+-    expect(plant((p) => { p.sections[0].parts[2].value = 'other'; })).toThrow('a mailto has a listed topic and the read support_inbox');
++    expect(plant((p) => { p.sections[1].parts[2].topic = 'sales'; })).toThrow('a mailto has a listed topic');
++    expect(plant((p) => { p.sections[1].parts[1].topic = 'general'; })).toThrow('no other part has a topic');
++    expect(plant((p) => { p.sections[1].parts[2].value = 'other'; })).toThrow('a mailto has a listed topic and the read support_inbox');
++  });
++});
++
++describe('(e) the plain pages carry the header links (SEARCHFIX.3 H Q2, H Q4; task-451)', () => {
++  const PLAIN: Array<[string, string]> = [['web_help', 'static'], ['web_terms', 'static'], ['web_privacy', 'static'], ['web_maxbld_error', 'error'], ['web_maxbld_error', 'miss']];
++  it.each(PLAIN)('%s %s: a <header> with / "MaxBLD" and /login "Log in", before the page content; the narrow column is kept', (id, state) => {
++    const { page, content } = staticPage(id, state);
++    const html = ssr(staticWebTree(page), content, { actions: { retry: () => undefined } });
++    const header = /<header\b[^>]*>([\s\S]*?)<\/header>/.exec(html);
++    expect(header).not.toBeNull();
++    expect(header![1]).toMatch(/<a\b[^>]*href="\/"[^>]*>[\s\S]*?MaxBLD[\s\S]*?<\/a>/);
++    expect(header![1]).toMatch(/<a\b[^>]*href="\/login"[^>]*>[\s\S]*?Log in[\s\S]*?<\/a>/);
++    expect([content['nav.home'], content['nav.sign_in']]).toEqual(['MaxBLD', 'Log in']);
++    expect(html.indexOf('<header')).toBeLessThan(html.indexOf('data-testid="static-footer"'));
++    expect(html).toContain('max-w-2xl');
++    expect(html).not.toContain('max-w-6xl');
++    expect(html.match(/<h1\b/g)?.length ?? 0).toBeLessThanOrEqual(1);
++    expect(errors).toEqual([]);
++  });
++  it('RED: a title-less hero with a tagline (or any part but the wordmark and nav) still throws', () => {
++    const { page } = clone(staticPage('web_help', 'static'));
++    (page.sections[0] as unknown as Json).parts.push({ role: 'tagline', content: 'help.intro' });
++    expect(() => staticWebTree(page)).toThrow('a hero has a title');
+   });
+ });
+diff --git a/src/tests/surfaces/surface-conformance.logic.test.ts b/src/tests/surfaces/surface-conformance.logic.test.ts
+index 8f5965f7382c7fa997eaf1e23e2d8062b18c8f46..6e662a6a9783746e2c52fa202b1217560ba4b424 100644
+--- a/src/tests/surfaces/surface-conformance.logic.test.ts
++++ b/src/tests/surfaces/surface-conformance.logic.test.ts
+@@ -259,7 +259,8 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
+     // SRCH.C12 (task-321; dated 2026-11-19; operator RR-0299 "C12 - is a fake email address until launch"): 422 -> 424 strings: +2 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (help.lot.prompt, help.address.link, lines 25-26); measured with surface-validate --check before (422) and after (424).
+     // SRCH.LOTMAP-2 (task-362; dated 2026-11-19; design small-pages-v8 choose-lot.html:278 "Pick a lot on the map or in the list."): 425 -> 426 strings: +1 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (select.hint); goldens unchanged (100); measured with surface-validate --check before (425) and after (426).
+     // SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings: +1 in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json (help.mailto.wrong_lot); goldens unchanged (100); measured with surface-validate --check before (426) and after (427).
+-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 100 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 427 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
++    // SEARCHFIX.3 (task-451; dated 2026-11-24; H Q2/H Q4 GROUNDER-QUESTIONS.md:75, :77; doc-2 B.6 (doc-2:48); plan rulings 8.1 b and 8.3): 427 -> 436 strings: +8 nav strings (nav.home "MaxBLD" and nav.sign_in "Log in" in web_help, web_terms, web_privacy and web_maxbld_error .content.json, the plain-page header links) and +1 net in mobile_parcel_disambiguation_map.content.json (unlinked.report and unlinked.stop added, select.label retired); goldens unchanged (100); measured with surface-validate --check before (427) and after (436).
++    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 100 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 436 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
+   });
+   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
+     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
+diff --git a/src/tests/surfaces/surface-validate.logic.test.ts b/src/tests/surfaces/surface-validate.logic.test.ts
+index 348152fd8d4312ead5bad40b23002a09b633dfb4..16f1b2fcdbe830393f7490a274cd70d4a079765e 100644
+--- a/src/tests/surfaces/surface-validate.logic.test.ts
++++ b/src/tests/surfaces/surface-validate.logic.test.ts
+@@ -89,7 +89,8 @@ describe('FE-13 surface-validate gate: real tree', () => {
+     // SRCH.C12 (task-321; dated 2026-11-19; operator RR-0299 "C12 - is a fake email address until launch"): 422 -> 424 strings: +2 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (help.lot.prompt, help.address.link, lines 25-26); measured with surface-validate --check before (422) and after (424).
+     // SRCH.LOTMAP-2 (task-362; dated 2026-11-19; design small-pages-v8 choose-lot.html:278 "Pick a lot on the map or in the list."): 425 -> 426 strings: +1 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (select.hint); goldens unchanged (100); measured with surface-validate --check before (425) and after (426).
+     // SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings: +1 in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json (help.mailto.wrong_lot, the topic "Wrong address or lot"); goldens unchanged (100); measured with surface-validate --check before (426) and after (427).
+-    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 427 strings) · S-page ok (1 of 1 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
++    // SEARCHFIX.3 (task-451; dated 2026-11-24; H Q2/H Q4 GROUNDER-QUESTIONS.md:75, :77; doc-2 B.6 (doc-2:48); plan rulings 8.1 b and 8.3): 427 -> 436 strings: +8 nav strings (nav.home "MaxBLD" and nav.sign_in "Log in" in web_help, web_terms, web_privacy and web_maxbld_error .content.json, the plain-page header links) and +1 net in mobile_parcel_disambiguation_map.content.json (unlinked.report and unlinked.stop added, select.label retired); goldens unchanged (100); measured with surface-validate --check before (427) and after (436).
++    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 436 strings) · S-page ok (1 of 1 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
+     expect(r.stdout.startsWith('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · ')).toBe(true);
+     expect(r.stdout).toContain('S-desc ok (examined 33 in scope:');
+   });
+

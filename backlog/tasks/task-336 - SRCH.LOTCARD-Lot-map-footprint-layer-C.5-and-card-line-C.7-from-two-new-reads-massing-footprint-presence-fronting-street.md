@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-LOTCARD'
 created_date: '2026-11-19T15:57:00Z'
-updated_date: '2026-11-24T14:42:00Z'
+updated_date: '2026-11-24T17:05:00Z'
 labels:
   - S
   - plan:SRCH.LOTCARD
@@ -73,6 +73,8 @@ RR-0289 (MORNING-DECISIONS.md:1117) supersedes plan step 4: footprint -> 'has th
 AC1: data check script written (scripts/analysis/lot-map-data-check.mjs); orchestrator runs it on the rehearsal stack. AC2/3 evidence: commits d03adc2b7, 6140a6867; goldens 'lotmap goldens ok (11)'.
 
 2026-11-19 DATA CHECK run by the orchestrator on the rehearsal stack (127.0.0.1:55322, read-only, dblock-teststack empty): node scripts/analysis/lot-map-data-check.mjs on the SAMPLES.md multi-lot address 26 Kenneth Ave: 5112332 footprint=true primary=true street="Kenneth Ave"; 5427844 footprint=true primary=true street="Kenneth Ave"; {"lots":2,"with_footprint":2,"no_building":0,"with_primary_footprint":2,"with_street":2}. One address only (the sample set has one multi-lot case); a wider sample is a follow-up when more multi-lot addresses are listed.
+
+Dated note 2026-11-24 (M-246, prior text kept; task-451 SEARCHFIX.3, lane BL-SFX3, commit 04c181564): findings closed on this card's work. ST3: the map lot area is null outside LOT_SIZE_PLAUSIBLE_M2 and reads "Not available" (RR-0444 2c, MORNING-DECISIONS.md:2290-2291). V1: a lot with no fronting street reads "at the back" (MORNING-DECISIONS.md:776, doc-2 C.7, FOLD-PLAN.md:57); the note above that "at the back" is not used is superseded. V3: the card's screen-reader label is its visible text (lead line and area; no frontage or zoning). L7: lot-map-data-check.mjs refuses a flag with no value (usage, exit 2).
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

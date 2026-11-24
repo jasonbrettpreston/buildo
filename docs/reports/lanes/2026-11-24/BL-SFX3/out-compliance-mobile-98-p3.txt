@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:23:42.826Z file_sha256=f4e5bdbe0c1fd772d0a7616c5bf5be89bd548db620a339c134593a2ae3a3bc04 prompt_sha256=7111c502dd59766dffbe9110375c7ba3b89cb36bcbee957261a562a515522261
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-mobile-98-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0392 "Nothing is added that the plan or a ruling does not name (RR-0392, ...MORNING-DECISIONS.md:1975)" — src/tests/consumer-parcel-lookup.infra.test.ts "+describe('SEARCHFIX.1 T6: a lot opens only on an exact match (two unique returns in the resolver)'" — the T6/T7/T8 blocks are SEARCHFIX.1 (task-449) locks and are not in this card's "Findings folded: ST3/2c, V1, V2, V3 (with C.9), L2, L7, R3, X1, X6 (static-page half), R5, B.7 (map links), H Q2, H Q4" list — confirm they arrive from a merged task-449 base (the lane's own change list names only ST3 and L2 for this file) before merge
+DEFER severity=MED — card "The plan's section 2 lines are this card's acceptance tests, each red first" — src/tests/consumer-parcel-lookup.infra.test.ts "describe('SEARCHFIX.3 ST3: the map area is null outside LOT_SIZE_PLAUSIBLE_M2'" — chunk 3 shows red only for the map payload; AC1's "in its screen-reader label", AC4 "The screen-reader label contains the visible card text" and AC5 "The lot-map smoke test renders the four error states as errors" sit in mobile/__tests__ where the note says "their red and green are UNVERIFIED until the push station" — verify those reds at the push station before merge
+DEFER severity=LOW — Spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)" — src/tests/surfaces/static-web-binding.ui.test.tsx "expect(html).toContain('max-w-2xl');" — pinning the layout class in the unit suite locks styling, not the ids, labels and host props the dated note names as the render smoke — assert the narrow column by a test id so UI validation stays Maestro's
+DEFER severity=LOW — RR-0289, not pasted — src/tests/surfaces/search-follow-ups.logic.test.ts "RR-0289 rules massing presence only; \"at the back\" is the v8 phrase for a lot with no fronting street" — the dated note states what an operator ruling not in the pasted context governs — quote RR-0289's words (or the superseding ruling) in the note so the removed lock is traceable
+
+MET — card "Must not: ... add a new size setting (reuse LOT_SIZE_PLAUSIBLE_M2, src/lib/report-projection/project.ts:79)" — src/tests/consumer-parcel-lookup.infra.test.ts — "expect(lib()).toMatch(/import \{ LOT_SIZE_PLAUSIBLE_M2 \} from '@\/lib\/report-projection\/project';/)" pins the one home and "not.toMatch(/\b(50|5000|5_000)\b/)" refuses a typed bound
+MET — AC2 "A lot with no fronting street reads \"at the back\"" — src/tests/surfaces/search-follow-ups.logic.test.ts — "'lot.lead.no_building': 'Lot {letter} · no building · at the back'" locks the phrase on the no-street leads and the loop over house_faces, no_building_faces, lot.letter refuses it elsewhere
+MET — AC3 "links to the wrong-lot help topic" — src/tests/surfaces/lot-map-help-link.logic.test.ts — "const TOPIC = 'wrong-lot';" plus "expect(link!.props.onPress).toEqual(openHelp(TOPIC));" and the new check that wrong-lot is a mailto topic of web_help in the page table
+MET — H Q2 and H Q4 "MaxBLD home -> /; Log in -> /login" — src/tests/surfaces/static-web-binding.ui.test.tsx — the (e) block asserts a header with href="/" MaxBLD and href="/login" Log in for web_help, web_terms, web_privacy and both web_maxbld_error states
+MET — L7 "a flag with no value, or with the next flag as its value, is an error (usage, exit 2)" — src/tests/surfaces/search-follow-ups.logic.test.ts — "expect(parseArgs(['--url', '--dry-run']).error).toBeTruthy();" with the real-value cases asserted undefined
+MET — RR-0446 "leave it as it is 02 Agrred add to the plan." — src/tests/consumer-parcel-lookup.infra.test.ts — the new ST3 block builds "assembleLotMap({ address: null, pin: null, truncated: false, neighbours: []" and adds no neighbour-lot expectation
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: none
+
+---
+⏱  94206ms (94.2s)
+📊 Tokens — total: 40854, input: 20746, output: 20108, reasoning: 18992

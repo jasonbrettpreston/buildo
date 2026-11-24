@@ -201,7 +201,48 @@ describe('the page rules (named cases)', () => {
   it('the ruled message texts are verbatim', () => {
     expect(LOT_MAP_SLICE.content['state.intersection']).toBe('That looks like an intersection. Type a house number to see the lots.');
     expect(LOT_MAP_SLICE.content['unlinked.heading']).toBe('No lot linked yet');
-    expect(LOT_MAP_SLICE.content['unlinked.body']).toBe("We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address.");
+    // SEARCHFIX.3 V2 (task-451 AC3, dated 2026-11-24; ruling source doc-2 B.6 (doc-2:48) "Try a nearby address or report it." and B.7 (doc-2:49) "report it inside
+    // the no-lot message"; plan ruling 8.1 b; prior pin: "... Try a nearby address."): the line is the body, the link "report it", then the full stop.
+    expect(LOT_MAP_SLICE.content['unlinked.body']).toBe("We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address or ");
+    expect([LOT_MAP_SLICE.content['unlinked.report'], LOT_MAP_SLICE.content['unlinked.stop']]).toEqual(['report it', '.']);
+  });
+  it('SEARCHFIX.3 V2 (task-451 AC3): the no-lot message holds the "report it" link to the wrong-lot help topic, then the stop', () => {
+    for (const k of ['unlinked', 'unlinked_no_pin']) {
+      const desc = nodes(byTestID(lotMapProps(situation(k)), 'parcel-lotmap-unlinked')!).find((n) => n.component === 'AlertDescription')!;
+      const [body, link, stop] = desc.children as [unknown, PropsNode, PropsNode];
+      expect([k, body]).toEqual([k, { text: { content: 'unlinked.body' }, vars: { address: { contract: 'contract_parcels_lookup.map.address' } } }]);
+      expect([k, link.component, link.props.key, link.props.testID, link.props.accessibilityRole, link.props.onPress, link.children]).toEqual([
+        k, 'Text', 'unlinked-report', 'parcel-lotmap-report', 'link', { action: 'open_help', topic: 'wrong-lot', q: { derived: 'query' } }, [{ content: 'unlinked.report' }]]);
+      expect([k, stop.component, stop.props.key, stop.children]).toEqual([k, 'Text', 'unlinked-stop', [{ content: 'unlinked.stop' }]]);
+    }
+  });
+  it('SEARCHFIX.3 B.7 (task-451; doc-2:49 "to /help?topic=wrong-lot ... under every notice"): every help link of the page opens the wrong-lot topic', () => {
+    const topics = ALL.flatMap((k) => nodes(lotMapProps(situation(k))).filter((n) => (n.props.onPress as Json | null | undefined)?.action === 'open_help').map((n) => (n.props.onPress as Json).topic));
+    expect(topics.length).toBeGreaterThan(0);
+    expect([...new Set(topics)]).toEqual(['wrong-lot']);
+  });
+  it('SEARCHFIX.3 ST3 (task-451 AC1; RR-0444 MD:2290-2291 2c): the null area reads "Not available" on the card and in its label', () => {
+    expect(LOT_MAP_SLICE.content['lot.null']).toBe('Not available');
+    const card = byTestID(lotMapProps(situation('lot_facts_null')), 'parcel-lotmap-card-PCL-A1')!;
+    const area = nodes(card).find((n) => n.props.key === 'card-area')!;
+    expect(area.children).toEqual([{ content: 'lot.null' }]);
+    const label = card.props.accessibilityLabel as { text: unknown; vars: Json };
+    expect([label.text, label.vars.area]).toEqual([{ content: 'lot.label' }, { content: 'lot.null' }]);
+  });
+  it('SEARCHFIX.3 V3 (task-451 AC4; GROUNDER-H D1): the card label is the lead line and the area (no frontage, no zoning); Continue speaks its visible text', () => {
+    for (const k of ['multi_parcel_2', 'multi_parcel_3plus', 'multi_parcel_2_lot_b', 'lot_facts_null']) {
+      const t = lotMapProps(situation(k));
+      for (const card of nodes(t).filter((n) => n.props.role === 'radio')) {
+        const label = card.props.accessibilityLabel as { text: unknown; vars: Json };
+        const title = nodes(card).find((n) => n.props.key === 'card-title')!.children[0];
+        const area = nodes(card).find((n) => n.props.key === 'card-area')!.children[0];
+        expect([k, label.text, Object.keys(label.vars).sort(), label.vars.lead, label.vars.area]).toEqual([k, { content: 'lot.label' }, ['area', 'lead'], title, area]);
+      }
+      const cont = byTestID(t, 'parcel-lotmap-continue')!;
+      expect([k, cont.props.accessibilityLabel]).toEqual([k, (cont.children[0] as PropsNode).children[0]]);
+    }
+    expect(LOT_MAP_SLICE.content['lot.label']).toBe('{lead}, {area}');
+    expect('select.label' in LOT_MAP_SLICE.content).toBe(false);
   });
   it('null lot facts show the content null value, never "0"; an outline-less lot draws no polygon but keeps its card', () => {
     const s = situation('lot_facts_null');

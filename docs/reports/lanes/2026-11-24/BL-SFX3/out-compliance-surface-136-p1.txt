@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:26:06.303Z file_sha256=5e29949380f3aa853b543344fd5cc89eac494da384c9eb7cce86fd1b8be7e451 prompt_sha256=f9312cbf10bda22947abc193cba40d0f7c100cde905095419cf7856509fc959a
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-surface-136-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — fe.47 "All tunables are data; zero thresholds in src/" — task "reuse LOT_SIZE_PLAUSIBLE_M2, src/lib/report-projection/project.ts:79" / queue note "an implausible lot size (outside LOT_SIZE_PLAUSIBLE_M2) is sent as a null area" — the implausible-area bound is reused from a src/ constant rather than a registered logic variable, so the change adds a threshold use in src/ that fe.47 (OWED) forbids — register the bound as a logic variable, or record a dated amendment to fe.47 for this reuse.
+
+DEFER severity=LOW — fe.46 "a new library, a new component kind or a new binding outside §11b.5 is an operator ruling before it is built" — impl note "static-page.json header hero on web_help, web_terms, web_privacy and both web_maxbld_error states (H Q2, H Q4, ruling 8.5)" and "StaticBinding draws a wordmark-and-nav-only hero as the header" — the plain-page header hero may be a new rendered component kind; the folded finding X6 (static-page half) names header links, and "ruling 8.5" is not among the pasted rulings — confirm 8.5/X6 authorises the hero as a layout of existing StaticBinding and not a new kind.
+
+REJECT — RR-0446 / fe.01 — the registry body still says "the pin and the faint neighbouring lots" and "on unlinked the neighbour outlines within the logic-variable radius" while the new note says "no faint neighbouring lots on the unlinked state" — repo convention keeps prior text and appends a superseding dated note, and the task's "Must not: draw neighbour lots" authorises the removal, so the retained body sentence is the superseded prior text, not a live claim.
+
+MET — fe.06 — queue note "an implausible lot size (...) reads 'Not available'" and "a lot with no fronting street reads ... 'at the back'" — the unmeasured/absent value is shown honestly, not as a number.
+
+MET — fe.11 — queue note header "MF-53 · McFrontend queue · lane BL-SFX3, task-451 SEARCHFIX.3" — the search-fix attaches to the Phase 2 convert-on-touch page, no admin task outside MF-30/37/40 added.
+
+MET — fe.14 — same note — no MF task outside Phase 0-2 or convert-on-touch is introduced; it is a folded-findings fix on MF-53.
+
+MET — fe.18 — queue note "lot.label {lead}, {area} ... unlinked.report and unlinked.stop" — the new card copy is carried as content fields, not new hardcoded strings.
+
+MET — fe.24 — queue note "map content lot.null Not available" and "unlinked.body ends 'or ' with unlinked.report" — the value/status copy reaches the surface through content keys, no front-end code per value.
+
+MET — fe.52 — registry metering "property_view, parcel_ref = the matched parcels.parcel_id" — matches "parcel_ref = parcels.parcel_id VARCHAR(20)".
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 58   Unmet: 0
+Rules met: fe.06, fe.11, fe.14, fe.18, fe.24, fe.52
+
+---
+⏱  132167ms (132.2s)
+📊 Tokens — total: 59216, input: 30369, output: 28847, reasoning: 28089

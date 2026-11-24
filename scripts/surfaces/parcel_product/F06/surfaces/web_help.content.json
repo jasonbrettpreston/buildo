@@ -10,5 +10,7 @@
   "help.mailto.general": "Email support",
   "help.mailto.lot_match": "Report incorrect lot match",
   "help.mailto.wrong_lot": "Wrong address or lot",
-  "help.title": "Help & Support"
+  "help.title": "Help & Support",
+  "nav.home": "MaxBLD",
+  "nav.sign_in": "Log in"
 }

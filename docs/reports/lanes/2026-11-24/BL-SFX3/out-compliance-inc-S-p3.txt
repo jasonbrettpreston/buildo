@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:21:56.197Z file_sha256=e8982536cc3a8b2a3223df00a27ff52344f68156f0767d32f015f4afdaea2b15 prompt_sha256=373aa6a494c95b292423bafd1a860dace5c5d6870e7f81005ea964e4ba4fb9db
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-inc-S-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — doc-2 B.6/B.7 dated note "the no-lot message now ends \"Try a nearby address or report it.\", with \"report it\" an inline link to Help & Support, topic wrong-lot" — NONE (cannot see; the binding and content files sit outside this chunk) — this chunk only retargets the existing help links in src/tests/surfaces/lot-map-help-link.logic.test.ts:104, it carries no line that makes "report it" an inline link — confirm in mobile/src/components/surfaces/LotMapBinding.tsx and mobile_parcel_disambiguation_map.content.json (other chunks) that the inline link exists and takes topic wrong-lot.
+DEFER severity=LOW — doc-2 C.9 dated note "the label is the card's visible text (lead line and area)" — NONE (cannot see; the composer is not pasted) — the diff locks only the area value (consumer-lookup.ts:237) and no pasted line shows the label or the "Not available" content value — confirm LotMapBinding.tsx builds the label from lead + area and that lot.null reads "Not available", per AC1/AC4.
+REJECT — H Q2/H Q4 — the change adds the header to web_privacy and both web_maxbld_error states, not only help and terms — the pasted Implementation Notes line "static-page.json header hero on web_help, web_terms, web_privacy and both web_maxbld_error states (H Q2, H Q4, ruling 8.5)" names those pages, so it is named by the card.
+REJECT — RR-0392 "no other infrastructure beyond this" — the SEARCHFIX.1 T6/T7/T8 blocks in this diff are accused of being out of task-451's scope — the pasted doc-2 carries the SEARCHFIX.1 dated notes (G.1, A.3) that name "Spec 100 §3.2 dated note 2026-11-24" and the two-unique reading, so the tests rest on pasted clauses.
+MET — doc-2 C.9 dated note "An implausible lot size (outside LOT_SIZE_PLAUSIBLE_M2) is sent as a null area" — src/lib/parcels/consumer-lookup.ts:237 "area: plausibleSize(l.lot_size_sqm) ? areaSqftM2Dot(l.lot_size_sqm) : null," — the map area is null outside the window, both bounds inclusive per the ST3 test.
+MET — doc-2 C.7 dated note "the card reads \"Lot A · has the house · faces Dunmore Lane\" and \"Lot B · no building · at the back\"" — src/tests/surfaces/search-follow-ups.logic.test.ts:147 "'lot.lead.house': 'Lot {letter} · has the house · at the back'," — both no-street leads end "at the back"; the two faces leads still carry {street}.
+MET — doc-2 C.12 dated note "task-451 points it at the topic wrong-lot" — src/tests/surfaces/lot-map-help-link.logic.test.ts:89 "expect(link!.props.onPress).toEqual(openHelp(TOPIC));" — the map help row now asserts openHelp('wrong-lot').
+MET — doc-2 C.9 dated note "Frontage and zoning are still sent by the lookup (the map field whitelist)" — src/lib/parcels/consumer-lookup.ts:238 "frontage: len1(l.frontage_m)," — frontage and zoning are still sent; only the area is gated.
+MET — task "Must not: draw neighbour lots, or add a new size setting (reuse LOT_SIZE_PLAUSIBLE_M2, src/lib/report-projection/project.ts:79)" — src/lib/parcels/consumer-lookup.ts:28 "import { LOT_SIZE_PLAUSIBLE_M2 } from '@/lib/report-projection/project';" — the window is imported once, not redefined.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: C.3, C.7, C.12
+
+---
+⏱  125949ms (125.9s)
+📊 Tokens — total: 54490, input: 27127, output: 27363, reasoning: 26433

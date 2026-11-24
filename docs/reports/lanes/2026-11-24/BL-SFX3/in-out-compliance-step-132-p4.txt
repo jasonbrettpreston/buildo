@@ -1,0 +1,1102 @@
+LIST step-132 sha256:24c4c710133ae4b359d5152281d799c142397c8c546c1c93f43d0a8d33033cc1 material sha256:bf10b6dac9474069c052b2b8adc81c9c0568601959c6b8e4b0e8b3df8d06c0cf part 1 of 1 chunk 4 of 5
+RULE LIST step-132 (docs/specs/01-pipeline/132_step_standard_handbook.md, sections 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 4 of 5 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["mobile/__tests__/lotMapScreens.golden.test.ts","mobile/src/components/surfaces/LotMapBinding.tsx","mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json","scripts/analysis/lot-map-data-check.mjs","scripts/surfaces/_schema/census/mobile-product.json","scripts/surfaces/_schema/static-page.json","scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json","scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json","scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json","scripts/surfaces/parcel_product/F06/surfaces/web_maxbld_error.content.json","scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json","scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json","src/components/surfaces/web/StaticBinding.tsx"]
+
+## 2. Every step
+
+What every step declares and does, whatever its archetype.
+
+- **core.1** A step is three files: a descriptor (data only), a compute module and a thin shell that exports `pipeline.step(descriptor, compute)`. File names are hyphenated and need not match the slug; §1 table 1b lists every step's real paths. `scripts/steps/_schema/step.schema.json` is the vocabulary; prose never adds a field. Behaviour lives in descriptor data, a declared check, a shape rule or (last resort) a new schema field, never only in code (Rule 1).
+  *Why:* One place says what a step is, and the schema, not a reviewer, decides what is valid.
+  Rules: `Rule-1` `A1` `R2` · history: `P1` `GAP-G-1`
+
+- **core.2** All 20 categories are present and every field is answered; write `"none"` (with a why where the schema asks) instead of leaving a field out. Declare at least one check.
+  *Why:* An omitted field cannot be told apart from a forgotten one; "none" is a decision someone made.
+  Rules: `Rule-5` `Rule-6` · history: `R-Y` `K1`
+
+- **core.3** Use the closed vocabulary: full-word archetypes; a lock id unique across manifest, one-time and backfill scripts; `guards.schema_drift` none/propagate/pause (rule id V3, alias SPEC122A-V3, which is not the V3 standard); staleness as scope × trigger; typed `empty_source`; and the cross-step majority forms (`batch`, `spec_version`, terminal ids, flat emits with every declared emit present on every run and an empty cursor reading 0 (CHAT-90), notes keys). The old `outputs.writes[].replay` / `append_unsafe` field is deleted (V4, now history).
+  *Why:* Shared names let one library, one gate and one admin page read every step the same way.
+  Rules: `R-DE` `V1` (SPEC122A-V1) `V2` (SPEC122A-V2) `V3` (SPEC122A-V3) `V5` (SPEC122A-V5) `V6` (SPEC122A-V6) · history: `V4` (SPEC122A-V4)
+
+- **core.4** Take the archetype from the code: PH-0 derives it, and the census (`step-archetype-census.json`) must agree with the descriptor (#25). The archetype selects the required and forbidden categories. A step whose only write is a snapshot it exists to record is a RECORDER, not an ASSERT with a hidden write.
+  *Why:* The archetype drives which fields are required, so a wrong label silently drops checks.
+  Rules: `R-AE` `R-AO` `Rule-7`
+
+- **core.5** Where a machine can derive a descriptor value, it is gated rather than trusted: `mode_select` per archetype and emit types that match the captures (#47).
+  *Why:* A value the machine can check should never be the author's word alone.
+  Rules: `R-BH`
+
+- **core.6** The verdict comes only from check rows. Each row is PASS, WARN (through `warn_limit` / `warn_limit_from_config`) or its declared severity. `checks_failed` counts FAIL rows and `checks_warned` counts WARN rows. A metric that is never zero is WARN with a stated retighten condition; INFO is only for a purely descriptive counter. A uniqueness invariant is a check row, not a throw. A legacy exclusive ceiling becomes an inclusive `ceiling_max` with a declared deviation.
+  *Why:* A parallel boolean or a severity chosen to dodge red hides failures from the run row and the admin page.
+  Rules: `R-H` `R-Q` `R-AD` `R-CL` `Rule-10` `Rule-10-addendum-R-H` `GAP-G-5` `R-FD` `R-JV` `R-KD` · history: `W4A-R2`
+
+- **core.7** A rule kept inside compute is still written down: as a check's `why`, or as an Intent Ledger row naming where it lives, never only as a code comment (`checkPreservedInComputeHasWhy`).
+  *Why:* Nothing about a step's behaviour may live only in code.
+  Rules: `Rule-4` · history: `P5` `GAP-G-2`
+
+- **core.8** EXTERNALIZED. Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero. Step variables are named `<slug>_<name>`; a name shared by two or more steps comes only from the closed `SHARED_LOGIC_VARIABLES` map, and legacy shared names are renamed by migration with values carried. Unit constants and definitional windows are pinned (min = max). Runner and gate numbers are pinned `step_*` / `gate_*` / `tooling_*` variables. A missing `logic_variables` row fails the run; `on_invalid` is `fail` for any verdict- or write-affecting variable. A variable is retired by a `config.retired[]` declaration, never deleted. A model constant ratified elsewhere becomes a variable with its existing value as default.
+  *Why:* The operator tunes the system from the admin page; a literal in code is a setting nobody can see or change.
+  Rules: `R-A` `R-G` `R-AW` `R-CV` `R-DR` `R-EB` `Rule-3` `R-FC` `R-FE` `R-JW` `R-KN` `R-KR` `R-LA` · history: `R-AU` `Rule-3-addendum-R-AU` `P4` `GAP-G-4` `W4A-R1` `W4A-R3` `Q-C3`
+
+- **core.9** Compute is pure. It receives `ctx` (config with `$meta`, clock, catalog, descriptor, `withinLimit`), reports every check value through `ctx.report(id, value)` and returns rows, a `write_plan` or `records_meta`. The runner owns every read set-up, write, transaction, session GUC (`execution.read_gucs`), catalog probe (`guards.requires` / `ctx.catalog`), calendar date (`ctx.clock` in `pipeline_timezone`) and the verdict. An ASSERT may read `ctx.pool` read-only over declared relations (R-CA (i)). Compute never branches on PostGIS; it never reads `logic_variables` SQL; a config value aliased inside a check body still counts as compute deciding (PURITY-G7). Gate E purity codes PURITY-G0…PURITY-G13 must read zero for a new conversion; the escape-hatch ban is an ast-grep rule.
+  *Why:* Pure compute can be tested with plain inputs, replayed from captures and reviewed without a database.
+  Rules: `R-W` `R-BZ` `R-CA` `R-CE` `R-CF` `R-CM` `R-CX` `R-CY` `R-DC` `Rule-2` `Rule-2-addendum-R-W` `A2` `K3` `R-KF` `R-KJ` `R-KT` · history: `P2`
+
+- **core.10** Compute reads the `ctx` shape the runner's dispatch for its descriptor actually builds (a multi-primary INGESTOR gets `acquired.primaries[id]` and `written.by_target.<table>`, not the flat shape), and its compute lock builds that ctx through the real dispatch, stubbing only DB and network answers.
+  *Why:* A hand-built ctx in a test can pass while the real run reads zeros.
+  Rules: `R-EW` `R-FG`
+
+- **core.11** Output is observable. `emits[]` equals what the captures emit and stays flat; dynamic-keyed telemetry rides a check row's `detail`, capped by a variable. A step that can skip declares a `when:"pre"` check; one that can scope-defer also declares a `deferred_to_full` terminal. Every run row carries the propagated `chain_run_id`.
+  *Why:* A skipped or deferred run must say why in its own audit table, and runs correlate by id, not by time window.
+  Rules: `R-P` `R-U` `R-BU` `R-EP` `R-KS` · history: `Q-W4G-3`
+
+- **core.12** Declare write discipline per write target, never per step: mechanic ⊥ guard ⊥ scope ⊥ retract. A banned write shape ships only with a dated, SHA-anchored `grandfathered.json` entry naming its why; guard `none` needs a why. A target on an RLS-enabled table declares `guards.requires: rls_bypass_or_policy`. One upsert binds at most 65,535 parameters, so the batch keeps the measured worst case under it.
+  *Why:* Write safety differs per table; a per-step answer is wrong for at least one target.
+  Rules: `R-CT` `R-CU` `Rule-8` `Rule-9` `V7` (SPEC122A-V7) `R-KB`
+
+- **core.13** A destructive retraction declares a truthful crash posture (`recovery.interrupted`) and a `recovery.before_image`; the library writes the before-image before retracting, and the runner forces FULL after an interrupted run.
+  *Why:* A run killed half-way must never leave a half-retracted table that the next run calls unchanged.
+  Rules: `R-B` `R-M` `Rule-12`
+
+- **core.14** Declared equals witnessed. Acquisition reads go in `inputs.reads`; measurement reads (check SQL, emits) in `checks[].reads`; per-mode statement counts in `outputs.write_inventory.by_mode`; version pins in `staleness.pins`; invalidators in `outputs.invalidates[]` with a closed `by`. Fast invariant #44 traces what the step really runs and fails any gap; an unresolved invalidator fails (#44 (i)); a pin on a producer still awaiting captures prints OWED. Prior-run baselines accept only completed/completed_with_warnings runs.
+  *Why:* The cross-step ledger is only true if it is measured, never re-typed.
+  Rules: `R-BF` `R-BG` `R-BJ` `R-BK` `R-BL` `R-BM` `R-BW` `R-CB` `R-CW` `R-DB` `R-DG` `R-DI` `R-DO` `R-EA` `R-ER` `R-ES` `R-FF` `R-GP` `R-HA` `R-JF` · history: `W4A-R4`
+
+- **core.15** Every frozen enum value and every `execution.*` declaration has a disposition in its registry: executed (with a named executor or check), descriptive, or retired.
+  *Why:* A field that looks enforced but has no executor is a promise nobody keeps.
+  Rules: `R-X` `R-AJ` `R-AX` · history: `M4` (SPEC121-M4)
+
+- **core.16** The step is admin-verifiable: its registry, description, table-map and telemetry entries are derived from the descriptor (#51); range badges come from declared check bounds; each logic variable shows whether it is in effect (#53).
+  *Why:* The operator checks a step's output on the admin page, so the page must be derived, not hand-kept.
+  Rules: `R-DL` `R-DV` `R-DW` `R-EO`
+
+- **core.17** A priced or modelled output declares the population it is for, as a query bound on the producing step.
+  *Why:* A number without its population cannot be checked or compared.
+  Rules: `R-AY` `R-BT`
+
+- **core.18** Overrides are honest: `override.dry_run` is `"none"` unless the step honours it, and per-invocation row caps (`--limit=N`) are retired by deviation.
+  *Why:* A dry run that writes, or a cap that hides rows, makes the run report false.
+  Rules: `R-AV` `R-AZ` `R-GS` `R-GT`
+
+## 3. By archetype
+
+The archetype comes from `identity.archetype` (see `step-archetype-census.json`); it selects the required fields, and `execution.shape` selects the phase (§1). Every line in section 2 applies too.
+
+### INGESTOR
+
+Acquires an outside source and writes it into its own tables.
+
+- **ingestor.1** Phases run acquire → validate → write → score. Every "before X" guarantee in the owner spec becomes a `pre_write` check carrying an `order_guarantee` whose anchor is a literal sentence of that spec.
+  *Why:* A FAIL reported after rows are already written is a guarantee broken.
+  Rules: `Rule-11` `GAP-G-3`
+
+- **ingestor.2** A source-version skip is taken only when the target is non-empty.
+  *Why:* Skipping on an unchanged hash over an empty table leaves it empty for good.
+  Rules: `R-DD`
+
+- **ingestor.3** Primaries: a `ckan_datastore` primary is first-class (null geometry, targetless, union groups, per-member truth); a PDF document set is an acquisition format.
+  *Why:* Each source form gets one library path instead of a per-step reader.
+  Rules: `R-BY` `R-DX`
+
+- **ingestor.4** Derived secondary targets are written from a runner-owned prior-state read inside the primary transaction; one may be non-fatal (`on_error: warn_row`) with a declared zero-bound WARN check.
+  *Why:* The derived write stays atomic with its source and a failure still shows up as a row.
+  Rules: `R-DM` `R-DY`
+
+- **ingestor.5** A `written:"seen"` column is a runner-clock column touched for every fed key and excluded from the guard; its target declares `idempotent_rerun: "declared_drift"`, and the rerun proof passes only when rewritten == touched exactly.
+  *Why:* The touch rewrites rows on every run by design, so `zero_writes` would be a false claim.
+  Rules: `R-DZ` `R-EX`
+
+- **ingestor.6** Worked examples (one step each): load_parcels replaces geometry only on a material change beyond a variable tolerance; close_stale_permits folds into load_permits' declared retraction; coa made its change-detection hash timezone-independent at the cost of one measured re-upsert.
+  *Why:* Shows how the general rules were applied where they were first needed.
+  Rules: `R-BS` `R-BX` `R-EN` `R-EV` `R-JB`
+
+### LINK
+
+Joins two populations and writes the link rows or columns.
+
+- **link.1** `mode_select` is `tri_state`, or `none` with a `full_rescan` invalidator (the mode gate itself is R-BH (i), on core.5). Crash posture is `force_full_on_next_run`, and an autonomous FULL run happens only on a chain whose `chain_args` declare `--full`.
+  *Why:* A destructive rescan must be chosen on purpose, never by accident after a crash.
+  Rules: `R-L`
+
+- **link.2** `runLinkPhase` (shape `link`) serves more than one LINK family through opt-in arms; counter names come from the match plan. Other LINK steps run their own phase: shape `link_keyed` (`runLinkKeyedPhase`), `link_column` (`runLinkColumnPhase`); a MATCHER runs `runCascadePhase` (shape `cascade`), which hosts any declared cascade target, link_coa among them (R-JY, from the bundled runner night). §1 table 1a lists which step uses which. A match plan may also declare a closed `extra_counters` set, summed per batch (R-IG, from the bundled RE-FREEZE night).
+  *Why:* One library path, not a copy per link step.
+  Rules: `R-EG` `R-IG` `R-JY`
+
+- **link.3** Worked examples: a link-rate floor's denominator is the entity population, not the source-row count (link_wsib); a full-rescan LINK may keep its junction current with a declared material-geometry trigger (`guards.requires`, link_parcel_abutments).
+  *Why:* Shows the rules applied where they were first needed.
+  Rules: `R-N` `R-CR`
+
+- **link.4** Open operator question Q-B1: a better neighbour front-setback estimator (`front_setback_est_m`; owed to the Spec 130 lane). Since 2026-10-19 (operator ruling; Spec 130:93, Spec 131 LC-58, Spec 69a M-205(1) dated note) averaging is evaluated: max(neighbour estimate + `fya_porch_allowance_m`, the zone default), always "needs survey"; Q-B1 stays open only for a better estimator. A reader must not read a parcel with no abutment pairs (deleted until the next run by R-CR's trigger) as "no neighbours". Separately, R-CR's trigger form is replaced by the fleet keyed-delete arm when that lands; that does not close Q-B1. (124a R-CR's own cell still says averaging stays `not_evaluated` until Q-B1; that cell is stale, owed to a ruling lane.)
+  *Why:* An unanswered question stays visible on its own line, next to the rule that raised it.
+  Rules: `Q-B1`
+
+### MATCHER
+
+A LINK whose join is a fuzzy, tiered match. Everything under LINK applies except the phase: a MATCHER declares shape `cascade` and runs `runCascadePhase`, not `runLinkPhase`.
+
+- **matcher.1** Accuracy is a sampled precision/recall against a before-image, recorded at each repair, never a self-consistent predicate.
+  *Why:* A matcher graded against itself always passes.
+  Rules: `R-O`
+
+### ENRICHER
+
+Adds derived columns to rows another step owns, in scoped passes.
+
+- **enricher.1** No Layer-1 skip: a legacy skip gate moves into the write scope as a declared deviation, or, if it has no runner home and no lineage column, is knowingly retired.
+  *Why:* An ENRICHER that skips whole runs hides rows that changed upstream.
+  Rules: `R-AR` `R-AR.1`
+
+- **enricher.2** `runEnrichPhase` is generic: hooks are optional `enrich_hooks` declarations and intervals come from config. Pass DML goes through `ctx.exec(writesRef, sql, params)`; scope-ledger hygiene DELETEs are library-owned, and a guard-suppressed hygiene action emits one WARN row. Updated counters belong to whichever mechanism wrote the rows this run. One per-batch transaction may carry a step's statements (`ctx.flushBatch([...])`, a SAVEPOINT per warn_row statement), and an ENRICHER may write derived rows (R-JZ, from the bundled runner night). (Dated note 2026-10-26, `2026-10-26-batch-m#CHAT-174.ENRICHER2-HELD-NOTE`: the ENRICHER derive arm is held by CHAT-167 until designed with CLP ②; validate refuses `derive` on an ENRICHER by name.) (Dated note 2026-10-26, `2026-10-26-batch-r#CHAT-189.CLPD-Q4`, `2026-10-26-batch-r#CHAT-189.CLPD-Q5`: the ENRICHER derive arm is ruled for CLP ②; the list form's SAVEPOINT per warn_row statement is retired (a named refusal; the savepoint is the runner's derived-history write), and in an ENRICHER that declares derived rows `ctx.exec`, `joinUpdate` and `retract` refuse its root and history tables.)
+  *Why:* Writes stay behind the runner seam, and counters are not double-counted.
+  Rules: `R-AK` `R-AT` `R-CI` `R-CJ` `R-CK` `R-JZ`
+
+- **enricher.3** `execution.maintenance` may declare a dead-tuple-ratio dynamic-target arm, measured once and shared.
+  *Why:* Vacuum decisions follow the table's real state, from one measurement.
+  Rules: `R-CG`
+
+### MATERIALIZER
+
+Rebuilds a derived table from tables other steps own.
+
+- **materializer.1** `recovery.reset` is not none. `materialize_form` is `insert_select` or `rows` (rows computed in JS; the runner owns reads, writes and transactions), or `replace` (the whole table replaced through the existing staging executor in one transaction; zero rows leave it untouched; R-JX, from the bundled runner night); batch size comes from config.
+  *Why:* Rebuilds must be resumable, and JS rows must not bring their own I/O.
+  Rules: `R-EH` `R-JG` `R-JX` · history: `Q-MZ`
+
+### BACKFILL
+
+Fills historical rows in batches.
+
+- **backfill.1** Batch size comes from config. A one-time backfill leaves its chain once a measured run inserts 0 rows (backfill_realtor_permit_trades).
+  *Why:* A finished backfill should stop costing a chain slot.
+  Rules: `R-EM`
+
+### ASSERT
+
+Measures data quality and writes nothing but its own run row.
+
+- **assert.1** `outputs`, `recovery` and `counters` are none. Compute may read `ctx.pool` read-only over declared relations (R-CA (i), on core.9, corrects older text that says no pool is reachable); vocabulary-coverage reads use a runner-owned READ ONLY snapshot.
+  *Why:* An ASSERT measures; it must not change what it measures.
+  Rules: `R-CH`
+
+- **assert.2** Worked example: assert_schema checks at chain start that every declared logic variable has a DB row.
+  *Why:* A missing variable is caught before any step reads it.
+  Rules: `R-D`
+
+### RECORDER
+
+Records a snapshot it exists to publish.
+
+- **recorder.1** A RECORDER's `outputs` is an object (never `none`) and its snapshot write is declared in `outputs.writes[]`. Either `runRecorderPhase` executes it (shape `recorder`), or the step declares no shape and compute returns a `write_plan` that the runner executes after compute (`runWritePlan`, R-CD). (`outputs.publish` was deleted at a RE-FREEZE; Spec 124 §3's Rule 7 table still names it.)
+  *Why:* The snapshot is the step's purpose, so it is declared, not hidden.
+  Rules: `R-CD`
+
+### EFFECTOR
+
+Acts on the outside world (sends, calls, notifies). Census only until its first RE-FREEZE; not yet in the step.schema.json enum.
+
+- **effector.1** Four gates: a kill switch or injected transport, an exactly-once ledger, captured intended effects, and a dry run. Outside calls are replayed from recorded responses.
+  *Why:* An effect on the outside world cannot be rolled back, so it must be switchable, counted once and rehearsable.
+  Rules: `R-EI`
+
+### RUNNER (a home, not an archetype)
+
+Concerns the runner owns for every step.
+
+- **runner.1** Reconcile runs as a step at the head of the sources chain. A slug whose concern the runner owns (`reconcile`, `observe_chain`) is a declared `runner_owned` exemption, not a conversion; a step is retired, not converted, only under a closed predicate.
+  *Why:* Every chained slug has exactly one honest status.
+  Rules: `R-AP` `R-EJ` `R-EK` `A3`
+
+- **runner.2** Seam validation and chain-end synthesis derive from declared step edges; a chain step row's status is derived from its verdict (PASS → completed, WARN → completed_with_warnings, a covered FAIL → completed_with_errors); a hard-coded `'completed'` is retired.
+  *Why:* A chain that says completed after a FAIL is lying.
+  Rules: `R-V` `R-CC` `Q-S1-a`
+
+## 4. Cross-cutting
+
+### Lifecycle stages
+
+How a step moves from legacy script to converted.
+
+- **x-stages.1** A step's stage is declared data in `converted.json` `pending[]`: `red_suite` → `descriptor_only` → `compute_ported` → `runner_wired` → `shape_clean` (or `shape_clean_pending_recapture`) → converted. Red tests are declared there, never a code skip. The declared stage alone decides which gates cannot yet be answered (`stageAwaitsCaptures`); a pending row with no descriptor file does not block whole-registry selection.
+  *Why:* Progress is visible and a half-built step is graded for what it is.
+  Rules: `R-K` `R-K.1` `R-DU` `R-EF` `R-K.2` · history: `M5` (SPEC121-M5)
+
+- **x-stages.2** The commits are ① red suite + descriptor, ② compute + runner (the shell swap), ③ cutover into `converted[]`. A pending step lands ② at `compute_ported` with its legacy shell live, and may swap its shell before ③ only once every declared upstream (`inputs.reads.steps`) is converted, or pending past ② and not awaiting captures (`stageAwaitsCaptures`); fast invariant #54 checks this, and an unregistered or unknown upstream fails.
+  *Why:* A downstream step never runs on a converted shell before its producer.
+  Rules: `R-EQ` `Q-R-EQ-1` `R-FH` `R-JQ` · history: `W4A-R6`
+
+- **x-stages.3** A net-new step (no legacy predecessor) has no PRE capture; its G8 reference is its committed POST. It is accepted as net-new only with the full R-DK evidence set: census `legacy: "none"`, no git history of the script before its descriptor, no `legacy_citation`, a `recapture.json` entry with `via` bracket or env, a red-evidence artifact (gate K) and a rerun-zero proof on every POST. Otherwise fast invariant #22 refuses it by name, and any PRE file on an accepted slug is RED.
+  *Why:* There is nothing older to compare against.
+  Rules: `R-DK` · history: `R-CS`
+
+- **x-stages.4** A cutover stages every owner spec named in the system map, or declares `Spec-diff: N-A` (#43). Target Files are generated into the owner spec; every spec that names a chained step classifies it; fleet counts are derived from registries, never retyped.
+  *Why:* Specs and registries stay in step with the code without anyone remembering to update them.
+  Rules: `R-AF` `R-AN` `R-BB` `R-BE`
+
+### Captures, goldens and proof
+
+How a conversion proves it changed nothing it did not mean to.
+
+- **x-captures.1** Captures are reproducible from committed data alone: every capture has a `recapture.json` entry, and `node scripts/analysis/capture-step-golden.js --replay-all` prints the retake commands from those entries (plain and env captures first, then brackets; a ledger-gated step whose bracket recipe passes no force env has that bracket retaken before its standalone capture, CHAT-89); capture pairs follow the declared chain variance. Every harness run is ledgered as captured, never a baseline. PRE captures are committed before re-runs. A post witness trace with no golden capture and no `recapture.json` entry is an orphan: it is deleted by literal path only when a recipe-backed trace of the same slug witnesses a superset of its statement fingerprints, otherwise it gets a recipe and is retaken (R-IJ).
+  *Why:* A capture nobody can retake proves nothing.
+  Rules: `R-AC` `R-AI` `R-BQ` `R-CZ` `R-DQ` `R-IJ` `R-JP` `R-KC`
+
+- **x-captures.2** A forced-write table is proven by a bracket: a perturbation cohort (when a guard includes the step's own stamp), delete-and-reinsert (INSERT-only), or derived-status (derived targets), counted through gate G's `count_path`. A PRE taken with a retired input argv stands in only under a closed predicate.
+  *Why:* A rerun that writes nothing proves nothing about a guarded write path.
+  Rules: `R-AS` `R-BD` `R-BR` `R-DN` `R-DP` `R-ET` `R-GZ` `R-JH` `R-KA`
+
+- **x-captures.3** The golden differential is a mechanical fingerprint gate (G8, #38/#40). Every diff is explained only in `docs/reports/golden/<slug>/explained-diffs.json`, citing a Defect Ledger id; an unexplainable differential stops the work.
+  *Why:* A commit message saying "diff is fine" is not evidence.
+  Rules: `R-C` `R-DA` `K4` `G8` (SCORECARD-G8) `R-GR`
+
+- **x-captures.4** A step that calls a paid or outside API is captured and replayed from committed recorded responses.
+  *Why:* Tests and captures must not spend money or depend on someone else's uptime.
+  Rules: `R-EL`
+
+- **x-captures.5** A class-A behaviour (Spec 123 risk class A) is proven by a both-directions lock, shown red then green (scorecard G7; mutation testing is not a gate). Tests write before-images into a per-file sandbox, never the real golden tree. A live test proves its child process completed before asserting on its output.
+  *Why:* A test that cannot fail, or that reads output that never arrived, proves nothing.
+  Rules: `R-E` `R-CO` `R-CP` `G7` (SCORECARD-G7) · history: `M7` (SPEC121-M7)
+
+### Cross-step order
+
+How steps that share tables are ordered and checked.
+
+- **x-crossstep.1** A same-statement write guard is not a chain-order edge. ORDER rows with neither endpoint converted and unproduced reads whose inserter is unconverted are counted against a shrink-only ceiling, not hard. Gate D reads one converted-set view.
+  *Why:* The ledger stays strict for converted steps without blocking on legacy ones.
+  Rules: `R-BN` `R-BO` `R-BP` `R-EE`
+
+### step-validate and the scorecard
+
+The one command that grades a step.
+
+- **x-validate.1** One command grades a step: `node scripts/analysis/step-validate.mjs --step=<slug>` (or `--all`, `--staged`, `--fast`). It validates the DATA (descriptor, fast invariants) and the scorecard grades the PROCESS; it runs in the hooks, never as a separate track.
+  *Why:* One integrated answer, the same at the desk and in the hook.
+  Rules: `R-R` `Rule-13` `Rule-13-addendum-R-T`
+
+- **x-validate.2** The scorecard gates G0–G9 (Spec 123 §6; aliases SCORECARD-G0…SCORECARD-G9, not the Gate E purity codes): G0 boundary freeze, G1 archaeology, G2 churn × complexity, G3 Intent Ledger (only tables with a Disposition column are scored), G4 risk class, G5 seam map, G6 classification with Defect Ledger ids, G7 test adequacy, G8 differential, G9 §R Reflection. Ship bar: ≥14/17 with G6–G8 full; with E3 on it is 17/17. Markdown header and separator rows are never counted as data.
+  *Why:* The assessment is graded by machine, the same for every step.
+  Rules: `R-F` `R-FA` `G0` (SCORECARD-G0) `G1` (SCORECARD-G1) `G2` (SCORECARD-G2) `G3` (SCORECARD-G3) `G4` (SCORECARD-G4) `G5` (SCORECARD-G5) `G6` (SCORECARD-G6) `G9` (SCORECARD-G9) `SHIP-BAR` `R-FB` `R-JD` `R-KM` `R-LC`
+
+### The V3 label
+
+What `standard=V3` means and how it is enforced.
+
+- **x-v3.1** `standard=V3` prints only when all nine R-EY conditions hold, fail closed: (1) compute purity clean, (2) no gate-ledger allowance, (3) #44 PASS with nothing attributed, (4) no blocking registry failure, (5) no stage-gated red, (6) G0–G8 at max with no other hard stop, (7) the five words all PASS with nothing deferred, (8) no unmet `cutover_prereq`, (9) every exception naming the step cites a register id. Otherwise it prints `standard=V2 (fails: …)`. E1 (ratchet: a step that read V3 never drops) and E2 (cutover gate) are on; E3 (every converted step V3) is built off behind `gate_v3_hard_gate_enabled`. R-IH stage 1: `step-validate` prints an advisory `R-EY (9) why-only` line for each step with a deviation whose only register id is in `why`, plus a run total; no verdict changes until stage 3 reads `adjudicated_by` only.
+  *Why:* One list replaces the older "five words", "six parts" and "four conditions"; the label means the same thing everywhere.
+  Rules: `R-IH` `R-IK` `R-JC` `R-BA` `R-CN` `R-DT` `R-EY` `STD-VERSIONS`
+
+- **x-v3.2** An operator decision found only in a plan or assessment (a pilot plan's rulings, an accepted deviation) is recorded as a register row before a step can cite it: the V3 condition-9 backfill recorded 33 such decisions as rows R-FI…R-GO (124a §B21/§B22), and each exception entry they govern cites its row. A citation on a converted descriptor's `deviations[]` entry is appended on the bundled RE-FREEZE night, because the edit moves the capture fingerprint. That night is split (R-II): night 1 carries the citations, and the refresh_snapshot producer-read waits for its own RE-FREEZE at permits ③.
+  *Why:* Condition (9) needs a resolvable id on every exception, and a decision that lives only in a plan file is invisible to the gate.
+  Rules: `R-FI` `R-FJ` `R-FK` `R-FL` `R-FM` `R-FN` `R-FO` `R-FP` `R-FQ` `R-FR` `R-FS` `R-FT` `R-FU` `R-FV` `R-FW` `R-FX` `R-FY` `R-FZ` `R-GA` `R-GB` `R-GC` `R-GD` `R-GE` `R-GG` `R-GH` `R-GI` `R-GJ` `R-GK` `R-GL` `R-GM` `R-GN` `R-GO` `R-II` `R-KG` `R-KH` `R-KV` `R-KX` `R-LE` `R-LS` `R-LT` `R-LU` `R-LV` `R-LW` `R-LX` `R-LY` `R-LZ` `R-MA` `R-MB` `R-MC` · history: `R-GF`
+
+- **x-v3.3** An exception entry with no operator decision found (the condition-9 census class c) goes to the operator as a family ruling, recorded by decision log and register row like any other: the 2026-10-20 rulings are R-HN…R-HZ (V3 Exception Rulings page and chat CHAT-22) and the CoA cutover rulings R-IA…R-IF (R-IB and R-IC also cover enrich_permits' twin deviations, operator CHAT-24). A conversion retires a legacy audit row, `records_meta` key, constant row or log-only query only when the entry cites a consumer grep with zero readers or shows the counted mechanism is gone (R-HR, a named exception to Spec 123 §3.1); a legacy defect corrected inline is ratified per entry, never as a general rule (R-HQ). Citations on a fingerprint-locked descriptor ride the bundled RE-FREEZE night.
+  *Why:* Condition (9) needs every exception to cite a ruling, and a family ruling with its evidence condition stated once is cheaper to check than one ruling per entry.
+  Rules: `R-HN` `R-HO` `R-HP` `R-HQ` `R-HR` `R-HS` `R-HT` `R-HU` `R-HV` `R-HW` `R-HX` `R-HY` `R-HZ` `R-IA` `R-IB` `R-IC` `R-ID` `R-IE` `R-IF` `R-JE` `R-JK` `R-JL` `R-JM` `R-JU` `R-KE`
+
+### Rulings protocol and the resolution ladder
+
+What to do when the standard does not answer your question.
+
+- **x-rulings.1** When no rung answers, use the protocol: one pass discovers and proposes (closed Intent Ledger vocabulary); a different party adjudicates, named and dated; the ruling gets a dated register row in Spec 124 §5 (or a 124a LIVE REGISTER section) that answers the seven admission questions and names a lock; the same commit adds the both-directions test and amends the spec; a pilot-local defect becomes a ruling only if it will recur in another archetype; a document move is tool-performed and verified by a line-set diff. Cited ids must resolve.
+  *Why:* A rule without a lock is not a rule, and the person who found a problem does not get to rule on it.
+  Rules: `R-I` `R-J` `R-AA` `R-AM` `R-DF` `P4-1` `P4-2` `P4-3` `P4-4` `P4-5` `P4-6` `P4-7` `R-KO`
+
+- **x-rulings.2** Resolution ladder: ground the problem (query, grep, read; cite the owner spec from the system map); classify it CONTRACT / INCIDENTAL / DEFECT; resolve at the first fitting rung (descriptor, declared check, logic variable, library change, shape rule, new schema field); if none fits or two conflict, go to the protocol; add a both-directions test and re-run the golden capture; record a Defect Ledger id and a §R Reflection entry when it may recur. Route each learning to the most enforced artifact that can hold it.
+  *Why:* The cheapest enforced answer wins, and lessons are kept where a machine reads them.
+  Rules: `L7-0` `L7-1` `L7-2` `L7-3` `L7-4` `L7-5` · history: `M9` (SPEC121-M9) `M10` (SPEC121-M10)
+
+- **x-rulings.3** Where the standard is written: Spec 122 is the standard (the live schema and behaviour) and the Spec 124 register is the policy; on policy the register governs, on the schema and behaviour Spec 122 does. Spec 123 is the standard for the conversion procedure and its G0–G9 gates. This handbook is Spec 132, generated from both through the rule map; cite a line as `Spec 132 §<line id> (R-xx)`. Every spec opens with one role banner (authority register, standard, design, historical, generated handbook); a historical spec adds no rule id, so a new rule goes to the register.
+  *Why:* Each question has one home, and a reader knows from the first lines what a spec may decide.
+  Rules: `R-GU` `R-GV` `R-GW` `R-GX` `R-HH` `R-HI` `R-HJ` `R-IY`
+
+- **x-rulings.4** Operator decisions are transferred by generator, never by hand: each set of rulings (a review-page export or a chat ruling with its quote, and any later amendment with its quote) is committed verbatim as `docs/reports/decisions/<date>-<slug>.json`; `node scripts/analysis/decision-log.mjs --write` emits a register-row skeleton per approved decision, and every approved decision becomes a register row (Spec 124, Spec 69a or Spec 131 by subject) that cites `<log stem>#<decision id>`; `--check` at pre-commit fails on an uncovered decision or a citation of an unknown one. Each log is re-derived at `--check` from its raw record under `docs/reports/decisions/raw/`, so a hand-edited log fails. Rulings recorded this way for a step not yet built (resolve_bylaws, Spec 134) govern its plan; a report surface has one declaration (R-RS).
+  *Why:* A ruling transferred by hand is a ruling that can be forgotten; the log is the operator's own words and the check proves each one landed.
+  Rules: `R-GY` `R-HB` `R-HC` `R-HD` `R-HE` `R-HF` `R-HG` `R-HK` `R-HL` `R-HM` `R-IL` `R-IM` `R-IN` `R-IO` `R-IP` `R-IQ` `R-IR` `R-IS` `R-IT` `R-IU` `R-IV` `R-IW` `R-IX` `R-IZ` `R-JA` `R-JI` `R-JJ` `R-JN` `R-JO` `R-JR`
+
+### Verification before integration and acceptance
+
+What must be independently checked before work lands.
+
+- **x-verify.1** Before an integrate-N branch is built, a fresh lane that did not write the work verifies every landing lane's claims read-only (cited ids and quotes, red-first tests red on the parent, counts and exit codes reproduced). The report lives at `docs/reports/verification/<branch>.md` and every integrate commit cites it (`.husky/commit-msg`).
+  *Why:* Self-reported results are not evidence; an independent re-check is.
+  Rules: `R-EZ` · history: `M14` (SPEC121-M14)
+
+- **x-verify.2** Cloud acceptance runs are pinned to a commit sha, use partial `--only` / `--from` runs, and form one end-of-sources acceptance set; ceilings are never raised (resize instead); EP-PIN-D17 blocks every post-sources legacy slug. A chain is complete only when converted, with no ledger rows, LDG-10 complete, cloud accepted and tooling integrated.
+  *Why:* Acceptance grades the code that will ship, once, with nothing waved through.
+  Rules: `R-AB` `R-AL` `R-AQ` `R-AQ.1` `R-BC` `R-ED`
+
+### Tooling, hooks and commit form
+
+How the repo machinery runs.
+
+- **x-tooling.1** Pre-commit is file-only, staged-scoped and inside a pinned time budget (#52), and runs every generator `--check`. The full suite runs at pre-push (8 forks; pre-commit 4; never above 10). Tests needing Postgres are `*.db.test.ts` and run only under `npm run test:db`. Lanes serialise DB writers, full suites and landings on the host (R-CQ, a process rule; nothing enforces it). `migrate.js --only` applies chosen migrations in order, failing closed on dependencies.
+  *Why:* Commits stay fast and safe on the shared host; slow and DB work runs where it belongs.
+  Rules: `R-GQ` `R-AG` `R-CQ` `R-DH` `R-DJ` `R-DS` `R-EC` `R-EU` `R-KI` `R-KL` `R-KP` `R-KY` `R-LB` `R-LF` `R-LG` `R-LH` `R-LI` `R-LJ` `R-LK` `R-LL` `R-LM` `R-LN` `R-LO` `R-LP` `R-LQ` · history: `R-BV`
+
+- **x-tooling.2** Commit form: after two full-form conversions of an archetype, later ones may land compressed (three commits), and compressed is then the default; full form needs a stated reason in the assessment.
+  *Why:* Ceremony is spent where an archetype is still new.
+  Rules: `R-PACE-1` `R-AH`
+
+- **x-tooling.3** Programme promises are declared data in `programme-items.json`, generated and gated; a programme-gate precondition is locked both directions, never a printed count. A proposal to add a box states its measured read/write cost at production scale. Stop and redesign if a per-step override is needed.
+  *Why:* Promises that live only in prose get forgotten.
+  Rules: `R-T` `R-Z` `P3` `K2` `R-KK` `R-KQ` `R-KU` `R-LR` `R-KW` `R-KZ` `R-LD`
+
+- **x-tooling.4** This handbook's own success test: a new engineer can build, read and diagnose a step from it alone.
+  *Why:* Spec 120's test, kept from Spec 121 M2.
+  Rules: history: `M2` (SPEC121-M2)
+
+## 6. Rules with no or partial machine check (80 in force)
+
+"A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 50 have no check and 30 are partial; 20 more entries are retired ids kept so the seed count reconciles.
+
+Enforcement across all 444 mapped ids: 296 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 80 none (see the glossary).
+
+| Rule | Class | Line | Reason |
+|---|---|---|---|
+| R-H | partial | core.6 | partial: skip-row WARN locked (skipRecordsMeta); the INFO-vs-WARN choice itself is unchecked (GAP G-5, 124:137) |
+| R-J | none | x-rulings.1 | no machine check: document governance |
+| R-N | none | link.3 | no lock named (commit e01cad11) |
+| R-O | none | matcher.1 | no machine check: assessment-report narrative only |
+| R-AB | partial | x-verify.2 | partial: chain-sources-workflow.infra warns that an unpinned run is "NOT valid as an R-AB acceptance run"; acceptance-set completeness unchecked |
+| R-BT | none | core.17 | no lock: "no lock yet — PLANNED with the step" (124a:237) |
+| R-BY | partial | ingestor.3 | partial: ingest-prereq-pdf-acquire.logic (not named in row) |
+| R-CJ | partial | enricher.2 | partial: purity-s3-exec-seam.logic (scope_retire_lock_held; not named in row) |
+| R-CT | partial | core.12 | partial: per-step locks only (steps/coa/violations D3 and the classify_coa_* violations assert their targets declare rls_bypass_or_policy); write.js assertWritePrivileges checks declared tables at runtime; fleet gate owed (V3 lane C1) |
+| R-CU | partial | core.12 | partial: generator-locked execution.batch (INGESTOR); library split owed (V3 lane C2) |
+| R-DF | partial | x-rulings.1 | partial: spec124-register-locks.logic now reads every register row (widened 2026-10-20, observe-1), but 101 unlabelled and 15 lockless pre-R-CX rows sit on its shrink-only grandfather lists |
+| R-EL | partial | x-captures.4 | partial: c6-rulings.infra; live-call FAIL owed (PIN C6-6-RECORDED) |
+| R-EW | partial | core.10 | partial: src/tests/steps/coa/dispatch.logic.test.ts locks (i) for coa only; (ii) every other converted step's compute lock built through the real dispatch is not asserted (older hand-built locks on the closed list PIN R-EW-LOCKS) |
+| R-EX | partial | ingestor.5 | partial: src/tests/capture-rerun-proof.logic.test.ts locks the seen_drift proof (rewritten == touched, row delta 0, projected hash) and the zero_writes FAIL; no static check that every seen-column target declares declared_drift (caught only when the POST proof runs) |
+| Rule-11 | partial | ingestor.1 | partial: checkOrderGuaranteesCited (declared half only; GAP G-3 open) |
+| Rule-10-addendum-R-H | none | core.6 | no machine check for INFO-vs-WARN (GAP G-5) |
+| P4-1 | none | x-rulings.1 | no machine check: procedural |
+| P4-2 | none | x-rulings.1 | no machine check except R-EZ commit-msg citation for integrate branches |
+| P4-4 | partial | x-rulings.1 | partial: spec124-register-locks.logic names-a-lock arm covers every row, with 15 lockless pre-R-CX rows grandfathered (shrink-only) |
+| P4-6 | none | x-rulings.1 | no machine check: G9 checks the Reflection section exists |
+| L7-0 | none | x-rulings.2 | no machine check found (consolidate-1 inventory) |
+| L7-3 | none | x-rulings.2 | no machine check found (consolidate-1 inventory) |
+| K2 | none | x-tooling.3 | no machine check: programme stop criterion; UNCERTAIN who checks |
+| GAP-G-3 | none | ingestor.1 | no machine check: completeness half open |
+| GAP-G-5 | none | core.6 | no machine check: author judgment |
+| R-FD | none | core.6 | no machine check: assert-coa-freshness.infra locks the two bounds' externalization, not the inclusive form or the retired fail>warn refusal (moved from W4A-R2, whose register row R-FD is) |
+| Q-B1 | none | link.4 | no machine check: an open operator question; its interim constraint (averaging not_evaluated) is prose in the 124a R-CR row |
+| Rule-1 | partial | core.1 | partial: step-conformance.infra — compute-shape rules fire on the known-bad fixture (the compute slice of Rule 1 only) |
+| Rule-5 | partial | core.2 | partial: step-schema.logic — checks may never be "none" (checks:[] minItems not fixture-tested) |
+| V6 | partial | core.3 | partial: s4-empty-source-guard-real-descriptors.logic — typed empty_source string and array forms halt end-to-end (illegal form rejection untested) |
+| R-AW | partial | core.8 | partial: logic-var-parity.logic — seed/code literal parity for the founding instance only; no fleet check |
+| R-FC | partial | core.8 | partial: r-de-vocabulary.logic — <slug>_<name> end-state naming; migration with values carried not asserted (moved from W4A-R1, whose register row R-FC is) |
+| R-CF | partial | core.9 | partial: refresh-snapshot-query-consolidation.logic — one step declares execution.read_gucs and sets no GUC in compute; runner issuing the GUC not asserted |
+| Rule-8 | partial | core.12 | partial: step-schema.logic — per-target guard_why if/then fires; step-level discipline refusal untested |
+| R-FF | none | core.14 | no machine check: classify-coa-scope.infra asserts the legacy script contract, not the by:"pin" watermark form; only the reader side is locked (R-DO/R-ER) (moved from W4A-R4, whose register row R-FF is) |
+| R-AY | partial | core.17 | partial: steps/compute_parcel_cost_estimates/violations — founding step's population bound only; not required fleet-wide |
+| R-EV | partial | ingestor.6 | partial: steps/coa/compute.logic — TZ-independent data_hash; admission conditions (a)-(d) not asserted |
+| R-CR | partial | link.3 | partial: migration-255-parcel-abutments.infra — trigger installed; guards.requires declaration not asserted |
+| R-CI | partial | enricher.2 | partial: purity-s3-exec-seam.logic — undeclared writesRef refused; library-owned hygiene DELETEs not asserted |
+| R-AI | partial | x-captures.1 | partial: step-conformance.infra — indirect: step-validate self-test (expectedCaptureChains fixtures) passes |
+| R-CP | partial | x-captures.5 | partial: gate-score-floor.infra — notLookedReasons locked both ways; not that every live test calls it |
+| Rule-13 | partial | x-validate.1 | partial: step-conformance.infra — scorecard block staleness only |
+| Rule-13-addendum-R-T | partial | x-validate.1 | partial: step-library.logic — invariants/plausibility EVERY_RUN executor rows; DATA-vs-PROCESS split not asserted |
+| P4-3 | partial | x-rulings.1 | partial: spec124-register-locks.logic — register rows parse with unique ids; statement/amends columns unchecked |
+| L7-2 | none | x-rulings.2 | no machine check: rung ordering is a judgement call; no test (verify-12 N1 re-audit) |
+| R-AQ | partial | x-verify.2 | partial: run-chain-selection.logic — --only/--from partial-run mechanism; "one acceptance set" not asserted |
+| R-AH | partial | x-tooling.2 | partial: step-conformance.infra — indirect: step-validate self-test (checkCompressedFormDefault fixtures) passes |
+| R-KF | none | core.9 | OWED MB-31: step-closure.logic.test.ts (recorded 2026-10-30-batch-aj, lock not yet built) |
+| R-KI | none | x-tooling.1 | OWED MB-68: hook arms; hooks-composition.infra (MB-68) (recorded 2026-10-30-batch-aj, lock not yet built) |
+| R-KJ | none | core.9 | OWED MB-31: the R4-09 input-allowlist test (step-closure.logic.test.ts) (recorded 2026-10-30-batch-aj, lock not yet built) |
+| R-KK | none | x-tooling.3 | OWED MB-67: mcbylaws-queue-check.mjs (MB-67) (recorded 2026-10-30-batch-aj, lock not yet built) |
+| R-KQ | none | x-tooling.3 | OWED MB-73: mcbylaws-promises.logic.test.ts (MB-73) (recorded 2026-10-30-batch-aj, lock not yet built) |
+| R-KS | none | core.11 | OWED MB-31: trace test in catalogue lock (MB-31) (recorded 2026-10-30-batch-ak, lock not yet built) |
+| R-KT | none | core.9 | OWED MB-31: step-closure.logic.test.ts input allowlist (MB-31) (recorded 2026-10-30-batch-ak, lock not yet built) |
+| R-KU | none | x-tooling.3 | OWED MB-73: mcbylaws-promises.logic.test.ts red fixtures (MB-73) (recorded 2026-10-30-batch-ak, lock not yet built) |
+| R-LR | none | x-tooling.3 | OWED MB-67: gate arm (MB-67) refuses any McBylaws script or night whose database target is not 127.0.0.1:54322, red fixture a remote target (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-KW | none | x-tooling.3 | OWED MB-67: mcbylaws-queue-check.mjs on temp repos Q1..Q5 (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-KX | none | x-v3.2 | OWED MB-67: hold.mjs H1..H7 per-commit parent-tree check (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LB | none | x-tooling.1 | OWED MB-67: precommit-budget.mjs --measure with a re-pinned evidence file (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LG | none | x-tooling.1 | OWED MB-68: loop-gate record schema tests (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LH | none | x-tooling.1 | OWED MB-68: loop-gate regression-ratchet and oracle-first red fixtures (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LI | none | x-tooling.1 | OWED MB-68: loop-gate oracle-first red fixtures, split-commit and glob-miss cases (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LJ | none | x-tooling.1 | OWED MB-68: loop-gate one-increment fixtures (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LK | none | x-tooling.1 | OWED MB-68: loop-gate floor_fell fixture on an OWED line (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LL | none | x-tooling.1 | OWED MB-68: loop-gate --mode ci prints "external groups: not run in CI" (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LM | none | x-tooling.1 | OWED MB-68: loop-gate canary fixture (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LN | none | x-tooling.1 | OWED MB-68: hooks-composition.infra: the loop arm is wired by MB-67 only (MB-67, MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LO | none | x-tooling.1 | OWED MB-68: loop-gate verify --json prints rounds_since_thresholds (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LP | none | x-tooling.1 | OWED MB-68: loop-gate fast-set and full-set runs (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LQ | none | x-tooling.1 | OWED MB-68: loop-gate reason-length red fixtures (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LS | none | x-v3.2 | OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LT | none | x-v3.2 | OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LU | none | x-v3.2 | OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LV | none | x-v3.2 | OWED MB-68: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LW | none | x-v3.2 | OWED MB-68: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LX | none | x-v3.2 | OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LY | none | x-v3.2 | OWED MB-67: the gate tests do not yet name R-LY (recorded 2026-10-31-batch-an) |
+| R-LZ | none | x-v3.2 | OWED MB-79: no test names R-LZ yet (recorded 2026-10-31-batch-an) |
+| R-MB | none | x-v3.2 | OWED MB-84: the lock is the gate exceptions test and the MB-84 push-gate run (recorded 2026-11-03-batch-av) |
+| R-MC | none | x-v3.2 | OWED MB-79 (f): no test names R-MC yet (recorded 2026-11-03-batch-aw) |
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/mobile/__tests__/lotMapScreens.golden.test.ts b/mobile/__tests__/lotMapScreens.golden.test.ts
+index 230aff48ceea15f1e90672e5aa5a5f5091ff3b27..04beedbd08be839e164d7478f87854bf40577be2 100644
+--- a/mobile/__tests__/lotMapScreens.golden.test.ts
++++ b/mobile/__tests__/lotMapScreens.golden.test.ts
+@@ -201,7 +201,48 @@ describe('the page rules (named cases)', () => {
+   it('the ruled message texts are verbatim', () => {
+     expect(LOT_MAP_SLICE.content['state.intersection']).toBe('That looks like an intersection. Type a house number to see the lots.');
+     expect(LOT_MAP_SLICE.content['unlinked.heading']).toBe('No lot linked yet');
+-    expect(LOT_MAP_SLICE.content['unlinked.body']).toBe("We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address.");
++    // SEARCHFIX.3 V2 (task-451 AC3, dated 2026-11-24; ruling source doc-2 B.6 (doc-2:48) "Try a nearby address or report it." and B.7 (doc-2:49) "report it inside
++    // the no-lot message"; plan ruling 8.1 b; prior pin: "... Try a nearby address."): the line is the body, the link "report it", then the full stop.
++    expect(LOT_MAP_SLICE.content['unlinked.body']).toBe("We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address or ");
++    expect([LOT_MAP_SLICE.content['unlinked.report'], LOT_MAP_SLICE.content['unlinked.stop']]).toEqual(['report it', '.']);
++  });
++  it('SEARCHFIX.3 V2 (task-451 AC3): the no-lot message holds the "report it" link to the wrong-lot help topic, then the stop', () => {
++    for (const k of ['unlinked', 'unlinked_no_pin']) {
++      const desc = nodes(byTestID(lotMapProps(situation(k)), 'parcel-lotmap-unlinked')!).find((n) => n.component === 'AlertDescription')!;
++      const [body, link, stop] = desc.children as [unknown, PropsNode, PropsNode];
++      expect([k, body]).toEqual([k, { text: { content: 'unlinked.body' }, vars: { address: { contract: 'contract_parcels_lookup.map.address' } } }]);
++      expect([k, link.component, link.props.key, link.props.testID, link.props.accessibilityRole, link.props.onPress, link.children]).toEqual([
++        k, 'Text', 'unlinked-report', 'parcel-lotmap-report', 'link', { action: 'open_help', topic: 'wrong-lot', q: { derived: 'query' } }, [{ content: 'unlinked.report' }]]);
++      expect([k, stop.component, stop.props.key, stop.children]).toEqual([k, 'Text', 'unlinked-stop', [{ content: 'unlinked.stop' }]]);
++    }
++  });
++  it('SEARCHFIX.3 B.7 (task-451; doc-2:49 "to /help?topic=wrong-lot ... under every notice"): every help link of the page opens the wrong-lot topic', () => {
++    const topics = ALL.flatMap((k) => nodes(lotMapProps(situation(k))).filter((n) => (n.props.onPress as Json | null | undefined)?.action === 'open_help').map((n) => (n.props.onPress as Json).topic));
++    expect(topics.length).toBeGreaterThan(0);
++    expect([...new Set(topics)]).toEqual(['wrong-lot']);
++  });
++  it('SEARCHFIX.3 ST3 (task-451 AC1; RR-0444 MD:2290-2291 2c): the null area reads "Not available" on the card and in its label', () => {
++    expect(LOT_MAP_SLICE.content['lot.null']).toBe('Not available');
++    const card = byTestID(lotMapProps(situation('lot_facts_null')), 'parcel-lotmap-card-PCL-A1')!;
++    const area = nodes(card).find((n) => n.props.key === 'card-area')!;
++    expect(area.children).toEqual([{ content: 'lot.null' }]);
++    const label = card.props.accessibilityLabel as { text: unknown; vars: Json };
++    expect([label.text, label.vars.area]).toEqual([{ content: 'lot.label' }, { content: 'lot.null' }]);
++  });
++  it('SEARCHFIX.3 V3 (task-451 AC4; GROUNDER-H D1): the card label is the lead line and the area (no frontage, no zoning); Continue speaks its visible text', () => {
++    for (const k of ['multi_parcel_2', 'multi_parcel_3plus', 'multi_parcel_2_lot_b', 'lot_facts_null']) {
++      const t = lotMapProps(situation(k));
++      for (const card of nodes(t).filter((n) => n.props.role === 'radio')) {
++        const label = card.props.accessibilityLabel as { text: unknown; vars: Json };
++        const title = nodes(card).find((n) => n.props.key === 'card-title')!.children[0];
++        const area = nodes(card).find((n) => n.props.key === 'card-area')!.children[0];
++        expect([k, label.text, Object.keys(label.vars).sort(), label.vars.lead, label.vars.area]).toEqual([k, { content: 'lot.label' }, ['area', 'lead'], title, area]);
++      }
++      const cont = byTestID(t, 'parcel-lotmap-continue')!;
++      expect([k, cont.props.accessibilityLabel]).toEqual([k, (cont.children[0] as PropsNode).children[0]]);
++    }
++    expect(LOT_MAP_SLICE.content['lot.label']).toBe('{lead}, {area}');
++    expect('select.label' in LOT_MAP_SLICE.content).toBe(false);
+   });
+   it('null lot facts show the content null value, never "0"; an outline-less lot draws no polygon but keeps its card', () => {
+     const s = situation('lot_facts_null');
+diff --git a/mobile/src/components/surfaces/LotMapBinding.tsx b/mobile/src/components/surfaces/LotMapBinding.tsx
+index 2b8aa69c1858389ee3cd1b5748ace545b0e876ed..3e89663cc1ec3f8f677ba173f4bcc9bd1217d3b4 100644
+--- a/mobile/src/components/surfaces/LotMapBinding.tsx
++++ b/mobile/src/components/surfaces/LotMapBinding.tsx
+@@ -38,7 +38,8 @@ const content = (key: string): Ref => ({ content: key });
+ const contract = (p: string): Ref => ({ contract: `${CONTRACT}.${p}` });
+ const derived = (name: string): Ref => ({ derived: name });
+ const node = (component: string, props: Record<string, unknown>, children: Child[] = []): PropsNode => ({ component, props, children });
+-/** A lot fact that may be null: the contract value, else the content null value "—" (never "0", never blank). */
++/** A lot fact that may be null: the contract value, else the content null value (never "0", never blank). SEARCHFIX.3 (task-451, RR-0444 2c): the null value
++ *  reads "Not available"; the server sends a null area for an implausible lot size (src/lib/parcels/consumer-lookup.ts, LOT_SIZE_PLAUSIBLE_M2). */
+ const fact = (value: string | null, path: string): Ref => (value === null ? content('lot.null') : contract(path));
+ 
+ const pill = (): PropsNode =>
+@@ -85,23 +86,37 @@ const errorNotices = (s: LotMapSituation): PropsNode[] => [
+     : []),
+ ];
+ 
++/** The Help & Support topic of every link on this page (doc-2 B.7, "to /help?topic=wrong-lot"; the Help page has it since task-450). */
++const HELP_TOPIC = 'wrong-lot';
++
++// SEARCHFIX.3 V2 (task-451; doc-2 B.6 "Try a nearby address or report it." and B.7 "report it inside the no-lot message", choose-lot-states.html:277): the
++// line is the body, an inline "report it" link (a nested Text: the vendored AlertDescription is the RN Text, so the press is the native nested-Text press), then the stop.
+ const unlinkedNotice = (): PropsNode =>
+   notice('unlinked', 'MapPin', L.noticeIconNeutral, [
+     node('Text', { key: 'unlinked-heading', className: L.noticeHeading, role: 'header' }, [content('unlinked.heading')]),
+     node('AlertDescription', { key: 'unlinked-text', className: L.noticeTextNeutral }, [
+       { text: content('unlinked.body'), vars: { address: contract('map.address') } },
++      node('Text', {
++        key: 'unlinked-report',
++        testID: 'parcel-lotmap-report',
++        className: L.helpLinkText,
++        accessibilityRole: 'link',
++        onPress: { action: 'open_help', topic: HELP_TOPIC, q: derived('query') },
++      }, [content('unlinked.report')]),
++      node('Text', { key: 'unlinked-stop' }, [content('unlinked.stop')]),
+     ]),
+   ]);
+ 
+-/** SRCH.C12 / B.7: the v8 link to Help & Support, prefilled with the typed query (the existing action open_help). */
+-const helpLink = (topic: 'lot_match' | 'address_match'): PropsNode =>
++/** SRCH.C12 / B.7: the v8 link to Help & Support, prefilled with the typed query (the existing action open_help). SEARCHFIX.3 (task-451): every link takes
++ *  the topic wrong-lot (doc-2 B.7); the old topics lot_match and address_match stay on the Help page. */
++const helpLink = (): PropsNode =>
+   node('Button', {
+     key: 'help',
+     testID: 'parcel-lotmap-help',
+     variant: 'link',
+     className: L.helpLink,
+     accessibilityRole: 'link',
+-    onPress: { action: 'open_help', topic, q: derived('query') },
++    onPress: { action: 'open_help', topic: HELP_TOPIC, q: derived('query') },
+   }, [node('Text', { key: 'help-text', className: L.helpLinkText }, [content('help.address.link')])]);
+ 
+ /** C.11 (task-362; choose-lot.html:278): "Pick a lot on the map or in the list." under the disabled Choose a lot button. */
+@@ -112,7 +127,7 @@ const pickHint = (): PropsNode =>
+ const helpRow = (): PropsNode =>
+   node('View', { key: 'help-row', testID: 'parcel-lotmap-help-row', className: L.helpRow }, [
+     node('Text', { key: 'help-prompt', className: L.helpPrompt }, [content('help.lot.prompt')]),
+-    helpLink('lot_match'),
++    helpLink(),
+   ]);
+ 
+ const polygon = (key: string, coords: string, holes: string, stroke: string, fill: string, width: number, parcelPath: string): PropsNode =>
+@@ -168,17 +183,16 @@ const cards = (s: LotMapSituation): PropsNode[] =>
+     const lot = s.map!.lots[i]!;
+     const checked = l.parcelId === s.selectedParcelId;
+     const area = fact(lot.area, `map.lots.${i}.area`);
+-    const frontage = fact(lot.frontage, `map.lots.${i}.frontage`);
+-    const zoning = fact(lot.zoning, `map.lots.${i}.zoning`);
+     // C.7 (RR-0284; RR-0289, MORNING-DECISIONS.md:1117, massing is reliable for presence only): a footprint says "has the house", none says
+-    // "no building" (choose-lot.html:306); the street phrase when the street is populated. A response without the field (an older server or a
+-    // cached one) says neither: the plain lot letter.
++    // "no building" (choose-lot.html:306); "faces {street}" when the street is populated, else "at the back" (SEARCHFIX.3 V1, task-451; MD:776, doc-2 C.7).
++    // A response without the footprint field (an older server or a cached one) says neither: the plain lot letter.
+     const known = lot.hasFootprint !== undefined;
+     const house = lot.hasFootprint === true;
+     const street = typeof lot.frontageStreet === 'string' && lot.frontageStreet.trim() !== '';
+     const leadKey = !known ? 'lot.letter'
+       : house ? (street ? 'lot.lead.house_faces' : 'lot.lead.house')
+         : street ? 'lot.lead.no_building_faces' : 'lot.lead.no_building';
++    const lead: Child = { text: content(leadKey), vars: { letter: derived(`letter.${i}`), ...(known && street ? { street: contract(`map.lots.${i}.frontageStreet`) } : {}) } };
+     return node('Button', {
+       key: `card-${l.parcelId}`,
+       testID: `parcel-lotmap-card-${l.parcelId}`,
+@@ -186,11 +200,12 @@ const cards = (s: LotMapSituation): PropsNode[] =>
+       className: checked ? L.cardChecked : L.card,
+       role: 'radio',
+       accessibilityState: { checked },
+-      accessibilityLabel: { text: content('lot.label'), vars: { letter: derived(`letter.${i}`), area, frontage, zoning } },
++      // SEARCHFIX.3 V3 (task-451; GROUNDER-H D1 "the spoken name is the visible text"): the label is the lead line and the area, the card's own text.
++      accessibilityLabel: { text: content('lot.label'), vars: { lead, area } },
+       onPress: { action: 'select', parcelId: contract(`map.lots.${i}.parcelId`) },
+     }, [node('View', { key: 'card-row', className: L.cardRow }, [
+       node('View', { key: 'card-text' }, [
+-        node('Text', { key: 'card-title', className: L.cardTitle }, [{ text: content(leadKey), vars: { letter: derived(`letter.${i}`), ...(known && street ? { street: contract(`map.lots.${i}.frontageStreet`) } : {}) } }]),
++        node('Text', { key: 'card-title', className: L.cardTitle }, [lead]),
+         node('Text', { key: 'card-area', className: L.cardArea }, [area]),
+       ]),
+       ...(checked ? [node('Icon', { key: 'check', icon: 'Check', size: Z.icon, color: H.check })] : []),
+@@ -200,12 +215,12 @@ const cards = (s: LotMapSituation): PropsNode[] =>
+ /** Nothing picked yet: Choose a lot is disabled and its hint shows (one predicate for both; choose-lot.html:278). */
+ const awaitingPick = (s: LotMapSituation): boolean => s.route === null;
+ 
++// SEARCHFIX.3 V3 (task-451): a non-null route always has a picked letter (lotMap.ts builds the route from the picked lot), so the label is "Choose a lot" or
++// "Continue with Lot X"; the button speaks its visible text (GROUNDER-H D1), and the generic "open the report" label is retired.
+ const continueButton = (s: LotMapSituation): PropsNode => {
+   const label: Child = s.route === null
+     ? content('select.none')
+-    : s.selectedLetter === null
+-      ? content('select.label')
+-      : { text: content('select.lot'), vars: { letter: derived(`letter.${s.lots.findIndex((l) => l.parcelId === s.selectedParcelId)}`) } };
++    : { text: content('select.lot'), vars: { letter: derived(`letter.${s.lots.findIndex((l) => l.parcelId === s.selectedParcelId)}`) } };
+   return node('Button', {
+     key: 'continue',
+     testID: 'parcel-lotmap-continue',
+@@ -214,7 +229,7 @@ const continueButton = (s: LotMapSituation): PropsNode => {
+     disabled: awaitingPick(s),
+     accessibilityRole: 'button',
+     accessibilityState: { disabled: awaitingPick(s) },
+-    accessibilityLabel: content('select.label'),
++    accessibilityLabel: label,
+     // aria-describedby="pick-hint" of the mock: the hint line travels with the disabled button.
+     ...(awaitingPick(s) ? { accessibilityHint: content('select.hint') } : {}),
+     onPress: s.route === null ? null : { action: 'push', route: s.route },
+@@ -231,13 +246,13 @@ const body = (s: LotMapSituation): PropsNode[] => {
+     case 'error':
+       return errorNotices(s);
+     case 'intersection':
+-      return [notice('intersection', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'intersection-text', className: L.noticeTextNeutral }, [content('state.intersection')])]), helpLink('address_match')];
++      return [notice('intersection', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'intersection-text', className: L.noticeTextNeutral }, [content('state.intersection')])]), helpLink()];
+     case 'too_many_lots':
+-      return [notice('too-many', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'too-many-text', className: L.noticeTextNeutral }, [content('state.too_many')])]), helpLink('address_match')];
++      return [notice('too-many', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'too-many-text', className: L.noticeTextNeutral }, [content('state.too_many')])]), helpLink()];
+     case 'unlinked_no_pin':
+-      return [unlinkedNotice(), helpLink('address_match')];
++      return [unlinkedNotice(), helpLink()];
+     case 'unlinked':
+-      return [unlinkedNotice(), helpLink('address_match'), ...mapView(s)];
++      return [unlinkedNotice(), helpLink(), ...mapView(s)];
+     case 'multi_parcel':
+       return [
+         node('View', { key: 'list-header', testID: 'parcel-lotmap-header', className: L.listHeader }, [
+diff --git a/mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json b/mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json
+index c12d952815490ab7120622df7dc639ff0b8f48bf..2795947907097c8726d89fae40b8f3f199c622e5 100644
+--- a/mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json
++++ b/mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json
+@@ -1,24 +1,25 @@
+ {
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 244e810f9da12a9f)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 6573a522bea3fc40)",
+   "surface": "mobile_parcel_disambiguation_map",
+   "config": {},
+   "content": {
+     "map.heading": "This address covers {count} lots. Which one do you mean?",
+     "map.clear.label": "Back to search",
+     "lot.letter": "Lot {letter}",
+-    "lot.lead.house": "Lot {letter} · has the house",
+-    "lot.lead.no_building": "Lot {letter} · no building",
++    "lot.lead.house": "Lot {letter} · has the house · at the back",
++    "lot.lead.no_building": "Lot {letter} · no building · at the back",
+     "lot.lead.no_building_faces": "Lot {letter} · no building · faces {street}",
+     "lot.lead.house_faces": "Lot {letter} · has the house · faces {street}",
+-    "lot.null": "—",
+-    "lot.label": "Lot {letter}, {area}, frontage {frontage}, zoning {zoning}",
++    "lot.null": "Not available",
++    "lot.label": "{lead}, {area}",
+     "select.none": "Choose a lot",
+     "select.lot": "Continue with Lot {letter}",
+-    "select.label": "Open the report for the chosen lot",
+     "select.hint": "Pick a lot on the map or in the list.",
+     "state.intersection": "That looks like an intersection. Type a house number to see the lots.",
+     "unlinked.heading": "No lot linked yet",
+-    "unlinked.body": "We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address.",
++    "unlinked.body": "We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address or ",
++    "unlinked.report": "report it",
++    "unlinked.stop": ".",
+     "state.too_many": "This address has many lots. Add a unit number or pick a nearby address.",
+     "state.loading": "Searching",
+     "state.error": "Couldn’t reach the lot service. Check your connection and try again.",
+diff --git a/scripts/analysis/lot-map-data-check.mjs b/scripts/analysis/lot-map-data-check.mjs
+index d8fc032571bb7ab8ef7648a3a92e0d6ebfd6242d..dab93753817b69891f726793024605e146743f8b 100644
+--- a/scripts/analysis/lot-map-data-check.mjs
++++ b/scripts/analysis/lot-map-data-check.mjs
+@@ -25,16 +25,32 @@ FROM parcels p
+ WHERE p.parcel_id = ANY($1::text[])
+ ORDER BY p.parcel_id`;
+ 
++// SEARCHFIX.3 L7 (task-451; GROUNDER-G item 2): a flag whose value is missing or is the next flag sets `error` (main prints the usage and exits 2),
++// so "--parcels --url x" is never read as parcels "--url" and a URL of "x".
++const valueAfter = (argv, i) => {
++  const v = argv[i + 1];
++  return v === undefined || v.startsWith('--') ? null : v;
++};
++
+ export function parseArgs(argv) {
+-  const o = { dryRun: argv.includes('--dry-run'), url: null, parcels: [...SAMPLE_PARCELS] };
++  const o = { dryRun: argv.includes('--dry-run'), url: null, parcels: [...SAMPLE_PARCELS], error: undefined };
+   const u = argv.indexOf('--url');
+-  if (u >= 0) o.url = argv[u + 1] ?? null;
++  if (u >= 0) {
++    o.url = valueAfter(argv, u);
++    if (o.url === null) o.error = '--url needs a value';
++  }
+   const p = argv.indexOf('--parcels');
+-  if (p >= 0) o.parcels = [...SAMPLE_PARCELS, ...String(argv[p + 1] ?? '').split(',').map((s) => s.trim()).filter(Boolean)];
++  if (p >= 0) {
++    const v = valueAfter(argv, p);
++    if (v === null) o.error = '--parcels needs a value';
++    else o.parcels = [...SAMPLE_PARCELS, ...v.split(',').map((s) => s.trim()).filter(Boolean)];
++  }
+   o.parcels = [...new Set(o.parcels)];
+   return o;
+ }
+ 
++const USAGE = 'Usage: node scripts/analysis/lot-map-data-check.mjs --dry-run | --url <rehearsal stack URL> [--parcels 1,2]';
++
+ /** Returns null when the URL is the rehearsal stack, else the reason it is refused. */
+ export function refuse(url) {
+   let u;
+@@ -54,6 +70,7 @@ export function summarise(rows) {
+ 
+ async function main() {
+   const o = parseArgs(process.argv.slice(2));
++  if (o.error) { console.error(`${o.error}. ${USAGE}`); process.exitCode = 2; return; }
+   if (o.dryRun) {
+     console.log(`-- BEGIN READ ONLY; parameters: $1 = ${JSON.stringify(o.parcels)}\n${SQL};\n-- ROLLBACK;`);
+     return;
+diff --git a/scripts/surfaces/_schema/census/mobile-product.json b/scripts/surfaces/_schema/census/mobile-product.json
+index 4a4c42bc359dc4fd00a3fced4c11e029f78fd349..d260577d2762ea79fb3a508c6f6619327bb6c902 100644
+--- a/scripts/surfaces/_schema/census/mobile-product.json
++++ b/scripts/surfaces/_schema/census/mobile-product.json
+@@ -6626,7 +6626,7 @@
+     "kind": "SURFACE",
+     "status": "generated",
+     "docs": {
+-      "purpose": "The \"choose your lot\" page (MF-53): where the search lands when an address does not resolve to exactly one lot, and its honest message states. One address over several lots: the lots are outlined on a map with a letter each, listed as cards (area, frontage, zoning) under the map, and the chosen lot opens its report. An address found with no linked lot: the plain message \"No lot linked yet\", the pin and the faint neighbouring lots, never a silent nearest-lot pick. Several such addresses: the message only. More than 10 lots on one address: \"This address has many lots. Add a unit number or pick a nearby address.\" An intersection: \"That looks like an intersection. Type a house number to see the lots.\" (the map version is MF-60). Nothing is selected when the page opens.",
++      "purpose": "The \"choose your lot\" page (MF-53): where the search lands when an address does not resolve to exactly one lot, and its honest message states. One address over several lots: the lots are outlined on a map with a letter each, listed as cards (area, frontage, zoning) under the map, and the chosen lot opens its report. An address found with no linked lot: the plain message \"No lot linked yet\", the pin and the faint neighbouring lots, never a silent nearest-lot pick. Several such addresses: the message only. More than 10 lots on one address: \"This address has many lots. Add a unit number or pick a nearby address.\" An intersection: \"That looks like an intersection. Type a house number to see the lots.\" (the map version is MF-60). Nothing is selected when the page opens. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the card is the lead line (Lot letter, \"has the house\" or \"no building\", then \"faces {street}\" or \"at the back\") and the area; an implausible area reads \"Not available\" (RR-0444 2c). There is no frontage or zoning on the card (C.9, removed by the design) and no faint neighbouring lots on the unlinked state (B.8 removed; RR-0446, MORNING-DECISIONS.md:2302-2303: the several-lots map stays as built). The no-lot message ends \"Try a nearby address or report it.\", with \"report it\" a link to the Help topic wrong-lot.",
+       "data_story": "It reads one contract, GET /api/parcels/lookup?q= (C-001), through the same query the search page already filled (['parcel-search', q]), so the normal flow makes no extra request. The server names the outcome (`resolution`) and, only for multi_parcel and unlinked, sends the `map` block: lot outlines (parcels.geom), area (parcels.lot_size_sqm, the report's area rule), frontage (parcels.frontage_m), zoning (parcels.zoning_zn_string), marker points (parcels.centroid_lat/lng), the address pin (address_points.latitude/longitude), a start view and the faint neighbour outlines. It emits **no analytics event**.",
+       "under_126": "**CONVERTED (MF-53)** — LIST with `render.projection: map`, rendered by the shared mobile binding (LotMapBinding.tsx props, SurfaceRenderer.tsx parts) from this descriptor and its content file. The map is react-native-maps' own MapView, Polygon and Marker configured by props; it owns no component (`owns.components[]` is empty)."
+     },
+@@ -6678,7 +6678,7 @@
+       "spec_version": "0-draft",
+       "versioning": {
+         "answer": "none",
+-        "why": "It reads the lookup response as sent; `resolution` and `map` are optional in the mobile mirror, so a payload from an older server still parses and falls back to the client derivation.",
++        "why": "It reads the lookup response as sent; `resolution` and `map` are optional in the mobile mirror, so a payload from an older server still parses and falls back to the client derivation. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the client derivation is deleted (task-450 Q19), so a payload without `resolution` reads as no_match and goes back to search.",
+         "evidence": [
+           "mobile/src/lib/schemas.ts — ConsumerParcelLookupResultSchema (resolution, map optional)"
+         ]
+@@ -6733,7 +6733,7 @@
+           "producing_steps": [
+             "parcels"
+           ],
+-          "chain_position": "sources[1]",
++          "chain_position": "sources[4]",
+           "owner_spec": "docs/specs/01-pipeline/55_source_parcels.md",
+           "evidence": [
+             "src/lib/parcels/lot-map.ts — resolveLotMap (the lot statement)",
+@@ -6772,7 +6772,7 @@
+           "producing_steps": [
+             "link_parcel_addresses"
+           ],
+-          "chain_position": "sources[3]",
++          "chain_position": "sources[8]",
+           "owner_spec": "docs/specs/01-pipeline/56_link_parcel_addresses.md",
+           "evidence": [
+             "src/lib/parcels/lot-map.ts — the pin statement"
+@@ -6786,7 +6786,7 @@
+           "producing_steps": [
+             "link_massing"
+           ],
+-          "chain_position": "sources[4]",
++          "chain_position": "sources[15]",
+           "owner_spec": "docs/specs/01-pipeline/56_source_massing.md",
+           "evidence": [
+             "src/lib/parcels/lot-map.ts — the lot statement's has_footprint EXISTS (SRCH.LOTCARD, RR-0284): footprint presence only, no geometry"
+@@ -6860,7 +6860,7 @@
+       "breakpoints": "mobile_first",
+       "export": "none",
+       "list": {
+-        "item_archetype": "lot card (Lot letter, area, frontage • zoning) under the map; on the map a polygon and a letter marker per lot",
++        "item_archetype": "lot card (Lot letter, area, frontage • zoning) under the map; on the map a polygon and a letter marker per lot Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the card reads the lead line and the area only; its screen-reader label is that same text.",
+         "pagination": "none",
+         "recycling": "none — at most 10 lots by the contract"
+       }
+@@ -7034,7 +7034,7 @@
+     "deviations": [
+       {
+         "from": "Spec 126 §11a.1 closed binding set (content, contract, ...): no source for client-reshaped map values",
+-        "why": "P35-D14 a form: the query text, the lot count, the lot letters, the start view as a map region, the pin, the dark map style (the app's existing DARK_MAP_STYLE, mobile/src/constants/tokens.ts) and the polygons (GeoJSON reshaped to react-native-maps coordinates and holes) are derived on the client by mobile/src/lib/lotMap.ts and bind as {\"derived\": name}. Closed list: query, lot_count, region, pin, map_style, letter.<i>, lots.<i>.marker, lots|neighbours.<i>.polygons.<j>.coordinates|holes (LOT_MAP_DERIVED_NAMES in LotMapBinding.tsx; the mobile golden test refuses any other).",
++        "why": "P35-D14 a form: the query text, the lot count, the lot letters, the start view as a map region, the pin, the dark map style (the app's existing DARK_MAP_STYLE, mobile/src/constants/tokens.ts) and the polygons (GeoJSON reshaped to react-native-maps coordinates and holes) are derived on the client by mobile/src/lib/lotMap.ts and bind as {\"derived\": name}. Closed list: query, lot_count, region, pin, map_style, letter.<i>, lots.<i>.marker, lots|neighbours.<i>.polygons.<j>.coordinates|holes (LOT_MAP_DERIVED_NAMES in LotMapBinding.tsx; the mobile golden test refuses any other). Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the map style is light (userInterfaceStyle light, SRCH.DAYLIGHT), not dark; neighbours.<i>.polygons are no longer drawn (no neighbour lots, RR-0446).",
+         "adjudicated_by": "operator 2026-11-09, Wave 1 decision batch item 13 (\"P35-D14 (a) deviation\"), applied to this page by MF-53 plan v4 (operator 2026-11-11: \"\\\"choose your lot\\\" and \\\"address issues\\\" screens should be built now\")",
+         "date": "2026-11-11"
+       },
+@@ -7068,7 +7068,7 @@
+         "check_id": "parceldisambig_intersection_deferred"
+       },
+       {
+-        "what": "The map is hidden from screen readers; the lot cards are the accessible list of the same lots. Faint neighbours (no linked lot) are map-only: a screen-reader user gets the message and its \"Try a nearby address.\" line.",
++        "what": "The map is hidden from screen readers; the lot cards are the accessible list of the same lots. Faint neighbours (no linked lot) are map-only: a screen-reader user gets the message and its \"Try a nearby address.\" line. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): no neighbours are drawn (RR-0446); a screen-reader user gets the message, now \"Try a nearby address or report it.\" with the link \"report it\".",
+         "measured": "mobile/src/components/surfaces/LotMapBinding.tsx — map-frame importantForAccessibility no-hide-descendants",
+         "check_id": "parceldisambig_no_silent_fallback"
+       }
+diff --git a/scripts/surfaces/_schema/static-page.json b/scripts/surfaces/_schema/static-page.json
+index d49e207b7bf753c31ecacf192162a632dab5a80f..b41d5f385c080205671096d2d3c45f9e1188a9bd 100644
+--- a/scripts/surfaces/_schema/static-page.json
++++ b/scripts/surfaces/_schema/static-page.json
+@@ -1,9 +1,25 @@
+ {
+- "$comment": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2 and section 12 folds 16, 18, 22; v1 section 3.2 and folds 4, 8): THE page table of the STATIC web pages, one page per surface per declared state, sections in screen order. Contract: static-page.schema.json (closed kinds prose and footer). Every part names a content key of the surface's own content file beside its descriptor (scripts/surfaces/parcel_product/F06/surfaces/<id>.content.json); a link names a same-origin path on the host table (src/lib/auth/host-policy.ts). The footer is the same on every page (Terms, Privacy, Help & Support, the short legal line, ruling L-R3 \"This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.\"), pinned equal across the content files by src/tests/surfaces/static-page.logic.test.ts. Help & Support has no mail link yet: the support inbox is ONE admin setting (Spec 126 section 11b.7 dated note 2026-11-11 item 3) that does not exist on the tip; the link lands with it. Read by src/lib/surfaces/maxbld-static.ts and the golden builder src/tests/surfaces/surface-goldens.ts. Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a), D-2 (a), D-3 (a) \"3 y\", D-6 (a) and the all-scenarios ruling; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 sections 3.5, 12, 13a, 13b): web_landing, the MaxBLD landing on maxbld.ca /, in two states: static (the stored citywide row read) and degraded (it is missing, zero or its reader threw: the citywide figures and the processing demo are left out, never a 500). Value parts name the declared server reads of src/lib/surfaces/maxbld-landing.ts; a read that fails leaves its part out on the server. The plan prices, the trial length, the Pro allowance and the post-trial line are not in the page until their readers exist (MF-47 Stripe price reader and parcel_tool_trial_months, MF-45 Pro limit): no typed value. The footer is the plain pages' footer, the same section. Dated note 2026-11-20 (PAGE.TABLE, task-390): `screens` holds the INTERACTIVE pages as rows (contract: static-page.schema.json, `screens`); the first is the phone semi question page. Rows name content keys of the surface's own content file; the `when` flags are the closed list SEMI_QUESTION_FLAG_NAMES of its binding.",
++ "$comment": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2 and section 12 folds 16, 18, 22; v1 section 3.2 and folds 4, 8): THE page table of the STATIC web pages, one page per surface per declared state, sections in screen order. Contract: static-page.schema.json (closed kinds prose and footer). Every part names a content key of the surface's own content file beside its descriptor (scripts/surfaces/parcel_product/F06/surfaces/<id>.content.json); a link names a same-origin path on the host table (src/lib/auth/host-policy.ts). The footer is the same on every page (Terms, Privacy, Help & Support, the short legal line, ruling L-R3 \"This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.\"), pinned equal across the content files by src/tests/surfaces/static-page.logic.test.ts. Help & Support has no mail link yet: the support inbox is ONE admin setting (Spec 126 section 11b.7 dated note 2026-11-11 item 3) that does not exist on the tip; the link lands with it. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R5; prior sentence kept): the sentence before is stale: Help & Support has its mail links (the role mailto, one per topic, reading the one setting support_inbox through src/lib/surfaces/maxbld-support.ts, MF-46 follow-up 2026-11-12); a link is left out only while the setting is unset. Read by src/lib/surfaces/maxbld-static.ts and the golden builder src/tests/surfaces/surface-goldens.ts. Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a), D-2 (a), D-3 (a) \"3 y\", D-6 (a) and the all-scenarios ruling; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 sections 3.5, 12, 13a, 13b): web_landing, the MaxBLD landing on maxbld.ca /, in two states: static (the stored citywide row read) and degraded (it is missing, zero or its reader threw: the citywide figures and the processing demo are left out, never a 500). Value parts name the declared server reads of src/lib/surfaces/maxbld-landing.ts; a read that fails leaves its part out on the server. The plan prices, the trial length, the Pro allowance and the post-trial line are not in the page until their readers exist (MF-47 Stripe price reader and parcel_tool_trial_months, MF-45 Pro limit): no typed value. The footer is the plain pages' footer, the same section. Dated note 2026-11-20 (PAGE.TABLE, task-390): `screens` holds the INTERACTIVE pages as rows (contract: static-page.schema.json, `screens`); the first is the phone semi question page. Rows name content keys of the surface's own content file; the `when` flags are the closed list SEMI_QUESTION_FLAG_NAMES of its binding. Dated note 2026-11-24 (SEARCHFIX.3, task-451; H Q2 and H Q4, docs/reports/reviews/mcfixreborn-g3/GROUNDER-QUESTIONS.md:75, :77; small-pages-v8 help.html and terms-privacy.html:262 \"MaxBLD home -> /; Log in -> /login\"; plan ruling 8.5): every plain page (web_help, web_terms, web_privacy, and both states of web_maxbld_error) opens with a header section, kind hero with only the wordmark (nav.home, /) and one nav link (nav.sign_in \"Log in\", /login); the binding draws a hero with no title as the header alone and keeps the narrow column.",
+  "pages": {
+   "web_help": {
+    "static": {
+     "sections": [
++     {
++      "kind": "hero",
++      "id": "top",
++      "parts": [
++       {
++        "role": "wordmark",
++        "content": "nav.home",
++        "href": "/"
++       },
++       {
++        "role": "nav",
++        "content": "nav.sign_in",
++        "href": "/login"
++       }
++      ]
++     },
+      {
+       "kind": "prose",
+       "id": "help",
+@@ -85,6 +101,22 @@
+   "web_terms": {
+    "static": {
+     "sections": [
++     {
++      "kind": "hero",
++      "id": "top",
++      "parts": [
++       {
++        "role": "wordmark",
++        "content": "nav.home",
++        "href": "/"
++       },
++       {
++        "role": "nav",
++        "content": "nav.sign_in",
++        "href": "/login"
++       }
++      ]
++     },
+      {
+       "kind": "prose",
+       "id": "terms",
+@@ -330,6 +362,22 @@
+   "web_privacy": {
+    "static": {
+     "sections": [
++     {
++      "kind": "hero",
++      "id": "top",
++      "parts": [
++       {
++        "role": "wordmark",
++        "content": "nav.home",
++        "href": "/"
++       },
++       {
++        "role": "nav",
++        "content": "nav.sign_in",
++        "href": "/login"
++       }
++      ]
++     },
+      {
+       "kind": "prose",
+       "id": "privacy",
+@@ -539,6 +587,22 @@
+   "web_maxbld_error": {
+    "error": {
+     "sections": [
++     {
++      "kind": "hero",
++      "id": "top",
++      "parts": [
++       {
++        "role": "wordmark",
++        "content": "nav.home",
++        "href": "/"
++       },
++       {
++        "role": "nav",
++        "content": "nav.sign_in",
++        "href": "/login"
++       }
++      ]
++     },
+      {
+       "kind": "prose",
+       "id": "error",
+@@ -586,6 +650,22 @@
+    },
+    "miss": {
+     "sections": [
++     {
++      "kind": "hero",
++      "id": "top",
++      "parts": [
++       {
++        "role": "wordmark",
++        "content": "nav.home",
++        "href": "/"
++       },
++       {
++        "role": "nav",
++        "content": "nav.sign_in",
++        "href": "/login"
++       }
++      ]
++     },
+      {
+       "kind": "prose",
+       "id": "not_found",
+diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json
+index 2b49a488408a2c9941fd887f454a8692738a8edb..1fe2b475ecc38cfdc42e5d8167a053a30d82956e 100644
+--- a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json
++++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json
+@@ -2,19 +2,20 @@
+   "map.heading": "This address covers {count} lots. Which one do you mean?",
+   "map.clear.label": "Back to search",
+   "lot.letter": "Lot {letter}",
+-  "lot.lead.house": "Lot {letter} · has the house",
+-  "lot.lead.no_building": "Lot {letter} · no building",
++  "lot.lead.house": "Lot {letter} · has the house · at the back",
++  "lot.lead.no_building": "Lot {letter} · no building · at the back",
+   "lot.lead.no_building_faces": "Lot {letter} · no building · faces {street}",
+   "lot.lead.house_faces": "Lot {letter} · has the house · faces {street}",
+-  "lot.null": "—",
+-  "lot.label": "Lot {letter}, {area}, frontage {frontage}, zoning {zoning}",
++  "lot.null": "Not available",
++  "lot.label": "{lead}, {area}",
+   "select.none": "Choose a lot",
+   "select.lot": "Continue with Lot {letter}",
+-  "select.label": "Open the report for the chosen lot",
+   "select.hint": "Pick a lot on the map or in the list.",
+   "state.intersection": "That looks like an intersection. Type a house number to see the lots.",
+   "unlinked.heading": "No lot linked yet",
+-  "unlinked.body": "We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address.",
++  "unlinked.body": "We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address or ",
++  "unlinked.report": "report it",
++  "unlinked.stop": ".",
+   "state.too_many": "This address has many lots. Add a unit number or pick a nearby address.",
+   "state.loading": "Searching",
+   "state.error": "Couldn’t reach the lot service. Check your connection and try again.",
+diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json
+index 706e60c4bbaeb5c3b15dd23c725d84d7f1f7ac55..3fe6b6d37d25b216f9c0871e3f1d89bc5f21593d 100644
+--- a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json
++++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json
+@@ -2,7 +2,7 @@
+   "kind": "SURFACE",
+   "status": "generated",
+   "docs": {
+-    "purpose": "The \"choose your lot\" page (MF-53): where the search lands when an address does not resolve to exactly one lot, and its honest message states. One address over several lots: the lots are outlined on a map with a letter each, listed as cards (area, frontage, zoning) under the map, and the chosen lot opens its report. An address found with no linked lot: the plain message \"No lot linked yet\", the pin and the faint neighbouring lots, never a silent nearest-lot pick. Several such addresses: the message only. More than 10 lots on one address: \"This address has many lots. Add a unit number or pick a nearby address.\" An intersection: \"That looks like an intersection. Type a house number to see the lots.\" (the map version is MF-60). Nothing is selected when the page opens.",
++    "purpose": "The \"choose your lot\" page (MF-53): where the search lands when an address does not resolve to exactly one lot, and its honest message states. One address over several lots: the lots are outlined on a map with a letter each, listed as cards (area, frontage, zoning) under the map, and the chosen lot opens its report. An address found with no linked lot: the plain message \"No lot linked yet\", the pin and the faint neighbouring lots, never a silent nearest-lot pick. Several such addresses: the message only. More than 10 lots on one address: \"This address has many lots. Add a unit number or pick a nearby address.\" An intersection: \"That looks like an intersection. Type a house number to see the lots.\" (the map version is MF-60). Nothing is selected when the page opens. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the card is the lead line (Lot letter, \"has the house\" or \"no building\", then \"faces {street}\" or \"at the back\") and the area; an implausible area reads \"Not available\" (RR-0444 2c). There is no frontage or zoning on the card (C.9, removed by the design) and no faint neighbouring lots on the unlinked state (B.8 removed; RR-0446, MORNING-DECISIONS.md:2302-2303: the several-lots map stays as built). The no-lot message ends \"Try a nearby address or report it.\", with \"report it\" a link to the Help topic wrong-lot.",
+     "data_story": "It reads one contract, GET /api/parcels/lookup?q= (C-001), through the same query the search page already filled (['parcel-search', q]), so the normal flow makes no extra request. The server names the outcome (`resolution`) and, only for multi_parcel and unlinked, sends the `map` block: lot outlines (parcels.geom), area (parcels.lot_size_sqm, the report's area rule), frontage (parcels.frontage_m), zoning (parcels.zoning_zn_string), marker points (parcels.centroid_lat/lng), the address pin (address_points.latitude/longitude), a start view and the faint neighbour outlines. It emits **no analytics event**.",
+     "under_126": "**CONVERTED (MF-53)** — LIST with `render.projection: map`, rendered by the shared mobile binding (LotMapBinding.tsx props, SurfaceRenderer.tsx parts) from this descriptor and its content file. The map is react-native-maps' own MapView, Polygon and Marker configured by props; it owns no component (`owns.components[]` is empty)."
+   },
+@@ -54,7 +54,7 @@
+     "spec_version": "0-draft",
+     "versioning": {
+       "answer": "none",
+-      "why": "It reads the lookup response as sent; `resolution` and `map` are optional in the mobile mirror, so a payload from an older server still parses and falls back to the client derivation.",
++      "why": "It reads the lookup response as sent; `resolution` and `map` are optional in the mobile mirror, so a payload from an older server still parses and falls back to the client derivation. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the client derivation is deleted (task-450 Q19), so a payload without `resolution` reads as no_match and goes back to search.",
+       "evidence": [
+         "mobile/src/lib/schemas.ts — ConsumerParcelLookupResultSchema (resolution, map optional)"
+       ]
+@@ -109,7 +109,7 @@
+         "producing_steps": [
+           "parcels"
+         ],
+-        "chain_position": "sources[1]",
++        "chain_position": "sources[4]",
+         "owner_spec": "docs/specs/01-pipeline/55_source_parcels.md",
+         "evidence": [
+           "src/lib/parcels/lot-map.ts — resolveLotMap (the lot statement)",
+@@ -148,7 +148,7 @@
+         "producing_steps": [
+           "link_parcel_addresses"
+         ],
+-        "chain_position": "sources[3]",
++        "chain_position": "sources[8]",
+         "owner_spec": "docs/specs/01-pipeline/56_link_parcel_addresses.md",
+         "evidence": [
+           "src/lib/parcels/lot-map.ts — the pin statement"
+@@ -162,7 +162,7 @@
+         "producing_steps": [
+           "link_massing"
+         ],
+-        "chain_position": "sources[4]",
++        "chain_position": "sources[15]",
+         "owner_spec": "docs/specs/01-pipeline/56_source_massing.md",
+         "evidence": [
+           "src/lib/parcels/lot-map.ts — the lot statement's has_footprint EXISTS (SRCH.LOTCARD, RR-0284): footprint presence only, no geometry"
+@@ -236,7 +236,7 @@
+     "breakpoints": "mobile_first",
+     "export": "none",
+     "list": {
+-      "item_archetype": "lot card (Lot letter, area, frontage • zoning) under the map; on the map a polygon and a letter marker per lot",
++      "item_archetype": "lot card (Lot letter, area, frontage • zoning) under the map; on the map a polygon and a letter marker per lot Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the card reads the lead line and the area only; its screen-reader label is that same text.",
+       "pagination": "none",
+       "recycling": "none — at most 10 lots by the contract"
+     }
+@@ -410,7 +410,7 @@
+   "deviations": [
+     {
+       "from": "Spec 126 §11a.1 closed binding set (content, contract, ...): no source for client-reshaped map values",
+-      "why": "P35-D14 a form: the query text, the lot count, the lot letters, the start view as a map region, the pin, the dark map style (the app's existing DARK_MAP_STYLE, mobile/src/constants/tokens.ts) and the polygons (GeoJSON reshaped to react-native-maps coordinates and holes) are derived on the client by mobile/src/lib/lotMap.ts and bind as {\"derived\": name}. Closed list: query, lot_count, region, pin, map_style, letter.<i>, lots.<i>.marker, lots|neighbours.<i>.polygons.<j>.coordinates|holes (LOT_MAP_DERIVED_NAMES in LotMapBinding.tsx; the mobile golden test refuses any other).",
++      "why": "P35-D14 a form: the query text, the lot count, the lot letters, the start view as a map region, the pin, the dark map style (the app's existing DARK_MAP_STYLE, mobile/src/constants/tokens.ts) and the polygons (GeoJSON reshaped to react-native-maps coordinates and holes) are derived on the client by mobile/src/lib/lotMap.ts and bind as {\"derived\": name}. Closed list: query, lot_count, region, pin, map_style, letter.<i>, lots.<i>.marker, lots|neighbours.<i>.polygons.<j>.coordinates|holes (LOT_MAP_DERIVED_NAMES in LotMapBinding.tsx; the mobile golden test refuses any other). Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): the map style is light (userInterfaceStyle light, SRCH.DAYLIGHT), not dark; neighbours.<i>.polygons are no longer drawn (no neighbour lots, RR-0446).",
+       "adjudicated_by": "operator 2026-11-09, Wave 1 decision batch item 13 (\"P35-D14 (a) deviation\"), applied to this page by MF-53 plan v4 (operator 2026-11-11: \"\\\"choose your lot\\\" and \\\"address issues\\\" screens should be built now\")",
+       "date": "2026-11-11"
+     },
+@@ -444,7 +444,7 @@
+       "check_id": "parceldisambig_intersection_deferred"
+     },
+     {
+-      "what": "The map is hidden from screen readers; the lot cards are the accessible list of the same lots. Faint neighbours (no linked lot) are map-only: a screen-reader user gets the message and its \"Try a nearby address.\" line.",
++      "what": "The map is hidden from screen readers; the lot cards are the accessible list of the same lots. Faint neighbours (no linked lot) are map-only: a screen-reader user gets the message and its \"Try a nearby address.\" line. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept): no neighbours are drawn (RR-0446); a screen-reader user gets the message, now \"Try a nearby address or report it.\" with the link \"report it\".",
+       "measured": "mobile/src/components/surfaces/LotMapBinding.tsx — map-frame importantForAccessibility no-hide-descendants",
+       "check_id": "parceldisambig_no_silent_fallback"
+     }
+diff --git a/scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json b/scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json
+index add8f5192306c4d96a1c1adbbf0a25989a6b46fa..21c8d90592d9cc242e027af18d3528a8c685fda4 100644
+--- a/scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json
++++ b/scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json
+@@ -10,5 +10,7 @@
+   "help.mailto.general": "Email support",
+   "help.mailto.lot_match": "Report incorrect lot match",
+   "help.mailto.wrong_lot": "Wrong address or lot",
+-  "help.title": "Help & Support"
++  "help.title": "Help & Support",
++  "nav.home": "MaxBLD",
++  "nav.sign_in": "Log in"
+ }
+diff --git a/scripts/surfaces/parcel_product/F06/surfaces/web_maxbld_error.content.json b/scripts/surfaces/parcel_product/F06/surfaces/web_maxbld_error.content.json
+index 3dc63092626dfc61ac107cbede9659ce0ed72d68..6318d80809e3c89ae5935b44eb33cd492c2ec443 100644
+--- a/scripts/surfaces/parcel_product/F06/surfaces/web_maxbld_error.content.json
++++ b/scripts/surfaces/parcel_product/F06/surfaces/web_maxbld_error.content.json
+@@ -6,6 +6,8 @@
+   "footer.legal": "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.",
+   "footer.privacy": "Privacy Policy",
+   "footer.terms": "Terms of Service",
++  "nav.home": "MaxBLD",
++  "nav.sign_in": "Log in",
+   "not_found.body": "There is no MaxBLD page at this address.",
+   "not_found.title": "Page not found"
+ }
+diff --git a/scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json b/scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json
+index d11c3e7eaa7487f1dbb1d5c25bd74cce21b98d48..82322ba55283d2b0e3db612915a21443ee1541d0 100644
+--- a/scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json
++++ b/scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json
+@@ -3,6 +3,8 @@
+   "footer.legal": "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.",
+   "footer.privacy": "Privacy Policy",
+   "footer.terms": "Terms of Service",
++  "nav.home": "MaxBLD",
++  "nav.sign_in": "Log in",
+   "privacy.intro": "This policy explains what personal information MaxBLD collects, why, who we share it with, and how you can delete it or ask to see it. It covers the website at maxbld.ca and the MaxBLD app for iOS and Android.",
+   "privacy.s1.account": "Account.",
+   "privacy.s1.account.1": "Your name and email.",
+diff --git a/scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json b/scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json
+index b9a33390972f970f797a677c8c801f5dc8838f7f..6f39587eca813562545fb041e5efe2665129351c 100644
+--- a/scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json
++++ b/scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json
+@@ -3,6 +3,8 @@
+   "footer.legal": "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.",
+   "footer.privacy": "Privacy Policy",
+   "footer.terms": "Terms of Service",
++  "nav.home": "MaxBLD",
++  "nav.sign_in": "Log in",
+   "terms.intro": "These terms are an agreement between you and MaxBLD (\"we\", \"us\"). They cover the MaxBLD website at maxbld.ca and the MaxBLD app for iOS and Android. By creating an account you agree to these terms. If you do not agree, do not use MaxBLD.",
+   "terms.s1.basis": "Reports are based on public City of Toronto data and our reading of it.",
+   "terms.s1.changes": "Changes to the service. We may change, add or remove features.",
+diff --git a/src/components/surfaces/web/StaticBinding.tsx b/src/components/surfaces/web/StaticBinding.tsx
+index ed219085a18758532112a2a7ee280baaee59ab18..f78f281672e08e7093164c90e2be36a49820458a 100644
+--- a/src/components/surfaces/web/StaticBinding.tsx
++++ b/src/components/surfaces/web/StaticBinding.tsx
+@@ -216,6 +216,11 @@ const heroNode = (s: StaticSection): StaticNode => {
+       media.push(textNode(p, { key, testID: 'landing-caption', className: L.caption }));
+     }
+   });
++  // SEARCHFIX.3 H Q2, H Q4 (task-451, dated 2026-11-24; GROUNDER-QUESTIONS.md:75, :77): a hero of only the wordmark and nav links is a plain page's header:
++  // the nav alone, as the <header>. Any other title-less hero still throws.
++  if (title === null && s.parts.every((p) => p.role === 'wordmark' || p.role === 'nav')) {
++    return node('Group', { key: s.id, testID: `static-${s.id}`, id: s.id, component: 'header', className: L.nav }, [...nav, node('Group', { key: `${s.id}-links`, className: L.navLinks }, links)]);
++  }
+   if (title === null) fail(`${s.id}: a hero has a title`);
+   return node('Stack', { key: s.id, testID: `static-${s.id}`, id: s.id, component: 'header', className: L.hero }, [
+     node('Group', { key: `${s.id}-nav`, component: 'nav', className: L.nav }, [...nav, node('Group', { key: `${s.id}-links`, className: L.navLinks }, links)]),
+@@ -325,7 +330,8 @@ export function staticWebTree(page: StaticPage): StaticNode {
+     if (!Array.isArray(s.parts) || s.parts.length === 0) fail(`${at}: no parts`);
+     return { kind: s.kind, id: s.id, parts: (s.parts as unknown[]).map((p, j) => checkPart(p, s.kind as string, `${at} part ${j}`)) };
+   });
+-  const landing = sections.some((s) => s.kind === 'hero');
++  // SEARCHFIX.3 (task-451): the landing is a page with a titled hero; a plain page's header hero keeps the narrow column.
++  const landing = sections.some((s) => s.kind === 'hero' && s.parts.some((p) => p.role === 'title'));
+   return node('Stack', { key: 'page', testID: 'static-page', component: 'main', className: L.screen }, [
+     node('Stack', { key: 'column', className: landing ? L.wide : L.column }, sections.map((s) => (KIND_NODES[s.kind] as (x: StaticSection) => StaticNode)(s))),
+   ]);
+

@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:24:19.482Z file_sha256=285cd2b0170e54c0ee13b703dda85747fbf2ce5ddf362c9e64ae7840beb27d9d prompt_sha256=35ef2f4fa172d3dee03c4ffcf318a4c04dbff0148f2318deb1af56f12a63f0bf
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-mobile-99-p8.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — task-451 AC6 "Objective C.3 carries a dated note: no neighbour lots" — NONE, the note lands elsewhere per Implementation Notes "The doc-2 dated notes (AC6 C.3, C.7, C.12, B.6/B.7, C.9) ... land in their own commit" — AC6 has no artifact in this chunk, cannot see it — land the C.3 dated-note commit before merge and confirm it survives.
+DEFER severity=LOW — RR-0444 / AC3 "The no-lot line ends 'or report it' and links to the wrong-lot help topic" — src/tests/surfaces/lot-map-help-link.logic.test.ts "expect(link.props.onPress).toEqual(openHelp(TOPIC))" — only the multi-lot and address-notice links to wrong-lot are asserted here, no assertion on the unlinked "ends 'or report it'" text in this chunk, cannot see it — confirm the unlinked.body/report line is locked in the mobile golden chunk.
+MET — RR-0442 "It should open on an exact match" — src/tests/consumer-parcel-lookup.infra.test.ts "expect(uniqueReturns(fs.readFileSync(RESOLVER, 'utf8'))).toBe(2)" — locks exactly two `unique` returns (exact read + typed-address-in-full), so a lot opens only on an exact match.
+MET — RR-0446 / "reuse LOT_SIZE_PLAUSIBLE_M2" — src/tests/consumer-parcel-lookup.infra.test.ts "expect(lib()).toMatch(/import \{ LOT_SIZE_PLAUSIBLE_M2 \} from .../)" and "expect(lib()).not.toMatch(/\b(50|5000|5_000)\b/)" — locks the one home and forbids a typed bound, so no new size setting.
+MET — §6.5 dated-note pattern (2026-11-24, "prior text kept") — src/tests/surfaces/search-follow-ups.logic.test.ts "// SEARCHFIX.3 V1 (task-451 AC2, dated 2026-11-24): the prior title said ..." — keeps the superseded reading in a dated note rather than deleting it.
+MET — §10 operating boundaries — diff paths are only "src/tests/..." files, none is an out-of-scope target ("mobile/src/store/*.ts", "mobile/app/**/_layout.tsx", "mobile/src/hooks/useUserProfile.ts", "stateDebug.ts").
+REJECT — §6.1 atomic-selector mandate — this chunk might be accused of whole-store reads / no-`useShallow` — it holds only test files (src/tests/**), no component or store selector code, so the mandate does not touch it.
+REJECT — RR-0392 "Push for all 4" — the SEARCHFIX.1 (task-449) T6/T7/T8 blocks might be accused of uninvited scope in a task-451 diff — RR-0392 "Push for all 4" and RR-0448 "8" name all search-fix tasks in one push and the blocks cite pasted RR-0442/RR-0443c, so they are named.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: none
+
+---
+⏱  64118ms (64.1s)
+📊 Tokens — total: 41911, input: 28293, output: 13618, reasoning: 12873

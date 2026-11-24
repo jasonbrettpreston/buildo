@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T17:26:54.402Z file_sha256=6bf0117cdd41895096bc7399f4104085d7d01dddebee419db5587ad3bbdfc0d1 prompt_sha256=13ecd5b173f8e41fb960e84c558f9c544ec387a7a1bcf808dcad111552822856
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-error-paths-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — docs/reports/generated/127-surface-registry.md "not_evaluated, semi_pending, not_produced, then openReport in withTransaction" — the diff deletes the old guarantee "`src/app/api/parcels/lookup/route.ts:124 (the .strict() parse runs before the meter)`", so nothing now rules out the meter running before the response is validated; a page that fails the strict parse could be counted and then returned as an error — restore the ordering sentence with the current line numbers of the strict parse and of openReport, or say the count is only taken after validation.
+
+DEFER severity=MED — docs/reports/generated/127-surface-registry.md "partial: `src/lib/parcels/consumer-lookup.ts:77-79, 100-102, 111-113, 133-136` (tier-stratified safeParse degradation -> warnings[] entries, payload still returned)" — on a tier parse failure the payload is still returned with a warning, so an unparseable area is not necessarily nulled; the new "Not available" rule only covers numbers outside LOT_SIZE_PLAUSIBLE_M2 and the raw value can still reach the card — state in consumer-lookup.ts that any area that fails its tier parse is also coerced to null, and cover that with a test.
+
+DEFER severity=MED — .cursor/MCFRONTEND-QUEUE.md "the Help page has the topic wrong-lot since task-450, so every link of the page opens it" — all five help links now carry topic `wrong-lot` (goldens: "topic": "wrong-lot") while this chunk never states what the Help surface renders for a topic it does not know (task-450 not yet deployed, or a later rename), so a stale deploy opens an empty help view with no topic match — state and test the Help page's unknown or empty topic fallback (show the topic list), and keep the topic name single-sourced.
+
+DEFER severity=LOW — mobile/__tests__/fixtures/lotMap.situations.json "\"parcelId\": \"PCL-C3\", \"area\": null," with the note "The fixture lot C … (the lot whose response lacks the footprint and street fields) now has area null" — one lot now carries both the older-server fallback and the null area, so no golden shows "Not available" beside a real lead ("has the house · faces X"); an empty area on an otherwise normal card is unverified — add a lot with frontageStreet and footprint present and area null, or split the two situations.
+
+REJECT — mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json "\"content\": \"lot.letter\"" — an absent frontageStreet or footprint field looks like it could render "faces null" or a false "has the house" — handled: the lead is picked by separate content keys (lot.lead.house_faces, no_building_faces, house, no_building) with a lot.letter fallback, so a missing field yields a shorter label, never a placeholder.
+
+REJECT — mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json "\"disabled\": true" and registry "a re-open in the month is free" — two taps on Continue could push twice and open two reports, a double count — handled: page is null for every lot while the web live switch is off (nothing is metered today), and on the metered path the openReport lock plus window count make the second open of the same parcel_ref in the billing month free.
+
+VERDICT: PASS on error-path safety
+Paths walked: error (500 envelope, route.ts:126-128), empty (area null, missing footprint/street fields, unknown help topic), retry/time-out (slow_query log at 500ms, no bound stated), double-submit (Continue twice, month re-open), degrade (tier safeParse partial, lead fallback), idempotency (usage_events per user + parcel_ref + billing month)   Unguarded: 2
+
+---
+⏱  114281ms (114.3s)
+📊 Tokens — total: 48433, input: 34539, output: 13894, reasoning: 13006

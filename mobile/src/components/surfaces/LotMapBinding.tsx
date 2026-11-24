@@ -38,7 +38,8 @@ const content = (key: string): Ref => ({ content: key });
 const contract = (p: string): Ref => ({ contract: `${CONTRACT}.${p}` });
 const derived = (name: string): Ref => ({ derived: name });
 const node = (component: string, props: Record<string, unknown>, children: Child[] = []): PropsNode => ({ component, props, children });
-/** A lot fact that may be null: the contract value, else the content null value "—" (never "0", never blank). */
+/** A lot fact that may be null: the contract value, else the content null value (never "0", never blank). SEARCHFIX.3 (task-451, RR-0444 2c): the null value
+ *  reads "Not available"; the server sends a null area for an implausible lot size (src/lib/parcels/consumer-lookup.ts, LOT_SIZE_PLAUSIBLE_M2). */
 const fact = (value: string | null, path: string): Ref => (value === null ? content('lot.null') : contract(path));
 
 const pill = (): PropsNode =>
@@ -85,23 +86,37 @@ const errorNotices = (s: LotMapSituation): PropsNode[] => [
     : []),
 ];
 
+/** The Help & Support topic of every link on this page (doc-2 B.7, "to /help?topic=wrong-lot"; the Help page has it since task-450). */
+const HELP_TOPIC = 'wrong-lot';
+
+// SEARCHFIX.3 V2 (task-451; doc-2 B.6 "Try a nearby address or report it." and B.7 "report it inside the no-lot message", choose-lot-states.html:277): the
+// line is the body, an inline "report it" link (a nested Text: the vendored AlertDescription is the RN Text, so the press is the native nested-Text press), then the stop.
 const unlinkedNotice = (): PropsNode =>
   notice('unlinked', 'MapPin', L.noticeIconNeutral, [
     node('Text', { key: 'unlinked-heading', className: L.noticeHeading, role: 'header' }, [content('unlinked.heading')]),
     node('AlertDescription', { key: 'unlinked-text', className: L.noticeTextNeutral }, [
       { text: content('unlinked.body'), vars: { address: contract('map.address') } },
+      node('Text', {
+        key: 'unlinked-report',
+        testID: 'parcel-lotmap-report',
+        className: L.helpLinkText,
+        accessibilityRole: 'link',
+        onPress: { action: 'open_help', topic: HELP_TOPIC, q: derived('query') },
+      }, [content('unlinked.report')]),
+      node('Text', { key: 'unlinked-stop' }, [content('unlinked.stop')]),
     ]),
   ]);
 
-/** SRCH.C12 / B.7: the v8 link to Help & Support, prefilled with the typed query (the existing action open_help). */
-const helpLink = (topic: 'lot_match' | 'address_match'): PropsNode =>
+/** SRCH.C12 / B.7: the v8 link to Help & Support, prefilled with the typed query (the existing action open_help). SEARCHFIX.3 (task-451): every link takes
+ *  the topic wrong-lot (doc-2 B.7); the old topics lot_match and address_match stay on the Help page. */
+const helpLink = (): PropsNode =>
   node('Button', {
     key: 'help',
     testID: 'parcel-lotmap-help',
     variant: 'link',
     className: L.helpLink,
     accessibilityRole: 'link',
-    onPress: { action: 'open_help', topic, q: derived('query') },
+    onPress: { action: 'open_help', topic: HELP_TOPIC, q: derived('query') },
   }, [node('Text', { key: 'help-text', className: L.helpLinkText }, [content('help.address.link')])]);
 
 /** C.11 (task-362; choose-lot.html:278): "Pick a lot on the map or in the list." under the disabled Choose a lot button. */
@@ -112,7 +127,7 @@ const pickHint = (): PropsNode =>
 const helpRow = (): PropsNode =>
   node('View', { key: 'help-row', testID: 'parcel-lotmap-help-row', className: L.helpRow }, [
     node('Text', { key: 'help-prompt', className: L.helpPrompt }, [content('help.lot.prompt')]),
-    helpLink('lot_match'),
+    helpLink(),
   ]);
 
 const polygon = (key: string, coords: string, holes: string, stroke: string, fill: string, width: number, parcelPath: string): PropsNode =>
@@ -168,17 +183,16 @@ const cards = (s: LotMapSituation): PropsNode[] =>
     const lot = s.map!.lots[i]!;
     const checked = l.parcelId === s.selectedParcelId;
     const area = fact(lot.area, `map.lots.${i}.area`);
-    const frontage = fact(lot.frontage, `map.lots.${i}.frontage`);
-    const zoning = fact(lot.zoning, `map.lots.${i}.zoning`);
     // C.7 (RR-0284; RR-0289, MORNING-DECISIONS.md:1117, massing is reliable for presence only): a footprint says "has the house", none says
-    // "no building" (choose-lot.html:306); the street phrase when the street is populated. A response without the field (an older server or a
-    // cached one) says neither: the plain lot letter.
+    // "no building" (choose-lot.html:306); "faces {street}" when the street is populated, else "at the back" (SEARCHFIX.3 V1, task-451; MD:776, doc-2 C.7).
+    // A response without the footprint field (an older server or a cached one) says neither: the plain lot letter.
     const known = lot.hasFootprint !== undefined;
     const house = lot.hasFootprint === true;
     const street = typeof lot.frontageStreet === 'string' && lot.frontageStreet.trim() !== '';
     const leadKey = !known ? 'lot.letter'
       : house ? (street ? 'lot.lead.house_faces' : 'lot.lead.house')
         : street ? 'lot.lead.no_building_faces' : 'lot.lead.no_building';
+    const lead: Child = { text: content(leadKey), vars: { letter: derived(`letter.${i}`), ...(known && street ? { street: contract(`map.lots.${i}.frontageStreet`) } : {}) } };
     return node('Button', {
       key: `card-${l.parcelId}`,
       testID: `parcel-lotmap-card-${l.parcelId}`,
@@ -186,11 +200,12 @@ const cards = (s: LotMapSituation): PropsNode[] =>
       className: checked ? L.cardChecked : L.card,
       role: 'radio',
       accessibilityState: { checked },
-      accessibilityLabel: { text: content('lot.label'), vars: { letter: derived(`letter.${i}`), area, frontage, zoning } },
+      // SEARCHFIX.3 V3 (task-451; GROUNDER-H D1 "the spoken name is the visible text"): the label is the lead line and the area, the card's own text.
+      accessibilityLabel: { text: content('lot.label'), vars: { lead, area } },
       onPress: { action: 'select', parcelId: contract(`map.lots.${i}.parcelId`) },
     }, [node('View', { key: 'card-row', className: L.cardRow }, [
       node('View', { key: 'card-text' }, [
-        node('Text', { key: 'card-title', className: L.cardTitle }, [{ text: content(leadKey), vars: { letter: derived(`letter.${i}`), ...(known && street ? { street: contract(`map.lots.${i}.frontageStreet`) } : {}) } }]),
+        node('Text', { key: 'card-title', className: L.cardTitle }, [lead]),
         node('Text', { key: 'card-area', className: L.cardArea }, [area]),
       ]),
       ...(checked ? [node('Icon', { key: 'check', icon: 'Check', size: Z.icon, color: H.check })] : []),
@@ -200,12 +215,12 @@ const cards = (s: LotMapSituation): PropsNode[] =>
 /** Nothing picked yet: Choose a lot is disabled and its hint shows (one predicate for both; choose-lot.html:278). */
 const awaitingPick = (s: LotMapSituation): boolean => s.route === null;
 
+// SEARCHFIX.3 V3 (task-451): a non-null route always has a picked letter (lotMap.ts builds the route from the picked lot), so the label is "Choose a lot" or
+// "Continue with Lot X"; the button speaks its visible text (GROUNDER-H D1), and the generic "open the report" label is retired.
 const continueButton = (s: LotMapSituation): PropsNode => {
   const label: Child = s.route === null
     ? content('select.none')
-    : s.selectedLetter === null
-      ? content('select.label')
-      : { text: content('select.lot'), vars: { letter: derived(`letter.${s.lots.findIndex((l) => l.parcelId === s.selectedParcelId)}`) } };
+    : { text: content('select.lot'), vars: { letter: derived(`letter.${s.lots.findIndex((l) => l.parcelId === s.selectedParcelId)}`) } };
   return node('Button', {
     key: 'continue',
     testID: 'parcel-lotmap-continue',
@@ -214,7 +229,7 @@ const continueButton = (s: LotMapSituation): PropsNode => {
     disabled: awaitingPick(s),
     accessibilityRole: 'button',
     accessibilityState: { disabled: awaitingPick(s) },
-    accessibilityLabel: content('select.label'),
+    accessibilityLabel: label,
     // aria-describedby="pick-hint" of the mock: the hint line travels with the disabled button.
     ...(awaitingPick(s) ? { accessibilityHint: content('select.hint') } : {}),
     onPress: s.route === null ? null : { action: 'push', route: s.route },
@@ -231,13 +246,13 @@ const body = (s: LotMapSituation): PropsNode[] => {
     case 'error':
       return errorNotices(s);
     case 'intersection':
-      return [notice('intersection', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'intersection-text', className: L.noticeTextNeutral }, [content('state.intersection')])]), helpLink('address_match')];
+      return [notice('intersection', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'intersection-text', className: L.noticeTextNeutral }, [content('state.intersection')])]), helpLink()];
     case 'too_many_lots':
-      return [notice('too-many', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'too-many-text', className: L.noticeTextNeutral }, [content('state.too_many')])]), helpLink('address_match')];
+      return [notice('too-many', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'too-many-text', className: L.noticeTextNeutral }, [content('state.too_many')])]), helpLink()];
     case 'unlinked_no_pin':
-      return [unlinkedNotice(), helpLink('address_match')];
+      return [unlinkedNotice(), helpLink()];
     case 'unlinked':
-      return [unlinkedNotice(), helpLink('address_match'), ...mapView(s)];
+      return [unlinkedNotice(), helpLink(), ...mapView(s)];
     case 'multi_parcel':
       return [
         node('View', { key: 'list-header', testID: 'parcel-lotmap-header', className: L.listHeader }, [

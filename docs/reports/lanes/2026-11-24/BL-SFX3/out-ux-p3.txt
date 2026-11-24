@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T17:27:36.837Z file_sha256=46b0bf2ea512ea32f469363134f7466cd751e978e51d7e0e83a8a36a446bb93c prompt_sha256=873ac78d4536290c0d2b3710162b2b83085e343b538fadb3a9dbb05fd924d629
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-ux-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/surfaces/surface-conformance.logic.test.ts:262 "unlinked.report and unlinked.stop added, select.label retired" vs design "The no-lot line ends "or report it" and links to the wrong-lot help topic" — the count note records a second new no-lot string beside "report it", so the person on the no-lot card may be offered two exits where the approved card text names one — check the content chunk renders only "or report it" as the sentence end, otherwise get a ruling before merge.
+
+DEFER severity=LOW — src/tests/surfaces/surface-validate.logic.test.ts:92 "nav.home "MaxBLD" and nav.sign_in "Log in" in web_help, web_terms, web_privacy and web_maxbld_error" — this puts a Log in link in front of a logged-out person on the maxbld error page, and the pasted design lines ("H Q2/H Q4 GROUNDER-QUESTIONS.md:75, :77") are not included so the error page's inclusion cannot be confirmed — cannot see; confirm those grounder lines cover the error page before merge.
+
+DEFER severity=LOW — src/tests/surfaces/surface-validate.logic.test.ts:92 "goldens unchanged (100)" — acceptance #1 "reads "Not available" on the card and in its screen-reader label" and #4 "The screen-reader label contains the visible card text" are not exercised by anything in this chunk, so the screen-reader half of the card is unjudged here — cannot see the binding or content chunk in this run; it is owed in that run, not deferred indefinitely.
+
+REJECT — src/tests/surfaces/surface-validate.logic.test.ts:92 "S-sbind ok (17 surfaces, 436 strings)" — a moved string count looks like a visible change to the person — it only locks the number the surfaces now emit, which is what the note measured with `surface-validate --check` before (427) and after (436), so it matches the design text and is harmless.
+
+VERDICT: PASS on the person's experience
+States checked: none drawn by this chunk (test count locks only); states named by the notes and left to their own chunks: plain-page header first view (help, terms, privacy, maxbld error), lot card no-lot line, screen-reader label   Dead ends found: 0
+
+---
+⏱  18406ms (18.4s)
+📊 Tokens — total: 9800, input: 6447, output: 3353, reasoning: 2824

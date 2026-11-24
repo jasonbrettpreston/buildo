@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T17:26:40.570Z file_sha256=7f400d89480381e799f9e68c38e39ea1cad6cbc3ca48fa288708c0053c35d457 prompt_sha256=7314fb30682a54fcf5c9e9f28309bc6c72f6680d78dbad71a6dfcce4bb11a12d
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-engineering-eng-all-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 5. Testing Standards "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails." — plan Implementation Notes "Mobile jest tests (lotMapPage.behaviour, lotMapScreens.golden) are not reached by the pre-commit related run (src/ and scripts/ only): their red and green are UNVERIFIED until the push station, as for task-450." — the only suites pinning AC1 card text and the regenerated mobile goldens were never shown failing, and those goldens were rewritten by "lotmap-golden-capture --write", so their green proves nothing about pre-change behaviour — run both mobile suites red against the pre-change tree at the push station and attach the failing output under docs/reports/red-evidence/ before merge.
+
+DEFER severity=MED — 12. Frontend Foundation Tooling "Pure functions with arithmetic invariants ... distance/unit conversions ... MUST have at least one `fast-check` property test asserting the invariant." — src/tests/consumer-parcel-lookup.infra.test.ts:393 "expect(areaOf('283.5')).toBe('3,052 sq ft · 284 m²');" — the changed derivation is a bounds window plus an m²/sq ft conversion, pinned only by four hand-picked numbers (49, 50, 5000, 5001) — add a fast-check property under src/tests/property/ (areaOf non-null implies the stored size lies inside LOT_SIZE_PLAUSIBLE_M2, null outside).
+
+DEFER severity=MED — 5. Testing Standards "A green suite in the wrong layer is false confidence." — src/tests/consumer-parcel-lookup.infra.test.ts:388 "it('a placeholder size, one under the window and one over it give null', () => {" — pure derivation (assembleLotMap area window, num('') to null) is pinned only inside an `.infra.test.ts`, while §5.2 mandates `*.logic.test.ts` for "Pure functions, scoring, classification" — move or mirror these cases into a `*.logic.test.ts`.
+
+DEFER severity=MED — 5. Testing Standards "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/consumer-parcel-lookup.infra.test.ts:405 "const { payload } = assembleConsumerPayload({ parcel_id: 'E1', lot_size_sqm: '', max_build_fsi: '', ..." — parcel rows and lot rows (:386 "lots: [{ parcel_id: 'P1', ...") are built as inline object literals, no factory import — build them through src/tests/factories.ts (extending it for the new fields) and pass the factory output in.
+
+DEFER severity=MED — 2. Error Handling & Stability "If using `!`, you must document why in an inline comment." — src/tests/consumer-parcel-lookup.infra.test.ts:410 "const cb = payload.neighbourhood.comparableBuilds![0]!;" — two stacked non-null assertions on an optional field, no justification comment (same at src/tests/surfaces/static-web-binding.ui.test.tsx:183 "expect(header![1])") — use optional chaining with an explicit expect, or add the one-line justification inline.
+
+DEFER severity=MED — 1. Architecture & UI Standards "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of 44px x 44px." — src/tests/surfaces/static-web-binding.ui.test.tsx:183 "expect(header![1]).toMatch(/<a\b[^>]*href=\"\\/\"[^>]*>[\\s\\S]*?MaxBLD[\\s\\S]*?<\\/a>/);" — the two new header links are pinned by href, text and order only, nothing in the pasted material proves the 44px minimum or the §11 "375px viewport test" item — assert the header link's min-h-[44px] min-w-[44px] (or the shared button minimum) and add a 375px render check.
+
+DEFER severity=MED — 11. Plan Compliance Checklist "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests." — NONE — the pasted lane record lists red/green counts, generators and deviations but no PASS/FAIL self-skeptical checklist walked before the test run — add the 5-10 item checklist with PASS/FAIL per item to the implementation notes.
+
+REJECT — 11. Plan Compliance Checklist (Cross-Layer Contracts) — duplicating the plausible-size window instead of sourcing it from docs/specs/_contracts.json — the diff introduces no new threshold and pins the single import home, "expect(lib()).toMatch(/import \\{ LOT_SIZE_PLAUSIBLE_M2 \\} from '@\\/lib\\/report-projection\\/project';/);", so there is no new contract row to add.
+
+REJECT — 5. Testing Standards — retiring the RR-0289 "at the back is not used" lock without a `*.regression.test.ts` — the same test replaces it with a two-sided lock, "for (const k of ['lot.lead.house', 'lot.lead.no_building']) expect([k, mapContent[k]!.endsWith(' · at the back')]).toEqual([k, true]);", plus a dated note quoting MD:776, so no fence is left unguarded.
+
+MET — 5. Testing Standards — src/tests/surfaces/static-web-binding.ui.test.tsx:178 — the changed StaticBinding header gets `*.ui.test.tsx` coverage per the §5.2 pattern table.
+
+MET — 2. Error Handling & Stability — src/tests/consumer-parcel-lookup.infra.test.ts:389 — the infra test carries unhappy-path inputs (placeholder size, out-of-window, "abc", "" ), satisfying §2.1 for this file.
+
+MET — 5. Testing Standards — src/tests/surfaces/surface-validate.logic.test.ts:94 — the parity/drift lock is updated with a measured before/after ("427 -> 436 strings"), so the generated-artifact guard is kept, not dropped.
+
+MET — 5. Testing Standards — src/tests/consumer-parcel-lookup.infra.test.ts:121 — each new source-text lock carries its own RED plant ("it('RED plant: a source with a third `unique` return is caught'").
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 14   Unmet: 7
+
+---
+⏱  68825ms (68.8s)
+📊 Tokens — total: 45535, input: 29672, output: 15863, reasoning: 14379

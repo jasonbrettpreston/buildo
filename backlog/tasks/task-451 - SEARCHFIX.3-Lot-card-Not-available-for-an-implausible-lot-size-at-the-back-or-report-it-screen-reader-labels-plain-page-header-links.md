@@ -3,11 +3,11 @@ id: TASK-451
 title: >-
   SEARCHFIX.3 Lot card: "Not available" for an implausible lot size, "at the
   back", "or report it", screen-reader labels, plain-page header links
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-SFX3'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T16:47:00Z'
+updated_date: '2026-11-24T18:06:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -35,6 +35,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-24/BL-SFX3/REPORT.md
+  - docs/reports/lanes/2026-11-24/BL-SFX3/GROUNDER.md
+  - docs/reports/lanes/2026-11-24/BL-SFX3/TRIAGE.md
 type: fix
 ordinal: 150040
 ---
@@ -52,7 +55,7 @@ Must not: draw neighbour lots, or add a new size setting (reuse LOT_SIZE_PLAUSIB
 
 Runs after SEARCHFIX.2 (both write scripts/surfaces/_schema/static-page.json). Dated note owed: task-336.
 
-Files: src/lib/parcels/consumer-lookup.ts, mobile/src/components/surfaces/LotMapBinding.tsx, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json, mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json, scripts/surfaces/_schema/static-page.json, src/components/surfaces/web/StaticBinding.tsx, src/tests/surfaces/static-page.logic.test.ts, src/tests/surfaces/static-web-binding.ui.test.tsx, src/tests/surfaces/lot-map-help-link.logic.test.ts, src/tests/consumer-parcel-lookup.infra.test.ts, mobile/__tests__/lotMapPage.behaviour.test.tsx, mobile/__tests__/lotMapScreens.golden.test.ts, scripts/analysis/lot-map-data-check.mjs, src/tests/fixtures/surfaces/, mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json, scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json, scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json, scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json, scripts/surfaces/parcel_product/F06/surfaces/web_maxbld_error.content.json, scripts/surfaces/_schema/census/mobile-product.json, docs/reports/generated/127-surface-registry.md, docs/reports/generated/127-surface-review-queue.md, src/tests/surfaces/search-follow-ups.logic.test.ts, src/tests/surfaces/surface-validate.logic.test.ts, src/tests/surfaces/surface-conformance.logic.test.ts, .cursor/MCFRONTEND-QUEUE.md
+Files: src/lib/parcels/consumer-lookup.ts, mobile/src/components/surfaces/LotMapBinding.tsx, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.descriptor.json, mobile/src/generated/surfaces/mobile_parcel_disambiguation_map.json, scripts/surfaces/_schema/static-page.json, src/components/surfaces/web/StaticBinding.tsx, src/tests/surfaces/static-page.logic.test.ts, src/tests/surfaces/static-web-binding.ui.test.tsx, src/tests/surfaces/lot-map-help-link.logic.test.ts, src/tests/consumer-parcel-lookup.infra.test.ts, mobile/__tests__/lotMapPage.behaviour.test.tsx, mobile/__tests__/lotMapScreens.golden.test.ts, scripts/analysis/lot-map-data-check.mjs, src/tests/fixtures/surfaces/, mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json, mobile/__tests__/fixtures/lotMap.situations.json, scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json, scripts/surfaces/parcel_product/F06/surfaces/web_terms.content.json, scripts/surfaces/parcel_product/F06/surfaces/web_privacy.content.json, scripts/surfaces/parcel_product/F06/surfaces/web_maxbld_error.content.json, scripts/surfaces/_schema/census/mobile-product.json, docs/reports/generated/127-surface-registry.md, docs/reports/generated/127-surface-review-queue.md, src/tests/surfaces/search-follow-ups.logic.test.ts, src/tests/surfaces/surface-validate.logic.test.ts, src/tests/surfaces/surface-conformance.logic.test.ts, .cursor/MCFRONTEND-QUEUE.md
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -62,7 +65,7 @@ Files: src/lib/parcels/consumer-lookup.ts, mobile/src/components/surfaces/LotMap
 - [ ] #3 The no-lot line ends "or report it" and links to the wrong-lot help topic
 - [ ] #4 The screen-reader label contains the visible card text
 - [ ] #5 The lot-map smoke test renders the four error states as errors
-- [ ] #6 Objective C.3 carries a dated note: no neighbour lots
+- [x] #6 Objective C.3 carries a dated note: no neighbour lots
 <!-- AC:END -->
 
 ## Definition of Done
@@ -279,4 +282,24 @@ rg#6 MED folded this card's, uncondi
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-24 taken on the board at lane launch (lane BL-SFX3, worktree /Users/brettpreston_macmini/Buildo-wt-sfx3, branch wf2/inc1b-sfx3), RR-0240
+
+2026-11-24 build started (lane BL-SFX3): tests first per plan section 4; red is the refused commit attempt with only the test and task files staged (RR-0225). Mobile jest tests (lotMapPage.behaviour, lotMapScreens.golden) are not reached by the pre-commit related run (src/ and scripts/ only): their red and green are UNVERIFIED until the push station, as for task-450.
+
+2026-11-24 deviation (lane BL-SFX3): mobile/__tests__/fixtures/lotMap.situations.json is added to the Files line (precedent task-450, which added the paths its generators needed). Reason: once the card label and the zoning line no longer read lot.null, no committed golden used the key, and surface-validate refused "SV-SBIND mobile_parcel_disambiguation_map: orphan content key lot.null" (the golden test lotMapScreens "every content key is used by a committed golden" holds the same rule). The fixture lot C of multi_parcel_3plus and multi_parcel_3plus_none (the lot whose response lacks the footprint and street fields) now has area null, so the multi_parcel_3plus golden shows the area null value "Not available" (AC1). No other fixture value changed.
+
+2026-11-24 build (lane BL-SFX3), plan PLAN-451-v1 sections 3 and 4 followed. Red: the commit attempt with only the test and task files staged was refused, Test Files 7 failed, Tests 22 failed | 199 passed (lane red.out). Changes: consumer-lookup.ts num('') null (L2) and the map area null outside LOT_SIZE_PLAUSIBLE_M2 (ST3); map content lot.null Not available, the two no-street leads end at the back (V1, ruling 8.2 a), lot.label {lead}, {area}, select.label retired, unlinked.body ends 'or ' with unlinked.report and unlinked.stop (V2, ruling 8.1 b); LotMapBinding: inline report-it link (it reuses the existing link text class L.helpLinkText so it reads as a link), every help link topic wrong-lot (B.7), card label = lead + area, Continue label = its visible text, unreachable select.label branch deleted (V3); static-page.json header hero on web_help, web_terms, web_privacy and both web_maxbld_error states (H Q2, H Q4, ruling 8.5) and the R5 dated sentence; StaticBinding draws a wordmark-and-nav-only hero as the header and keeps the narrow column; nav.home MaxBLD and nav.sign_in Log in in the four content files (ruling 8.3); lot-map-data-check parseArgs error (L7); census entry and descriptor dated text and chain positions sources[4], [8], [15] (R3); doc-2 dated notes C.3 (AC6), C.7, C.12, B.6/B.7, C.9; MF-53 queue dated note. surface-validate --check 427 strings before, 436 after. Generators: emit-mobile-surfaces --write, lotmap-golden-capture --write (11), emit again, buildGoldens one-off (70 goldens, 5 rewritten), generate-surface-registry then --check clean. Mobile jest (lotMapPage.behaviour, lotMapScreens.golden): red and green UNVERIFIED until the push station; an in-memory tsx probe of the binding gave the expected card text, labels, the unlinked line, the four error notices and the single help topic wrong-lot (lane probe.out).
+
+2026-11-24 deviation (lane BL-SFX3): static-web-binding.ui.test.tsx (c) also indexes the web_maxbld_error error page's prose (children[0] -> [1]); the plan's index-shift list named web_help only. Found by the green commit's related run (1 failed), fixed in the same work commit.
+
+2026-11-24 work commit 04c181564 (hooks: GATE OK, POLICY CHECKS OK; pre-commit related run Test Files 17 passed | 1 skipped (18), Tests 419 passed | 7 skipped (426); lane green.out). The doc-2 dated notes (AC6 C.3, C.7, C.12, B.6/B.7, C.9) and the regenerated docs/reports/generated/rule-lists-by-kind.md (doc-2 grew) land in their own commit: check-task-files refuses a path outside the Files line beside code, and neither path is code.
+
+2026-11-24 merge 182a28053 of wf2/board (fe88ecf71), ordered by the orchestrator; doc-2 conflict kept both sides, rule-lists page regenerated. Output review round 1 on the merged head: context-r3.md, 52 DeepSeek lens outputs (lens set per the board table: plan-protocol output_off; 9 compliance lists), 184 findings (HIGH 24, MED 72, LOW 82, NIT 4) in docs/reports/lanes/2026-11-24/BL-SFX3/FINDINGS.md. Grounder owed.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+SEARCHFIX.3 landed in 04c181564 (work; hooks GATE OK, POLICY CHECKS OK; pre-commit related run Test Files 17 passed | 1 skipped (18), Tests 419 passed | 7 skipped (426); red refused first with Test Files 7 failed, Tests 22 failed), 0e491221e (doc-2 dated notes incl. C.3 no neighbour lots, AC6 at doc-2 line 170), dd40a13d5 (task-336 dated note), merge 182a28053 of wf2/board, review records 63c96df49. Lot card: Not available for a size outside LOT_SIZE_PLAUSIBLE_M2, at the back for a lot with no fronting street, the no-lot line ends or report it linking the wrong-lot topic, the screen-reader label is the visible card text; plain pages get the header links; surface strings 427 to 436. Phone tests never run: AC4, AC5 and the phone halves of AC1 to AC3 are UNPROVEN until the Mobile CI job on the pushed tip shows lotMapPage.behaviour.test.tsx and lotMapScreens.golden.test.ts green and one device tap of report it is recorded. The card is not DONE and not called working. (The phone tests run only in the GitHub Mobile CI job after a push, not at the push station.)
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 4 pile; grounder docs/reports/lanes/2026-11-24/BL-SFX3/GROUNDER.md; triage docs/reports/lanes/2026-11-24/BL-SFX3/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->

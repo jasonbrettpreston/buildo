@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:21:37.041Z file_sha256=92458a7528c02162796bcbb45d99e1cbb602af66066e93481cb9eef254deae05 prompt_sha256=d6b3826d6512ac9f0b6366edd9d98d83bbecb10485444a715a2fc0acee257d03
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-agents-s5-1to3-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0392 (card: "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)") — src/tests/consumer-parcel-lookup.infra.test.ts "const SFX_MARK = 'Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449';" — the change carries task-449's SEARCHFIX.1 locks (the two-unique-returns count, the descriptor count restatements, and a dated note required in docs/specs/03-mobile/100_mobile_parcel_cost_tool.md) while the card's folded list is "ST3/2c, V1, V2, V3 (with C.9), L2, L7, R3, X1, X6 (static-page half), R5, B.7 (map links), H Q2, H Q4" and no docs/specs path is on its Files line, so this card's close depends on another card's text — move the SEARCHFIX.1 block to task-449's change, or name T6/T7/T8 and the Spec 100 path on task-451's card.
+
+DEFER severity=MED — AC3 "The no-lot line ends "or report it" and links to the wrong-lot help topic" — src/tests/surfaces/lot-map-help-link.logic.test.ts "expect(link!.props.onPress).toEqual(openHelp(TOPIC));" (inside describe 'SRCH.C12 C.12: the multi-lot state ends with "Not sure which lot? Get...") — no pasted clause names the C.12 multi-lot help link changing from lot_match to wrong-lot; the dated note added above it cites only "doc-2 B.7 (doc-2:49)", and B.7 in this same test file is the address-confusion notice link — cite the ruling that covers the multi-lot link, or keep lot_match on that link.
+
+DEFER severity=LOW — card "The plan's section 2 lines are this card's acceptance tests, each red first." — Implementation Notes "Mobile jest tests (lotMapPage.behaviour, lotMapScreens.golden) are not reached by the pre-commit related run (src/ and scripts/ only): their red and green are UNVERIFIED until the push station" — the AC1 card/aria label text and the AC5 four-error-state smoke test have no red evidence anywhere in this material, only a note that red is deferred — record the red run for the two mobile test files at the push station and before the close.
+
+DEFER severity=LOW — AC1 "A lot size outside the plausible range reads "Not available" on the card and in its screen-reader label" — src/tests/consumer-parcel-lookup.infra.test.ts "expect(['123456789', 49, 5001, '49.99', '5000.01'].map(areaOf)).toEqual([null, null, null, null, null]);" — the only card-level "Not available" evidence here is the fixture lot whose response lacks the size at all ("the multi_parcel_3plus golden shows the area null value "Not available" (AC1)"), so nothing pasted drives an out-of-range stored size through to the card text or its label — feed one out-of-range stored size through the binding or golden so AC1's card and label half is exercised for the implausible-range case, not only the missing-field case.
+
+REJECT — AC2 "A lot with no fronting street reads "at the back"" — the change drops the old lock "expect(Object.values(mapContent).filter((v) => /at the back/.test(v))).toEqual([]);" and the RR-0289 title wording — RR-0289 is not in the pasted clauses and AC2 mandates the phrase, so removing that negative lock is required here, not drift.
+
+MET — AC2 — src/tests/surfaces/search-follow-ups.logic.test.ts "'lot.lead.house': 'Lot {letter} · has the house · at the back'," — the two no-street leads carry the phrase and the two faces leads and lot.letter are asserted not to hold it.
+
+MET — card "Must not: ... add a new size setting (reuse LOT_SIZE_PLAUSIBLE_M2, src/lib/report-projection/project.ts:79)" — src/tests/consumer-parcel-lookup.infra.test.ts "expect(lib()).toMatch(/import \{ LOT_SIZE_PLAUSIBLE_M2 \} from '@\/lib\/report-projection\/project';/);" — the lock requires the one home for the window and no typed bound in the lib.
+
+MET — AC3 "links to the wrong-lot help topic" (B.7 notice links) — src/tests/surfaces/lot-map-help-link.logic.test.ts "expect(link.props.onPress).toEqual(openHelp(TOPIC));" under 'SRCH.C12 B.7' plus the web_help mailto-topic assertion — the notice links take wrong-lot and the topic is checked to exist on the Help page.
+
+MET — rule list "each chunk goes against every list part and is stamped chunk c of m with its path list" — material header "part 1 of 1 chunk 3 of 3 ... paths: [\"src/tests/consumer-parcel-lookup.infra.test.ts\", ...]" — the stamp names 7 paths and the chunk holds exactly those 7 file diffs.
+
+MET — card string-count practice ("What changes ... the plain pages get their header links" plus the count lock) — src/tests/surfaces/surface-conformance.logic.test.ts "S-sbind ok (17 surfaces, 436 strings)" and src/tests/surfaces/surface-validate.logic.test.ts the same — both locks read 436 and the stated arithmetic 427 + 8 nav strings + 1 net = 436 holds.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+Rules met: none
+
+---
+⏱  93532ms (93.5s)
+📊 Tokens — total: 41248, input: 21678, output: 19570, reasoning: 18216

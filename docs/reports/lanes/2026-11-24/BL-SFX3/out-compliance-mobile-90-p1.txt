@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:23:00.657Z file_sha256=a09ea05a85a80ef587fe67d1b5981e8b5944b339fd50df7b17e6d36150273a45 prompt_sha256=9078da351bbb9258905e2b54b2c45d45b6bbc78e5543fc7198a1c30a29450fef
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-mobile-90-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0392 "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)." — docs/reports/generated/127-surface-registry.md "Dated 2026-11-24 (SEARCHFIX.1, task-449; operator, verbatim, RR-0442" and "80 names in inputs.field_whitelist" — the regenerated registry introduces task-449 search facts and task-376/RR-0278 meter facts (emits ledger, report-produced metering, removed user_profiles write) that no task-451 acceptance criterion or pasted ruling names — confirm these are pure regeneration of already-merged descriptors, otherwise move them to their owning task so task-451 adds only what its card names.
+DEFER severity=LOW — AC #6 "Objective C.3 carries a dated note: no neighbour lots" — NONE — no C.3 dated note appears in the four reviewed files, only the implementation note "The doc-2 dated notes (AC6 C.3, C.7, C.12, B.6/B.7, C.9) ... land in their own commit", so AC6 is not evidenced in this chunk — ensure the C.3 dated note is present in a reviewed chunk because a plan note alone does not satisfy the AC.
+DEFER severity=LOW — AC #1 "A lot size outside the plausible range reads "Not available" on the card and in its screen-reader label" — mobile/__tests__/fixtures/lotMap.situations.json "- "area": "3,052 sq ft · 284 m²"," / "+ "area": null," — the committed golden proves null renders "Not available" but the fixture nulls a plausible 284 m² lot, so the outside-range trigger is exercised only server-side in the chunk carrying consumer-lookup.ts, not reviewed here — keep the null for the content key and confirm that chunk asserts the LOT_SIZE_PLAUSIBLE_M2 boundary.
+DEFER severity=LOW — Findings folded "ST3/2c, V1, V2, V3 (with C.9), L2, L7, R3, X1, X6 (static-page half), R5, B.7 (map links), H Q2, H Q4" — docs/reports/generated/127-surface-registry.md "no faint neighbouring lots on the unlinked state (B.8 removed" — the note invokes B.8, which is not among the folded findings (only B.7 is listed), so the removal is attributed to an unfoldable finding — cite the folded item that directs it ("Must not: draw neighbour lots") or add B.8 to the folded list.
+MET — AC #2 — .cursor/MCFRONTEND-QUEUE.md "a lot with no fronting street reads "Lot B · no building · at the back"" — records the AC2 behaviour.
+MET — AC #3 — .cursor/MCFRONTEND-QUEUE.md "the no-lot message ends "Try a nearby address or report it." with "report it" an inline link to the same topic" — records AC3 and the wrong-lot topic.
+MET — AC #4 — .cursor/MCFRONTEND-QUEUE.md "The card's screen-reader label is its visible text (lead line and area, no frontage or zoning)" — records AC4.
+MET — RR-0446 — docs/reports/generated/127-surface-registry.md "the several-lots map stays as built" — records RR-0446.
+MET — Spec 90 §3 — .cursor/MCFRONTEND-QUEUE.md "an implausible lot size (outside LOT_SIZE_PLAUSIBLE_M2) is sent as a null area and reads "Not available"" — the plausibility decision stays server-side and the client renders a content string, so Dumb Glass holds.
+REJECT — AC #1 — that changing the fixture area to null misrepresents an implausible size — the map area is nulled server-side before the client sees it, so a fixture carrying null is the correct client input and the golden tests the null render.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: none
+
+---
+⏱  132411ms (132.4s)
+📊 Tokens — total: 63755, input: 34119, output: 29636, reasoning: 28691

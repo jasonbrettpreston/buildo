@@ -1,0 +1,925 @@
+LIST mobile-99 sha256:73a0158536c3811d668482c23b9737e8309a5b5a396559f2fdda0fe2f7c0f54a material sha256:d5dfd8a3ec3f6b999d6b64dbe907c52d92e0450390933eea8c1edca7458bcbdd part 1 of 2 chunk 4 of 4
+RULE LIST mobile-99 (docs/specs/03-mobile/99_mobile_state_architecture.md, whole file), part 1 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 4 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/consumer-parcel-lookup.infra.test.ts","src/tests/surfaces/lot-map-help-link.logic.test.ts","src/tests/surfaces/search-follow-ups.logic.test.ts","src/tests/surfaces/static-page.logic.test.ts","src/tests/surfaces/static-web-binding.ui.test.tsx","src/tests/surfaces/surface-conformance.logic.test.ts","src/tests/surfaces/surface-validate.logic.test.ts"]
+
+# Spec 99 — Mobile State Architecture & Ownership Protocol
+
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 2** of `.cursor/active_task.md`.
+
+> Dated note 2026-11-09 (McFrontend Phase 2, MF-41; M-246, prior text kept; operator, verbatim: "1. confirmed" (Part B incl. D-5), record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: Part B confirmed, Spec 126 standard section, MF-20 D-7"): the MaxBLD app (a separate Expo project, Spec 116 §3 dated note 2026-11-09; MF-49) owns its own state and routing: its own root layout and a `parcel_tool` gate, not `decideAuthGateRoute`. The §5 routing arms govern the Buildo app.
+
+**Status:** ACTIVE
+**Cross-references:** Spec 90 (Engineering Protocol §7), Spec 93 (Auth & AuthGate routing), Spec 94 (Onboarding), Spec 95 (User Profiles — server is canonical), Spec 96 (Subscription gate)
+**As-is audit:** `docs/reports/mobile_state_audit_2026-05-02.md`
+
+> ⚠️ **AMENDMENT 2026-09-15 (WF1 "Spec 126/127/128 surface standard") — max-server-side impact. Additive: no rule below is rewritten, and §3 stays normative.**
+>
+> Spec 126 makes Spec 90 §3's "Dumb Glass" prime directive *enforceable* rather than merely stated: under max-server-side the client renders a **fetched projection** — the server owns section order, labels, formatting decisions and which lines render — and the archetype component set draws it. That moves the Layer-2 / Layer-3 boundary in §2, and it does so in a direction this spec already anticipates.
+>
+> **Sections affected, and how:**
+>
+> | §  | Effect |
+> |---|---|
+> | **§2** (the five layers) | Layer 1 **grows** — canonical for the *projection*, not only the data. Layer 2's role is unchanged, but the cached object becomes a projected screen rather than a raw payload. Layer 3 **shrinks to device + ephemeral state only**. Layers 4a/4b and 5 are untouched, and §2.1's hard rules all still hold. |
+> | **§3** (the field ownership matrix) | Stays **normative**, and becomes **descriptor data**: the `Field / Server Type / Local Mirror / Owner Layer / Canonical Writer / Authorized Readers / Bridge` row is the SURFACE descriptor's `state` category verbatim (Spec 126 §4.1). Rows for fields that are Layer-3 *mirrors* of Layer-1 data retire as those mirrors collapse. Measured: **4 of the 7 stores are MMKV-persisted mirrors of server fields** — `filterStore` (139L) mirrors 6 `user_profiles` columns, `userProfileStore` (156L) mirrors 5 notification-preference columns. |
+> | **§4** (the six bridge patterns) | **B2** (TanStack→Zustand) and **B3** (Zustand→Server) retire *for the mirrored fields only*. B1 is unchanged and its query-key hygiene rule becomes a schema constraint: `inputs.query_key` is single-param on the DETAIL archetype. The six patterns are not reduced to four — they are unused for fields that no longer have a Layer-3 home. |
+> | **§7.7** (funnel ratio invariants) | Unchanged in substance; the per-method attempted/succeeded/failed contract becomes `emits.counters` with the ratio stated as a declared invariant, so the drift it warns about is checked rather than greppped. |
+> | **§8.6** (the schema-vs-matrix drift check) | **The gap is confirmed, not closed, by this amendment.** `mobile/scripts/check-spec99-matrix.mjs` exists and **nothing runs it** — re-verified 2026-09-15: no match in `.husky/`, `.github/`, `mobile/package.json` or `package.json`; `mobile/__tests__/spec99.mandates.lint.test.ts:335-346` only asserts the file *exists*. Wiring it into `mobile-ci.yml` is Spec 126 §12 phase **P0b**. |
+>
+> **What deliberately stays client-side** — these five are the boundary, and each is declared per surface rather than assumed: device state (GPS, push token, permission status) · optimistic UI (Spec 90 §3 encourages it by name) · the 24 h MMKV offline cache · animation/gesture (Layer 5, §2.1's hard rule) · navigation position (`expo-router` owns it). Anything else computed on the client is a Spec 128 rule-2 violation needing a dated `deviations[]` row.
+>
+> **The three auth screens are out of scope entirely** (1,302 lines): they talk to the Supabase Auth SDK, not to our contracts.
+
+
+## 1. Goal & Anti-Patterns This Prevents
+
+**Goal:** A single normative document that, for every piece of mobile state, answers four questions:
+1. **Who owns it?** (single layer)
+2. **Who can write it?** (single function)
+3. **Who can read it?** (typed contract)
+4. **What bridges are allowed?** (enumerated patterns)
+
+**This spec is the gate-keeper.** Adding a new Zustand store, a new MMKV blob, a new hydration bridge, or a new routing `useEffect` requires either matching an existing pattern in §3-§5 or amending this spec.
+
+### 1.1 Three documented incidents this protocol prevents
+
+| Incident | Date | Pattern | Spec rule that would have prevented it |
+|----------|------|---------|----------------------------------------|
+| `currentStep` selector subscription loop | 2026-05-02 (commit `3727ceb` → fixed `6c5d085`) | Routing `useEffect` subscribed to a Zustand field it ALSO mutated via `router.replace`-induced cascade | §6.4 (lazy `getState()` for state read in router effects) |
+| Dual-router (AuthGate ↔ OnboardingLayout) loop | 2026-05-02 (fixed same day, WF3) | Two layout-level `router.replace` effects reading DIFFERENT sources of truth (server profile vs local store) for the same routing decision | §5.1 (one router per gate boundary) + §5.2 (read canonical source) |
+| `isFetching` / Tabs flicker loop | 2026-05-02 (current — fix scheduled as §9.4a P0 BLOCKING) | Render gate condition included an unstable signal (`isFetching` toggles on every refetch); flips AppLayout between `<SubscriptionLoadingGuard/>` and `<Tabs>` ~80×/sec, mounting/unmounting LeadFeedScreen continuously | §6.5 (gate conditions must be stable; never gate on `isFetching`) |
+
+### 1.2 The six user-stated quality goals (verbatim)
+
+1. **Observability (maximum)** — every state mutation, every gate decision, every cache invalidation must leave a trace. Codified in §7.
+2. **Clear ownership** — for every field, exactly ONE store owns the canonical value. Codified in §3.
+3. **Where bridges are allowed** — only the patterns in §4. Anything else is a spec amendment.
+4. **Canonical write path** — for every field, exactly one function writes it. Codified in §3 column "Canonical Writer".
+5. **Clear structure / clear logic / similar approach / one approach** — codified in §2 (layer hierarchy), §6 (selector hygiene), §8 (test mandates).
+
+---
+
+
+## 2. Layer Hierarchy
+
+State flows top-down. A lower layer NEVER initiates a write to an upper layer except via the bridges in §4.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 1 — SERVER (Postgres user_profiles, Firebase Auth)   │  ← canonical for ALL account-scoped data
+└─────────────────────────────────────────────────────────────┘
+                         ↓ (Bridge B1: useQuery)
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 2 — TanStack Query cache (in-memory + MMKV persist)  │  ← canonical for CACHED server state
+└─────────────────────────────────────────────────────────────┘
+                         ↓ (Bridge B2: hydrate effect)
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 3 — Zustand stores (typed, scoped, never reactive    │  ← canonical for LOCAL UX state
+│           to themselves)                                     │
+└─────────────────────────────────────────────────────────────┘
+                         ↓ (Zustand `persist` middleware)
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 4a — MMKV (UNENCRYPTED, plaintext on disk)           │  ← persistence for non-sensitive UX state
+│           Persists Zustand stores + TanStack Query cache.   │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 4b — Expo SecureStore / iOS Keychain / Android       │  ← persistence for sensitive credentials
+│            Keystore (ENCRYPTED, hardware-backed where avail)│
+│            Currently used only by RNFirebase native module  │
+│            for the Firebase auth session — no app code      │
+│            touches it directly today.                        │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 5 — Reanimated SharedValues (UI-only, never gated    │  ← orthogonal to layers 1-4
+│           on for routing or business logic)                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 2.1 Hard rules
+
+- **Layer 4a (MMKV) is NEVER read directly outside Zustand `persist` middleware or TanStack `Persister`.** Direct `createMMKV().getString()` in component / hook code is BANNED. (Closes the `user-profile-cache` duplicate-blob anti-pattern.) The Zustand `persist` middleware's own rehydration read (via the configured `storage.getString`) is the sole exempt pathway — it is the canonical mechanism by which persisted Zustand state hydrates on cold boot. The TanStack `Persister`'s rehydration read is similarly exempt for the same reason.
+- **Layer 4a (MMKV) is UNENCRYPTED.** Anything sensitive — Firebase ID tokens, refresh tokens, API keys, payment credentials, government IDs, photo content — MUST go into Layer 4b (SecureStore/Keychain), NEVER into MMKV. The current allowlist of sensitive-but-OK-in-MMKV items is empty. Adding a new persisted field with credential-like content requires a Spec 99 amendment naming it explicitly.
+- **Layer 4b (SecureStore) is the ONLY place sensitive credentials may live on disk.** RNFirebase handles its own session storage natively (Keychain on iOS, EncryptedSharedPreferences on Android) — app code does NOT manage Firebase tokens directly. Adding any new app-managed credential (e.g., a third-party API key) requires using `expo-secure-store` + a Spec 99 amendment.
+- **The `['user-profile']` TanStack query is excluded from MMKV persistence** via `dehydrateOptions.shouldDehydrateQuery` on the `PersistQueryClientProvider` (`mobile/app/_layout.tsx`). The query payload carries 5 PII identity fields (`full_name`, `phone_number`, `company_name`, `email`, `backup_email`); persisting it to Layer 4a would violate this section. The query stays in-memory normally; cold-boot mobile re-fetches from server (the canonical source) — adds ~50–200 ms to the first profile-dependent render but eliminates the on-disk PII surface. Other queries (`['lead-feed']`, `['flight-board']`, `['notification-prefs']`) carry only public permit data or non-PII toggles and continue to persist normally. The full encryption-at-rest path (passing `encryptionKey` to `createMMKV` in `mmkvPersister.ts`) is a future hardening that would let other PII-adjacent queries persist safely; the dehydrate filter is the immediate fix.
+- **Layer 3 (Zustand) NEVER mirrors a Layer 1 (server) field unless the Field Ownership Matrix §3 explicitly authorizes the mirror, with a declared bridge (§4) as the canonical writer.**
+- **Layer 5 (Reanimated SharedValues) NEVER drives routing, gating, or business logic.** SharedValues exist on the UI thread; reading them on the JS thread is racy.
+
+---
+
+
+## 3. Field Ownership Matrix
+
+This table is **normative**. Adding a field to the mobile app requires adding a row here. Modifying ownership requires a spec amendment.
+
+### 3.1 Server-Authoritative Profile Fields (Spec 95 §6)
+
+| Field | Server Type | Local Mirror | Owner Layer | Canonical Writer | Authorized Readers | Bridge |
+|-------|-------------|--------------|-------------|------------------|---------------------|--------|
+| `user_id` | text PK | — (no mirror; equal to `authStore.user.uid`) | Server | Server insert on first PATCH | apiClient (Bearer routing), AuthGate | — |
+| `trade_slug` | text (immutable post-set) | `filterStore.tradeSlug` | Server | Server PATCH `/api/user-profile` from `profession.tsx` | filterStore consumers (LeadFeedScreen, LeadFilterSheet, settings) | B2 |
+| `default_tab` | enum | `filterStore.defaultTab` | Server | Server PATCH from settings | AppLayout default-route, settings | B2 |
+| `location_mode` | enum | `filterStore.locationMode` | Server | Server PATCH from `address.tsx` or settings | useLocation, LeadFeedScreen | B2 |
+| `home_base_lat` / `home_base_lng` | numeric | `filterStore.homeBaseLocation{lat,lng}` | Server | Server PATCH from `address.tsx` or settings | useLocation (fallback when GPS denied) | B2 |
+| `radius_km` | int | `filterStore.radiusKm` | Server | `usePatchProfile()` mutation hook (Spec 99 §9.16, B3 with rollback) — called from LeadFilterSheet preset buttons, settings slider, `(app)/index.tsx` widen-radius shortcuts | useLeadFeed params, LeadFilterSheet UI | B2 read + B3 write |
+| `supplier_selection` | text | `filterStore.supplierSelection` | Server | Server PATCH from `supplier.tsx` or settings | settings, future supplier-tagged feed | B2 |
+| `full_name` / `company_name` / `phone_number` / `backup_email` | text | `userProfileStore.{fullName,companyName,phoneNumber,backupEmail}` | Server | Server PATCH from settings | settings forms, NotificationToast (display only) | B2 |
+| `new_lead_min_cost_tier` | enum (`low`/`medium`/`high`) | `userProfileStore.newLeadMinCostTier` | Server | Server PATCH from settings notifications | settings cost-tier slider, push-notification dispatch (lifecycle classifier) | B2 |
+| `phase_changed` | bool | `userProfileStore.phaseChanged` | Server | Server PATCH from settings notifications | settings toggle, push-notification dispatch | B2 |
+| `lifecycle_stalled_pref` | bool | `userProfileStore.lifecycleStalled` | Server | Server PATCH from settings notifications | settings toggle, push-notification dispatch (suffix `_pref` on server side avoids collision with `permits.lifecycle_stalled`) | B2 |
+| `start_date_urgent` | bool | `userProfileStore.startDateUrgent` | Server | Server PATCH from settings notifications | settings toggle, push-notification dispatch | B2 |
+| `notification_schedule` | enum (`morning`/`anytime`/`evening`) | `userProfileStore.notificationSchedule` | Server | Server PATCH from settings notifications | settings segmented control, push-notification dispatch | B2 |
+| `onboarding_complete` | bool | **NONE** (was `onboardingStore.isComplete` until 2026-05-02; see §3.5 deprecation) | Server | Server PATCH in `complete.tsx` | AuthGate (Branch 5), `IncompleteBanner` (read server profile directly per §9.2) | B2 |
+| `tos_accepted_at` | timestamptz | — | Server | Server PATCH from `terms.tsx` | AuthGate fallback, audit | — |
+| `account_preset` | enum | — | Server (admin-set) | Admin tool | AuthGate manufacturer branch (Branch 4.5) | — |
+| `account_deleted_at` | timestamptz | — | Server | DELETE intent endpoint | apiClient → AccountDeletedError → AuthGate reactivation modal | — |
+| `subscription_status` | enum | — | Server (Stripe webhook + admin) | Stripe webhook handler | AppLayout subscription gate, PaywallScreen | — |
+| `lead_views_count` | int | — | Server (incremented on lead view API) | Lead view endpoint | PaywallScreen copy | — |
+| `trial_started_at` | timestamptz | — | Server | server / admin | settings, internal logic | — |
+<!-- WF3 2026-05-04 hardening (review_followups.md mobile-PII bundle + Phase 7 amendment): `stripe_customer_id`, `trade_slugs_override`, and `radius_cap_km` removed from this matrix and from `mobile/src/lib/userProfile.schema.ts`. All three are server-only / admin-internal — `stripe_customer_id` is PII (Spec 99 §2.1 violation if persisted to MMKV), the other two are admin-managed fields with no mobile consumer (verified by grep). The corresponding API route's `CLIENT_SAFE_COLUMNS` whitelist (Phase 2, commit 08ff823) excludes all three from GET / PATCH responses to mobile clients. The Phase 7 amendment caught a CRITICAL bug where the mobile schema still declared `trade_slugs_override` and `radius_cap_km` as required-but-nullable — Zod v4's `.nullable()` permits `null` but NOT a missing key, so every API response would have failed schema parse and broken every profile-dependent screen. -->
+
+| `display_name` | text | — | Server | Server insert on first PATCH (typically derived from auth provider) | settings (display only) | — |
+| `email` | text | — | Server (Firebase auth claim) | Server insert on first PATCH | settings (display only), notification dispatch | — |
+| `created_at` / `updated_at` | timestamptz | — | Server (Postgres trigger) | Postgres `NOW()` on insert/update | observability only — never read by client routing | — |
+
+### 3.2 Auth / Identity (Firebase + apiClient)
+
+| Field | Owner Layer | Canonical Writer | Authorized Readers | Persistence |
+|-------|-------------|------------------|---------------------|-------------|
+| `user.uid` | `authStore` (Layer 3) | `authStore.setAuth()` — invoked ONLY from `initFirebaseAuthListener` | AuthGate (gate Branch 1), apiClient (Bearer Authorization), useUserProfile (`enabled` gate), settings/account screens (display) | MMKV `auth-store` (uid only — Spec 93 §3.4 partialize strips PII) |
+| `user.email` | `authStore` | `authStore.setAuth()` | reactivation modal copy, settings | NOT persisted |
+| `user.displayName` | `authStore` | `authStore.setAuth()` | settings | NOT persisted |
+| `idToken` | `authStore` | `authStore.setAuth()` (init + 401 retry) | apiClient `Authorization: Bearer` only | NOT persisted (short-lived) |
+| `isLoading` | `authStore` | `authStore.setAuth()` / `clearAuth()` / `setLoading()` (init defaults to `true`; cleared to `false` on first auth resolve) | AuthGate (initial-load gate before hydrate completes) | NOT persisted (process-local) |
+| `_hasHydrated` | `authStore` | `onRehydrateStorage` callback (sole production writer); `setHasHydrated(true)` permitted ONLY in tests to bypass MMKV | AuthGate (Branch 0 — wait-for-hydrate gate) | NOT persisted (process-local) |
+
+### 3.3 Onboarding-Local State (no server mirror)
+
+After §9.3 deduplication, `onboardingStore` holds ONLY these two genuinely-local fields. `selectedTradeName` (display-only mirror) was removed — display sites derive the trade label from the canonical `filterStore.tradeSlug` via `getTradeLabel(slug)` in `mobile/src/lib/onboarding/tradeData.ts`.
+
+| Field | Owner Layer | Canonical Writer | Authorized Readers |
+|-------|-------------|------------------|---------------------|
+| `currentStep` | `onboardingStore` | each onboarding screen calls `setStep('next')` AFTER its PATCH succeeds (Spec 94 §10 Step 11) | AuthGate `getResumePath()` — **MUST be read via `useOnboardingStore.getState().currentStep` inside the effect closure (NEVER subscribed via `useStore((s) => s.currentStep)` per §6.4)** |
+| `selectedPath` | `onboardingStore` | `setPath()` in `path.tsx` | `address.tsx`, `supplier.tsx` (skip-suppliers branch), `terms.tsx` (Path L vs Path T branch), `complete.tsx` (display) |
+
+### 3.4 Engagement (Zustand, in-memory)
+
+| Field | Owner Layer | Writer | Readers |
+|-------|-------------|--------|---------|
+| `unreadFlightBoard` | `notificationStore` (in-memory) | `incrementUnread()` in `NotificationHandlers` foreground push handler; `clearUnread()` on Flight Board tab focus | AppLayout tab badge |
+| `paywall.visible` | `paywallStore` (in-memory — Spec 96 §9 explicit) | `show()` — called by `InlineBlurBanner.tsx:12` on banner tap (verified 2026-05-03 §9.9 audit). The original §3.4 audit incorrectly flagged this as caller-less; the grep missed `usePaywallStore((s) => s.show)` selector usage. | AppLayout subscription gate, PaywallScreen |
+| `paywall.dismissed` | `paywallStore` (in-memory) | `dismiss()` (PaywallScreen "Maybe later" tap), `reset()` (signOut per §B5; `expired→active` transition in AppLayout — renamed from `clear()` 2026-05-03 for §B5 naming uniformity) | AppLayout subscription gate, InlineBlurBanner |
+
+### 3.4c Engagement (Zustand, MMKV-persisted)
+<!-- Subsection number is `3.4c`, not `3.4b`, because §3.4a (UI-Only SharedValues, below) was already taken by an existing subsection. Document order in this section: §3.4 → §3.4a (existing) → §3.4c (this section). -->
+
+These stores survive app close and are reset on sign-out via §B5. Spec 77 §3.2 prescribes the persistence — same-user re-sign-in re-seeds via the gate (no server source of truth to re-hydrate from, so first-sight semantics protect post-reset UX).
+
+| Field | Owner Layer | Writer | Readers | Persistence | Sign-out reset |
+|-------|-------------|--------|---------|-------------|----------------|
+| `seenMap` (`Record<permitId, ISO8601>`) | `flightBoardSeenStore` (Zustand + persist→MMKV `flight-board-last-seen` blob) | `markSeen(permitId, updatedAt)` from `[flight-job].tsx` on detail-open | `flight-board.tsx` `renderItem` to compute `hasUpdate = updated_at !== seenMap[permitId]` per Spec 77 §3.2 | Layer 4a (MMKV plaintext — non-PII; just permit IDs + ISO timestamps) | Required (§B5) — `clearLocalSessionState` calls `useFlightBoardSeenStore.getState().reset()` |
+| `recent` (`string[]`, newest first, at most `SEARCH_RECENT_MAX` = 3) | `recentSearchesStore` (Zustand + persist→MMKV `parcel-recent-searches` blob) | `add(query)` from `parcel-tool/index.tsx`, only when a search opens a page (the lot report, SELECT on the address list, the map page) | `parcel-tool/index.tsx` recent-search chips | Layer 4a (MMKV plaintext — a searched street address; not in the Layer 4b list above) | Required (§B5) — `clearLocalSessionState` calls `useRecentSearchesStore.getState().reset()` |
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-35 · McFrontend queue · lane MF-35 build; operator, verbatim: "D15 b, D16 a, D17 a D18 a, D-2 a , D-9 a, D-1 a"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-10: MF-35 v3 and MF-51 decisions"; plan `~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md`): the `recentSearchesStore` row above is added by MF-35 (P35-D16 a: the MaxBLD search page's recent searches on the phone, max 3, newest first, duplicates ignoring case removed, saved only when a search opens a page, cleared at sign-out). A searched street address is none of the Layer 4b items (tokens, keys, payment credentials, government IDs, photo content; :97), so Layer 4a applies. `storeReset.coverage.test.ts` finds the new store with no count change (its guard is `>= 6`).
+
+### 3.4a UI-Only SharedValues (Layer 5 — orthogonal to Layers 1-4)
+
+These are NOT Zustand stores. They use `react-native-reanimated`'s `makeMutable()` and live exclusively on the UI thread. They are **never** read by router effects, hydrated from server, persisted to MMKV, or reset in §B5 sign-out — they are process-local UI state for animations.
+
+| Field | File | Writer | Readers | Sign-out reset |
+|-------|------|--------|---------|----------------|
+| `tabBarScrollY` | `tabBarStore.ts` | `onScroll` worklets in `(app)/index.tsx`, `flight-board.tsx`, `map.tsx` | `AnimatedTabBar` `useDerivedValue` | NOT required (process-local, not user-scoped) |
+| `tabBarVisible` | `tabBarStore.ts` | derived from `tabBarScrollY` direction | `AnimatedTabBar` `translateY` | NOT required |
+
+### 3.5 Deprecated mirrors (migration targets per §9)
+
+| Mirror | Replacement | Migration WF |
+|--------|-------------|--------------|
+| `onboardingStore.isComplete` | Read `useUserProfile().data.onboarding_complete` directly | WF2 §9.2a-c |
+| `onboardingStore.locationMode` / `homeBaseLat` / `homeBaseLng` / `supplierSelection` (the duplicates) | Use `filterStore` exclusively (already populated by B2 hydration) | WF2 §9.3 |
+| `onboardingStore.selectedTrade` (duplicate of `filterStore.tradeSlug`) | Use `filterStore.tradeSlug` | WF2 §9.3 |
+| `onboardingStore.selectedTradeName` (display-only mirror of server `display_name` lookup) | Read from server profile or extract from trade catalog at display site | WF2 §9.3 |
+| `useUserProfile.readCachedProfile` MMKV blob (`user-profile-cache`) | Eliminated — TanStack persister covers fast-hydration | WF3 §9.1 (✅ done — see `mobile/src/lib/migrations/userProfileCacheCleanup.ts` for the one-time orphan-file cleanup) |
+| `userProfileStore.hydrate` non-idempotent set | Migrate to deep-equal-before-set per §6.6 | WF2 §9.8 |
+| `filterStore.hydrate` non-idempotent set | Same | WF2 §9.8 |
+| ~~`paywallStore.show()` action with no caller~~ | RESOLVED — §9.9 audit (2026-05-03) confirmed `InlineBlurBanner.tsx:12` calls it. The original audit grep missed the selector form. | WF3 §9.9 ✅ |
+
+---
+
+
+## 4. The Six Bridge Patterns
+
+These are the **only** allowed cross-layer flows. A seventh pattern requires a spec amendment.
+
+### B1 — Server → TanStack Query
+
+**Pattern:**
+```ts
+const query = useQuery({
+  queryKey: ['user-profile'],
+  queryFn: fetchProfile,
+  staleTime: 300_000,
+  enabled: !!user,
+});
+```
+
+**Rules:**
+- Every server fetch MUST go through TanStack Query — never raw `fetch()` in components.
+- `queryKey` MUST be a stable, parameterized array. Object literals with closure refs are BANNED (cache fragmentation).
+- `enabled` gates: use `!!user` for user-scoped queries; never `enabled: someChangingValue` that toggles continuously.
+- **`refetchOnReconnect` defaults to `true` and MUST stay enabled** for `['user-profile']` so a returning-from-offline user gets a fresh profile (Stripe webhook may have flipped `subscription_status` during the offline window). The 2026-05-02 incident #3 root cause is **not** `refetchOnReconnect` — it's that AppLayout's render gate gates on `isFetching` (per §6.5 BANNED). Surgical fix: strip `isFetching` from the gate condition (§9.4); `refetchOnReconnect` stays on.
+- Validation: every response MUST be parsed through a Zod schema before TanStack stores it (Spec 90 §13 Zod Boundary).
+
+**Query-key registry (the stable, parameterized keys in use).** Adding a new server query requires a row here:
+
+| Query key | Owner hook | Notes |
+|-----------|-----------|-------|
+| `['user-profile']` | `useUserProfile` | PII — excluded from MMKV persistence (§2.1) |
+| `['lead-feed', params]` | `useLeadFeed` | public permit data; persists normally |
+| `['flight-board']` | `useFlightBoard` | saved-board rows |
+| `['lead-detail', id]` | `useLeadDetail` | single lead |
+| `['parcel-search', q]` | `useParcelSearch` (Spec 100) | debounced typeahead; public cadastral data; persists normally |
+| `['parcel-lookup', parcelId]` | `useParcelLookup` (Spec 100) | the parcel detail; depends ONLY on `parcelId` (query-key hygiene — never on the search string) |
+| `['parcel-entitlement']` | `useParcelEntitlement` (Spec 100; SRCH.A6, task-320) | the caller's plan and this month's report count ("N of M reports left until <date>"); a display, never a gate; the caller's own, so no parameter; not persisted across a restart (`mobile/src/lib/persistFilter.ts` NOT_PERSISTED) |
+
+### B2 — TanStack → Zustand (server-to-local hydration)
+
+**Pattern:**
+```ts
+useEffect(() => {
+  if (query.data) {
+    hydrateFilter(query.data);
+    hydrateUserProfile(query.data);
+  }
+}, [query.data, hydrateFilter, hydrateUserProfile]);
+```
+
+**Rules:**
+- The hydrate effect MUST live in exactly ONE hook (`useUserProfile` for the profile bridge). Multiple components calling that hook share the same TanStack cache, but each runs the effect once on mount — that's fine; the hydrate functions are idempotent.
+- Hydrate functions MUST be **idempotent** — calling twice with identical data MUST result in zero observable state change. Specifically: object-valued fields MUST use deep-equal-before-set per §6.6.
+- Hydrate MUST NOT call `router.replace` or trigger any navigation. Routing happens in §5 routers, not in hydrate effects.
+- The `markComplete()` bridge call (currently in `useUserProfile.ts:101-103`) is DEPRECATED — see §9.2.
+
+### B3 — Zustand → Server (mutation with optimistic update)
+
+**Pattern:**
+```ts
+const mutation = useMutation({
+  mutationFn: (patch) => fetchWithAuth('/api/user-profile', { method: 'PATCH', body: JSON.stringify(patch) }),
+  onMutate: async (patch) => {
+    // Optimistic update: write to filterStore immediately
+    useFilterStore.getState().setRadiusKm(patch.radius_km);
+    return { previous: prevValue };
+  },
+  onError: (_err, _patch, ctx) => {
+    // Rollback
+    useFilterStore.getState().setRadiusKm(ctx.previous);
+  },
+  onSettled: () => queryClient.invalidateQueries({ queryKey: ['user-profile'] }),
+});
+```
+
+**Rules:**
+- Optimistic local writes MUST go through the field's canonical writer per §3.
+- Rollback MUST be paired with every optimistic write.
+- `onSettled` MUST invalidate the relevant query so the next render reads server truth.
+
+> **Rollback race acknowledgement 2026-05-05 (originally amended to mandate re-read; revised same day to match `usePatchProfile.ts` §9.16 implementation):** the naive rollback pattern above CAN overwrite legitimate concurrent writes when the same field is mutated more than once in flight. Concrete scenario: user adjusts the radius slider (mutation A starts; `onMutate` captures `previous = 10`, applies optimistic = 20). Before A's network call resolves, user adjusts again (mutation B starts; B's `onMutate` reads `useFilterStore.getState().radiusKm` = 20 — A's optimistic value — applies optimistic = 30). Mutation A errors. A's `onError` restores 10. The user's screen flips 30 → 10; B's eventual `onSettled` invalidate refetches and restores 30 from the server (B's PATCH succeeded), so the FINAL state is correct — but the user sees a one-frame flicker during the rollback.
+>
+> **Canonical pattern: naive rollback** (what `usePatchProfile.ts:onError` currently does — restore `previous` unconditionally on error). Acceptable for low-contention fields where the user is unlikely to fire a second mutation before the first resolves.
+>
+> **Recommended for high-contention fields: re-read-before-rollback.** When a field is prone to rapid concurrent user input (slider drags, type-ahead, multi-step forms), augment `onError` to read the current Zustand value first; only restore `previous` if it equals the optimistic value the mutation set:
+> ```ts
+> onError: (_err, patch, ctx) => {
+>   const current = useFilterStore.getState().radiusKm;
+>   if (current === patch.radius_km) {
+>     useFilterStore.getState().setRadiusKm(ctx.previous);
+>   }
+>   // else: a newer write landed — do not clobber (last-write-wins).
+> },
+> ```
+>
+> **Alternative for stricter correctness: per-field version counter.** Each `onMutate` increments a counter; `onError` only restores if the counter at error-time matches. Handles the edge case where a concurrent write happens to set the same value as the optimistic (which the equality check above misses). More elaborate; only justified if the equality-miss case is observed in production.
+>
+> **For deep-equal fields** (e.g., `homeBaseLocation`), the equality check uses `fast-deep-equal/es6` per §6.6.
+>
+> **Per-field decision matrix:** review each existing `useMutation` site for contention. `usePatchProfile.ts` currently mutates `radius_km` only; user-facing surfaces are slider + preset buttons + settings page. Slider drag is a high-contention shape (multiple mutations in flight while the user holds + drags). Decision recorded here: **re-read-before-rollback IS recommended for `radius_km` if the slider's mutation cadence is observed to fire concurrent mutations in production.** Until that observation, the naive pattern is the canonical default — promoting re-read prematurely creates spec-vs-code drift the M1+M2+M3 batch was designed to close.
+
+### B4 — Auth Listener → Cache Invalidation
+
+**Pattern:** (current implementation in `mobile/src/store/authStore.ts`)
+```ts
+auth().onAuthStateChanged((firebaseUser) => {
+  if (firebaseUser) {
+    const expectedUid = firebaseUser.uid;
+    const isUidChange = lastKnownUid !== expectedUid;
+    if (isUidChange) {
+      lastKnownUid = expectedUid;
+    }
+    void firebaseUser.getIdToken().then((idToken) => {
+      if (lastKnownUid !== expectedUid) return; // stale
+      useAuthStore.getState().setAuth({...}, idToken);
+      // Invalidate AFTER setAuth so the refetch uses the NEW bearer token.
+      // Pre-§9.1-amend, invalidate fired synchronously and raced setAuth
+      // (Gemini WF3-§9.1 review F7).
+      if (isUidChange) {
+        void queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      }
+    });
+  }
+});
+```
+
+**Rules:**
+- Triggers: cold-boot first-fire (`lastKnownUid === null`) AND genuine UID change.
+- `lastKnownUid` is NOT reset on sign-out (Spec 93 §3.4 fast-path preservation).
+- Stale-resolution guard: `getIdToken().then()` MUST verify `lastKnownUid === expectedUid` before calling `setAuth` (race-prevention per WF3 review).
+- Telemetry: emit `Sentry.addBreadcrumb({category:'auth', message:'uid_change_cache_invalidated'})` only on genuine UID change (not first-fire) per §7.
+- **HMR caveat (DEV only):** `lastKnownUid` is module-scoped `let`, so Metro Fast Refresh resets it on hot reload of `authStore.ts` while in-flight `getIdToken().then()` closures from the OLD module retain the stale binding. The stale-resolution guard above mitigates the late-write race. The cache-invalidation re-fire is acceptable (extra refetch, not data loss). DO NOT move `lastKnownUid` into Zustand state to "fix" HMR — that would defeat the cold-boot first-fire detection (Zustand persist would rehydrate it from MMKV).
+
+### B5 — Sign-out Reset (the global fan-out)
+
+**Pattern:** (current implementation in `mobile/src/store/authStore.ts:signOut` after the §9.19 unification)
+```ts
+// Module-scope helper — shared between explicit signOut() and the
+// onAuthStateChanged(null) listener branch (forced sign-outs). Both
+// paths invoke this AFTER auth().signOut() resolves (or fails — see
+// the try/finally in signOut below).
+function clearLocalSessionState(): void {
+  usePaywallStore.getState().reset();      // Spec 96 §9 — fast shared-device handoff
+  queryClient.clear();                     // §9.10 — purge ALL TanStack queries
+  mmkvPersister.removeClient();            // §9.18 — purge persister disk blob
+  useFilterStore.getState().reset();
+  useNotificationStore.getState().reset();
+  useOnboardingStore.getState().reset();
+  useUserProfileStore.getState().reset();
+  useAuthStore.setState({ user: null, idToken: null, isLoading: false });
+  resetIdentity();
+}
+
+signOut: async () => {
+  track('signout_initiated');
+  // §9.19 (also DeepSeek WF2 P2 review #11): try/finally guarantees the
+  // PIPEDA-critical local cleanup runs even if Firebase signOut throws
+  // (network blip, expired refresh token, Firebase unreachable). Pre-fix
+  // a thrown signOut() left the user logged in locally with stale
+  // Zustand + TanStack caches.
+  try {
+    await auth().signOut();
+  } catch (err) {
+    Sentry.captureException(err, {
+      extra: { context: 'authStore.signOut: firebase signOut failed; running cleanup anyway' },
+    });
+  } finally {
+    clearLocalSessionState();
+  }
+}
+```
+
+**Rules:**
+- Order WAS normative (paywall reset BEFORE firebase signOut) but the §9.19 unification moved the entire fan-out into `clearLocalSessionState()` which runs in `finally` (i.e., AFTER `auth().signOut()` resolves or throws). This is intentional: the try/finally guarantees cleanup on Firebase failure (the PIPEDA-critical case), and the paywall reset still runs before any subsequent code observes the cleared session because both branches reach `finally` synchronously. The "BEFORE firebase signOut" rule for paywall reset (Spec 96 §9 anti-flicker) is preserved by Spec 96 §9's separate guard, not by the order in `signOut()`.
+- All in-memory Zustand stores MUST be enumerated in `clearLocalSessionState()`. Adding a new store with user-scoped state requires adding a `.reset()` call there. **Enforcement:** §8.5 store-enumeration test grep-asserts that every `create<*Store>(` in `mobile/src/store/*.ts` has a corresponding `.getState().reset()` call in `clearLocalSessionState()` (or in `signOut()` directly for stores explicitly excluded from the helper — currently none).
+- **`queryClient.clear()` MUST fire** as part of `clearLocalSessionState()`. Reason: `enabled: !!user` only stops *new* fetches — in-flight fetches resolve and write to the cache, attributing the previous user's data to the next sign-in. Additionally, the MMKV-persisted TanStack cache (`mmkvPersister`, 24h `maxAge`) survives the sign-out and rehydrates on next mount, leaking previous-user `['user-profile']` to a different user signing in on a shared device — a privacy violation under PIPEDA (the same reason `userProfileStore.partialize` strips PII). The B4 invalidate-on-uid-change is defense-in-depth; this `clear()` call is the primary fix. **§9.10 ✅ DONE** — implementation chose `queryClient.clear()` (broader purge) over the originally-specified scoped `removeQueries({queryKey: ['user-profile']})`; broader purge is defense-in-depth (cancels in-flight refetches across all queries, not just `['user-profile']`) and is stricter than the §B5 PIPEDA letter requires. Spec amended 2026-05-05 to match implementation. The MMKV blob is purged separately via `mmkvPersister.removeClient()` (added §9.18, consolidated into `clearLocalSessionState()` by §9.19) — orthogonal mechanism, both required.
+
+### B6 — API Client → Auth Listener (mid-session token refresh on 401)
+
+Spec 99 amendment 2026-05-05 (resolves WF2 M1+M2+M3 #6, DeepSeek): Firebase ID tokens expire after ~1 hour. `onAuthStateChanged` does NOT fire on token expiry — Firebase only fires it on USER state changes (sign-in / sign-out / forced revocation). Pre-amend, B4 covered cold-boot/UID-change invalidation but the spec said nothing about mid-session refresh; the apiClient's existing 401 interceptor was implicit. A future contributor removing the interceptor "because it's not in the spec" would silently break the app at the 1-hour mark. B6 documents the interceptor as a normative bridge.
+
+**Pattern:** (current implementation in `mobile/src/lib/apiClient.ts:65-84`)
+```ts
+async function fetchWithAuthInternal<T>(path, options, isRetry = false): Promise<T> {
+  const { idToken } = useAuthStore.getState();
+  const headers = { Authorization: `Bearer ${idToken}`, ... };
+  const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
+
+  // 401 intercept: force-refresh idToken and retry once.
+  if (response.status === 401 && !isRetry) {
+    try {
+      const { user } = useAuthStore.getState();
+      const newToken = await auth().currentUser?.getIdToken(true);
+      if (newToken && user) {
+        useAuthStore.getState().setAuth(user, newToken);
+        return fetchWithAuthInternal<T>(path, options, /* isRetry */ true);
+      }
+    } catch {
+      // Token refresh failed (Firebase unreachable, refresh token revoked) —
+      // fall through to throw ApiError(401).
+    }
+    throw new ApiError(401, 'Unauthorized');
+  }
+  // ...
+}
+```
+
+**Rules:**
+- 401 from server MUST trigger `auth().currentUser?.getIdToken(true)` (force-refresh) exactly once. The `isRetry` boolean parameter is the cycle guard — recursive call sets `isRetry: true`, the second 401 propagates `ApiError(401)` instead of looping.
+- Refreshed token MUST be written to `useAuthStore` via `setAuth(user, newToken)` BEFORE the retry. The retry uses the new bearer because `fetchWithAuthInternal` re-reads `idToken` from the store at line 20.
+- Refresh failure (Firebase unreachable, `currentUser` null, `getIdToken` rejection) MUST propagate as `ApiError(401)` — the apiClient does NOT call `clearAuth()` directly. The error propagates to TanStack Query → consumer → AuthGate, which routes via Branch 4 (other profileError) to the retry UI per §5.3. A second 401 after the user-initiated retry would mean the refresh token itself is invalid — at that point the user is effectively signed out, and the next foreground/AppState event would let the listener detect the broken session.
+- This bridge is mid-session ONLY. Cold-boot UID-change invalidation belongs to B4; sign-out cleanup belongs to B5. B6 fires when the app already has a logged-in `user` and just needs a fresh `idToken`.
+- This section is the canonical (and sole) normative source for the 401 interceptor contract; `mobile/src/lib/apiClient.ts:65-84` is the implementation site. Removing the interceptor without a corresponding B6 spec amendment is forbidden.
+- **Known limitation:** concurrent 401s each call `getIdToken(true)` independently. Firebase deduplicates the network refresh internally, but the store receives two `setAuth` writes. Low risk in practice (Zustand `set` is sync; second write is a no-op if newToken is identical). Tracked in `docs/reports/review_followups.md` as "concurrent 401 mutex" for future hardening.
+
+---
+
+
+## 5. Routing Authority Rules
+
+### 5.1 One router per gate boundary
+
+The mobile app has exactly TWO routing boundaries:
+
+| Boundary | Sole Authority | File | Spec |
+|----------|----------------|------|------|
+| `(auth)` ↔ `(onboarding)` ↔ `(app)` | **AuthGate** | `mobile/app/_layout.tsx` AuthGate component | Spec 93 §5 Step 6 + Spec 94 §10 |
+| `(app)` trial / expired / paywall | **AppLayout** | `mobile/app/(app)/_layout.tsx` | Spec 96 §10 Step 2 |
+
+**Other layouts (`(auth)/_layout.tsx`, `(onboarding)/_layout.tsx`, `(app)/[lead]`/`[flight-job]` modals) MUST NOT have routing `useEffect`s.** They render their `<Stack/>` and let AuthGate / AppLayout govern transitions.
+
+### 5.2 Routers MUST read from the canonical source
+
+For each routing decision, the router MUST read from the field's owner per §3:
+
+| Decision | Read from |
+|----------|-----------|
+| Is user authenticated? | `authStore.user` (canonical) |
+| Has onboarding completed? | `useUserProfile().data.onboarding_complete` (canonical = server profile) — NEVER `useOnboardingStore.isComplete` |
+| Which onboarding step to resume? | `useOnboardingStore.getState().currentStep` (lazy read per §6.4) |
+| Account in deletion window? | `profileError instanceof AccountDeletedError` |
+| Subscription status? | `useUserProfile().data.subscription_status` (canonical) — NEVER mirrored locally |
+
+**Stale-profile guard (CRITICAL):** Routers MUST NOT make a routing decision against a `profile` whose `user_id !== authStore.user?.uid`. When the UID changes (B4 cache invalidation in flight), TanStack returns the previous user's `query.data` until the new fetch resolves; using it would route the new user based on the old user's `onboarding_complete` / `subscription_status`. AuthGate's existing `profileLoading && !profile` guard only defends the cold-boot case — it does NOT defend the UID-change-mid-fetch case. Implementation: `if (profile && (!profile.user_id || profile.user_id !== user?.uid)) return;` placed after the `profileLoading` guard.
+
+**Hardening beyond spec letter (Gemini WF2 §9.6 F1 + DeepSeek #2 consensus, landed in `mobile/src/lib/auth/decideAuthGateRoute.ts`):** the falsy-uid pre-check (`!profile.user_id`) is stricter than the §5.2 `!==` letter required and rejects a corrupted/poisoned cache where `user_id` is `null` / `''` / `undefined` while attesting to `onboarding_complete: true`. Without the falsy guard, `null !== 'real-uid'` evaluates `true` so the inequality check ALSO returns `wait` for this case — *but only by accident*: a future cache-shape change that surfaced `user_id: ''` (empty string, not null) coupled with the same falsy assertion would still bypass the inequality (empty string `!== 'real-uid'` is also `true`, so the path appears safe — but a future predicate that read `profile.user_id` for routing would see the empty string and fail open). The explicit `!profile.user_id` falsy guard rejects the entire "corrupted cache" attack class regardless of which falsy value the corruption produces. AuthGate's caller emits a Sentry `stale_profile_missing_user_id` breadcrumb in this branch (caller-side side effect) so cache corruption is observable without routing on it. **§9.11 ✅ DONE.**
+
+### 5.3 The 9 routing arms (AuthGate, Spec 93 §5 Step 6)
+
+This subsection is the canonical AuthGate matrix. Any change to AuthGate's branches requires updating this section. **Counting convention:** 9 distinct routing arms (1, 2, 3, 4, 4.5, 5a, 5b, 5c, 5d). §8.2 test mandate covers all 9. Branch 5 has 4 sub-cases (5a-5d) because the destination depends on which group the user is currently in × `onboarding_complete`; collapsing them in tests would mask sub-case-specific bugs.
+
+```
+1.   !user                                           → /(auth)/sign-in
+2.   AccountDeletedError                             → reactivation modal (no nav)
+3.   ApiError 404                                    → /(onboarding)/profession
+4.   profileError (other)                            → retry UI (no nav)
+4.5. profile.account_preset='manufacturer' && !complete  → /(onboarding)/manufacturer-hold
+5a.  profile && inAuthGroup && !complete             → getResumePath(profile, currentStep)
+5b.  profile && inAuthGroup && complete              → /(app)/ + registerPushToken
+5c.  profile && inOnboardingGroup && complete        → /(app)/
+5d.  profile && !auth && !onboarding && !complete    → getResumePath(profile, currentStep)
+```
+
+### 5.4 Lint rule: router useEffect dependency hygiene
+
+Router `useEffect` dependency arrays MUST NOT contain Zustand fields read inside the effect body. Use lazy `useStore.getState().field` instead. **Exception:** the dep array MUST contain values that — when changed — should cause the routing decision to be re-evaluated (e.g., `segments`, `user`, `profile`). The distinction: `user.uid` is a routing input (in deps); `currentStep` is informational for the destination (lazy read).
+
+---
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/consumer-parcel-lookup.infra.test.ts b/src/tests/consumer-parcel-lookup.infra.test.ts
+index 5df8e0b6f7baf99c28043b792a2f2668f53867a2..979c6952c45355496605d5b12d32f06de2af71ae 100644
+--- a/src/tests/consumer-parcel-lookup.infra.test.ts
++++ b/src/tests/consumer-parcel-lookup.infra.test.ts
+@@ -114,6 +114,61 @@ describe('route source-shape locks (Spec 100 §3)', () => {
+   });
+ });
+ 
++// SEARCHFIX.1 (task-449; RR-0442, MORNING-DECISIONS.md:2276, operator verbatim "It should open on an exact match and we have a different process
++// for address mistakes"; RR-0443 c, :2284, "What happens with a partial address? Similar to an address mistake they need to select from the
++// available addresses that are close"). T6: only two places in the resolver may open a lot. T7 (G3 R1): the lookup contract text says so, and
++// its counts restate their own arrays. T8: Spec 100 carries the dated note (the noteIn pattern of spec-notes-1b.logic.test.ts).
++const RESOLVER = path.resolve(__dirname, '../lib/admin/parcel-lookup.ts');
++const uniqueReturns = (src: string): number => (src.match(/resolution: 'unique'/g) ?? []).length;
++const RR0442 = 'It should open on an exact match and we have a different process for address mistakes';
++const RR0443C = 'What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close';
++const SFX_MARK = 'Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449';
++type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- descriptor JSON
++const readJson = (rel: string): Json => JSON.parse(fs.readFileSync(path.resolve(__dirname, '../..', rel), 'utf8'));
++
++describe('SEARCHFIX.1 T6: a lot opens only on an exact match (two unique returns in the resolver)', () => {
++  it('parcel-lookup.ts holds exactly two `unique` returns: the exact read and the typed-address-in-full typeahead row', () => {
++    expect(uniqueReturns(fs.readFileSync(RESOLVER, 'utf8'))).toBe(2);
++  });
++  it('RED plant: a source with a third `unique` return is caught', () => {
++    expect(uniqueReturns("a = { resolution: 'unique' }; b = { resolution: 'unique' }; c = { resolution: 'unique' };")).not.toBe(2);
++  });
++});
++
++describe('SEARCHFIX.1 T7 (G3 R1): the lookup contract says exact opens and its counts match its arrays', () => {
++  const d = readJson('scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json');
++  const census = (Object.values(readJson('scripts/surfaces/_schema/census/contracts.json')) as Json[]).find((x) => x?.identity?.id === d.identity.id);
++  it('the census row equals the emitted descriptor', () => {
++    expect(census).toEqual(d);
++  });
++  it('data_story carries the exact-opens dated note and no "24 fields"', () => {
++    const story = d.docs.data_story as string;
++    expect(story).toContain('exact match opens; a typeahead, a street type or direction conflict, a unit, letter or dash form, and a mistype list');
++    expect(story).not.toContain('24 fields');
++  });
++  it('every stated count equals the array it describes', () => {
++    expect(Number(/It reads (\d+) tables/.exec(d.docs.data_story)?.[1])).toBe(d.inputs.tables.length);
++    expect(Number(/reads (\d+) table\(s\)/.exec(d.inputs.why)?.[1])).toBe(d.inputs.tables.length);
++    expect(Number(/writes (\d+) table\(s\)/.exec(d.outputs.why)?.[1])).toBe(d.outputs.tables.length);
++    const parity = d.checks.find((c: Json) => /field_whitelist_parity$/.test(c.id));
++    expect(Number(/pick-by-name of (\d+) field/.exec(parity.why)?.[1])).toBe(d.inputs.field_whitelist.length);
++  });
++  it('emits names the property_view ledger write on this metered surface (surface.schema.json: "none" on a metered surface is a rule-9 violation)', () => {
++    expect([d.metering.answer, d.emits.answer, d.emits.ledger_events]).toEqual(['metered', 'ledger', ['property_view']]);
++  });
++});
++
++describe('SEARCHFIX.1 T8: Spec 100 carries the exact-match dated note', () => {
++  it('the note quotes RR-0442 and RR-0443 c verbatim', () => {
++    const spec = fs.readFileSync(path.resolve(__dirname, '../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md'), 'utf8');
++    const at = spec.indexOf(SFX_MARK);
++    expect(at, 'the SEARCHFIX.1 note is missing').toBeGreaterThan(-1);
++    const end = spec.indexOf('\n', at);
++    const note = spec.slice(at, end === -1 ? spec.length : end);
++    for (const words of [RR0442, RR0443C, 'RR-0442', 'RR-0443 c']) expect(note).toContain(words);
++  });
++});
++
+ describe('log hygiene — the raw q is NEVER logged (Spec 100 §2.8)', () => {
+   it('the logInfo payload carries outcome/parcelId/matchType/duration but no q', () => {
+     const src = route();
+@@ -323,3 +378,40 @@ describe('MF-53 a neighbour without a drawable outline is dropped (OUTPUT panel
+     expect(map.neighbours.map((n) => n.parcelId)).toEqual(['N3']);
+   });
+ });
++
++// SEARCHFIX.3 (task-451; RR-0444, MORNING-DECISIONS.md:2290-2291 2c "The lot card shows "Not available" for an implausible area"; FOLD-PLAN.md task 3 ST3):
++// the map lot's area is sent only when the stored size lies inside the one plausible window, LOT_SIZE_PLAUSIBLE_M2 (project.ts:79, 50 to 5,000 m²,
++// inclusive as project.ts lot_size_implausible tests it); outside it, or not a number, the area is null and the card shows the content null value.
++describe('SEARCHFIX.3 ST3: the map area is null outside LOT_SIZE_PLAUSIBLE_M2', () => {
++  const areaOf = (size: unknown): string | null => assembleLotMap({ address: null, pin: null, truncated: false, neighbours: [],
++    lots: [{ parcel_id: 'P1', lot_size_sqm: size as string | null, frontage_m: null, zoning_zn_string: null, centroid_lat: null, centroid_lng: null, primary_frontage_street_name: null, has_footprint: false, outline: null }] }).lots[0]!.area;
++  it('a placeholder size, one under the window and one over it give null', () => {
++    expect(['123456789', 49, 5001, '49.99', '5000.01'].map(areaOf)).toEqual([null, null, null, null, null]);
++  });
++  it('the two bounds are inside (inclusive) and a plausible size keeps its text', () => {
++    expect([areaOf(50) !== null, areaOf(5000) !== null, areaOf('50') !== null]).toEqual([true, true, true]);
++    expect(areaOf('283.5')).toBe('3,052 sq ft · 284 m²');
++    expect([areaOf(null), areaOf(''), areaOf('abc')]).toEqual([null, null, null]);
++  });
++  it('the lib reads the window from the one home and types no bound', () => {
++    expect(lib()).toMatch(/import \{ LOT_SIZE_PLAUSIBLE_M2 \} from '@\/lib\/report-projection\/project';/);
++    expect(lib()).not.toMatch(/\b(50|5000|5_000)\b/);
++  });
++});
++
++// SEARCHFIX.3 L2 (FOLD-PLAN.md:56; a defensive guard, no stored row holds ''): an empty string reads null through the shared num, never 0.
++describe('SEARCHFIX.3 L2: an empty string is null, never 0', () => {
++  it('the headline area, the comparable-build numbers and the neighbourhood stats read null for ""', () => {
++    const { payload } = assembleConsumerPayload({ parcel_id: 'E1', lot_size_sqm: '', max_build_fsi: '', comp_count: '', comp_build_ratio_p50: '', comp_fsi_p50: '', neighbourhood_id: '',
++      comparable_builds: [{ address: '5 Elm', lot_sqm: '', permit_fsi: '' }] }, []);
++    expect([payload.areas.lot_size_sqm, payload.areas.max_build_fsi]).toEqual([null, null]);
++    const s = payload.neighbourhood.compStats;
++    expect([s.compCount, s.compBuildRatioP50, s.compFsiP50, s.neighbourhoodId]).toEqual([null, null, null, null]);
++    const cb = payload.neighbourhood.comparableBuilds![0]!;
++    expect([cb.lot_sqm, cb.permit_fsi]).toEqual([null, null]);
++  });
++  it('a real zero is still 0 (only the empty string changes)', () => {
++    const { payload } = assembleConsumerPayload({ parcel_id: 'E2', comp_count: 0, neighbourhood_id: '0' }, []);
++    expect([payload.neighbourhood.compStats.compCount, payload.neighbourhood.compStats.neighbourhoodId]).toEqual([0, 0]);
++  });
++});
+diff --git a/src/tests/surfaces/lot-map-help-link.logic.test.ts b/src/tests/surfaces/lot-map-help-link.logic.test.ts
+index 421d3c5b620ed0a14896fd4fc85a8944ef7af0af..631bbcacb716eb0a3708a7a0eb539a0133bff357 100644
+--- a/src/tests/surfaces/lot-map-help-link.logic.test.ts
++++ b/src/tests/surfaces/lot-map-help-link.logic.test.ts
+@@ -8,6 +8,8 @@
+ //         intersection, no lot linked, many lots.
+ // Every link opens Help & Support through the existing action `open_help` (mobile/src/lib/maxbldHelp.ts) with the built Help topic (lot_match on the lot map, address_match under the notices; v8 names wrong-lot) and the typed query. Operator RR-0299 (MORNING-DECISIONS.md:1155): the support address is a placeholder until launch;
+ // this page reads no setting and writes none. Root test: reads committed files as text, no DB, no network, no mobile import.
++// Dated 2026-11-24 (SEARCHFIX.3, task-451; doc-2 B.7 (doc-2:49) "to /help?topic=wrong-lot"; prior text above kept): every link of the page now opens the
++// topic wrong-lot, which the Help page has since task-450 (web_help, "Wrong address or lot"); the old topics lot_match and address_match stay on the Help page.
+ import { describe, expect, it } from 'vitest';
+ import fs from 'node:fs';
+ import path from 'node:path';
+@@ -39,7 +41,9 @@ const column = (g: Json): Json[] => allByTestId(g.props, 'parcel-lotmap-column')
+ const HELP = 'parcel-lotmap-help';
+ // The built Help topics are the binding (orchestrator reading under build-with-existing-bindings; v8 names wrong-lot, which the Help page lacks):
+ // the lot map link is lot_match ("Report incorrect lot match"), the address-notice links are address_match (web_help.content.json:7, :11).
++// Dated 2026-11-24 (SEARCHFIX.3, task-451; prior reading above kept): the Help page has the topic wrong-lot since task-450, so every link takes it (doc-2:49).
+ const openHelp = (topic: string) => ({ action: 'open_help', topic, q: { derived: 'query' } });
++const TOPIC = 'wrong-lot';
+ 
+ describe('SRCH.C12: the two v8 strings', () => {
+   it('the content file and the generated slice carry the v8 text under help.lot.prompt and help.address.link', () => {
+@@ -69,7 +73,7 @@ describe('SRCH.C12 C.12: the multi-lot state ends with "Not sure which lot? Get
+   it('the two multi-lot goldens are exactly the nothing-picked and the picked case', () => {
+     expect([...NOTHING_PICKED, ...PICKED].sort()).toEqual([...WITH_ROW].sort());
+   });
+-  it.each(WITH_ROW)('%s: the help row follows the button (and its hint line when shown): the prompt text and the link button to Help with topic lot_match', (name) => {
++  it.each(WITH_ROW)('%s: the help row follows the button (and its hint line when shown): the prompt text and the link button to Help with topic wrong-lot', (name) => {
+     const col = column(golden(name));
+     const at = col.findIndex((c) => c.props?.testID === 'parcel-lotmap-continue');
+     expect(at).toBeGreaterThan(-1);
+@@ -82,7 +86,7 @@ describe('SRCH.C12 C.12: the multi-lot state ends with "Not sure which lot? Get
+     expect(link!.component).toBe('Button');
+     expect(link!.props.testID).toBe(HELP);
+     expect([link!.props.variant, link!.props.accessibilityRole]).toEqual(['link', 'link']);
+-    expect(link!.props.onPress).toEqual(openHelp('lot_match'));
++    expect(link!.props.onPress).toEqual(openHelp(TOPIC));
+     expect(link!.children[0].children).toEqual([{ content: 'help.address.link' }]);
+     expect(allByTestId(golden(name).props, HELP)).toHaveLength(1);
+   });
+@@ -97,7 +101,7 @@ describe('SRCH.C12 B.7: the link under each address-confusion notice', () => {
+     expect(link.component).toBe('Button');
+     expect(link.props.testID).toBe(HELP);
+     expect([link.props.variant, link.props.accessibilityRole]).toEqual(['link', 'link']);
+-    expect(link.props.onPress).toEqual(openHelp('address_match'));
++    expect(link.props.onPress).toEqual(openHelp(TOPIC));
+     expect(link.children[0].children).toEqual([{ content: 'help.address.link' }]);
+     expect(allByTestId(golden(name).props, HELP)).toHaveLength(1);
+     expect(allByTestId(golden(name).props, 'parcel-lotmap-help-row')).toEqual([]);
+@@ -112,6 +116,14 @@ describe('SRCH.C12 B.7: the link under each address-confusion notice', () => {
+   });
+ });
+ 
++describe('SEARCHFIX.3 B.7: the map topic is a Help page topic (task-451)', () => {
++  it('wrong-lot is a mailto topic of web_help in the page table, so the link lands on a listed topic', () => {
++    const table = rj('scripts/surfaces/_schema/static-page.json');
++    const topics = (table.pages.web_help.static.sections as Json[]).flatMap((s) => (s.parts as Json[]).filter((p) => p.role === 'mailto').map((p) => p.topic));
++    expect(topics).toContain(TOPIC);
++  });
++});
++
+ describe('SRCH.C12: the host passes the action, and the page reads and writes nothing new', () => {
+   it('disambiguate.tsx hands open_help (the existing openHelp) to the renderer', () => {
+     const src = fs.readFileSync(path.join(ROOT, 'mobile/app/(app)/parcel-tool/disambiguate.tsx'), 'utf8');
+diff --git a/src/tests/surfaces/search-follow-ups.logic.test.ts b/src/tests/surfaces/search-follow-ups.logic.test.ts
+index 6d390f78e8a10551b1c7439fd35c0448ddb3f849..9bf4cdca0c1fa03af00d50dd7a9470721d9a7d6f 100644
+--- a/src/tests/surfaces/search-follow-ups.logic.test.ts
++++ b/src/tests/surfaces/search-follow-ups.logic.test.ts
+@@ -141,14 +141,20 @@ describe('GAP.13: the dated notes on the parent queue rows (M-246, prior text ke
+ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map and C.7 the card lead (choose-lot.html:306)', () => {
+   const LEADS = {
+     'lot.letter': 'Lot {letter}',
+-    'lot.lead.house': 'Lot {letter} · has the house',
+-    'lot.lead.no_building': 'Lot {letter} · no building',
++    // SEARCHFIX.3 V1 (task-451, dated 2026-11-24; MD:776 "'at the back' when it has none", doc-2 C.7, FOLD-PLAN.md:57; prior values 'Lot {letter} · has the house'
++    // and 'Lot {letter} · no building'): a lot with no fronting street reads "at the back".
++    'lot.lead.house': 'Lot {letter} · has the house · at the back',
++    'lot.lead.no_building': 'Lot {letter} · no building · at the back',
+     'lot.lead.no_building_faces': 'Lot {letter} · no building · faces {street}',
+     'lot.lead.house_faces': 'Lot {letter} · has the house · faces {street}',
+   };
+-  it('lead keys carry the v8 words (choose-lot.html:306) in the content file and the slice; "at the back" is not data and is not used (RR-0289, MORNING-DECISIONS.md:1117)', () => {
++  // SEARCHFIX.3 V1 (task-451 AC2, dated 2026-11-24): the prior title said '"at the back" is not data and is not used (RR-0289, MORNING-DECISIONS.md:1117)' and its
++  // assertion was that no content value holds "at the back". RR-0289 rules massing presence only; "at the back" is the v8 phrase for a lot with no fronting street
++  // (MD:776, doc-2 C.7, FOLD-PLAN.md:57), so the lock is now on where the phrase may and may not appear.
++  it('lead keys carry the v8 words (choose-lot.html:306) in the content file and the slice; "at the back" ends only the two no-street leads', () => {
+     for (const [k, v] of Object.entries(LEADS)) expect([k, mapContent[k], mapSlice[k]]).toEqual([k, v, v]);
+-    expect(Object.values(mapContent).filter((v) => /at the back/.test(v))).toEqual([]);
++    for (const k of ['lot.lead.house', 'lot.lead.no_building']) expect([k, mapContent[k]!.endsWith(' · at the back')]).toEqual([k, true]);
++    for (const k of ['lot.lead.house_faces', 'lot.lead.no_building_faces', 'lot.letter']) expect([k, /at the back/.test(mapContent[k]!)]).toEqual([k, false]);
+   });
+   const leadKey = (name: string, i: number): { key: string; street: unknown } => {
+     const g = rj(`${GOLD}/${MAP}/${name}.mobile.json`);
+@@ -158,7 +164,8 @@ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map an
+     const street = /"street":(\{[^}]*\})/.exec(text)?.[1] ?? null;
+     return { key: refs[0]!, street: street && JSON.parse(street) };
+   };
+-  it('two lots: A has a footprint and a street (house and faces), B has no footprint and no street ("no building" only)', () => {
++  // SEARCHFIX.3 (task-451, dated 2026-11-24; prior title ended '("no building" only)'): the key is unchanged; its text now ends "at the back".
++  it('two lots: A has a footprint and a street (house and faces), B has no footprint and no street ("no building · at the back")', () => {
+     expect(leadKey('multi_parcel_2', 0)).toEqual({ key: 'lot.lead.house_faces', street: { contract: 'contract_parcels_lookup.map.lots.0.frontageStreet' } });
+     expect(leadKey('multi_parcel_2', 1)).toEqual({ key: 'lot.lead.no_building', street: null });
+   });
+@@ -196,6 +203,17 @@ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map an
+     expect(src).toContain('55322');
+     expect(src).not.toMatch(/\b(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE)\b/);
+   });
++  // SEARCHFIX.3 L7 (task-451; GROUNDER-G item 2): a flag with no value, or with the next flag as its value, is an error (usage, exit 2), never a silent read.
++  it('SEARCHFIX.3 L7: --url or --parcels with a missing value or a flag as its value sets an error; a real value does not', async () => {
++    const parseArgs = (await import('../../../scripts/analysis/lot-map-data-check.mjs')).parseArgs as unknown as (argv: string[]) => { error?: string };
++    expect(parseArgs(['--parcels', '--url', 'x']).error).toBeTruthy();
++    expect(parseArgs(['--url']).error).toBeTruthy();
++    expect(parseArgs(['--url', '--dry-run']).error).toBeTruthy();
++    expect(parseArgs(['--parcels']).error).toBeTruthy();
++    expect(parseArgs(['--parcels', '1,2']).error).toBeUndefined();
++    expect(parseArgs(['--url', 'postgres://u@127.0.0.1:55322/db']).error).toBeUndefined();
++    expect(parseArgs(['--dry-run']).error).toBeUndefined();
++  });
+   it('the data-check guard refuses every host, port, scheme and query override but the rehearsal stack', async () => {
+     const { refuse } = await import('../../../scripts/analysis/lot-map-data-check.mjs');
+     expect(refuse('postgres://u:p@127.0.0.1:55322/db')).toBeNull();
+diff --git a/src/tests/surfaces/static-page.logic.test.ts b/src/tests/surfaces/static-page.logic.test.ts
+index c46c926fd9bb128d302ff52d8b162e7bcfe64ad7..fafda8ba54c1da9f720a0b17c4a8cefdbffdd37e 100644
+--- a/src/tests/surfaces/static-page.logic.test.ts
++++ b/src/tests/surfaces/static-page.logic.test.ts
+@@ -51,21 +51,22 @@ describe('T1 the page table against the contract', () => {
+     expect(pagesOf().length).toBe(7);
+   });
+   it('RED: each planted defect is refused', () => {
++    // SEARCHFIX.3 (task-451, dated 2026-11-24): web_help gains the header section first (H Q2), so its prose and footer move from [0], [1] to [1], [2].
+     const plants: Array<[string, (t: Json) => void]> = [
+-      ['a number as content', (t) => { t.pages.web_help.static.sections[0].parts[1].content = 9.99; }],
++      ['a number as content', (t) => { t.pages.web_help.static.sections[1].parts[1].content = 9.99; }],
+       // MF-76 (dated 2026-11-11): hero is a landing kind now, so the planted unknown kind is one no row has added.
+-      ['an unknown kind', (t) => { t.pages.web_help.static.sections[0].kind = 'banner'; }],
+-      ['a role outside its kind', (t) => { t.pages.web_help.static.sections[1].parts[3].role = 'paragraph'; }],
+-      ['a link with no href', (t) => { delete t.pages.web_help.static.sections[1].parts[0].href; }],
+-      ['an off-origin href', (t) => { t.pages.web_help.static.sections[1].parts[0].href = '//evil.com'; }],
+-      ['an href on a paragraph', (t) => { t.pages.web_help.static.sections[0].parts[1].href = '/help'; }],
+-      ['a value typed into a part', (t) => { t.pages.web_help.static.sections[0].parts[1].text = 'Hello'; }],
++      ['an unknown kind', (t) => { t.pages.web_help.static.sections[1].kind = 'banner'; }],
++      ['a role outside its kind', (t) => { t.pages.web_help.static.sections[2].parts[3].role = 'paragraph'; }],
++      ['a link with no href', (t) => { delete t.pages.web_help.static.sections[2].parts[0].href; }],
++      ['an off-origin href', (t) => { t.pages.web_help.static.sections[2].parts[0].href = '//evil.com'; }],
++      ['an href on a paragraph', (t) => { t.pages.web_help.static.sections[1].parts[1].href = '/help'; }],
++      ['a value typed into a part', (t) => { t.pages.web_help.static.sections[1].parts[1].text = 'Hello'; }],
+       // MF-46 follow-up (dated 2026-11-12): the mailto role (parts 2-6 of web_help).
+-      ['a mailto without a topic', (t) => { delete t.pages.web_help.static.sections[0].parts[2].topic; }],
+-      ['a mailto topic outside the list', (t) => { t.pages.web_help.static.sections[0].parts[2].topic = 'sales'; }],
+-      ['a mailto reading another value', (t) => { t.pages.web_help.static.sections[0].parts[2].value = 'other'; }],
+-      ['a mailto with an href', (t) => { t.pages.web_help.static.sections[0].parts[2].href = '/help'; }],
+-      ['a topic on a paragraph', (t) => { t.pages.web_help.static.sections[0].parts[1].topic = 'general'; }],
++      ['a mailto without a topic', (t) => { delete t.pages.web_help.static.sections[1].parts[2].topic; }],
++      ['a mailto topic outside the list', (t) => { t.pages.web_help.static.sections[1].parts[2].topic = 'sales'; }],
++      ['a mailto reading another value', (t) => { t.pages.web_help.static.sections[1].parts[2].value = 'other'; }],
++      ['a mailto with an href', (t) => { t.pages.web_help.static.sections[1].parts[2].href = '/help'; }],
++      ['a topic on a paragraph', (t) => { t.pages.web_help.static.sections[1].parts[1].topic = 'general'; }],
+       // PAGE.TABLE (task-390): the interactive screens; sections of mobile_parcel_semi_question: 0 bar, 1 status, 2-4 notices, 5 text, 6 choices, 7 button.
+       ['a screen section of an unknown kind', (t) => { t.screens.mobile_parcel_semi_question.sections[1].kind = 'banner'; }],
+       ['a number as screen content', (t) => { t.screens.mobile_parcel_semi_question.sections[1].content = 9.99; }],
+@@ -141,21 +142,43 @@ describe('T3 one footer, one legal line', () => {
+ });
+ 
+ describe('T4 every link is a public host-table route with a page behind it', () => {
+-  it('each href is a public maxbld.ca row rewritten to an existing internal page; none is scope D', () => {
++  // SEARCHFIX.3 H Q2, H Q4 (task-451, dated 2026-11-24; GROUNDER-QUESTIONS.md:75, :77; help.html and terms-privacy.html:262 "MaxBLD home -> /; Log in -> /login"):
++  // the plain pages gain the header links / and /login. Prior text: one list ['/help', '/privacy', '/terms'], each internal /parcel-tool + href under the
++  // (static) mount, which / (internal /parcel-tool/home) and /login (a page outside (static)) cannot meet. Now two pinned sets: the footer set keeps the strict
++  // check; the header set is checked as public host rows whose internal page exists (the pageExists reading of web-landing.logic.test.ts T5).
++  const PAGES_ROOT = 'src/app/(maxbld)/parcel-tool';
++  const pageExists = (internal: string): boolean => {
++    const rel = internal.replace(/^\/parcel-tool/, '');
++    return [path.join(ROOT, PAGES_ROOT, rel, 'page.tsx'), path.join(ROOT, PAGES_ROOT, '(static)', rel, 'page.tsx')].some((f) => fs.existsSync(f));
++  };
++  const hrefsOf = (kind: string): string[] => [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.filter((s: Json) => s.kind === kind).flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))].sort();
++  it('each footer href is a public maxbld.ca row rewritten to an existing internal page under (static); none is scope D', () => {
+     // MF-76 (dated 2026-11-11): the plain pages only; the landing's links (in-page anchors, /login, /signup with a plan, the help topic) are pinned
+     // by src/tests/surfaces/web-landing.logic.test.ts T5 against the same host table.
+-    const hrefs = [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))];
+-    expect(hrefs.sort()).toEqual(['/help', '/privacy', '/terms']);
++    const hrefs = hrefsOf('footer');
++    expect(hrefs).toEqual(['/help', '/privacy', '/terms']);
+     for (const h of hrefs) {
+       const row = matchMaxbldRoute(h);
+       expect([h, row?.routeClass, row?.internal]).toEqual([h, 'public', `/parcel-tool${h}`]);
+       expect([h, fs.existsSync(path.join(ROOT, `${MOUNTS}${h}/page.tsx`))]).toEqual([h, true]);
+     }
+   });
++  it('each header href is a public maxbld.ca row whose internal page exists; the plain pages hold no other link', () => {
++    expect(hrefsOf('hero')).toEqual(['/', '/login']);
++    const all = [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))].sort();
++    expect(all).toEqual(['/', '/help', '/login', '/privacy', '/terms']);
++    for (const h of hrefsOf('hero')) {
++      const row = matchMaxbldRoute(h);
++      expect([h, row?.routeClass, typeof row?.internal === 'string' && pageExists(row.internal)]).toEqual([h, 'public', true]);
++    }
++  });
+ });
+ 
+ describe('T5 the plain pages are public (no gate)', () => {
+-  const gateImports = (text: string): string[] => text.split('\n').filter((l) => /^\s*import\b/.test(l) && /require-parcel-tool-page|requireParcelToolPage/.test(l));
++  // SEARCHFIX.3 X6 static half (task-451, dated 2026-11-24; prior text: a per-line filter of import lines, which a wrapped multi-line import or a bare call
++  // slipped past): the gate module or its call anywhere in the comment-stripped text.
++  const strip = (text: string): string => text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
++  const gateImports = (text: string): string[] => [...strip(text).matchAll(/require-parcel-tool-page|requireParcelToolPage\s*\(/g)].map((m) => m[0]);
+   it('no mount under (static) imports the parcel-tool page gate', () => {
+     const files = fs.readdirSync(path.join(ROOT, MOUNTS), { recursive: true }).map(String).filter((f) => f.endsWith('.tsx'));
+     // Dated 2026-11-11 (MF-46, plan v1 fold 4): + refused/page.tsx, the internal target of a refused maxbld.ca page path (it only calls notFound()).
+@@ -167,6 +190,11 @@ describe('T5 the plain pages are public (no gate)', () => {
+   it('RED: a planted gate import is caught', () => {
+     expect(gateImports("import { requireParcelToolPage } from '@/lib/auth/require-parcel-tool-page';\n// requireParcelToolPage in a comment")).toHaveLength(1);
+   });
++  it('RED (SEARCHFIX.3 X6): a wrapped three-line import and a bare call are caught; a comment-only mention is not', () => {
++    expect(gateImports("import {\n  requireParcelToolPage,\n} from '@/lib/auth/require-parcel-tool-page';").length).toBeGreaterThan(0);
++    expect(gateImports('export default async function P() { await requireParcelToolPage(); }').length).toBeGreaterThan(0);
++    expect(gateImports('// requireParcelToolPage() and require-parcel-tool-page in a comment\n/* requireParcelToolPage() */\nexport const x = 1;')).toEqual([]);
++  });
+ });
+ 
+ describe('T6 legal text parity (plan v3 §12 fold 22) and the support inbox ruling', () => {
+diff --git a/src/tests/surfaces/static-web-binding.ui.test.tsx b/src/tests/surfaces/static-web-binding.ui.test.tsx
+index b94a84c76570275c65e0a564c3e9a4eb567c949b..02be1560ecbcd160192b4cdaf8f75348622b7dbb 100644
+--- a/src/tests/surfaces/static-web-binding.ui.test.tsx
++++ b/src/tests/surfaces/static-web-binding.ui.test.tsx
+@@ -14,6 +14,9 @@
+ //       data-topic); with none the server's keepValued leaves them out; the prefill island adds the cleaned, encoded fragment values as the body of
+ //       the fragment topic's link only (a CR/LF bcc payload stays inside the body); RED: a mailto without its value, a topic outside the list, a
+ //       topic on a paragraph throw.
++//   (e) dated 2026-11-24 (SEARCHFIX.3, task-451; H Q2 and H Q4, GROUNDER-QUESTIONS.md:75, :77; help.html and terms-privacy.html:262 "MaxBLD home -> /; Log in -> /login";
++//       plan ruling 8.5: both states of the error page): every plain page draws the header with the links / "MaxBLD" and /login "Log in" and keeps the
++//       narrow column; RED: a title-less hero with any other part still throws.
+ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+ import fs from 'node:fs';
+ import path from 'node:path';
+@@ -99,6 +102,7 @@ describe('(b) the one action', () => {
+ });
+ 
+ describe('(c) RED: planted defects throw', () => {
++  // SEARCHFIX.3 (task-451, dated 2026-11-24): web_help gains the header section first (H Q2), so its prose and footer move from sections[0], [1] to [1], [2].
+   const base = (): { page: StaticPage; content: Record<string, string> } => clone(staticPage('web_help', 'static'));
+   it('an unknown component and an unknown action throw at render', () => {
+     const { page, content } = base();
+@@ -107,7 +111,8 @@ describe('(c) RED: planted defects throw', () => {
+     (bad.children[0] as StaticNode).component = 'Card';
+     expect(() => ssr(bad, content)).toThrow('StaticBinding: unmapped component "Card"');
+     const act = staticWebTree(clone(staticPage('web_maxbld_error', 'error')).page);
+-    const prose = (act.children[0] as StaticNode).children[0] as StaticNode;
++    // SEARCHFIX.3 (task-451, dated 2026-11-24): the error page opens with the header section (H Q4, ruling 8.5), so its prose moves from children[0] to [1].
++    const prose = (act.children[0] as StaticNode).children[1] as StaticNode;
+     (prose.children[2] as StaticNode).props.onClick = { action: 'push', route: '/x' };
+     expect(() => ssr(act, STATIC_CONTENT.web_maxbld_error as Record<string, string>)).toThrow('StaticBinding: unknown action');
+   });
+@@ -121,15 +126,15 @@ describe('(c) RED: planted defects throw', () => {
+   });
+   it('a number as a part content, an unknown kind, a role outside its kind, a link with no href or an off-origin href throw in the tree', () => {
+     const plant = (f: (p: Json) => void): (() => StaticNode) => { const { page } = base(); f(page as unknown as Json); return () => staticWebTree(page); };
+-    expect(plant((p) => { p.sections[0].parts[1].content = 9.99; })).toThrow('is not a content key');
++    expect(plant((p) => { p.sections[1].parts[1].content = 9.99; })).toThrow('is not a content key');
+     // MF-76 (dated 2026-11-11): hero is a landing kind now; the planted unknown kind is one no row has added.
+-    expect(plant((p) => { p.sections[0].kind = 'banner'; })).toThrow('unknown section kind "banner"');
+-    expect(plant((p) => { p.sections[0].parts[1].role = 'link'; p.sections[0].parts[1].href = '/help'; })).toThrow('role "link" is not a prose role');
+-    expect(plant((p) => { delete p.sections[1].parts[0].href; })).toThrow('href undefined is not allowed here');
+-    expect(plant((p) => { p.sections[1].parts[0].href = '//evil.com'; })).toThrow('href "//evil.com" is not allowed here');
+-    expect(plant((p) => { p.sections[1].parts[0].href = 'https://evil.com'; })).toThrow('is not allowed here');
+-    expect(plant((p) => { p.sections[0].parts[1].href = '/help'; })).toThrow('href "/help" is not allowed here');
+-    expect(plant((p) => { p.sections[0].extra = 1; })).toThrow('unknown key "extra"');
++    expect(plant((p) => { p.sections[1].kind = 'banner'; })).toThrow('unknown section kind "banner"');
++    expect(plant((p) => { p.sections[1].parts[1].role = 'link'; p.sections[1].parts[1].href = '/help'; })).toThrow('role "link" is not a prose role');
++    expect(plant((p) => { delete p.sections[2].parts[0].href; })).toThrow('href undefined is not allowed here');
++    expect(plant((p) => { p.sections[2].parts[0].href = '//evil.com'; })).toThrow('href "//evil.com" is not allowed here');
++    expect(plant((p) => { p.sections[2].parts[0].href = 'https://evil.com'; })).toThrow('is not allowed here');
++    expect(plant((p) => { p.sections[1].parts[1].href = '/help'; })).toThrow('href "/help" is not allowed here');
++    expect(plant((p) => { p.sections[1].extra = 1; })).toThrow('unknown key "extra"');
+     expect(plant((p) => { p.sections = []; })).toThrow('at least one section');
+   });
+ });
+@@ -162,8 +167,31 @@ describe('(d) the Help & Support mail links (MF-46 follow-up, dated 2026-11-12)'
+     const { page, content } = staticPage('web_help', 'static');
+     expect(() => ssr(staticWebTree(page), content, { values: {} })).toThrow('StaticBinding: no server value "support_inbox"');
+     const plant = (f: (p: Json) => void): (() => StaticNode) => { const p = clone(page) as unknown as Json; f(p); return () => staticWebTree(p as unknown as StaticPage); };
+-    expect(plant((p) => { p.sections[0].parts[2].topic = 'sales'; })).toThrow('a mailto has a listed topic');
+-    expect(plant((p) => { p.sections[0].parts[1].topic = 'general'; })).toThrow('no other part has a topic');
+-    expect(plant((p) => { p.sections[0].parts[2].value = 'other'; })).toThrow('a mailto has a listed topic and the read support_inbox');
++    expect(plant((p) => { p.sections[1].parts[2].topic = 'sales'; })).toThrow('a mailto has a listed topic');
++    expect(plant((p) => { p.sections[1].parts[1].topic = 'general'; })).toThrow('no other part has a topic');
++    expect(plant((p) => { p.sections[1].parts[2].value = 'other'; })).toThrow('a mailto has a listed topic and the read support_inbox');
++  });
++});
++
++describe('(e) the plain pages carry the header links (SEARCHFIX.3 H Q2, H Q4; task-451)', () => {
++  const PLAIN: Array<[string, string]> = [['web_help', 'static'], ['web_terms', 'static'], ['web_privacy', 'static'], ['web_maxbld_error', 'error'], ['web_maxbld_error', 'miss']];
++  it.each(PLAIN)('%s %s: a <header> with / "MaxBLD" and /login "Log in", before the page content; the narrow column is kept', (id, state) => {
++    const { page, content } = staticPage(id, state);
++    const html = ssr(staticWebTree(page), content, { actions: { retry: () => undefined } });
++    const header = /<header\b[^>]*>([\s\S]*?)<\/header>/.exec(html);
++    expect(header).not.toBeNull();
++    expect(header![1]).toMatch(/<a\b[^>]*href="\/"[^>]*>[\s\S]*?MaxBLD[\s\S]*?<\/a>/);
++    expect(header![1]).toMatch(/<a\b[^>]*href="\/login"[^>]*>[\s\S]*?Log in[\s\S]*?<\/a>/);
++    expect([content['nav.home'], content['nav.sign_in']]).toEqual(['MaxBLD', 'Log in']);
++    expect(html.indexOf('<header')).toBeLessThan(html.indexOf('data-testid="static-footer"'));
++    expect(html).toContain('max-w-2xl');
++    expect(html).not.toContain('max-w-6xl');
++    expect(html.match(/<h1\b/g)?.length ?? 0).toBeLessThanOrEqual(1);
++    expect(errors).toEqual([]);
++  });
++  it('RED: a title-less hero with a tagline (or any part but the wordmark and nav) still throws', () => {
++    const { page } = clone(staticPage('web_help', 'static'));
++    (page.sections[0] as unknown as Json).parts.push({ role: 'tagline', content: 'help.intro' });
++    expect(() => staticWebTree(page)).toThrow('a hero has a title');
+   });
+ });
+diff --git a/src/tests/surfaces/surface-conformance.logic.test.ts b/src/tests/surfaces/surface-conformance.logic.test.ts
+index 8f5965f7382c7fa997eaf1e23e2d8062b18c8f46..6e662a6a9783746e2c52fa202b1217560ba4b424 100644
+--- a/src/tests/surfaces/surface-conformance.logic.test.ts
++++ b/src/tests/surfaces/surface-conformance.logic.test.ts
+@@ -259,7 +259,8 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
+     // SRCH.C12 (task-321; dated 2026-11-19; operator RR-0299 "C12 - is a fake email address until launch"): 422 -> 424 strings: +2 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (help.lot.prompt, help.address.link, lines 25-26); measured with surface-validate --check before (422) and after (424).
+     // SRCH.LOTMAP-2 (task-362; dated 2026-11-19; design small-pages-v8 choose-lot.html:278 "Pick a lot on the map or in the list."): 425 -> 426 strings: +1 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (select.hint); goldens unchanged (100); measured with surface-validate --check before (425) and after (426).
+     // SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings: +1 in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json (help.mailto.wrong_lot); goldens unchanged (100); measured with surface-validate --check before (426) and after (427).
+-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 100 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 427 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
++    // SEARCHFIX.3 (task-451; dated 2026-11-24; H Q2/H Q4 GROUNDER-QUESTIONS.md:75, :77; doc-2 B.6 (doc-2:48); plan rulings 8.1 b and 8.3): 427 -> 436 strings: +8 nav strings (nav.home "MaxBLD" and nav.sign_in "Log in" in web_help, web_terms, web_privacy and web_maxbld_error .content.json, the plain-page header links) and +1 net in mobile_parcel_disambiguation_map.content.json (unlinked.report and unlinked.stop added, select.label retired); goldens unchanged (100); measured with surface-validate --check before (427) and after (436).
++    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 100 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 436 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
+   });
+   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
+     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
+diff --git a/src/tests/surfaces/surface-validate.logic.test.ts b/src/tests/surfaces/surface-validate.logic.test.ts
+index 348152fd8d4312ead5bad40b23002a09b633dfb4..16f1b2fcdbe830393f7490a274cd70d4a079765e 100644
+--- a/src/tests/surfaces/surface-validate.logic.test.ts
++++ b/src/tests/surfaces/surface-validate.logic.test.ts
+@@ -89,7 +89,8 @@ describe('FE-13 surface-validate gate: real tree', () => {
+     // SRCH.C12 (task-321; dated 2026-11-19; operator RR-0299 "C12 - is a fake email address until launch"): 422 -> 424 strings: +2 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (help.lot.prompt, help.address.link, lines 25-26); measured with surface-validate --check before (422) and after (424).
+     // SRCH.LOTMAP-2 (task-362; dated 2026-11-19; design small-pages-v8 choose-lot.html:278 "Pick a lot on the map or in the list."): 425 -> 426 strings: +1 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (select.hint); goldens unchanged (100); measured with surface-validate --check before (425) and after (426).
+     // SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings: +1 in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json (help.mailto.wrong_lot, the topic "Wrong address or lot"); goldens unchanged (100); measured with surface-validate --check before (426) and after (427).
+-    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 427 strings) · S-page ok (1 of 1 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
++    // SEARCHFIX.3 (task-451; dated 2026-11-24; H Q2/H Q4 GROUNDER-QUESTIONS.md:75, :77; doc-2 B.6 (doc-2:48); plan rulings 8.1 b and 8.3): 427 -> 436 strings: +8 nav strings (nav.home "MaxBLD" and nav.sign_in "Log in" in web_help, web_terms, web_privacy and web_maxbld_error .content.json, the plain-page header links) and +1 net in mobile_parcel_disambiguation_map.content.json (unlinked.report and unlinked.stop added, select.label retired); goldens unchanged (100); measured with surface-validate --check before (427) and after (436).
++    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 436 strings) · S-page ok (1 of 1 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
+     expect(r.stdout.startsWith('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · ')).toBe(true);
+     expect(r.stdout).toContain('S-desc ok (examined 33 in scope:');
+   });
+

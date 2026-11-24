@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:24:09.324Z file_sha256=6a705929826e3740f32e8b020e8c0f254d84dc127373b6df278935c24969a988 prompt_sha256=0aed83984d01598601ab80d374ce4f438f18bbfc39e59d4b9497b48189493c97
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-mobile-99-p4.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none raised: no clause in the pasted list is violated by the five files in this chunk.
+
+DEFER severity=MED — AC6 "Objective C.3 carries a dated note: no neighbour lots" — docs/reports/generated/127-surface-review-queue.md:201 "Dated note 2026-11-24 (SEARCHFIX.3, task-451, R3; prior text kept)" — the only dated note in this chunk is the queue's R3 note; no line adds the C.3 note, and the implementation notes place it in a later commit ("The doc-2 dated notes (AC6 C.3, C.7, C.12, B.6/B.7, C.9) ... land in their own commit"), so AC6 has no evidence in this material — confirm that commit is inside this change, or land the C.3 note here.
+
+DEFER severity=LOW — RR-0392 "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)" — docs/reports/generated/127-surface-review-queue.md:412 "-| writes | `user_profiles` | `user_id` · `trade_slug` · `display_name`" — the diff deletes MF-53's declared `user_profiles` write row, a change named by no AC and no plan line (R3 names only chain positions sources[4]/[8]/[15]) — state in the notes that the generator recomputed it, or restore the row.
+
+REJECT — §8.3 "Each render gate condition (per §6.5) MUST have a test asserting that toggling `isFetching` does NOT flip the gate." — the lot-map tests are accused of omitting an isFetching-toggle assertion — the situation builder here only reaches `loading` when no data has settled (the four error inputs are passed `isFetching: false`), and this chunk shows no §6.5 stable-signal gate with an `isFetching` carve-out, so §8.3 names no gate in this material.
+
+MET — AC2 — mobile/__tests__/lotMapPage.behaviour.test.tsx:110 — "Lot B · no building · at the back" plus the 3-lot case asserting "at the back" for the no-street house and "faces" where a street exists.
+
+MET — AC3 — mobile/__tests__/lotMapPage.behaviour.test.tsx:167 — body "... Try a nearby address or report it." with the `parcel-lotmap-report` link opening `topic=wrong-lot`.
+
+MET — AC4 — mobile/__tests__/lotMapScreens.golden.test.ts:230 — card label text/vars pin lead plus area, and the frontage/zoning regex exclusion.
+
+MET — AC5 — mobile/__tests__/lotMapPage.behaviour.test.tsx:88 — the four error inputs render `parcel-lotmap-error` / `-ratelimit` / `-entitlement`, not the redirect tree.
+
+MET — B.7 — mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json:312 — every `open_help` action now carries `"topic": "wrong-lot"` and the golden test asserts the topic set is exactly `['wrong-lot']`.
+
+MET — R3 — docs/reports/generated/127-surface-review-queue.md:208 — chain positions updated to `sources[4]`, `sources[8]`, `sources[15]`.
+
+MET — AC1 — mobile/__tests__/lotMapScreens.golden.test.ts:224 — `lot.null` is "Not available" on the card and in its label.
+
+MET — Spec 99 §10 — no out-of-scope path (mobile/src/store/**, mobile/app/**/_layout.tsx, mobile/app/(onboarding)/*, mobile/src/hooks/useUserProfile.ts, mobile/src/lib/debug/stateDebug.ts) appears in this chunk.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 0
+Rules met: none
+
+---
+⏱  118056ms (118.1s)
+📊 Tokens — total: 56727, input: 32389, output: 24338, reasoning: 23412

@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:25:17.083Z file_sha256=401442b047a1b80981f3533bf4d82bab049bacef3b7e7d2914208c936a24fa6f prompt_sha256=dee0b03f6e7761636bbafdd8a5e6592e0f43df0c6886827be15252e7f0c345a5
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-step-132-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC2 "A lot with no fronting street reads "at the back"" — mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json:1695 ""content": "lot.letter"" — the third lot of multi_parcel_3plus, the same lot whose area becomes lot.null and whose response carries no fronting street, keeps the bare letter lead with no street var, so no "at the back" text is rendered for it and the lead-line contract this same change records in the queue note ("Lot letter, "has the house" or "no building", then "faces {street}" or "at the back"") is unmet for that card — fix: point that lead at a no-street key that yields "Lot C · at the back" and assert its rendered text in the new 3-lot test, which today asserts only lots A and B.
+
+DEFER severity=MED — AC5 "The lot-map smoke test renders the four error states as errors" — mobile/__tests__/lotMapPage.behaviour.test.tsx:61 "kind === 'entitlement' ? new ApiError(403, 'forbidden')" — errorOf keys off the fixture's `error` string and returns null for anything other than rate_limited, entitlement, unexpected or schema_drift, so whether the four states render as errors depends on fixture values this chunk does not change (its fixture diff touches only `area`), and the implementation notes record mobile jest red and green as UNVERIFIED until the push station — fix: branch errorOf on the situation name `k` instead of the fixture string, then run lotMapPage.behaviour and lotMapScreens.golden at the push station and record the result.
+
+DEFER severity=LOW — AC4 "The screen-reader label contains the visible card text" — mobile/__tests__/lotMapPage.behaviour.test.tsx:94 "the same commit removed the card facts line (C.9), so the frontage and zoning facts reach the screen through the card's accessibility label" — that dated 2026-11-20 comment now asserts the opposite of this change, which removes frontage and zoning from the label, and no dated note supersedes it — fix: add a dated SEARCHFIX.3 note keeping the prior text and recording the supersession.
+
+DEFER severity=NIT — x-rulings.1 "Cited ids must resolve." — docs/reports/generated/127-surface-review-queue.md:201 "an implausible area reads "Not available" (RR-0444 2c)" — RR-0444 as pasted carries items (1) and (2) a-b only, with no 2c, so the sub-citation cannot be resolved from the pasted record — fix: cite the decision-log id of the ruling that actually names the "Not available" rule.
+
+REJECT — RR-0392 "Nothing is added that the plan or a ruling does not name" — accused of adding the errorOf helper and the four-error-notice assertions beyond the card's plain words — AC5 names "The lot-map smoke test renders the four error states as errors", so those lines are named, not invented.
+
+MET — AC1 — mobile/__tests__/fixtures/lotMap.situations.json:287 ""area": null" — the lot whose size is not usable now carries null, and the card text and the label template read the same area var, so the null value reaches both.
+MET — AC3 — mobile/__tests__/lotMapPage.behaviour.test.tsx:170 "expect(mockOpenBrowser.mock.calls).toEqual([['https://maxbld.ca/help#topic=wrong-lot&q=12%20Laneway%20Rear']])" — the no-lot line ends "or report it" and its link opens the wrong-lot topic with the typed address.
+MET — AC4 — mobile/__tests__/lotMapPage.behaviour.test.tsx:115 "expect(labelA).toBe('Lot A · has the house · faces Dunmore Lane, 3,052 sq ft · 284 m²')" — the label equals the card lead plus its area, and the test forbids frontage or zoning in it.
+MET — AC5 — mobile/__tests__/lotMapPage.behaviour.test.tsx:86 "expect([k, s.state]).toEqual([k, 'error'])" — the four error inputs assert state error and their own notice testID, with Retry only on the unexpected error.
+MET — RR-0446 "several-lots map stays as built; no neighbour lots" — mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json:2741 ""key": "unlinked-report"" — the unlinked state gains only the report link and a stop text, no neighbouring lots.
+MET — B.7 "to /help?topic=wrong-lot" — mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json:2858 ""topic": "wrong-lot"" — every help link that read address_match or lot_match now reads wrong-lot.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 1
+Rules met: none
+
+---
+⏱  137820ms (137.8s)
+📊 Tokens — total: 54245, input: 34750, output: 19495, reasoning: 18351

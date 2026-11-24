@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-24T17:27:26.130Z file_sha256=08ebeab3bf1b024a5abe5bc32e01b609614eae26dd4f9cb053340f9c54f7d64a prompt_sha256=482f5004f288915a561bc47ff3bf702baa92b360d924a6022afd015916f19e33
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-security-p2.txt (model: deepseek-reasoner)
+
+PII: the change adds one more link that puts the user-typed address into a help deep link (`q: derived('query')`), an existing pattern for the help button.
+
+REJECT — mobile/src/components/surfaces/LotMapBinding.tsx "onPress: { action: 'open_help', topic: HELP_TOPIC, q: derived('query') }," — a shareable URL like maxbld.ca/help#topic=wrong-lot&q=<payload> could reflect that value on the help page — the island that reads the hash is not in this diff (cannot see it); src/tests/surfaces/static-web-binding.ui.test.tsx pins "the prefill island adds the cleaned, encoded fragment values as the body of the fragment topic's link only (a CR/LF bcc payload stays inside the body)", so the consumer is claimed encoded and the fragment never reaches the server.
+
+DEFER severity=LOW — mobile/src/components/surfaces/LotMapBinding.tsx "onPress: { action: 'open_help', topic: HELP_TOPIC, q: derived('query') }," — the typed address is recorded in the in-app browser history and prefilled into the mailto body, so a shared device exposes it — pre-existing behaviour for parcel-lotmap-help, extended here to the report-it link and the notice links; blast radius is the device owner, no server-side exposure.
+
+VERDICT: PASS on exploitability
+Surfaces touched: PII
+
+---
+⏱  18119ms (18.1s)
+📊 Tokens — total: 39213, input: 35970, output: 3243, reasoning: 2928

@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T17:25:23.653Z file_sha256=8c5a0ab1d7180398a51d59348d0501dccf1c234e96b5d9959be3e8be9465726c prompt_sha256=8e72dcf133ef6adab58f8c7bda9dcd2767cab65467fb5a57259911524df462f1
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-compliance-step-132-p5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0392 "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)" — src/tests/consumer-parcel-lookup.infra.test.ts "const spec = fs.readFileSync(path.resolve(__dirname, '../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md'), 'utf8');" — the new T8 lock asserts a Spec 100 dated note that neither the folded-findings list (ST3/2c, V1, V2, V3 (with C.9), L2, L7, R3, X1, X6 (static-page half), R5, B.7 (map links), H Q2, H Q4) nor the card's Files line names, so it is red at push or satisfied only by an edit outside the Files line — fix: move T6/T7/T8 to the SEARCHFIX.1 lane, or add docs/specs/03-mobile/100_mobile_parcel_cost_tool.md to the Files line and land the note in this change.
+DEFER severity=MED — RR-0392 "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)" — src/tests/consumer-parcel-lookup.infra.test.ts "const d = readJson('scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json');" — T7 requires the F02 contract descriptor and scripts/surfaces/_schema/census/contracts.json to carry task-449 text, and neither path is on this card's Files line — rationale: if both are already correct the lock passes at no cost, but any edit they still need cannot land here under check-task-files.
+DEFER severity=MED — acceptance criterion "#5 The lot-map smoke test renders the four error states as errors" — Implementation Notes "Mobile jest tests (lotMapPage.behaviour, lotMapScreens.golden) are not reached by the pre-commit related run (src/ and scripts/ only): their red and green are UNVERIFIED until the push station, as for task-450." — AC5 is evidenced only by the in-memory probe, not by the committed smoke test, so the card's "each red first" is unproven at this commit — rationale: bounded to the push station run, record its red and green output on the card there.
+MET — core.8 (R-A, Rule-3) — src/lib/parcels/consumer-lookup.ts "import { LOT_SIZE_PLAUSIBLE_M2 } from '@/lib/report-projection/project';" — the plausible window is reused from its one existing home and the lib types no bound, matching the card's "reuse LOT_SIZE_PLAUSIBLE_M2, src/lib/report-projection/project.ts:79".
+MET — acceptance criterion "#2 A lot with no fronting street reads "at the back"" — src/tests/surfaces/search-follow-ups.logic.test.ts "'lot.lead.house': 'Lot {letter} · has the house · at the back'," — the changed lock pins the phrase to the two no-street leads and to those only.
+MET — acceptance criterion "#3 The no-lot line ends "or report it" and links to the wrong-lot help topic" — src/tests/surfaces/lot-map-help-link.logic.test.ts "const TOPIC = 'wrong-lot';" — every help link on the page takes wrong-lot and the page-table lock asserts that topic is a listed mailto topic of web_help.
+MET — x-captures.5 — src/tests/surfaces/static-page.logic.test.ts "it('RED (SEARCHFIX.3 X6): a wrapped three-line import and a bare call are caught; a comment-only mention is not'" — each new lock ships with a RED plant that fails the same predicate it pins.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 1
+Rules met: R-A, Rule-3
+
+---
+⏱  76864ms (76.9s)
+📊 Tokens — total: 49530, input: 32986, output: 16544, reasoning: 15610

@@ -1,0 +1,776 @@
+LIST mobile-99 sha256:c36746eb4aa912b1498623847960f273646ed82f7b848fbd34d56c48b8fee4b1 material sha256:d5dfd8a3ec3f6b999d6b64dbe907c52d92e0450390933eea8c1edca7458bcbdd part 2 of 2 chunk 4 of 4
+RULE LIST mobile-99 (docs/specs/03-mobile/99_mobile_state_architecture.md, whole file), part 2 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 4 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/consumer-parcel-lookup.infra.test.ts","src/tests/surfaces/lot-map-help-link.logic.test.ts","src/tests/surfaces/search-follow-ups.logic.test.ts","src/tests/surfaces/static-page.logic.test.ts","src/tests/surfaces/static-web-binding.ui.test.tsx","src/tests/surfaces/surface-conformance.logic.test.ts","src/tests/surfaces/surface-validate.logic.test.ts"]
+
+## 6. Render-Stability Rules (selector hygiene)
+
+### 6.1 Atomic selectors MANDATE — no whole-store reads, no object-returning selectors without `useShallow`
+
+Components MUST select only the primitives or stable references they need. As stores grow, bad selectors destroy frame rate by triggering re-renders on every mutation regardless of whether the component cared about the changed field. Zustand without a selector returns the WHOLE state object — a new reference produced on every `set()` — guaranteeing a re-render of the consumer on every store mutation anywhere in the store.
+
+```ts
+// BANNED — returns the WHOLE state on every render → re-renders on EVERY store mutation
+//          even if the component only consumes one field. UI thread blocking risk.
+const store = useFilterStore();
+const { tradeSlug } = useFilterStore();   // destructure of whole state — same problem
+
+// BANNED — returns a NEW object every render → re-renders on every store mutation
+const { hydrate, reset } = useFilterStore((s) => ({ hydrate: s.hydrate, reset: s.reset }));
+
+// REQUIRED — atomic primitive selectors
+const tradeSlug = useFilterStore((s) => s.tradeSlug);
+const hydrate = useFilterStore((s) => s.hydrate);
+const reset = useFilterStore((s) => s.reset);
+```
+
+**`useShallow` escape hatch:** Zustand v5 ships `useShallow` exactly to opt into shallow-equality checks for object-returning selectors. Permitted for selectors returning arrays/objects of primitives (e.g., `useShallow((s) => s.tags)` or `useShallow((s) => ({ lat: s.lat, lng: s.lng }))`). BANNED for selectors returning store-action objects (`useShallow((s) => ({ hydrate: s.hydrate, reset: s.reset }))`) — separate selectors per action are simpler and shallow-equal still allocates a new array per render. Each `useShallow` site MUST include a one-line comment justifying why a primitive selector is insufficient.
+
+**Enforcement:** §9.15 (router-hygiene lint vitest) is extended in this amendment to also flag whole-store reads (`useFilterStore()` with no selector) anywhere in `mobile/app/**` and `mobile/src/components/**`.
+
+### 6.2 Hydrate functions MUST be idempotent
+
+```ts
+// REQUIRED idempotent pattern
+hydrate: (profile) => {
+  const next = { tradeSlug: profile.trade_slug ?? '', radiusKm: profile.radius_km ?? 10, ... };
+  set((prev) => {
+    // Only update keys that changed — Zustand's set bails out only on full-state Object.is
+    const diff = computeDiff(prev, next);
+    return diff.empty ? prev : { ...prev, ...diff.changed };
+  });
+}
+```
+
+### 6.3 IS DISTINCT FROM gate on mutation
+
+```ts
+// REQUIRED — don't write the same value back
+setTradeSlug: (slug) => set((s) => s.tradeSlug === slug ? s : { tradeSlug: slug }),
+```
+
+### 6.4 Lazy `getState()` in router effects
+
+```ts
+// REQUIRED inside AuthGate's routing effect
+useEffect(() => {
+  // ... routing decision ...
+  const currentStep = useOnboardingStore.getState().currentStep;  // ← lazy
+  router.replace(getResumePath(profile, currentStep));
+}, [user, segments, profile, ...]);  // ← currentStep NOT in deps
+```
+
+### 6.5 Gate conditions MUST be stable signals
+
+A render gate condition (`if (X) return <Loading/>`) MUST evaluate to the same value across consecutive renders unless an *intentional* state transition occurred.
+
+```ts
+// BANNED — isFetching toggles on every refetch → AppLayout flickers between guard and Tabs
+if (isLoading || isFetching || profile == null) return <SubscriptionLoadingGuard/>;
+
+// REQUIRED — gate only on stable signals
+if (isLoading || profile == null || profile.subscription_status == null) {
+  return <SubscriptionLoadingGuard/>;
+}
+// Background refetches (isFetching=true with profile already loaded) are silent —
+// the existing rendered tree stays mounted; refetch updates data when it resolves.
+```
+
+> **Amendment 2026-05-05 (resolves WF5 H1, audit `audit_spec99_2026-05-04.md`):** narrow `isFetching` carve-outs ARE permitted in render gates ONLY when ALL three conditions hold:
+>
+> 1. The carve-out pairs `isFetching` with a **stable status field** — a server-canonical enum that doesn't toggle on every refetch (e.g., `subscription_status`). Coupling with transient signals (`isError`, `isPaused`, `fetchStatus`) is BANNED.
+> 2. The carve-out branch returns the **same `<Loading*/>` element** as the parent stable-signal gate. Returning a different element introduces a new flicker surface and is BANNED.
+> 3. The carve-out is **explicitly enumerated below** by spec amendment in the SAME commit that adds the code. Implicit / grandfathered carve-outs are BANNED — reviewers MUST reject any unenumerated carve-out.
+>
+> **Permitted carve-outs (enumerated):**
+>
+> - **`mobile/app/(app)/_layout.tsx` — `isFetching && profile.subscription_status === 'expired'` returning `<SubscriptionLoadingGuard/>`.**
+>   *Rationale:* Protects the post-payment `expired → active` transition (Spec 96 §9 anti-flicker). After Stripe's webhook flips `subscription_status` from `'expired'` to `'active'`, the next AppState→active or `refetchOnReconnect` fires a `['user-profile']` refetch; without the carve-out the gate would briefly render `<PaywallScreen>` for one frame before the new status arrives. The `'expired'` value is a server-canonical enum — it doesn't flip on refetch — so this branch fires ONLY while the cached status is already `'expired'` AND a refetch is in flight. Trial / active / past_due / admin_managed users never enter this branch (status mismatch), so background refetches stay silent for them and the tab tree stays mounted.
+>   *Why this carve-out instead of a `useMutation`-backed flag refactor:* A flag refactor narrows the protection to AppState→active-initiated refetches only, leaving `refetchOnReconnect` and other automatic refetch paths exposed to the one-frame flash. The carve-out covers all refetch sources for the same UX cost.
+>
+> Adding a new permitted carve-out requires extending this enumeration in the same commit; reviewers MUST reject any unenumerated carve-out.
+>
+> **Dated note 2026-11-24 (M-246, prior text kept; task-450 SEARCHFIX.2; RR-0444 MD:2290 "Now we need to fold the findings"; findings V4, V5, N4; GROUNDER-B D2, D3, D5):** the redirect-once pattern of the MaxBLD parcel-tool pages. (1) A page replaces itself through `useSettledRedirect` (mobile/src/hooks/useParcelPageHooks.ts:16-25): the first time the fetch is not running and a target route exists, and never again; its effect dependencies name the route string (`target`), not an object. (2) The page states are derived from stable signals, not from `isFetching`: the search page keeps its no-match line while a settled miss is fetched again (mobile/src/lib/parcelSearchMatch.ts `buildSearchSituation`, `showMiss`), and the semi question page reads no data with a parcel id as loading, never as a redirect (mobile/src/lib/semiQuestion.ts `buildSemiQuestionSituation`), because a paused offline first fetch reports `isFetching` false with no data; only an empty parcel id goes to the Lookup route. No carve-out is added to the enumeration above.
+
+**Current violations being remediated** (do not soften this rule because the live code violates it — these are tracked):
+- _Previously-tracked §6.5 violations all resolved_: line 202 broad gate removed by §9.4a (✅ DONE); line 216 narrow `expired` carve-out permitted by 2026-05-05 amendment above (now an enumerated exception).
+
+### 6.6 Object-valued store fields MUST be deep-compared before set
+
+> **§9.14 update (2026-05-04):** the original `notificationPrefs` JSONB blob — the canonical example for this rule — was flattened to 5 sibling primitive fields on `userProfileStore` (migration 117 + Phase B). Primitives compare via `Object.is` for free (Zustand's own equality), so deep-equal is no longer needed for that field. **Field-by-field comparison is the preferred shape going forward** (see Rules below); deep-equal remains required only for the few legitimately composite fields like `filterStore.homeBaseLocation` (`{lat, lng}` always travels together).
+
+```ts
+// REQUIRED for nested object fields (homeBaseLocation; was notificationPrefs pre-§9.14)
+import equal from 'fast-deep-equal/es6';
+
+hydrate: (profile) => set((prev) => {
+  const nextLoc = { lat: profile.home_base_lat, lng: profile.home_base_lng };
+  return equal(prev.homeBaseLocation, nextLoc) ? prev : { homeBaseLocation: nextLoc };
+});
+```
+
+**Rules:**
+- MUST use `fast-deep-equal/es6` (npm-installed, ~80 lines, no deps). Hand-rolled deep-equal is BANNED — easy to get wrong, hard to test, slow on cold paths.
+- For schemas with stable shape (Zod-validated), **prefer field-by-field comparison** over deep-equal. The §9.14 flatten of `notification_prefs` is the canonical example: 5 atomic primitives + 5 `Object.is` gates replaced 1 JSONB blob + 1 `fast-deep-equal` call.
+- New composite fields MUST justify the deep-equal cost in the spec PR (decision tree: would 2-3 atomic fields work? if yes, prefer flatten).
+
+---
+
+
+## 7. Observability Mandates
+
+### 7.1 Permanent state-debug hub
+
+Promote `mobile/src/lib/debug/loopDetector.ts` (currently temporary) to `mobile/src/lib/debug/stateDebug.ts`. In **DEV builds only** (`__DEV__` guard), it MUST:
+- Subscribe to every Zustand store and log every mutation with field-level diffs (current loopDetector behavior — keep)
+- Track render counts per component using `trackRender(tag)` (keep)
+- Track effect fires with dep diffs via `useDepsTracker(tag, deps)` (keep)
+- Detect render storms (>30 renders/sec) and log `[LOOP-DETECTED]` once with the offending tag (keep)
+
+In **production builds** (`!__DEV__`), the hub is a no-op stub (zero overhead). Implemented in §9.5 (commit `af52c75`) — every export early-returns; `useDepsTracker` is exported as `__DEV__ ? useDepsTrackerDev : useDepsTrackerNoop` (module-scope ternary) so the production noop has zero hook calls (Hermes/Metro constant-folds the ternary at build time).
+
+### 7.2 Cache invalidation telemetry
+
+Every `queryClient.invalidateQueries` call MUST be paired with:
+- `Sentry.addBreadcrumb({ category: 'query', message: 'invalidate', data: { key } })` for non-trivial invalidations (anything not in a user-initiated mutation's `onSettled`)
+- A `track('query_invalidate', { key })` PostHog event in DEV only (production volume too high)
+
+### 7.3 Router decision telemetry
+
+In **DEV builds**, every `router.replace` / `router.push` from AuthGate or AppLayout MUST emit `track('route_decision', { authority, branch, from, to, reason })`.
+
+In **production**, ONLY these four routing events emit telemetry (low frequency, high signal):
+1. `signOut → /(auth)/sign-in` — fires once per session end; churn / engagement signal.
+2. AuthGate Branch 2 (AccountDeletedError) → reactivation modal **shown** — compliance-critical (proves users saw the 30-day window prompt).
+3. `cancelled_pending_deletion` → forced sign-out (AppLayout deletion handler) — revenue / churn signal.
+4. AppLayout `expired → active` transition (paywall clears) — subscription conversion event.
+
+The high-frequency onboarding routing arms (5a-5d) MUST NOT emit production telemetry — too noisy, no actionable signal.
+
+### 7.4 React Strict Mode visibility
+
+`stateDebug.trackRender(tag)` MUST count Strict Mode double-fires (counter increments on each), not suppress them. The `[LOOP-DETECTED]` threshold (30/sec) is high enough to ignore Strict Mode noise but catch genuine loops.
+
+### 7.5 User attribution for Sentry crash reports
+
+`Sentry.setUser({ id: firebaseUser.uid })` MUST be called in the auth listener's signed-in branch (immediately after `identifyUser(uid)` for symmetry with the PostHog distinctId mechanism). `Sentry.setUser(null)` MUST be called inside `clearLocalSessionState()` (the §B5 fan-out — NOT in `signOut()` directly, so the listener-driven forced-signout path also clears the attribution; same lesson as `paywallStore.reset()` from commits `381a0c9` + `f2f7147`).
+
+**Rationale:** without user attribution, individual user reports of crashes cannot be correlated with Sentry events. Anonymous JS stack traces are unactionable for support workflows.
+
+**PII boundary:** Firebase `uid` is opaque (server-generated, not personally identifying alone). The `Sentry.setUser` payload is restricted to `{ id }` only — `email`, `username`, `ip_address` are NEVER sent. Same precedent as PostHog distinctId per `mobile/src/lib/analytics.ts`.
+
+**Enforcement:** `mobile/__tests__/useAuth.test.ts` asserts `Sentry.setUser` calls match the auth state machine — set on signed-in, null on signed-out, null on forced-signout. A regression that drops `Sentry.setUser` on the signout fan-out fails CI.
+
+### 7.6 Product funnel events
+
+A fixed enumeration of product flow events MUST fire at canonical sites so the funnel ratios (`% of lead-detail-views that save`, `% of paywall-shows that convert`) are measurable in PostHog without manual instrumentation diff against the codebase.
+
+**Production events (low-frequency, high-signal, fire in both DEV and PROD):**
+
+| Event | Site | Trigger | Payload |
+|---|---|---|---|
+| `lead_detail_viewed` | `mobile/app/(app)/[lead].tsx` | `useEffect` on `detail.lead_id` resolve (per-navigation, NOT per-render) | `{ lead_id, lead_type }` |
+| `flight_job_detail_viewed` | `mobile/app/(app)/[flight-job].tsx` | `useEffect` on `item.permit_num` + `item.revision_num` resolve | `{ lead_id, lead_type: 'permit' }` |
+| `lead_saved` / `lead_unsaved` | `mobile/src/hooks/useSaveLead.ts` `onMutate` | User tap (BEFORE server confirms — measures intent) | `{ lead_id, lead_type }` |
+| `paywall_shown` | `mobile/src/components/paywall/PaywallScreen.tsx` | Mount `useEffect` (component only mounts when `subscription_status='expired'` AND `!paywallStore.dismissed`) | `{ subscription_status: 'expired' }` |
+| `subscribe_button_clicked` | `PaywallScreen.tsx` `handlePrimary` | User tap on the primary CTA, BEFORE `openCheckout` resolves | none |
+
+**DEV-only events (high-frequency; emit per `__DEV__` gate per §7.3 split — too noisy for production):**
+
+| Event | Site | Reason for DEV-only |
+|---|---|---|
+| `paywall_dismissed` | `PaywallScreen.tsx` "Maybe later" press | A user can dismiss → reopen → dismiss repeatedly per session; per-tap PostHog events would flood. |
+| `flight_board_viewed` | `mobile/app/(app)/flight-board.tsx` mount `useEffect` | Tab toggles (Feed ↔ FlightBoard) are unbounded per session. |
+
+**Rejected (per §7.3 frequency-split rule — would flood production):**
+- `lead_card_viewed` per FlashList `renderItem` (covered by `lead_detail_viewed` on tap).
+
+**PII boundary** (whitelisted in `mobile/src/lib/analytics.ts` `ALLOWED_KEYS`):
+- `lead_id` is `${permit_num}--${revision_num}` for permits or `COA-${application_number}` for CoA — public city-of-record data, NOT PII.
+- `lead_type`, `subscription_status`, `tier` are categorical enums, NOT PII.
+- `email`, `phone_number`, `displayName`, etc. are NEVER passed to `track()` and would be dropped by the whitelist if accidentally added.
+
+**Enforcement (§8.7 — see §8 Test Mandates):** the `mobile/__tests__/spec99.mandates.lint.test.ts` test greps each canonical site for the matching `track()` call. A regression that removes a funnel event from its canonical site fails CI.
+
+### 7.7 Auth funnel ratio invariants
+
+For the `auth_method_attempted` / `auth_method_succeeded` / `auth_method_failed` ratio to be measurable in PostHog, every auth method MUST emit at least one outcome event (`succeeded` XOR `failed`) per attempt. Drift here corrupts the ratio silently — a regression that drops `auth_method_failed` on a specific error path makes the conversion rate look better than it is.
+
+**Per-method contract (verified at `mobile/app/(auth)/sign-in.tsx`):**
+
+| Method | Attempted site | Succeeded site | Failed site(s) |
+|---|---|---|---|
+| Apple | `handleAppleSignIn` (line ~258) | `handleAppleSignIn` success branch (line ~281) | `handleAppleSignIn` catch (line ~287; skip on `ERR_REQUEST_CANCELED`) |
+| Google | `handleGoogleSignIn` (line ~296) | googleResponse useEffect success branch (line ~236) | googleResponse useEffect (3 sites: oauth_response_error line ~217, no_id_token line ~226, signInWithCredential catch line ~241) |
+| Email | `handleEmailSignIn` (line ~312) | `handleEmailSignIn` success branch (line ~319) | `handleEmailSignIn` catch (line ~322) |
+| Phone (SMS) | `handleSendCode` (line ~335) | (no synchronous succeeded — SMS-request success transitions to OTP entry) | `handleSendCode` catch (line ~348) |
+| Phone (OTP) | (implicit: continuation of phone-attempted from SMS step) | `handleVerifyOtp` success branch (line ~372) | `handleVerifyOtp` catch (line ~377) |
+
+**Phone exception explained:** the phone flow is 2-step (SMS request + OTP verify). `auth_method_attempted: phone` fires at the SMS step. The outcome can fire at:
+1. SMS request error (`handleSendCode` catch) → `auth_method_failed`.
+2. OTP verify success (`handleVerifyOtp` success) → `auth_method_succeeded`.
+3. OTP verify failure (`handleVerifyOtp` catch) → `auth_method_failed`.
+
+If the user abandons between SMS-success and OTP-entry, the attempted has no outcome — UX dropout, not a code bug. PostHog dashboards should account for this with a "phone-attempted with no outcome" funnel step.
+
+**Apple `ERR_REQUEST_CANCELED` exception:** Apple sign-in's user-cancellation is handled BEFORE the `auth_method_failed` track call (sign-in.tsx around line 285). User-cancelled attempts deliberately produce no outcome event because cancellation is not a "failure" — the user actively chose not to authenticate. PostHog dashboards should treat Apple-cancelled the same as phone-abandoned.
+
+**Enforcement (§8.8 — see §8 Test Mandates):** the `mobile/__tests__/spec99.mandates.lint.test.ts` test greps `sign-in.tsx` for each method's `auth_method_attempted/succeeded/failed` triple. A regression that removes any outcome event from sign-in.tsx fails CI.
+
+---
+
+
+## 8. Test Mandates
+
+### 8.1 Idempotency tests for every bridge
+
+Each bridge in §4 MUST have a Jest test asserting that calling it twice with identical input produces zero observable mutations on the second call. Pattern:
+
+> **B6 carve-out (added with §4 B6, 2026-05-05):** B6 is a one-shot 401-retry interceptor — by design, two consecutive 401s with identical input fire `getIdToken(true)` on each call (Firebase deduplicates the network refresh internally; the per-request `isRetry` guard limits each call chain to exactly one retry). The B1-B5 idempotency mandate does NOT apply to B6 in the hydration-equality sense. B6's test contract is enforced separately by the §4.B6 rules (exactly-once retry per call chain via `isRetry`; identical-token short-circuit at the Firebase SDK layer).
+
+```ts
+it('hydrate is idempotent — second call with same profile produces no notify', () => {
+  const listener = jest.fn();
+  useFilterStore.subscribe(listener);
+  useFilterStore.getState().hydrate(profile);
+  useFilterStore.getState().hydrate(profile);
+  expect(listener).toHaveBeenCalledTimes(1);  // not 2
+});
+```
+
+### 8.2 Router branch coverage
+
+Each branch in §5.3 (5 + 4.5 manufacturer = 6 branches) MUST have a Jest test verifying its specific (segments + profile + error) input combination produces the correct `router.replace` call. Pattern: `mobile/__tests__/authGate.test.ts` (to be created in WF2).
+
+### 8.3 Gate-stability tests
+
+Each render gate condition (per §6.5) MUST have a test asserting that toggling `isFetching` does NOT flip the gate. Pattern: render the layout twice (once with isFetching=true, once with =false) — both must produce the same JSX.
+
+### 8.4 The stateDebug hub as CI regression guard
+
+**Prerequisite:** §9.5 ✅ done (commit `af52c75` promoted `loopDetector.ts` → `stateDebug.ts` with `__DEV__` guards).
+
+`stateDebug.dumpDiagnostics()` is permitted in CI integration tests as an assertion — `expect(maxRendersPerSecond).toBeLessThan(20)`. **Not yet actionable as written:** `dumpDiagnostics()` returns a `string` (human-readable snapshot), not a structured object. Tracked as **§9.5b** (NEW followup): add a `getDiagnosticsSnapshot(): { renders: Array<{tag, total, last1s}>, effects: Array<...> }` accessor for parse-free CI assertions (Gemini WF3-§9.5 review #4).
+
+### 8.5 Store-enumeration test (§B5 reset coverage)
+
+A vitest at `mobile/__tests__/storeReset.coverage.test.ts` MUST glob `mobile/src/store/*.ts`, parse each file for `export const use<Name>Store = create<...>(`, and assert that `signOut()` in `mobile/src/store/authStore.ts` calls `use<Name>Store.getState().reset()` for every discovered store (or that the store is explicitly excluded with a `// signOut-exempt: <reason>` comment). Adding a store without a reset call OR exemption fails CI.
+
+### 8.6 Schema-vs-matrix drift check
+
+A pre-commit script `mobile/scripts/check-spec99-matrix.mjs` MUST parse the Zod object keys from `mobile/src/lib/userProfile.schema.ts` and the §3.1 markdown table, asserting setEqual (every server field has exactly one §3.1 row). A future migration that adds a new server field without a §3.1 row fails the check. Pattern matches existing `scripts/ai-env-check.mjs`.
+
+---
+
+
+## 9. Migration Plan (followup WFs)
+
+The following items eliminate the duplication identified in the audit and resolve the spec-vs-code drift surfaced by adversarial review. Each is a separate WF — this Spec 99 only authorizes the work; it does not perform it.
+
+**Priority legend:**
+- **P0/BLOCKING** — closes an active incident or spec-code drift visible in production code. Spec 99's normative rules are violated until landed.
+- **P1** — duplication / structural cleanup; required for the spec to fully apply but not actively breaking users today.
+- **P2** — observability / tooling / future-proofing.
+
+**Sequencing:** items with explicit `depends on:` lines MUST land in order.
+
+| # | Priority | Item | WF type | Files |
+|---|----------|------|---------|-------|
+| 9.4a | **P0** | Strip `isFetching` from AppLayout loading gate (§6.5 violation; root cause of incident #3 emulator flicker loop) | WF3 | `mobile/app/(app)/_layout.tsx:202` |
+| 9.4b | P2 | (Optional) keep `refetchOnReconnect: true` decision documented; no code change needed | — | — |
+| 9.8 | **P0** | Add deep-equal-before-set to `filterStore.hydrate` and `userProfileStore.hydrate` (§6.6 violation; required before §9.7 tests can pass) | WF3 | `mobile/src/store/filterStore.ts:78`, `mobile/src/store/userProfileStore.ts:59`. Install `fast-deep-equal`. |
+| 9.10 | ✅ DONE | Implemented as `queryClient.clear()` in `mobile/src/store/authStore.ts` (`clearLocalSessionState` helper per §9.19) — broader-than-spec purge for defense-in-depth (cancels in-flight refetches across all queries, not just `['user-profile']`). Originally specified as scoped `removeQueries({queryKey: ['user-profile']})`; spec amended 2026-05-05 to match implementation (see §B5 rule body). | WF3 | `mobile/src/store/authStore.ts:signOut()` |
+| 9.11 | ✅ DONE | Implemented in `mobile/src/lib/auth/decideAuthGateRoute.ts:100` as part of the §9.6 pure-function extraction. Hardened beyond spec letter with `!profile.user_id` falsy pre-check (Gemini WF2 §9.6 F1 + DeepSeek #2 consensus — rejects corrupted-cache attack class where `user_id` is null/empty while attesting to `onboarding_complete: true`). Spec §5.2 amended 2026-05-05 to document the falsy guard. | WF3 | `mobile/src/lib/auth/decideAuthGateRoute.ts` |
+| 9.2a | P1 | Migrate `IncompleteBanner` to read `useUserProfile().data.onboarding_complete` (NOT `useOnboardingStore.isComplete`) | WF2 | `mobile/src/components/onboarding/IncompleteBanner.tsx` |
+| 9.2b | P1 | depends on 9.2a — Remove `markComplete()` bridge from `useUserProfile.ts:101-103` AND update direct callers in `mobile/app/(onboarding)/complete.tsx:69` and `terms.tsx:91` to PATCH `onboarding_complete=true` directly to server (no local state mirror) | WF2 | `mobile/src/hooks/useUserProfile.ts`, `mobile/app/(onboarding)/complete.tsx`, `mobile/app/(onboarding)/terms.tsx` |
+| 9.2c | P1 | depends on 9.2b — Remove `isComplete` field + `markComplete()` action from `onboardingStore`. Add `persist` `migrate` function (version bump 0→1) to drop the legacy MMKV key for existing users. | WF2 | `mobile/src/store/onboardingStore.ts` |
+| 9.3 | P1 | Remove `selectedTrade`, `selectedTradeName`, `locationMode`, `homeBaseLat`, `homeBaseLng`, `supplierSelection` duplicates from `onboardingStore`. Add `persist` `migrate` function (version bump) to drop legacy MMKV keys. Update onboarding screens to write to `filterStore` after server PATCH success (no local mirror). | WF2 | `mobile/src/store/onboardingStore.ts`, `mobile/app/(onboarding)/profession.tsx`, `address.tsx`, `supplier.tsx` |
+| 9.1 | ✅ DONE | Eliminated `user-profile-cache` MMKV blob. TanStack persister is now sole canonical profile cache (verified sync via `mmkvPersister.restoreClient` — no cold-boot regression). §B5 dropped the `clearUserProfileCache()` call. One-time `cleanupLegacyUserProfileCache()` migration in `mobile/src/lib/migrations/` purges the orphaned blob on existing installs (gated by `legacyStorage.contains('profile')` to avoid materializing an empty file on fresh installs per Gemini WF3-§9.1 review F2). | WF3 | `mobile/src/hooks/useUserProfile.ts`, `mobile/src/store/authStore.ts`, `mobile/src/lib/migrations/userProfileCacheCleanup.ts` |
+| 9.5 | ✅ DONE | Promoted `loopDetector.ts` → `mobile/src/lib/debug/stateDebug.ts` (commit `af52c75`). Every export `__DEV__`-guarded. `useDepsTracker` exported as module-scope ternary (`__DEV__ ? useDepsTrackerDev : useDepsTrackerNoop`) so production noop calls ZERO hooks (Hermes/Metro DCEs the dev impl). `wired` flag persisted on `globalThis` so HMR re-fires of `wireStoreLogging()` don't multiply subscriptions. Production-path test at `mobile/__tests__/stateDebug.prod.test.ts` exercises the `__DEV__ === false` path. | WF3 | `mobile/src/lib/debug/stateDebug.ts`, 5 import-site updates, `mobile/__tests__/stateDebug.prod.test.ts` (NEW) |
+| 9.5b | ✅ DONE | Added `getDiagnosticsSnapshot(): {renders: DiagnosticsCounter[], effects: DiagnosticsCounter[]}` to `stateDebug.ts`; both arrays sorted by total desc; production returns empty arrays via `__DEV__` guard. `dumpDiagnostics()` refactored to format the snapshot. CI assertions can now read counters structurally. | WF2 P2 batch | `mobile/src/lib/debug/stateDebug.ts` |
+| 9.6 | P1 | Add AuthGate router branch tests (9 arms per §5.3) | WF2 | `mobile/__tests__/authGate.test.ts` (NEW) |
+| 9.7 | P1 | depends on 9.8 — Idempotency tests for all bridges per §8.1 | WF2 | `mobile/__tests__/bridges.test.ts` (NEW) |
+| 9.9 | ✅ DONE | Audited `paywallStore.show()` — caller is `mobile/src/components/paywall/InlineBlurBanner.tsx:12` (`usePaywallStore((s) => s.show)`). The original §3.4 audit grep missed the selector usage; row updated with verified caller. | WF2 P2 batch | `docs/specs/03-mobile/99_mobile_state_architecture.md` §3.4 |
+| 9.12 | ✅ DONE | Added `mobile/__tests__/storeReset.coverage.test.ts`. Discovers all Zustand stores in `mobile/src/store/` via regex, asserts each has a matching `.getState().reset()` call in `signOut()` OR a `// signOut-exempt: <reason>` comment. Catches the silent-leak bug where adding a new store and forgetting the signOut entry leaves stale data on shared devices (PIPEDA leak class). | WF2 P2 batch | `mobile/__tests__/storeReset.coverage.test.ts` (NEW) |
+| 9.13 | ✅ DONE | Added `mobile/scripts/check-spec99-matrix.mjs`. Parses Zod schema field names + §3.1 table column 1; asserts setEqual. Brace-depth tracker in schema parser skips nested `notification_prefs` keys; multi-line `z\s*\.` allows `subscription_status` (split across 3 lines). Currently 0 drift across 27 fields. Discovered & fixed 4 missing §3.1 rows (`created_at`, `updated_at`, `display_name`, `email`) as part of close-out. | WF2 P2 batch | `mobile/scripts/check-spec99-matrix.mjs` (NEW), `docs/specs/03-mobile/99_mobile_state_architecture.md` §3.1 |
+| 9.14 | ✅ DONE | Flattened `notification_prefs` JSONB → 5 sibling columns (3 booleans + 2 enums) via migration 117. Server (`userProfile.schema.ts` + 2 API routes + `classify-lifecycle-phase.js` push-dispatch script) and mobile (`userProfile.schema.ts`, `userProfileStore`, `settings.tsx`, 4 test files) updated in coordinated phases. Cost-tier enum reconciled from divergent `['small','medium','large','major','mega']` (one-off in `notifications/preferences/route.ts`) to canonical `['low','medium','high']`. `lifecycle_stalled_pref` server-column suffix avoids collision with `permits.lifecycle_stalled` in pipeline joins. `userProfileStore` persist `version: 1` + migrate drops orphan JSONB blob from existing MMKV. `fast-deep-equal` no longer called from `userProfileStore` — primitive `Object.is` per field replaces the deep-equal hot path that §6.6 was written to mitigate. | WF2 cross-domain | migration 117, `src/lib/userProfile.schema.ts`, `src/app/api/user-profile/route.ts`, `src/app/api/notifications/preferences/route.ts`, `scripts/classify-lifecycle-phase.js`, 4 server test files; `mobile/src/lib/userProfile.schema.ts`, `mobile/src/store/userProfileStore.ts`, `mobile/app/(app)/settings.tsx`, 4 mobile test files |
+| 9.15 | ✅ DONE | Added `mobile/__tests__/routerHygiene.lint.test.ts`. Two static-analysis rules: (1) router-effect hygiene — extracts every `useEffect(() => { BODY }, [DEPS])` block via brace-depth tracking; if `router` is in DEPS, scans BODY for `useXStore(` hook calls (lazy `.getState()` reads remain permitted). (2) atomic-selector mandate — globs `mobile/app/**/*.tsx` + `mobile/src/components/**/*.tsx`; flags any `useXStore()` zero-arg whole-store read per §6.1. 51 tests pass against current code. | WF2 P2 batch | `mobile/__tests__/routerHygiene.lint.test.ts` (NEW) |
+| 9.16 | ✅ DONE | Migrated the 3 lossy local-only `setRadiusKm` call sites (`(app)/index.tsx` ×2 widen-radius shortcuts + `(app)/settings.tsx` slider + `LeadFilterSheet.tsx` preset buttons) to canonical Bridge B3 via the new `usePatchProfile` hook. Each invocation now: cancels in-flight `['user-profile']` refetches → optimistically applies via `setRadiusKm` (the canonical setter per §3.1) → PATCHes `/api/user-profile` → rolls back on error → invalidates the query on settle. No new B6 pattern was added; the prior partial implementation was a bug, not a deliberate design. The `usePatchProfile` options-builder is exported separately so `mobile/__tests__/usePatchProfile.test.ts` can construct a `MutationObserver` directly without a React renderer (6 lifecycle tests cover all 4 §4.B3 contract obligations). The hook is intentionally extensible — adding `location_mode`/`home_base_lat`/`home_base_lng`/`supplier_selection`/`default_tab` to `ProfilePatch` plus snapshot/apply branches in `onMutate`/`onError` is a straightforward future expansion. | WF2 §9.16 | `mobile/src/hooks/usePatchProfile.ts` (NEW), `mobile/__tests__/usePatchProfile.test.ts` (NEW), `mobile/app/(app)/index.tsx`, `mobile/app/(app)/settings.tsx`, `mobile/src/components/feed/LeadFilterSheet.tsx` |
+| 9.17 | ✅ DONE | Cursor backward-compat — accept pre-deploy bare-int builder `lead_ids` in lead-feed cursor parser at the Phase 6 deploy moment (server-side fix). Closes deferred CRITICAL from the WF3 Phase 7 adversarial review (Gemini): cursor wire-format break for in-flight clients during the lead_id-to-string Phase 6 transition. The `get-lead-feed.ts` row-tuple comparison was extended with a `CASE WHEN $7::text = 'builder' THEN LPAD($8::text, 20, '0') ELSE $8::text END` pattern so cursors emitted before deploy (bare int) and after deploy (zero-padded string) both decode against the canonical lead_id shape. Existing logic test relaxed to match the new shape while still asserting row-tuple comparison structure. | WF3 (Spec 70 cursor work, recorded here for §9 catalog completeness) | `src/features/leads/lib/get-lead-feed.ts`, `src/tests/get-lead-feed.logic.test.ts` |
+| 9.18 | ✅ DONE | Strip `['user-profile']` query from MMKV persister to comply with §2.1 PII layer boundary. Closes deferred CRITICAL from WF3 Phase 7 Gemini review: the mobile `UserProfileSchema` includes 5 PII identity fields (full_name, phone_number, company_name, email, backup_email) that landed unencrypted on disk via the TanStack persister; `mmkvPersister` is Layer 4a UNENCRYPTED while §2.1 mandates Layer 4b SecureStore for PII. Two-commit landing: `671aa87` (initial fix via `dehydrateOptions.shouldDehydrateQuery` filter excluding the user-profile query — only filters WRITES to MMKV) + `202a9aa` (code-reviewer CRITICAL amendment: bumped persister `buster` to `'wf3-pii-strip-1'` to flush the pre-WF3 persisted blob from existing clients on cold-boot, since `shouldDehydrateQuery` does NOT filter rehydration READS; also extracted `persistFilter.ts` helper for the dehydrate predicate). | WF3 | `mobile/src/lib/persistFilter.ts` (NEW), `mobile/app/_layout.tsx` (PersistQueryClientProvider config), `mobile/src/store/authStore.ts` (`mmkvPersister.removeClient()` call), `mobile/__tests__/offline.test.ts` |
+| 9.19 | ✅ DONE | Unify forced-signout cleanup with explicit-signout path (§B5 listener-null branch). Pre-WF3 the `signOut()` finally block did the global fan-out (queryClient.clear + 4 peer-store resets + persister blob purge) but the `onAuthStateChanged(null)` listener branch only called `clearAuth()` — leaving stale data on shared devices for forced sign-outs (admin disable, password change on another device, project token revocation per Spec 93 §3.1). The asymmetry was the PROMOTED CRITICAL from §9.14 Phase D Gemini review, made more visible in §9.18 (which added `mmkvPersister.removeClient()` to `signOut()` but not the listener path). Resolution: extracted `clearLocalSessionState()` module-scope helper containing the full fan-out; both paths now invoke it. Added `forced_signout` PostHog event distinct from `signout_initiated` so analytics distinguishes the two trigger paths. `lastKnownUid !== null` guard prevents the cleanup from firing on every cold-boot first-fire (when the listener legitimately fires `null` before Firebase resolves the cached session). Two-commit landing: `381a0c9` (initial unification with helper extraction + telemetry) + `f2f7147` (code-reviewer amendments — deterministic mock-call assertions in `useAuth.test.ts`). | WF3 | `mobile/src/store/authStore.ts` (`clearLocalSessionState` helper + listener wiring), `mobile/__tests__/storeReset.coverage.test.ts`, `mobile/__tests__/useAuth.test.ts` |
+| 9.20 | ✅ DONE | Dead-code sweep across cumulative §9 + WF3 changes (16+ commits across mobile state + auth + push dispatch + mobile schema + cursor backward-compat + PII strip). Conservative posture: only items with NO consumers AND NO upgrade-path obligation removed. Knip baseline reduced from 4 unused exports to 3 — the removed export was `CLIENT_SAFE_COLUMNS` in the SERVER `userProfile.schema.ts` (consumers were since-deleted server-shape lookup helpers). Persist `migrate` functions and one-time MMKV cleanup helpers KEPT for upgrader safety (existing v0 clients still need them; removing would silently corrupt v0 state on upgraders). | WF3 | `src/lib/userProfile.schema.ts` (server-side `CLIENT_SAFE_COLUMNS` removal) |
+| 9.23 | ✅ DONE | B6 — API Client → Auth Listener (mid-session token refresh on 401) bridge spec amendment per WF2 M1+M2+M3 #6 (DeepSeek). Documents the existing `mobile/src/lib/apiClient.ts:65-84` 401 interceptor as a normative bridge — Firebase ID tokens expire after ~1 hour but `onAuthStateChanged` does NOT fire on expiry, so without this bridge a future contributor could remove the interceptor "because it's not in the spec" and silently break the app at the 1-hour mark. §4 header renamed Five → Six Bridge Patterns. No code change — implementation existed; this is normative documentation. | WF2 doc-only | `docs/specs/03-mobile/99_mobile_state_architecture.md` §4 (B6 section + header rename) |
+| 9.24 | ✅ DONE (spec amendment + 2026-05-05 same-day revision) | B3 rollback race documentation per WF2 M1+M2+M3 #7 (DeepSeek). Initial amendment mandated re-read-before-rollback as the recommended default; revised same day to match `usePatchProfile.ts` §9.16 implementation — naive rollback is the canonical pattern for low-contention fields, re-read-before-rollback is recommended for high-contention fields if/when production observation justifies it. Closes the spec-vs-code drift the M1+M2+M3 batch was designed to prevent. No code change needed. | WF2 doc-only | `docs/specs/03-mobile/99_mobile_state_architecture.md` §4 B3 Rules subsection |
+| 9.21 | ✅ DONE | Pattern A class-level fix per audit Phase 5 (`audit_spec99_2026-05-04.md` line 161-168) — `mobile/__tests__/spec99.mandates.lint.test.ts` statically asserts every §7 + §8 mandate has implementation evidence. 10 mandate cases (§7.1-§7.4, §8.1-§8.6) + 1 sanity case + 1 meta-count guard. Hardcoded `MANDATES` array means adding a new spec mandate requires explicitly adding a row (the meta-count guard catches accidental drops). Source-grep style consistent with `routerHygiene.lint.test.ts` (§5.4+§6.1 enforcement) and `storeReset.coverage.test.ts` (§8.5). The lint test surfaced a NEW gap: §7.2 (`Sentry.addBreadcrumb({category:'query'})` paired with `invalidateQueries`) has zero implementation evidence at HEAD — audit Phase 4 verified §7.1/§7.3 but not §7.2; that case is `it.skip` with `pendingReason` until a follow-up WF3 wires the telemetry. | WF1 | `mobile/__tests__/spec99.mandates.lint.test.ts` (NEW) |
+
+---
+
+
+## 10. Operating Boundaries
+
+### Target Files
+- `docs/specs/03-mobile/99_mobile_state_architecture.md` (this file — the spec)
+- `docs/reports/mobile_state_audit_2026-05-02.md` (the audit feeding §3)
+- `docs/specs/03-mobile/90_mobile_engineering_protocol.md` §7 (replaced with pointer to this spec)
+
+### Out-of-Scope Files
+- All `mobile/src/store/*.ts` — modified in §9.3 / §9.5 followups, not here
+- All `mobile/app/**/_layout.tsx` — already fixed in prior WF3; further changes per §9.4
+- All `mobile/app/(onboarding)/*.tsx` — modified in §9.3 followup
+- `mobile/src/hooks/useUserProfile.ts` — modified in §9.1 / §9.2 / §9.4
+- `mobile/src/lib/debug/stateDebug.ts` (renamed from `loopDetector.ts` in §9.5) — modify only via §9.5b structured-snapshot followup
+
+### Cross-Spec Dependencies
+- **This spec is a dependency of:** every future mobile WF that adds state, a store, or a router.
+- **This spec depends on:** Spec 90 (engineering stack), Spec 93 (auth + AuthGate), Spec 94 (onboarding flow), Spec 95 (server profile = canonical), Spec 96 (subscription gate).
+- **Authorized amendment process:** any change to §3 (Field Ownership Matrix), §4 (Bridge Patterns), or §5 (Routing Authority Rules) requires a WF1 amendment with adversarial review.
+- `scripts/classify-lifecycle-phase.js` — consumes the mig-117 flattened notification-preference columns (`lifecycle_stalled_pref` etc.) this spec owns, for push-dispatch gating (§9.14).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/consumer-parcel-lookup.infra.test.ts b/src/tests/consumer-parcel-lookup.infra.test.ts
+index 5df8e0b6f7baf99c28043b792a2f2668f53867a2..979c6952c45355496605d5b12d32f06de2af71ae 100644
+--- a/src/tests/consumer-parcel-lookup.infra.test.ts
++++ b/src/tests/consumer-parcel-lookup.infra.test.ts
+@@ -114,6 +114,61 @@ describe('route source-shape locks (Spec 100 §3)', () => {
+   });
+ });
+ 
++// SEARCHFIX.1 (task-449; RR-0442, MORNING-DECISIONS.md:2276, operator verbatim "It should open on an exact match and we have a different process
++// for address mistakes"; RR-0443 c, :2284, "What happens with a partial address? Similar to an address mistake they need to select from the
++// available addresses that are close"). T6: only two places in the resolver may open a lot. T7 (G3 R1): the lookup contract text says so, and
++// its counts restate their own arrays. T8: Spec 100 carries the dated note (the noteIn pattern of spec-notes-1b.logic.test.ts).
++const RESOLVER = path.resolve(__dirname, '../lib/admin/parcel-lookup.ts');
++const uniqueReturns = (src: string): number => (src.match(/resolution: 'unique'/g) ?? []).length;
++const RR0442 = 'It should open on an exact match and we have a different process for address mistakes';
++const RR0443C = 'What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close';
++const SFX_MARK = 'Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449';
++type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- descriptor JSON
++const readJson = (rel: string): Json => JSON.parse(fs.readFileSync(path.resolve(__dirname, '../..', rel), 'utf8'));
++
++describe('SEARCHFIX.1 T6: a lot opens only on an exact match (two unique returns in the resolver)', () => {
++  it('parcel-lookup.ts holds exactly two `unique` returns: the exact read and the typed-address-in-full typeahead row', () => {
++    expect(uniqueReturns(fs.readFileSync(RESOLVER, 'utf8'))).toBe(2);
++  });
++  it('RED plant: a source with a third `unique` return is caught', () => {
++    expect(uniqueReturns("a = { resolution: 'unique' }; b = { resolution: 'unique' }; c = { resolution: 'unique' };")).not.toBe(2);
++  });
++});
++
++describe('SEARCHFIX.1 T7 (G3 R1): the lookup contract says exact opens and its counts match its arrays', () => {
++  const d = readJson('scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json');
++  const census = (Object.values(readJson('scripts/surfaces/_schema/census/contracts.json')) as Json[]).find((x) => x?.identity?.id === d.identity.id);
++  it('the census row equals the emitted descriptor', () => {
++    expect(census).toEqual(d);
++  });
++  it('data_story carries the exact-opens dated note and no "24 fields"', () => {
++    const story = d.docs.data_story as string;
++    expect(story).toContain('exact match opens; a typeahead, a street type or direction conflict, a unit, letter or dash form, and a mistype list');
++    expect(story).not.toContain('24 fields');
++  });
++  it('every stated count equals the array it describes', () => {
++    expect(Number(/It reads (\d+) tables/.exec(d.docs.data_story)?.[1])).toBe(d.inputs.tables.length);
++    expect(Number(/reads (\d+) table\(s\)/.exec(d.inputs.why)?.[1])).toBe(d.inputs.tables.length);
++    expect(Number(/writes (\d+) table\(s\)/.exec(d.outputs.why)?.[1])).toBe(d.outputs.tables.length);
++    const parity = d.checks.find((c: Json) => /field_whitelist_parity$/.test(c.id));
++    expect(Number(/pick-by-name of (\d+) field/.exec(parity.why)?.[1])).toBe(d.inputs.field_whitelist.length);
++  });
++  it('emits names the property_view ledger write on this metered surface (surface.schema.json: "none" on a metered surface is a rule-9 violation)', () => {
++    expect([d.metering.answer, d.emits.answer, d.emits.ledger_events]).toEqual(['metered', 'ledger', ['property_view']]);
++  });
++});
++
++describe('SEARCHFIX.1 T8: Spec 100 carries the exact-match dated note', () => {
++  it('the note quotes RR-0442 and RR-0443 c verbatim', () => {
++    const spec = fs.readFileSync(path.resolve(__dirname, '../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md'), 'utf8');
++    const at = spec.indexOf(SFX_MARK);
++    expect(at, 'the SEARCHFIX.1 note is missing').toBeGreaterThan(-1);
++    const end = spec.indexOf('\n', at);
++    const note = spec.slice(at, end === -1 ? spec.length : end);
++    for (const words of [RR0442, RR0443C, 'RR-0442', 'RR-0443 c']) expect(note).toContain(words);
++  });
++});
++
+ describe('log hygiene — the raw q is NEVER logged (Spec 100 §2.8)', () => {
+   it('the logInfo payload carries outcome/parcelId/matchType/duration but no q', () => {
+     const src = route();
+@@ -323,3 +378,40 @@ describe('MF-53 a neighbour without a drawable outline is dropped (OUTPUT panel
+     expect(map.neighbours.map((n) => n.parcelId)).toEqual(['N3']);
+   });
+ });
++
++// SEARCHFIX.3 (task-451; RR-0444, MORNING-DECISIONS.md:2290-2291 2c "The lot card shows "Not available" for an implausible area"; FOLD-PLAN.md task 3 ST3):
++// the map lot's area is sent only when the stored size lies inside the one plausible window, LOT_SIZE_PLAUSIBLE_M2 (project.ts:79, 50 to 5,000 m²,
++// inclusive as project.ts lot_size_implausible tests it); outside it, or not a number, the area is null and the card shows the content null value.
++describe('SEARCHFIX.3 ST3: the map area is null outside LOT_SIZE_PLAUSIBLE_M2', () => {
++  const areaOf = (size: unknown): string | null => assembleLotMap({ address: null, pin: null, truncated: false, neighbours: [],
++    lots: [{ parcel_id: 'P1', lot_size_sqm: size as string | null, frontage_m: null, zoning_zn_string: null, centroid_lat: null, centroid_lng: null, primary_frontage_street_name: null, has_footprint: false, outline: null }] }).lots[0]!.area;
++  it('a placeholder size, one under the window and one over it give null', () => {
++    expect(['123456789', 49, 5001, '49.99', '5000.01'].map(areaOf)).toEqual([null, null, null, null, null]);
++  });
++  it('the two bounds are inside (inclusive) and a plausible size keeps its text', () => {
++    expect([areaOf(50) !== null, areaOf(5000) !== null, areaOf('50') !== null]).toEqual([true, true, true]);
++    expect(areaOf('283.5')).toBe('3,052 sq ft · 284 m²');
++    expect([areaOf(null), areaOf(''), areaOf('abc')]).toEqual([null, null, null]);
++  });
++  it('the lib reads the window from the one home and types no bound', () => {
++    expect(lib()).toMatch(/import \{ LOT_SIZE_PLAUSIBLE_M2 \} from '@\/lib\/report-projection\/project';/);
++    expect(lib()).not.toMatch(/\b(50|5000|5_000)\b/);
++  });
++});
++
++// SEARCHFIX.3 L2 (FOLD-PLAN.md:56; a defensive guard, no stored row holds ''): an empty string reads null through the shared num, never 0.
++describe('SEARCHFIX.3 L2: an empty string is null, never 0', () => {
++  it('the headline area, the comparable-build numbers and the neighbourhood stats read null for ""', () => {
++    const { payload } = assembleConsumerPayload({ parcel_id: 'E1', lot_size_sqm: '', max_build_fsi: '', comp_count: '', comp_build_ratio_p50: '', comp_fsi_p50: '', neighbourhood_id: '',
++      comparable_builds: [{ address: '5 Elm', lot_sqm: '', permit_fsi: '' }] }, []);
++    expect([payload.areas.lot_size_sqm, payload.areas.max_build_fsi]).toEqual([null, null]);
++    const s = payload.neighbourhood.compStats;
++    expect([s.compCount, s.compBuildRatioP50, s.compFsiP50, s.neighbourhoodId]).toEqual([null, null, null, null]);
++    const cb = payload.neighbourhood.comparableBuilds![0]!;
++    expect([cb.lot_sqm, cb.permit_fsi]).toEqual([null, null]);
++  });
++  it('a real zero is still 0 (only the empty string changes)', () => {
++    const { payload } = assembleConsumerPayload({ parcel_id: 'E2', comp_count: 0, neighbourhood_id: '0' }, []);
++    expect([payload.neighbourhood.compStats.compCount, payload.neighbourhood.compStats.neighbourhoodId]).toEqual([0, 0]);
++  });
++});
+diff --git a/src/tests/surfaces/lot-map-help-link.logic.test.ts b/src/tests/surfaces/lot-map-help-link.logic.test.ts
+index 421d3c5b620ed0a14896fd4fc85a8944ef7af0af..631bbcacb716eb0a3708a7a0eb539a0133bff357 100644
+--- a/src/tests/surfaces/lot-map-help-link.logic.test.ts
++++ b/src/tests/surfaces/lot-map-help-link.logic.test.ts
+@@ -8,6 +8,8 @@
+ //         intersection, no lot linked, many lots.
+ // Every link opens Help & Support through the existing action `open_help` (mobile/src/lib/maxbldHelp.ts) with the built Help topic (lot_match on the lot map, address_match under the notices; v8 names wrong-lot) and the typed query. Operator RR-0299 (MORNING-DECISIONS.md:1155): the support address is a placeholder until launch;
+ // this page reads no setting and writes none. Root test: reads committed files as text, no DB, no network, no mobile import.
++// Dated 2026-11-24 (SEARCHFIX.3, task-451; doc-2 B.7 (doc-2:49) "to /help?topic=wrong-lot"; prior text above kept): every link of the page now opens the
++// topic wrong-lot, which the Help page has since task-450 (web_help, "Wrong address or lot"); the old topics lot_match and address_match stay on the Help page.
+ import { describe, expect, it } from 'vitest';
+ import fs from 'node:fs';
+ import path from 'node:path';
+@@ -39,7 +41,9 @@ const column = (g: Json): Json[] => allByTestId(g.props, 'parcel-lotmap-column')
+ const HELP = 'parcel-lotmap-help';
+ // The built Help topics are the binding (orchestrator reading under build-with-existing-bindings; v8 names wrong-lot, which the Help page lacks):
+ // the lot map link is lot_match ("Report incorrect lot match"), the address-notice links are address_match (web_help.content.json:7, :11).
++// Dated 2026-11-24 (SEARCHFIX.3, task-451; prior reading above kept): the Help page has the topic wrong-lot since task-450, so every link takes it (doc-2:49).
+ const openHelp = (topic: string) => ({ action: 'open_help', topic, q: { derived: 'query' } });
++const TOPIC = 'wrong-lot';
+ 
+ describe('SRCH.C12: the two v8 strings', () => {
+   it('the content file and the generated slice carry the v8 text under help.lot.prompt and help.address.link', () => {
+@@ -69,7 +73,7 @@ describe('SRCH.C12 C.12: the multi-lot state ends with "Not sure which lot? Get
+   it('the two multi-lot goldens are exactly the nothing-picked and the picked case', () => {
+     expect([...NOTHING_PICKED, ...PICKED].sort()).toEqual([...WITH_ROW].sort());
+   });
+-  it.each(WITH_ROW)('%s: the help row follows the button (and its hint line when shown): the prompt text and the link button to Help with topic lot_match', (name) => {
++  it.each(WITH_ROW)('%s: the help row follows the button (and its hint line when shown): the prompt text and the link button to Help with topic wrong-lot', (name) => {
+     const col = column(golden(name));
+     const at = col.findIndex((c) => c.props?.testID === 'parcel-lotmap-continue');
+     expect(at).toBeGreaterThan(-1);
+@@ -82,7 +86,7 @@ describe('SRCH.C12 C.12: the multi-lot state ends with "Not sure which lot? Get
+     expect(link!.component).toBe('Button');
+     expect(link!.props.testID).toBe(HELP);
+     expect([link!.props.variant, link!.props.accessibilityRole]).toEqual(['link', 'link']);
+-    expect(link!.props.onPress).toEqual(openHelp('lot_match'));
++    expect(link!.props.onPress).toEqual(openHelp(TOPIC));
+     expect(link!.children[0].children).toEqual([{ content: 'help.address.link' }]);
+     expect(allByTestId(golden(name).props, HELP)).toHaveLength(1);
+   });
+@@ -97,7 +101,7 @@ describe('SRCH.C12 B.7: the link under each address-confusion notice', () => {
+     expect(link.component).toBe('Button');
+     expect(link.props.testID).toBe(HELP);
+     expect([link.props.variant, link.props.accessibilityRole]).toEqual(['link', 'link']);
+-    expect(link.props.onPress).toEqual(openHelp('address_match'));
++    expect(link.props.onPress).toEqual(openHelp(TOPIC));
+     expect(link.children[0].children).toEqual([{ content: 'help.address.link' }]);
+     expect(allByTestId(golden(name).props, HELP)).toHaveLength(1);
+     expect(allByTestId(golden(name).props, 'parcel-lotmap-help-row')).toEqual([]);
+@@ -112,6 +116,14 @@ describe('SRCH.C12 B.7: the link under each address-confusion notice', () => {
+   });
+ });
+ 
++describe('SEARCHFIX.3 B.7: the map topic is a Help page topic (task-451)', () => {
++  it('wrong-lot is a mailto topic of web_help in the page table, so the link lands on a listed topic', () => {
++    const table = rj('scripts/surfaces/_schema/static-page.json');
++    const topics = (table.pages.web_help.static.sections as Json[]).flatMap((s) => (s.parts as Json[]).filter((p) => p.role === 'mailto').map((p) => p.topic));
++    expect(topics).toContain(TOPIC);
++  });
++});
++
+ describe('SRCH.C12: the host passes the action, and the page reads and writes nothing new', () => {
+   it('disambiguate.tsx hands open_help (the existing openHelp) to the renderer', () => {
+     const src = fs.readFileSync(path.join(ROOT, 'mobile/app/(app)/parcel-tool/disambiguate.tsx'), 'utf8');
+diff --git a/src/tests/surfaces/search-follow-ups.logic.test.ts b/src/tests/surfaces/search-follow-ups.logic.test.ts
+index 6d390f78e8a10551b1c7439fd35c0448ddb3f849..9bf4cdca0c1fa03af00d50dd7a9470721d9a7d6f 100644
+--- a/src/tests/surfaces/search-follow-ups.logic.test.ts
++++ b/src/tests/surfaces/search-follow-ups.logic.test.ts
+@@ -141,14 +141,20 @@ describe('GAP.13: the dated notes on the parent queue rows (M-246, prior text ke
+ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map and C.7 the card lead (choose-lot.html:306)', () => {
+   const LEADS = {
+     'lot.letter': 'Lot {letter}',
+-    'lot.lead.house': 'Lot {letter} · has the house',
+-    'lot.lead.no_building': 'Lot {letter} · no building',
++    // SEARCHFIX.3 V1 (task-451, dated 2026-11-24; MD:776 "'at the back' when it has none", doc-2 C.7, FOLD-PLAN.md:57; prior values 'Lot {letter} · has the house'
++    // and 'Lot {letter} · no building'): a lot with no fronting street reads "at the back".
++    'lot.lead.house': 'Lot {letter} · has the house · at the back',
++    'lot.lead.no_building': 'Lot {letter} · no building · at the back',
+     'lot.lead.no_building_faces': 'Lot {letter} · no building · faces {street}',
+     'lot.lead.house_faces': 'Lot {letter} · has the house · faces {street}',
+   };
+-  it('lead keys carry the v8 words (choose-lot.html:306) in the content file and the slice; "at the back" is not data and is not used (RR-0289, MORNING-DECISIONS.md:1117)', () => {
++  // SEARCHFIX.3 V1 (task-451 AC2, dated 2026-11-24): the prior title said '"at the back" is not data and is not used (RR-0289, MORNING-DECISIONS.md:1117)' and its
++  // assertion was that no content value holds "at the back". RR-0289 rules massing presence only; "at the back" is the v8 phrase for a lot with no fronting street
++  // (MD:776, doc-2 C.7, FOLD-PLAN.md:57), so the lock is now on where the phrase may and may not appear.
++  it('lead keys carry the v8 words (choose-lot.html:306) in the content file and the slice; "at the back" ends only the two no-street leads', () => {
+     for (const [k, v] of Object.entries(LEADS)) expect([k, mapContent[k], mapSlice[k]]).toEqual([k, v, v]);
+-    expect(Object.values(mapContent).filter((v) => /at the back/.test(v))).toEqual([]);
++    for (const k of ['lot.lead.house', 'lot.lead.no_building']) expect([k, mapContent[k]!.endsWith(' · at the back')]).toEqual([k, true]);
++    for (const k of ['lot.lead.house_faces', 'lot.lead.no_building_faces', 'lot.letter']) expect([k, /at the back/.test(mapContent[k]!)]).toEqual([k, false]);
+   });
+   const leadKey = (name: string, i: number): { key: string; street: unknown } => {
+     const g = rj(`${GOLD}/${MAP}/${name}.mobile.json`);
+@@ -158,7 +164,8 @@ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map an
+     const street = /"street":(\{[^}]*\})/.exec(text)?.[1] ?? null;
+     return { key: refs[0]!, street: street && JSON.parse(street) };
+   };
+-  it('two lots: A has a footprint and a street (house and faces), B has no footprint and no street ("no building" only)', () => {
++  // SEARCHFIX.3 (task-451, dated 2026-11-24; prior title ended '("no building" only)'): the key is unchanged; its text now ends "at the back".
++  it('two lots: A has a footprint and a street (house and faces), B has no footprint and no street ("no building · at the back")', () => {
+     expect(leadKey('multi_parcel_2', 0)).toEqual({ key: 'lot.lead.house_faces', street: { contract: 'contract_parcels_lookup.map.lots.0.frontageStreet' } });
+     expect(leadKey('multi_parcel_2', 1)).toEqual({ key: 'lot.lead.no_building', street: null });
+   });
+@@ -196,6 +203,17 @@ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map an
+     expect(src).toContain('55322');
+     expect(src).not.toMatch(/\b(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE)\b/);
+   });
++  // SEARCHFIX.3 L7 (task-451; GROUNDER-G item 2): a flag with no value, or with the next flag as its value, is an error (usage, exit 2), never a silent read.
++  it('SEARCHFIX.3 L7: --url or --parcels with a missing value or a flag as its value sets an error; a real value does not', async () => {
++    const parseArgs = (await import('../../../scripts/analysis/lot-map-data-check.mjs')).parseArgs as unknown as (argv: string[]) => { error?: string };
++    expect(parseArgs(['--parcels', '--url', 'x']).error).toBeTruthy();
++    expect(parseArgs(['--url']).error).toBeTruthy();
++    expect(parseArgs(['--url', '--dry-run']).error).toBeTruthy();
++    expect(parseArgs(['--parcels']).error).toBeTruthy();
++    expect(parseArgs(['--parcels', '1,2']).error).toBeUndefined();
++    expect(parseArgs(['--url', 'postgres://u@127.0.0.1:55322/db']).error).toBeUndefined();
++    expect(parseArgs(['--dry-run']).error).toBeUndefined();
++  });
+   it('the data-check guard refuses every host, port, scheme and query override but the rehearsal stack', async () => {
+     const { refuse } = await import('../../../scripts/analysis/lot-map-data-check.mjs');
+     expect(refuse('postgres://u:p@127.0.0.1:55322/db')).toBeNull();
+diff --git a/src/tests/surfaces/static-page.logic.test.ts b/src/tests/surfaces/static-page.logic.test.ts
+index c46c926fd9bb128d302ff52d8b162e7bcfe64ad7..fafda8ba54c1da9f720a0b17c4a8cefdbffdd37e 100644
+--- a/src/tests/surfaces/static-page.logic.test.ts
++++ b/src/tests/surfaces/static-page.logic.test.ts
+@@ -51,21 +51,22 @@ describe('T1 the page table against the contract', () => {
+     expect(pagesOf().length).toBe(7);
+   });
+   it('RED: each planted defect is refused', () => {
++    // SEARCHFIX.3 (task-451, dated 2026-11-24): web_help gains the header section first (H Q2), so its prose and footer move from [0], [1] to [1], [2].
+     const plants: Array<[string, (t: Json) => void]> = [
+-      ['a number as content', (t) => { t.pages.web_help.static.sections[0].parts[1].content = 9.99; }],
++      ['a number as content', (t) => { t.pages.web_help.static.sections[1].parts[1].content = 9.99; }],
+       // MF-76 (dated 2026-11-11): hero is a landing kind now, so the planted unknown kind is one no row has added.
+-      ['an unknown kind', (t) => { t.pages.web_help.static.sections[0].kind = 'banner'; }],
+-      ['a role outside its kind', (t) => { t.pages.web_help.static.sections[1].parts[3].role = 'paragraph'; }],
+-      ['a link with no href', (t) => { delete t.pages.web_help.static.sections[1].parts[0].href; }],
+-      ['an off-origin href', (t) => { t.pages.web_help.static.sections[1].parts[0].href = '//evil.com'; }],
+-      ['an href on a paragraph', (t) => { t.pages.web_help.static.sections[0].parts[1].href = '/help'; }],
+-      ['a value typed into a part', (t) => { t.pages.web_help.static.sections[0].parts[1].text = 'Hello'; }],
++      ['an unknown kind', (t) => { t.pages.web_help.static.sections[1].kind = 'banner'; }],
++      ['a role outside its kind', (t) => { t.pages.web_help.static.sections[2].parts[3].role = 'paragraph'; }],
++      ['a link with no href', (t) => { delete t.pages.web_help.static.sections[2].parts[0].href; }],
++      ['an off-origin href', (t) => { t.pages.web_help.static.sections[2].parts[0].href = '//evil.com'; }],
++      ['an href on a paragraph', (t) => { t.pages.web_help.static.sections[1].parts[1].href = '/help'; }],
++      ['a value typed into a part', (t) => { t.pages.web_help.static.sections[1].parts[1].text = 'Hello'; }],
+       // MF-46 follow-up (dated 2026-11-12): the mailto role (parts 2-6 of web_help).
+-      ['a mailto without a topic', (t) => { delete t.pages.web_help.static.sections[0].parts[2].topic; }],
+-      ['a mailto topic outside the list', (t) => { t.pages.web_help.static.sections[0].parts[2].topic = 'sales'; }],
+-      ['a mailto reading another value', (t) => { t.pages.web_help.static.sections[0].parts[2].value = 'other'; }],
+-      ['a mailto with an href', (t) => { t.pages.web_help.static.sections[0].parts[2].href = '/help'; }],
+-      ['a topic on a paragraph', (t) => { t.pages.web_help.static.sections[0].parts[1].topic = 'general'; }],
++      ['a mailto without a topic', (t) => { delete t.pages.web_help.static.sections[1].parts[2].topic; }],
++      ['a mailto topic outside the list', (t) => { t.pages.web_help.static.sections[1].parts[2].topic = 'sales'; }],
++      ['a mailto reading another value', (t) => { t.pages.web_help.static.sections[1].parts[2].value = 'other'; }],
++      ['a mailto with an href', (t) => { t.pages.web_help.static.sections[1].parts[2].href = '/help'; }],
++      ['a topic on a paragraph', (t) => { t.pages.web_help.static.sections[1].parts[1].topic = 'general'; }],
+       // PAGE.TABLE (task-390): the interactive screens; sections of mobile_parcel_semi_question: 0 bar, 1 status, 2-4 notices, 5 text, 6 choices, 7 button.
+       ['a screen section of an unknown kind', (t) => { t.screens.mobile_parcel_semi_question.sections[1].kind = 'banner'; }],
+       ['a number as screen content', (t) => { t.screens.mobile_parcel_semi_question.sections[1].content = 9.99; }],
+@@ -141,21 +142,43 @@ describe('T3 one footer, one legal line', () => {
+ });
+ 
+ describe('T4 every link is a public host-table route with a page behind it', () => {
+-  it('each href is a public maxbld.ca row rewritten to an existing internal page; none is scope D', () => {
++  // SEARCHFIX.3 H Q2, H Q4 (task-451, dated 2026-11-24; GROUNDER-QUESTIONS.md:75, :77; help.html and terms-privacy.html:262 "MaxBLD home -> /; Log in -> /login"):
++  // the plain pages gain the header links / and /login. Prior text: one list ['/help', '/privacy', '/terms'], each internal /parcel-tool + href under the
++  // (static) mount, which / (internal /parcel-tool/home) and /login (a page outside (static)) cannot meet. Now two pinned sets: the footer set keeps the strict
++  // check; the header set is checked as public host rows whose internal page exists (the pageExists reading of web-landing.logic.test.ts T5).
++  const PAGES_ROOT = 'src/app/(maxbld)/parcel-tool';
++  const pageExists = (internal: string): boolean => {
++    const rel = internal.replace(/^\/parcel-tool/, '');
++    return [path.join(ROOT, PAGES_ROOT, rel, 'page.tsx'), path.join(ROOT, PAGES_ROOT, '(static)', rel, 'page.tsx')].some((f) => fs.existsSync(f));
++  };
++  const hrefsOf = (kind: string): string[] => [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.filter((s: Json) => s.kind === kind).flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))].sort();
++  it('each footer href is a public maxbld.ca row rewritten to an existing internal page under (static); none is scope D', () => {
+     // MF-76 (dated 2026-11-11): the plain pages only; the landing's links (in-page anchors, /login, /signup with a plan, the help topic) are pinned
+     // by src/tests/surfaces/web-landing.logic.test.ts T5 against the same host table.
+-    const hrefs = [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))];
+-    expect(hrefs.sort()).toEqual(['/help', '/privacy', '/terms']);
++    const hrefs = hrefsOf('footer');
++    expect(hrefs).toEqual(['/help', '/privacy', '/terms']);
+     for (const h of hrefs) {
+       const row = matchMaxbldRoute(h);
+       expect([h, row?.routeClass, row?.internal]).toEqual([h, 'public', `/parcel-tool${h}`]);
+       expect([h, fs.existsSync(path.join(ROOT, `${MOUNTS}${h}/page.tsx`))]).toEqual([h, true]);
+     }
+   });
++  it('each header href is a public maxbld.ca row whose internal page exists; the plain pages hold no other link', () => {
++    expect(hrefsOf('hero')).toEqual(['/', '/login']);
++    const all = [...new Set(pagesOf().filter(([id]) => id !== 'web_landing').flatMap(([, , p]) => p.sections.flatMap((s: Json) => s.parts.filter((x: Json) => x.href).map((x: Json) => x.href as string))))].sort();
++    expect(all).toEqual(['/', '/help', '/login', '/privacy', '/terms']);
++    for (const h of hrefsOf('hero')) {
++      const row = matchMaxbldRoute(h);
++      expect([h, row?.routeClass, typeof row?.internal === 'string' && pageExists(row.internal)]).toEqual([h, 'public', true]);
++    }
++  });
+ });
+ 
+ describe('T5 the plain pages are public (no gate)', () => {
+-  const gateImports = (text: string): string[] => text.split('\n').filter((l) => /^\s*import\b/.test(l) && /require-parcel-tool-page|requireParcelToolPage/.test(l));
++  // SEARCHFIX.3 X6 static half (task-451, dated 2026-11-24; prior text: a per-line filter of import lines, which a wrapped multi-line import or a bare call
++  // slipped past): the gate module or its call anywhere in the comment-stripped text.
++  const strip = (text: string): string => text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
++  const gateImports = (text: string): string[] => [...strip(text).matchAll(/require-parcel-tool-page|requireParcelToolPage\s*\(/g)].map((m) => m[0]);
+   it('no mount under (static) imports the parcel-tool page gate', () => {
+     const files = fs.readdirSync(path.join(ROOT, MOUNTS), { recursive: true }).map(String).filter((f) => f.endsWith('.tsx'));
+     // Dated 2026-11-11 (MF-46, plan v1 fold 4): + refused/page.tsx, the internal target of a refused maxbld.ca page path (it only calls notFound()).
+@@ -167,6 +190,11 @@ describe('T5 the plain pages are public (no gate)', () => {
+   it('RED: a planted gate import is caught', () => {
+     expect(gateImports("import { requireParcelToolPage } from '@/lib/auth/require-parcel-tool-page';\n// requireParcelToolPage in a comment")).toHaveLength(1);
+   });
++  it('RED (SEARCHFIX.3 X6): a wrapped three-line import and a bare call are caught; a comment-only mention is not', () => {
++    expect(gateImports("import {\n  requireParcelToolPage,\n} from '@/lib/auth/require-parcel-tool-page';").length).toBeGreaterThan(0);
++    expect(gateImports('export default async function P() { await requireParcelToolPage(); }').length).toBeGreaterThan(0);
++    expect(gateImports('// requireParcelToolPage() and require-parcel-tool-page in a comment\n/* requireParcelToolPage() */\nexport const x = 1;')).toEqual([]);
++  });
+ });
+ 
+ describe('T6 legal text parity (plan v3 §12 fold 22) and the support inbox ruling', () => {
+diff --git a/src/tests/surfaces/static-web-binding.ui.test.tsx b/src/tests/surfaces/static-web-binding.ui.test.tsx
+index b94a84c76570275c65e0a564c3e9a4eb567c949b..02be1560ecbcd160192b4cdaf8f75348622b7dbb 100644
+--- a/src/tests/surfaces/static-web-binding.ui.test.tsx
++++ b/src/tests/surfaces/static-web-binding.ui.test.tsx
+@@ -14,6 +14,9 @@
+ //       data-topic); with none the server's keepValued leaves them out; the prefill island adds the cleaned, encoded fragment values as the body of
+ //       the fragment topic's link only (a CR/LF bcc payload stays inside the body); RED: a mailto without its value, a topic outside the list, a
+ //       topic on a paragraph throw.
++//   (e) dated 2026-11-24 (SEARCHFIX.3, task-451; H Q2 and H Q4, GROUNDER-QUESTIONS.md:75, :77; help.html and terms-privacy.html:262 "MaxBLD home -> /; Log in -> /login";
++//       plan ruling 8.5: both states of the error page): every plain page draws the header with the links / "MaxBLD" and /login "Log in" and keeps the
++//       narrow column; RED: a title-less hero with any other part still throws.
+ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+ import fs from 'node:fs';
+ import path from 'node:path';
+@@ -99,6 +102,7 @@ describe('(b) the one action', () => {
+ });
+ 
+ describe('(c) RED: planted defects throw', () => {
++  // SEARCHFIX.3 (task-451, dated 2026-11-24): web_help gains the header section first (H Q2), so its prose and footer move from sections[0], [1] to [1], [2].
+   const base = (): { page: StaticPage; content: Record<string, string> } => clone(staticPage('web_help', 'static'));
+   it('an unknown component and an unknown action throw at render', () => {
+     const { page, content } = base();
+@@ -107,7 +111,8 @@ describe('(c) RED: planted defects throw', () => {
+     (bad.children[0] as StaticNode).component = 'Card';
+     expect(() => ssr(bad, content)).toThrow('StaticBinding: unmapped component "Card"');
+     const act = staticWebTree(clone(staticPage('web_maxbld_error', 'error')).page);
+-    const prose = (act.children[0] as StaticNode).children[0] as StaticNode;
++    // SEARCHFIX.3 (task-451, dated 2026-11-24): the error page opens with the header section (H Q4, ruling 8.5), so its prose moves from children[0] to [1].
++    const prose = (act.children[0] as StaticNode).children[1] as StaticNode;
+     (prose.children[2] as StaticNode).props.onClick = { action: 'push', route: '/x' };
+     expect(() => ssr(act, STATIC_CONTENT.web_maxbld_error as Record<string, string>)).toThrow('StaticBinding: unknown action');
+   });
+@@ -121,15 +126,15 @@ describe('(c) RED: planted defects throw', () => {
+   });
+   it('a number as a part content, an unknown kind, a role outside its kind, a link with no href or an off-origin href throw in the tree', () => {
+     const plant = (f: (p: Json) => void): (() => StaticNode) => { const { page } = base(); f(page as unknown as Json); return () => staticWebTree(page); };
+-    expect(plant((p) => { p.sections[0].parts[1].content = 9.99; })).toThrow('is not a content key');
++    expect(plant((p) => { p.sections[1].parts[1].content = 9.99; })).toThrow('is not a content key');
+     // MF-76 (dated 2026-11-11): hero is a landing kind now; the planted unknown kind is one no row has added.
+-    expect(plant((p) => { p.sections[0].kind = 'banner'; })).toThrow('unknown section kind "banner"');
+-    expect(plant((p) => { p.sections[0].parts[1].role = 'link'; p.sections[0].parts[1].href = '/help'; })).toThrow('role "link" is not a prose role');
+-    expect(plant((p) => { delete p.sections[1].parts[0].href; })).toThrow('href undefined is not allowed here');
+-    expect(plant((p) => { p.sections[1].parts[0].href = '//evil.com'; })).toThrow('href "//evil.com" is not allowed here');
+-    expect(plant((p) => { p.sections[1].parts[0].href = 'https://evil.com'; })).toThrow('is not allowed here');
+-    expect(plant((p) => { p.sections[0].parts[1].href = '/help'; })).toThrow('href "/help" is not allowed here');
+-    expect(plant((p) => { p.sections[0].extra = 1; })).toThrow('unknown key "extra"');
++    expect(plant((p) => { p.sections[1].kind = 'banner'; })).toThrow('unknown section kind "banner"');
++    expect(plant((p) => { p.sections[1].parts[1].role = 'link'; p.sections[1].parts[1].href = '/help'; })).toThrow('role "link" is not a prose role');
++    expect(plant((p) => { delete p.sections[2].parts[0].href; })).toThrow('href undefined is not allowed here');
++    expect(plant((p) => { p.sections[2].parts[0].href = '//evil.com'; })).toThrow('href "//evil.com" is not allowed here');
++    expect(plant((p) => { p.sections[2].parts[0].href = 'https://evil.com'; })).toThrow('is not allowed here');
++    expect(plant((p) => { p.sections[1].parts[1].href = '/help'; })).toThrow('href "/help" is not allowed here');
++    expect(plant((p) => { p.sections[1].extra = 1; })).toThrow('unknown key "extra"');
+     expect(plant((p) => { p.sections = []; })).toThrow('at least one section');
+   });
+ });
+@@ -162,8 +167,31 @@ describe('(d) the Help & Support mail links (MF-46 follow-up, dated 2026-11-12)'
+     const { page, content } = staticPage('web_help', 'static');
+     expect(() => ssr(staticWebTree(page), content, { values: {} })).toThrow('StaticBinding: no server value "support_inbox"');
+     const plant = (f: (p: Json) => void): (() => StaticNode) => { const p = clone(page) as unknown as Json; f(p); return () => staticWebTree(p as unknown as StaticPage); };
+-    expect(plant((p) => { p.sections[0].parts[2].topic = 'sales'; })).toThrow('a mailto has a listed topic');
+-    expect(plant((p) => { p.sections[0].parts[1].topic = 'general'; })).toThrow('no other part has a topic');
+-    expect(plant((p) => { p.sections[0].parts[2].value = 'other'; })).toThrow('a mailto has a listed topic and the read support_inbox');
++    expect(plant((p) => { p.sections[1].parts[2].topic = 'sales'; })).toThrow('a mailto has a listed topic');
++    expect(plant((p) => { p.sections[1].parts[1].topic = 'general'; })).toThrow('no other part has a topic');
++    expect(plant((p) => { p.sections[1].parts[2].value = 'other'; })).toThrow('a mailto has a listed topic and the read support_inbox');
++  });
++});
++
++describe('(e) the plain pages carry the header links (SEARCHFIX.3 H Q2, H Q4; task-451)', () => {
++  const PLAIN: Array<[string, string]> = [['web_help', 'static'], ['web_terms', 'static'], ['web_privacy', 'static'], ['web_maxbld_error', 'error'], ['web_maxbld_error', 'miss']];
++  it.each(PLAIN)('%s %s: a <header> with / "MaxBLD" and /login "Log in", before the page content; the narrow column is kept', (id, state) => {
++    const { page, content } = staticPage(id, state);
++    const html = ssr(staticWebTree(page), content, { actions: { retry: () => undefined } });
++    const header = /<header\b[^>]*>([\s\S]*?)<\/header>/.exec(html);
++    expect(header).not.toBeNull();
++    expect(header![1]).toMatch(/<a\b[^>]*href="\/"[^>]*>[\s\S]*?MaxBLD[\s\S]*?<\/a>/);
++    expect(header![1]).toMatch(/<a\b[^>]*href="\/login"[^>]*>[\s\S]*?Log in[\s\S]*?<\/a>/);
++    expect([content['nav.home'], content['nav.sign_in']]).toEqual(['MaxBLD', 'Log in']);
++    expect(html.indexOf('<header')).toBeLessThan(html.indexOf('data-testid="static-footer"'));
++    expect(html).toContain('max-w-2xl');
++    expect(html).not.toContain('max-w-6xl');
++    expect(html.match(/<h1\b/g)?.length ?? 0).toBeLessThanOrEqual(1);
++    expect(errors).toEqual([]);
++  });
++  it('RED: a title-less hero with a tagline (or any part but the wordmark and nav) still throws', () => {
++    const { page } = clone(staticPage('web_help', 'static'));
++    (page.sections[0] as unknown as Json).parts.push({ role: 'tagline', content: 'help.intro' });
++    expect(() => staticWebTree(page)).toThrow('a hero has a title');
+   });
+ });
+diff --git a/src/tests/surfaces/surface-conformance.logic.test.ts b/src/tests/surfaces/surface-conformance.logic.test.ts
+index 8f5965f7382c7fa997eaf1e23e2d8062b18c8f46..6e662a6a9783746e2c52fa202b1217560ba4b424 100644
+--- a/src/tests/surfaces/surface-conformance.logic.test.ts
++++ b/src/tests/surfaces/surface-conformance.logic.test.ts
+@@ -259,7 +259,8 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
+     // SRCH.C12 (task-321; dated 2026-11-19; operator RR-0299 "C12 - is a fake email address until launch"): 422 -> 424 strings: +2 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (help.lot.prompt, help.address.link, lines 25-26); measured with surface-validate --check before (422) and after (424).
+     // SRCH.LOTMAP-2 (task-362; dated 2026-11-19; design small-pages-v8 choose-lot.html:278 "Pick a lot on the map or in the list."): 425 -> 426 strings: +1 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (select.hint); goldens unchanged (100); measured with surface-validate --check before (425) and after (426).
+     // SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings: +1 in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json (help.mailto.wrong_lot); goldens unchanged (100); measured with surface-validate --check before (426) and after (427).
+-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 100 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 427 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
++    // SEARCHFIX.3 (task-451; dated 2026-11-24; H Q2/H Q4 GROUNDER-QUESTIONS.md:75, :77; doc-2 B.6 (doc-2:48); plan rulings 8.1 b and 8.3): 427 -> 436 strings: +8 nav strings (nav.home "MaxBLD" and nav.sign_in "Log in" in web_help, web_terms, web_privacy and web_maxbld_error .content.json, the plain-page header links) and +1 net in mobile_parcel_disambiguation_map.content.json (unlinked.report and unlinked.stop added, select.label retired); goldens unchanged (100); measured with surface-validate --check before (427) and after (436).
++    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 100 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 436 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
+   });
+   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
+     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
+diff --git a/src/tests/surfaces/surface-validate.logic.test.ts b/src/tests/surfaces/surface-validate.logic.test.ts
+index 348152fd8d4312ead5bad40b23002a09b633dfb4..16f1b2fcdbe830393f7490a274cd70d4a079765e 100644
+--- a/src/tests/surfaces/surface-validate.logic.test.ts
++++ b/src/tests/surfaces/surface-validate.logic.test.ts
+@@ -89,7 +89,8 @@ describe('FE-13 surface-validate gate: real tree', () => {
+     // SRCH.C12 (task-321; dated 2026-11-19; operator RR-0299 "C12 - is a fake email address until launch"): 422 -> 424 strings: +2 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (help.lot.prompt, help.address.link, lines 25-26); measured with surface-validate --check before (422) and after (424).
+     // SRCH.LOTMAP-2 (task-362; dated 2026-11-19; design small-pages-v8 choose-lot.html:278 "Pick a lot on the map or in the list."): 425 -> 426 strings: +1 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (select.hint); goldens unchanged (100); measured with surface-validate --check before (425) and after (426).
+     // SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings: +1 in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json (help.mailto.wrong_lot, the topic "Wrong address or lot"); goldens unchanged (100); measured with surface-validate --check before (426) and after (427).
+-    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 427 strings) · S-page ok (1 of 1 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
++    // SEARCHFIX.3 (task-451; dated 2026-11-24; H Q2/H Q4 GROUNDER-QUESTIONS.md:75, :77; doc-2 B.6 (doc-2:48); plan rulings 8.1 b and 8.3): 427 -> 436 strings: +8 nav strings (nav.home "MaxBLD" and nav.sign_in "Log in" in web_help, web_terms, web_privacy and web_maxbld_error .content.json, the plain-page header links) and +1 net in mobile_parcel_disambiguation_map.content.json (unlinked.report and unlinked.stop added, select.label retired); goldens unchanged (100); measured with surface-validate --check before (427) and after (436).
++    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 436 strings) · S-page ok (1 of 1 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
+     expect(r.stdout.startsWith('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · ')).toBe(true);
+     expect(r.stdout).toContain('S-desc ok (examined 33 in scope:');
+   });
+

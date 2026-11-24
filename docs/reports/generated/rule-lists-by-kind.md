@@ -14,9 +14,9 @@ Example Files line: `scripts/steps/_schema/converted.json, scripts/load-permits.
 | eng-back | docs/specs/00_engineering_standards.md | 3. Database Management & Scaling; 9. Pipeline & Script Safety | 5,377 | 1 |
 | eng-shared | docs/specs/00_engineering_standards.md | 2. Error Handling & Stability; 4. Security & API Contracts; 5. Testing Standards; 6. Centralized Logging; 7. Dual Code Path Safety; 8. Next.js & TypeScript Constraints; 10. Frontend/Backend Boundary; 11. Plan Compliance Checklist; 12. Frontend Foundation Tooling; 13. Observability Standards; 14. The Prevention Loop | 37,472 | 1 |
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
-| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 22,477 | 1 |
+| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 24,153 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 6 lists | | 124,439 | 6 |
+| total | 6 lists | | 126,115 | 6 |
 
 ## McFrontend web
 
@@ -28,9 +28,9 @@ Example Files line: `src/components/report/, scripts/surfaces/parcel_product/F02
 | surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 | 1 |
 | step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
-| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 22,477 | 1 |
+| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 24,153 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 6 lists | | 157,369 | 6 |
+| total | 6 lists | | 159,045 | 6 |
 
 ## phone
 
@@ -45,9 +45,9 @@ Example Files line: `mobile/src/app/`; type build; milestone group [S].
 | eng-front | docs/specs/00_engineering_standards.md | 1. Architecture & UI Standards | 3,214 | 1 |
 | eng-shared | docs/specs/00_engineering_standards.md | 2. Error Handling & Stability; 4. Security & API Contracts; 5. Testing Standards; 6. Centralized Logging; 7. Dual Code Path Safety; 8. Next.js & TypeScript Constraints; 10. Frontend/Backend Boundary; 11. Plan Compliance Checklist; 12. Frontend Foundation Tooling; 13. Observability Standards; 14. The Prevention Loop | 37,472 | 1 |
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
-| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 22,477 | 1 |
+| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 24,153 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 9 lists | | 213,708 | 9 |
+| total | 9 lists | | 215,384 | 9 |
 
 ## storage
 
@@ -59,9 +59,9 @@ Example Files line: `src/lib/parcels/report-compute.ts`; type build; milestone g
 | eng-shared | docs/specs/00_engineering_standards.md | 2. Error Handling & Stability; 4. Security & API Contracts; 5. Testing Standards; 6. Centralized Logging; 7. Dual Code Path Safety; 8. Next.js & TypeScript Constraints; 10. Frontend/Backend Boundary; 11. Plan Compliance Checklist; 12. Frontend Foundation Tooling; 13. Observability Standards; 14. The Prevention Loop | 37,472 | 1 |
 | step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
-| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 22,477 | 1 |
+| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 24,153 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 6 lists | | 124,439 | 6 |
+| total | 6 lists | | 126,115 | 6 |
 
 ## tooling
 
@@ -73,9 +73,9 @@ Example Files line: `scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-c
 | agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 46,314 | 1 |
 | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
-| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 22,477 | 1 |
+| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 24,153 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 6 lists | | 141,443 | 6 |
+| total | 6 lists | | 143,119 | 6 |
 
 ## spec-only
 
@@ -85,7 +85,7 @@ Example Files line: `docs/specs/00-architecture/08_agents.md`; type build; miles
 | --- | --- | --- | ---: | ---: |
 | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
-| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 22,477 | 1 |
+| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 24,153 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 4 lists | | 80,424 | 4 |
+| total | 4 lists | | 82,100 | 4 |
 

@@ -141,14 +141,20 @@ describe('GAP.13: the dated notes on the parent queue rows (M-246, prior text ke
 describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map and C.7 the card lead (choose-lot.html:306)', () => {
   const LEADS = {
     'lot.letter': 'Lot {letter}',
-    'lot.lead.house': 'Lot {letter} · has the house',
-    'lot.lead.no_building': 'Lot {letter} · no building',
+    // SEARCHFIX.3 V1 (task-451, dated 2026-11-24; MD:776 "'at the back' when it has none", doc-2 C.7, FOLD-PLAN.md:57; prior values 'Lot {letter} · has the house'
+    // and 'Lot {letter} · no building'): a lot with no fronting street reads "at the back".
+    'lot.lead.house': 'Lot {letter} · has the house · at the back',
+    'lot.lead.no_building': 'Lot {letter} · no building · at the back',
     'lot.lead.no_building_faces': 'Lot {letter} · no building · faces {street}',
     'lot.lead.house_faces': 'Lot {letter} · has the house · faces {street}',
   };
-  it('lead keys carry the v8 words (choose-lot.html:306) in the content file and the slice; "at the back" is not data and is not used (RR-0289, MORNING-DECISIONS.md:1117)', () => {
+  // SEARCHFIX.3 V1 (task-451 AC2, dated 2026-11-24): the prior title said '"at the back" is not data and is not used (RR-0289, MORNING-DECISIONS.md:1117)' and its
+  // assertion was that no content value holds "at the back". RR-0289 rules massing presence only; "at the back" is the v8 phrase for a lot with no fronting street
+  // (MD:776, doc-2 C.7, FOLD-PLAN.md:57), so the lock is now on where the phrase may and may not appear.
+  it('lead keys carry the v8 words (choose-lot.html:306) in the content file and the slice; "at the back" ends only the two no-street leads', () => {
     for (const [k, v] of Object.entries(LEADS)) expect([k, mapContent[k], mapSlice[k]]).toEqual([k, v, v]);
-    expect(Object.values(mapContent).filter((v) => /at the back/.test(v))).toEqual([]);
+    for (const k of ['lot.lead.house', 'lot.lead.no_building']) expect([k, mapContent[k]!.endsWith(' · at the back')]).toEqual([k, true]);
+    for (const k of ['lot.lead.house_faces', 'lot.lead.no_building_faces', 'lot.letter']) expect([k, /at the back/.test(mapContent[k]!)]).toEqual([k, false]);
   });
   const leadKey = (name: string, i: number): { key: string; street: unknown } => {
     const g = rj(`${GOLD}/${MAP}/${name}.mobile.json`);
@@ -158,7 +164,8 @@ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map an
     const street = /"street":(\{[^}]*\})/.exec(text)?.[1] ?? null;
     return { key: refs[0]!, street: street && JSON.parse(street) };
   };
-  it('two lots: A has a footprint and a street (house and faces), B has no footprint and no street ("no building" only)', () => {
+  // SEARCHFIX.3 (task-451, dated 2026-11-24; prior title ended '("no building" only)'): the key is unchanged; its text now ends "at the back".
+  it('two lots: A has a footprint and a street (house and faces), B has no footprint and no street ("no building · at the back")', () => {
     expect(leadKey('multi_parcel_2', 0)).toEqual({ key: 'lot.lead.house_faces', street: { contract: 'contract_parcels_lookup.map.lots.0.frontageStreet' } });
     expect(leadKey('multi_parcel_2', 1)).toEqual({ key: 'lot.lead.no_building', street: null });
   });
@@ -195,6 +202,17 @@ describe('SRCH.LOTCARD (task-336, RR-0284): C.5 footprint presence on the map an
     expect(src).toContain('BEGIN READ ONLY');
     expect(src).toContain('55322');
     expect(src).not.toMatch(/\b(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE)\b/);
+  });
+  // SEARCHFIX.3 L7 (task-451; GROUNDER-G item 2): a flag with no value, or with the next flag as its value, is an error (usage, exit 2), never a silent read.
+  it('SEARCHFIX.3 L7: --url or --parcels with a missing value or a flag as its value sets an error; a real value does not', async () => {
+    const parseArgs = (await import('../../../scripts/analysis/lot-map-data-check.mjs')).parseArgs as unknown as (argv: string[]) => { error?: string };
+    expect(parseArgs(['--parcels', '--url', 'x']).error).toBeTruthy();
+    expect(parseArgs(['--url']).error).toBeTruthy();
+    expect(parseArgs(['--url', '--dry-run']).error).toBeTruthy();
+    expect(parseArgs(['--parcels']).error).toBeTruthy();
+    expect(parseArgs(['--parcels', '1,2']).error).toBeUndefined();
+    expect(parseArgs(['--url', 'postgres://u@127.0.0.1:55322/db']).error).toBeUndefined();
+    expect(parseArgs(['--dry-run']).error).toBeUndefined();
   });
   it('the data-check guard refuses every host, port, scheme and query override but the rehearsal stack', async () => {
     const { refuse } = await import('../../../scripts/analysis/lot-map-data-check.mjs');

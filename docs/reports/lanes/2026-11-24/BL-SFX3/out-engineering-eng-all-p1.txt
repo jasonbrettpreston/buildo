@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T17:26:12.438Z file_sha256=2a22e4df0b97b436852ca5944801cc7592f149497b14b150a64204d102ac9218 prompt_sha256=4a2a531d08626cb96e50c463881a9da3c1df0c344e4352e38d4d4876d483ddc5
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-engineering-eng-all-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 5.3 Red-Green Test Cycle "<clause quote: You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails.>" — task-451 Implementation Notes (pasted) "<code quote: Mobile jest tests (lotMapPage.behaviour, lotMapScreens.golden) are not reached by the pre-commit related run (src/ and scripts/ only): their red and green are UNVERIFIED until the push station, as for task-450.>" — the two mobile suites that pin AC2/AC4 and the card goldens were never shown red before the LotMapBinding and content changes were written — before push, stash the code changes, run `npx jest mobile/__tests__/lotMapPage.behaviour.test.tsx mobile/__tests__/lotMapScreens.golden.test.ts`, record the failing output in the lane evidence, then re-apply and show green.
+
+BUG severity=HIGH — 1.1 Mobile-First UI Mandate "<clause quote: All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of 44px x 44px.>" and 1.3 "<clause quote: Bare text nodes used as CTAs are not permitted, wrap in a TouchableOpacity with the required minimum height.>" — .cursor/MCFRONTEND-QUEUE.md:418 "<code quote: with "report it" an inline link to the same topic>" — an inline link inside the no-lot sentence is a text node used as a link with no 44px area and no hitSlop named anywhere in the plan or notes — wrap it in a TouchableOpacity with `min-h-[44px] min-w-[44px]` or give the nested Text `hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}` and assert it in lotMapPage.behaviour.test.tsx.
+
+BUG severity=HIGH — 14 The Prevention Loop "<clause quote: A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit**>" — task-451 Implementation Notes (pasted) "<code quote: The doc-2 dated notes (AC6 C.3, C.7, C.12, B.6/B.7, C.9) and the regenerated docs/reports/generated/rule-lists-by-kind.md (doc-2 grew) land in their own commit>" — the ruling the queue note records (no neighbour lots, card wording, wrong-lot topic) leaves the cited spec untouched in this commit, so the spec and the queue/registry disagree for as long as the split lasts — fold the doc-2 dated notes, the queue note and the code into one commit, or record the split as an operator-approved deviation.
+
+DEFER severity=MED — 11 Plan Compliance Checklist, Pre-Review Self-Checklist "<clause quote: Before declaring Green Light, generate a 5-10 item self-skeptical checklist ... Output PASS/FAIL per item in the response BEFORE running tests.>" — NONE — the lane notes record red and green counts but no per-item PASS/FAIL walk against the acceptance criteria before the green run — paste the 5-10 item checklist with PASS/FAIL into Implementation Notes before the push station.
+
+DEFER severity=LOW — 5.2 Test File Pattern "<clause quote: *.ui.test.tsx | React component rendering, interactions | Any new/changed component>" — task-451 Files (pasted) "<code quote: mobile/__tests__/lotMapPage.behaviour.test.tsx, mobile/__tests__/lotMapScreens.golden.test.ts>" — the mobile suites that cover the changed LotMapBinding component carry names that do not appear in the 5.2 pattern table — either rename to the mandated patterns or cite the Spec 90 mobile protocol clause that replaces them so the exemption is on the record.
+
+MET — 5.5 Parity battery — docs/reports/generated/127-surface-registry.md:682 — the generated doc is described as regenerated via emit-mobile-surfaces, lotmap-golden-capture and generate-surface-registry with a following `--check clean`, which is the generated-doc-to-generator drift guard.
+
+MET — 11 Cross-Layer Contracts Check — task-451 Description (pasted) "reuse LOT_SIZE_PLAUSIBLE_M2, src/lib/report-projection/project.ts:79" — the implausible-area rule reuses the existing threshold constant instead of introducing a new literal across spec, Zod and UI.
+
+MET — 5.3 Red-Green Test Cycle — task-451 Implementation Notes (pasted) "Test Files 7 failed, Tests 22 failed | 199 passed (lane red.out)" — the src/ and scripts/ suites were demonstrably red before the work commit.
+
+REJECT — 13.1 Product Telemetry "<clause quote: Every interactive handler in src/features/leads/ (onClick, onSubmit, onChange for filters) MUST call captureEvent().>" — the change is accused of adding an interactive "report it" link that emits no analytics event, per the registry's `emits: ledger` row — the mandatory coverage is scoped to `src/features/leads/` and the link lives in `mobile/src/components/surfaces/LotMapBinding.tsx`, so the clause does not reach it.
+
+REJECT — 4.3 Frontend Security "<clause quote: API routes must return only the fields the UI needs. Never SELECT * — always project specific columns.>" — the lookup's widened response is accused of being an unprojected dump — the registry records "an explicit pick-by-name projection of the 80 names in inputs.field_whitelist", which is exactly the projection the clause demands.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  53093ms (53.1s)
+📊 Tokens — total: 45547, input: 34210, output: 11337, reasoning: 10058

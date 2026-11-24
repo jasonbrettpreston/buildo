@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T17:27:29.708Z file_sha256=6bf0117cdd41895096bc7399f4104085d7d01dddebee419db5587ad3bbdfc0d1 prompt_sha256=a5ab1c9a2288c97a38ad104c9426ab593db684d39fb9ba3a74991dd47bd73e33
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX3/in-out-ux-p1.txt (model: deepseek-reasoner)
+
+REJECT — mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json "key": "unlinked-report" — the unlinked state now shows two links to the same Help topic (the inline "report it" link here plus the separate "Get help with an address" link that also uses "topic": "wrong-lot") so a screen-reader user meets the same destination twice in one message — harmless: design mandates both (AC3 inline "report it" to wrong-lot, and B.7 "Get help with an address" under the notice).
+
+REJECT — docs/reports/generated/127-surface-registry.md "listed as cards (area, frontage, zoning) under the map" — the same paragraph later says "There is no frontage or zoning on the card (C.9, removed by the design)", so an auditor reading the registry sees the card described with frontage and zoning and then without — harmless and by design: the note is a "prior text kept" dated note that supersedes, and this file is an internal report, not the end-user surface.
+
+DEFER severity=LOW — mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json "className": "text-xs font-semibold text-report-ink underline" — the inline "report it" link is rendered at text-xs, a small touch target on a phone — design mandates an inline link, and a larger "Get help with an address" link sits adjacent as the comfortable fallback, so this is safe to defer.
+
+DEFER severity=LOW — mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json "topic": "wrong-lot" — every help and report link on this page now opens the wrong-lot Help topic; if that topic is not actually live on the Help page (the note leans on task-450) the "report it" link dead-ends to a missing topic — verify the wrong-lot topic exists at the push station; bounded, since the queue note asserts task-450 added it.
+
+DEFER severity=LOW — mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json "content": "lot.label" — the card is shown carrying only lead and area vars, but the explicit accessible name itself is not visible in this chunk (cannot see the binding), so confirm the card's screen-reader label now excludes frontage and zoning per design "The card's screen-reader label is its visible text (lead line and area, no frontage or zoning)" and per AC4 — if a residual label still names frontage or zoning, the reader would hear fields the card no longer shows.
+
+VERDICT: PASS on the person's experience
+States checked: multi-lot cards (3+ and 2), lot with implausible size showing "Not available", lot with no street showing "at the back", lot with missing fields saying neither, unlinked "Try a nearby address or report it" line with inline link, help and report links, screen-reader labels; loading, hit, the four error states, offline, back and repeat visit are not drawn in this chunk (cannot see).   Dead ends found: 0
+
+---
+⏱  96508ms (96.5s)
+📊 Tokens — total: 54181, input: 34538, output: 19643, reasoning: 18947

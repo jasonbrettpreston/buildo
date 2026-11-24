@@ -25,15 +25,31 @@ FROM parcels p
 WHERE p.parcel_id = ANY($1::text[])
 ORDER BY p.parcel_id`;
 
+// SEARCHFIX.3 L7 (task-451; GROUNDER-G item 2): a flag whose value is missing or is the next flag sets `error` (main prints the usage and exits 2),
+// so "--parcels --url x" is never read as parcels "--url" and a URL of "x".
+const valueAfter = (argv, i) => {
+  const v = argv[i + 1];
+  return v === undefined || v.startsWith('--') ? null : v;
+};
+
 export function parseArgs(argv) {
-  const o = { dryRun: argv.includes('--dry-run'), url: null, parcels: [...SAMPLE_PARCELS] };
+  const o = { dryRun: argv.includes('--dry-run'), url: null, parcels: [...SAMPLE_PARCELS], error: undefined };
   const u = argv.indexOf('--url');
-  if (u >= 0) o.url = argv[u + 1] ?? null;
+  if (u >= 0) {
+    o.url = valueAfter(argv, u);
+    if (o.url === null) o.error = '--url needs a value';
+  }
   const p = argv.indexOf('--parcels');
-  if (p >= 0) o.parcels = [...SAMPLE_PARCELS, ...String(argv[p + 1] ?? '').split(',').map((s) => s.trim()).filter(Boolean)];
+  if (p >= 0) {
+    const v = valueAfter(argv, p);
+    if (v === null) o.error = '--parcels needs a value';
+    else o.parcels = [...SAMPLE_PARCELS, ...v.split(',').map((s) => s.trim()).filter(Boolean)];
+  }
   o.parcels = [...new Set(o.parcels)];
   return o;
 }
+
+const USAGE = 'Usage: node scripts/analysis/lot-map-data-check.mjs --dry-run | --url <rehearsal stack URL> [--parcels 1,2]';
 
 /** Returns null when the URL is the rehearsal stack, else the reason it is refused. */
 export function refuse(url) {
@@ -54,6 +70,7 @@ export function summarise(rows) {
 
 async function main() {
   const o = parseArgs(process.argv.slice(2));
+  if (o.error) { console.error(`${o.error}. ${USAGE}`); process.exitCode = 2; return; }
   if (o.dryRun) {
     console.log(`-- BEGIN READ ONLY; parameters: $1 = ${JSON.stringify(o.parcels)}\n${SQL};\n-- ROLLBACK;`);
     return;
