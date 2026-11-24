@@ -7,6 +7,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-24T14:47:00Z'
+updated_date: '2026-11-24T15:00:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -54,3 +55,194 @@ Files: mobile/src/lib/parcelSearchMatch.ts, mobile/src/lib/semiQuestion.ts, mobi
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+Planner: Cairn-Plan-450
+Plan id: PLAN-450-v1
+
+Read-only. I ran no tests, hooks or generators and wrote no file. File:line references were read at board head 5a26374b9. MD means ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md.
+
+## 1. Rules quoted first
+- RR-0442, MD:2276: "It should open on an exact match and we have a different process for address mistakes".
+- RR-0443 c, MD:2284: "What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close".
+- RR-0444, MD:2290: "Now we need to fold the findings (1) Valid Compliance finds". RR-0447 is at MD:2309 and RR-0448 at MD:2315 (the cards).
+- RR-0445, MD:2296: "we are mobie first - we always take that approach but it works onthe web".
+- RR-0392, MD:1975: "I don't think we need any other infastrcuture beyond this".
+- The 2026-09-16 rule, mobile/src/lib/parcelSearchMatch.ts:12-13: "beyond the cap, ask for a house number instead of listing". It is repeated at mobile/src/constants/parcelSearch.ts:20: "ask for a house number, do not list." No verbatim operator words were found (GROUNDER-QUESTIONS.md:127).
+- Spec 99 §6.5, docs/specs/03-mobile/99_mobile_state_architecture.md:527: "A render gate condition ... MUST evaluate to the same value across consecutive renders". Line :530 marks isFetching as BANNED. Line :782 says a §5 change "requires a WF1 amendment with adversarial review".
+- The lookup's additive rule, mobile/src/lib/schemas.ts:370-371: "a server-added field never raises ParcelLookupSchemaError on an installed build".
+- doc-2:49 (B.7): "Get help with an address (to /help?topic=wrong-lot)". The mock note in ~/Buildo-scratch/mcfrontend/small-pages-v8/help.html reads "Topics: General · Wrong address or lot · Billing".
+- The grounder records this plan follows:
+  - GROUNDER-B (g3) D1: delete `.strict()` (L1). D2: delete `&& !isFetching` (V4). D3: gate on settled data, not isFetching (V5). D5: dated note in Spec 99 (N4). D6, D8: descriptor text (R2). D7: projection "list" (R4).
+  - GROUNDER-H D2: `retryAfterSeconds == null` (L3). D4: `{min}` bound to the slice value (L5). D6: semi busy state (R4).
+  - GROUNDER-D D7: "three" becomes "two" (R5).
+  - GROUNDER-QUESTIONS :62 (Q8, the curly apostrophe), :60 (Q6/B.7) and :73 (Q19: "Delete this block ... and it now does").
+
+## 2. What exists and is reused
+- The refine line already exists: content key `list.refine` (mobile_parcel_search.content.json:8). It is drawn when `overCap` is set (mobile SearchBinding.tsx:214, web SearchBinding.tsx:243). The cap test is `isOverCandidateCap` (parcelSearchMatch.ts:212).
+- The intersection query-shape check `isIntersectionQuery` (:154-164) is the pattern for a check on the typed text.
+- `sliceNumber` (mobile/src/lib/sliceConfig.ts:14, no imports) and `SEARCH_MIN_QUERY_LEN` (SearchBinding.tsx:38) already carry the minimum length.
+- Templates `{text, vars}` already fill values on both platforms (the chip label at :116; web resolveWebValue :317-320).
+- The `open_help` action exists. On the phone, helpUrl (mobile/src/lib/maxbldHelp.ts:15) builds the link with the topic in the URL fragment. The web builds it at SearchBinding.tsx:385-387. On the help page, the HelpPrefill island matches the link by data-topic (HelpPrefill.tsx:34-35). Help topics are prose `mailto` parts (static-page.json:19-46) checked against a closed enum (static-page.schema.json:179-187).
+- The redirect-once hook is `useSettledRedirect` (mobile/src/hooks/useParcelPageHooks.ts:16-25). It is not changed.
+- Generators (the build runs them, never hand edits): scripts/surfaces/emit-mobile-surfaces.mjs --write, scripts/surfaces/search-golden-capture.ts --write, the semi golden capture, and surface-validate --check.
+
+## 3. The change, file by file, in build order
+1. mobile/src/lib/schemas.ts:428 (L1). Old: `.strict()`. New: delete that word. The enums at :424-425 stay. Also reword the comment at :370-371 ("The client derivation ... runs only when resolution is absent"), because step 2a removes that derivation.
+2. mobile/src/lib/parcelSearchMatch.ts:
+   a. Q19, :193-208. Delete both blocks: the declared-matchType path and the TODO(contract) count derivation. Replace them with one line: `return isIntersectionQuery(trimmed) ? 'intersection' : 'no_match';`. A payload with no `resolution` is then read as the server's no_match. Add one dated sentence to the header at :20-24 and reword :169-170.
+   b. L3, :298. Old: `!retryAfterSeconds`, which shows two messages for 0. New: `retryAfterSeconds == null`. Change :288 from "pinned, not fixed" to "MF35-DF1 closed (task-450)".
+   c. V4, :351. Old: `showMiss: outcome === 'no_match' && !isFetching && error == null`. New: drop `&& !isFetching`. Reword :275.
+   d. 2a, phone side:
+      - Add a pure helper beside :154, `hasHouseNumber(q)`: true when the text before the first comma contains a digit. It copies the server's comma cut (src/lib/admin/parcel-lookup.ts:225-226).
+      - In buildSearchSituation (:340-350), compute `noNumber = outcome === 'text_candidates' && !hasHouseNumber(debounced)`.
+      - `overCap` becomes `noNumber || isOverCandidateCap(...)`. The refine line already reads overCap, so no new field is added.
+      - Under option 8.1 A, candidates become [] when noNumber. Under option 8.1 B, they are unchanged.
+3. mobile/src/lib/semiQuestion.ts:72-74 (V5). Old: no data, no error and not fetching redirects to Lookup. That fires on a cold offline open, because a paused first fetch reports isFetching false. New: no data with a parcelId is 'loading'. Only an empty parcelId redirects to Lookup. isFetching is no longer read there; the argument stays in the type so callers do not change (see 8.4).
+4. scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json:15 and :21 (L5): "at least {min} characters". mobile_parcel_semi_question.content.json:4 (Q8): "Yes, it’s one half of a semi".
+5. mobile/src/components/surfaces/SearchBinding.tsx:
+   - :47 DERIVED_NAMES gains `/^min_query_len$/`.
+   - :84 the input hint and :221 the prompt become templates `{text, vars: {min: derived('min_query_len')}}`.
+   - :208 the topic becomes 'wrong-lot'.
+   - searchData.derived (:254-260) gains `min_query_len: SEARCH_MIN_QUERY_LEN`.
+6. src/components/surfaces/web/SearchBinding.tsx:
+   - :125 the input description and :245 the prompt become the same templates.
+   - :237 the topic becomes 'wrong-lot'.
+   - searchWebData.derived (:273-279) gains `min_query_len`, read by `sliceNumber` from the mobile generated slice through relative imports, the way :26 already imports parcelSearchCore.
+7. scripts/surfaces/_schema/static-page.schema.json:179-187: the topic enum gains "wrong-lot".
+8. scripts/surfaces/_schema/static-page.json, after :30: add one mailto part to web_help with content "help.mailto.wrong_lot", topic "wrong-lot" and value "support_inbox". The old topics stay; task 3 moves the map links.
+9. scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json — OUTSIDE FILES LINE. It needs "help.mailto.wrong_lot": "Wrong address or lot" (the mock's words). The page throws on a missing key (static-web-binding.ui.test.tsx:118-119).
+10. mobile_parcel_search.descriptor.json (R2). Text only, as dated "prior text kept" sentences:
+    - metering :419-421: the page counts nothing; the lookup it calls counts a produced report (F02).
+    - flag :231: "MAXBLD_WEB_LIVE (web target only)". A string is allowed (surface.schema.json:1238-1250).
+    - notes :536 and product_questions :576 and :586: closed by MF-45 D-4 a and MF-53.
+    - data_story :6 and under_126 :7: name the Layer 4a recent-searches store.
+    - Re-point the cites past the end of the 128-line index.tsx (:35, :266, :282, :369-373, :405) to SearchBinding.tsx and parcelSearchMatch.ts.
+    - Add `min_query_len` to the derived-name list in deviations[1] (:510).
+    - Add one sentence to check :266 saying refine also shows with no house number.
+    - The MF-50 lead_gen deviation (:516-520) stays; src/tests/parcel-tool-meter.logic.test.ts:240-250 reads it.
+11. mobile_parcel_semi_question.descriptor.json (R4): projection :166 "none" becomes "list" (see section 6, risk 1). Add one sentence to under_126 (:7) naming the busy overlay. There is no "busy" state name in the closed list.
+12. mobile/__tests__/daylightSearchPages.golden.test.ts:7 and :43 (R5): "three" becomes "two".
+13. Regenerate the two slices (mobile/src/generated/surfaces/*.json) and the goldens under src/tests/fixtures/surfaces/ with the generators. The content and descriptor fingerprints change, so every search, semi and web_help golden moves.
+14. docs/specs/03-mobile/99_mobile_state_architecture.md: a dated note (section 7).
+15. Test-side edits OUTSIDE FILES LINE, each needed because it pins old behaviour:
+    - src/tests/surfaces/surface-validate.logic.test.ts:93 and surface-conformance.logic.test.ts:258: the string count goes from 426 to 427, with a dated comment.
+    - mobile/__tests__/fixtures/parcelSearch.situations.json: rate_limited_zero errors.unexpected becomes false. Under 8.1 A, the "ambiguous" query "Bathurst St" also needs a house number.
+    - mobile/__tests__/parcelScreens.golden.test.ts:160-169 and surfaceRenderer.smoke.test.tsx:76-82: the MF35-DF1 pins.
+    - surfaceRenderer.smoke.test.tsx:41 and src/tests/surfaces/static-page.logic.test.ts:229-234: the address_match topic.
+    - mobile/__tests__/semiQuestionScreens.golden.test.ts:155-156: redirect_no_data now expects loading.
+
+## 4. Tests first (red, then green), by acceptance line and fold section 2 line
+AC1 / fold :42. New describe in mobile/__tests__/parcelSearchMatch.test.ts, "a street with no house number". The rows are the typed-address seat's real data:
+- "Gerrard St" with text_candidates [1 Gerrard St W 5440777, 1000 Gerrard St E 10640216, 1001 Gerrard St E 5402856] (seat 5a): overCap true. Today false, so red.
+- "Elm" with [1 Elm Ave 5379936] (5b): overCap true with one row.
+- "Gerrard St W" with text_candidates [1 Gerrard St W 5440777] (case 6 after task 449): overCap true, route null.
+- "Gerrard St, Toronto" with the 5a rows: overCap true.
+- Each no-number case also asserts candidates: [] under 8.1 A, or the rows under B.
+- Number cases keep the list and show no refine line:
+  - "383 El" [5106944, 5461541, 5191692]
+  - "679 Que" [5476455, 5497535]
+  - "123 Yongee St" [5179889, 5464983]
+  - "Unit 4, 123 Yonge St" [5464983]
+- Other states:
+  - "King and Bay" with no_match is 'intersection' with no refine line.
+  - "zzzz qqqq" with no_match keeps the miss line.
+  - "123 Main St, Mississauga" is outside_toronto.
+  - "12" shows the prompt.
+- mobile/__tests__/parcelSearchScreen.behaviour.test.tsx: typing "Gerrard St" over the 5a rows shows parcel-search-refine (under A, no parcel-candidate-*). The helpers `hit` (:48) and `list` (:49) gain `resolution`.
+
+AC2 / fold :43 (V4). The truth table at :417 flips to `toBe(true)`. Add a case: the same no_match data with isFetching false, then true, keeps showMiss true. Red today.
+
+AC3 / fold :47 (L1). mobile/__tests__/schemas.test.ts:
+- ParcelLotFormSchema parses {detected:'semi_half', basis:'doubt_multi_parcel_abut', unsure:true, extra:1}. Red today.
+- ConsumerParcelLookupResultSchema parses with that lotForm.
+- detected:'triplex' still throws, so the closed enums stay.
+
+AC4 / fold :45 (L5):
+- parcelSearchScreen.behaviour: typing "12" shows "Type at least " + SEARCH_MIN_QUERY_LEN + " characters to search.".
+- search-web-binding.ui.test.tsx "templates are filled": the prompt and the description carry no "{min}".
+- Both content strings contain "{min}" and no "3". Red today.
+
+AC5 / fold :46 (V5). mobile/__tests__/semiQuestionPage.behaviour.test.tsx: with parcelId PCL-S1, data undefined, isFetching false and no error, replace is not called and the loading state shows. Red today. An empty parcelId still goes to Lookup.
+
+AC6 / fold :48 (B.7):
+- search-web-binding.ui.test.tsx:121-125: the href is `/help#topic=wrong-lot&q=...`.
+- New case: the search link's topic is a mailto topic of web_help in static-page.json. Red today.
+- parcelSearchScreen.behaviour :162: the help link opens `https://maxbld.ca/help#topic=wrong-lot&q=Bathurst%20St`.
+
+Fold :44 (L3). parcelSearchMatch.test.ts:397: `unexpected: false`. Red.
+
+Fold :49 (Q19):
+- New: "a payload without resolution is no_match even with a match". Red; it is 'unique' today.
+- The tests at :82-143 move to `withResolution`. The withDeclaredType tests (:104-116) go with block 1.
+
+Fold :50-51 (Q8, R2, R4, R5): text only. surface-validate --check and the golden tests prove them.
+
+Phone: no 2-character request (seat case 29). The existing hook rule at useParcelLookup.ts:83 is unchanged.
+
+## 5. Limits, and what could fail or surprise
+Limits:
+- No server change (task 449) and no new resolution value.
+- The map links keep address_match and lot_match (task 3).
+- The web search page stays static (task 393).
+- The cap of 10 and the `list.refine` wording are unchanged.
+- static-page.json:2 (R5) and the nav and follow-ups headers stay with tasks 3 and 8.
+
+Risks:
+1. A LIST surface marked generated with projection "list" requires render.list.columns (surface.schema.json:3704-3790). R4 may therefore be refused by surface-validate. Fallback: keep "none" and add a dated sentence instead. Detected by surface-validate --check.
+2. Until task 449 lands, "Gerrard St W" still opens a lot as 'unique'. The phone rule acts on text_candidates only.
+3. `list.refine` says "More than 10 lots match". For a street with 3 rows that is false (see 8.2).
+4. Five fixture situations use the no-number query "Bathurst St" (ambiguous, fetching_with_candidates, none_checked). Under 8.1 A the list golden empties unless its query gains a number. The golden tests detect this.
+5. Q19 makes an older server's match a miss. The server always sends resolution (lookup-flow.ts:42, :53, :66, :94, per GROUNDER-B).
+6. V5: a disabled query (no token) with an id would show loading for good. The app gate should keep signed-out users off this page. UNVERIFIED.
+7. Clashes in the same wave: task 8 owns surfaceRenderer.smoke.test.tsx; task 3 owns static-page.logic.test.ts and static-page.json. Merge order matters.
+8. Spec 99:782 asks for a WF1 amendment for §5 changes. A reviewer may refuse a dated note there; §6.5 is the other place for it.
+9. A text like "Highway 27" has a digit, so it lists as today.
+10. `overCap` now means "show the refine line". Its comment says so.
+
+## 6. Dated notes and card notes owed
+- Spec 99, a hand edit of the spec file, in the M-246 form ("Dated note 2026-11-2x (M-246, prior text kept; task-450 SEARCHFIX.2; RR-0444 MD:2290 ...)"), placed after §5.1. It says:
+  - the MaxBLD parcel-tool pages navigate once per settled outcome through useSettledRedirect (useParcelPageHooks.ts:16-25);
+  - the dependencies name the route string;
+  - the semi page reads no data with an id as loading, never as a redirect.
+- task-319, through `node_modules/.bin/backlog task edit 319 --append-notes "..."`: `.strict()` was removed from the lot form; the enums stay.
+- task-450, through the same CLI: --plan, the acceptance checks and --append-notes. The notes include MF35-DF1 closed, the 8.x answers as verbatim dated rows (DoD #5), and the evidence (sha, tests, hook result).
+
+## 7. Open choices (not decided)
+8.1 With no house number: (A) the "add a house number" line alone, or (B) the line plus the close-address list.
+- For A:
+  - The 2026-09-16 rule, parcelSearchMatch.ts:12-13 and constants/parcelSearch.ts:20: "ask for a house number, do not list".
+  - The grounder found the list is "the first 10 addresses alphabetically, not the 'close' ones" (GROUNDER-QUESTIONS.md:33), and said A is "already answered by the 2026-09-16 ruling plus RR-0443 c" (:36).
+  - The card records A as its recommendation.
+- For B:
+  - RR-0443 c (MD:2284): a partial address picks "from the available addresses that are close".
+  - The fold plan question 7.2 (FOLD-PLAN.md:207) notes the 2026-09-16 words were not found.
+  - RR-0446 and RR-0448 left this choice unruled (MD:2304, :2316).
+- Cost: A moves the list golden and fixture (section 5, risk 4). B changes no golden, but next to a list of fewer than 10 it shows "More than 10 lots match", which contradicts itself.
+- Recommendation: A, ruled by the operator.
+
+8.2 The refine copy: keep "More than 10 lots match. Add a house number to narrow it down." (the card says "existing line"), or reword it. Rewording changes copy on the 10-plus case too. Recommendation: keep it now and raise the wording with 8.1.
+
+8.3 The topic token: "wrong-lot" (doc-2:49, as typed) or "wrong_lot" (the house style of the other topics). Content keys allow only underscores (static-page.schema.json:166), so the key is help.mailto.wrong_lot either way. Recommendation: "wrong-lot".
+
+8.4 V5 shape: (a) the check inside semiQuestion.ts alone (no data with an id is loading), or (b) pass the query's pending status from semi-question.tsx (OUTSIDE FILES LINE, plus fixtures and the capture script). GROUNDER-B D3 offered "status !== 'pending' / isFetched". Recommendation: (a), the fewest files.
+
+## 8. UNVERIFIED
+- Nothing was run: no tests, no generators, no device.
+- That an offline, paused first fetch gives isFetching false with data undefined comes from library knowledge (GROUNDER-B UNVERIFIED 2).
+- I did not check whether surface-validate accepts projection "list" here.
+- I did not check whether the Next build resolves the mobile slice JSON by relative path.
+- I did not confirm the exact web golden capture command.
+- The seat lists only 3 of the 10 "Gerrard St" rows and 1 of the "Elm" rows.
+- The 2026-09-16 ruling's operator words were not found.
+- The backlog CLI is at node_modules/.bin/backlog; it is not on PATH.
+
+### Critical Files for Implementation
+- /Users/brettpreston_macmini/Buildo-wt-board/mobile/src/lib/parcelSearchMatch.ts
+- /Users/brettpreston_macmini/Buildo-wt-board/mobile/src/components/surfaces/SearchBinding.tsx
+- /Users/brettpreston_macmini/Buildo-wt-board/src/components/surfaces/web/SearchBinding.tsx
+- /Users/brettpreston_macmini/Buildo-wt-board/mobile/src/lib/semiQuestion.ts
+- /Users/brettpreston_macmini/Buildo-wt-board/scripts/surfaces/_schema/static-page.json
+<!-- SECTION:PLAN:END -->
