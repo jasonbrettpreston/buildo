@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.730Z file_sha256=624d497190e7cc21562cb19d8e50cf4b776ec5bd9a518696deca3efa6d25f789 prompt_sha256=f9b5d3f655e66fcf16362afc8e08c7d3ef8139a5ee4e290a642f9031896b776b
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-airtight-124a.txt (model: deepseek-reasoner)
+
+REJECT — R-BA "a step-standard item that no machine checks is not part of the standard" — change accused of landing step-standard work without gate evidence ("Red proven by a refused commit attempt (2 server tests failed)") — this is a web-API/mobile presentation fix, no step descriptor, no `step-validate --step=<slug>` surface and no `converted.json` append, so no R-BA gate applies.
+REJECT — R-BB "#43 ... A change set that appends a file to `converted.json` `converted[]` must stage every spec whose system-map Implementation cell names that file" — change accused of touching `docs/specs/03-mobile/91_mobile_lead_feed.md` without an owner-spec-diff gate — #43 is conditional on a `converted[]` append and this diff appends none ("docs/specs/03-mobile/91_mobile_lead_feed.md" is a mobile spec edit, not a cutover row).
+REJECT — R-BE "One home: a generated path hand-listed in any Target Files span is RED" — change accused of hand-editing a spec's Target Files / field list — Spec 91's `LeadDetail` field list is not a `generated:target-files` span; R-BE binds sources-step owner specs and Specs 41–44 only.
+REJECT — R-BZ "Compute purity is a closed answer ... `compute-purity.mjs` over compute and its `require` closure" — change accused of a compute-purity violation — no compute file is touched; the touched files are `src/lib/leads/lead-detail-query.ts`, `src/app/api/leads/detail/[id]/types.ts` and mobile presentation helpers, none of which is a step compute.
+REJECT — R-AY "A step that produces a PRICED or MODELLED output declares the PRODUCT POPULATION it is for, as a bound on its own producing step" — change accused of serving modelled output without a population bound — the production of `modeled_gfa_sqm` is unchanged; this diff only serves an already-computed value through a read-only API, and R-AY binds the producing pipeline step.
+REJECT — R-CP "A test that spawns `step-validate.mjs` (or another long CLI) first proves the run finished" — change accused of absence-only assertions ("expect(src).not.toMatch(/10\.76|SQM_TO_SQFT/)") — those assertions are in tests that spawn no child process, so R-CP's completion precondition does not reach them.
+REJECT — Spec 136 fe.44 "the conversion factor is content/settings, never in code" (cited by the material, NOT pasted) — change accused of satisfying or breaking the conversion-factor ruling — the clause is not in the pasted context, so its satisfaction is "cannot see" and it is not mine to judge here.
+
+DEFER severity=LOW — R-BF "every step-registry and cross-step-ledger row generated or witnessed, never hand-kept; declared == observed" — scripts/surfaces/_schema/seed-report-v2.mjs:605 (hunk @@ -604,7 +604,7 @@) "area_unit: { ... note: 'today the screen mixes formatSqm (lot) and formatSqft (GFA), [parcelId].tsx:128-130' }" vs mobile/src/lib/parcelCostFormat.ts "export function formatServedSqft(...)" — the sibling registry note still names `formatSqft` and `[parcelId].tsx:128-130` after this diff deletes that export from that file, so the hand-kept row disagrees with the tree — update the note (or confirm `[parcelId].tsx` never imported the renamed export) in the same commit.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 28 (0 bind this change; governing clauses fe.44 / MORNING-DECISIONS.md:241 / Spec 91 §4.3 are not pasted and were not judged)   Unmet: 0
+
+---
+⏱  28791ms (28.8s)
+📊 Tokens — total: 29765, input: 23978, output: 5787, reasoning: 4889

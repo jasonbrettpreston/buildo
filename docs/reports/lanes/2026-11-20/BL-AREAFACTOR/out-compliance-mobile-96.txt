@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.796Z file_sha256=be704818c0a181d0945962b239acc7ff3db65b8414c0b8cdfa085396054f4e2f prompt_sha256=000df91f3dae3724c520df2a40f3f6102f9f8212cb4cd9bd528de10bfb16f7af
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-mobile-96.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — Spec 96 rule list header "RULE LIST mobile-96 (docs/specs/03-mobile/96_mobile_subscription.md, whole file), part 1 of 1." — NONE — the material is the task-411 area-factor diff (lead-detail cost, formatting helpers, surface registries) and no clause of the pasted Spec 96 names any of it; the clauses that do bind it, cited in the task description itself ("Rule: operator ruling MORNING-DECISIONS.md:241 ... Spec 136 fe.44"), are not pasted and so cannot be checked here — paste Spec 91 §4.3 and Spec 136 fe.44 with this material, or route this diff to a run whose rule list is those specs.
+
+MET — Spec 96 §10 Step 2 "**Gate execution order:** `(app)/_layout.tsx` is the SUBSCRIPTION gate." — mobile/app/(app)/[lead].tsx:81 — the diff edits one child screen's sqft label only; the layout gate, its six-status switch and the paywall mount are untouched, so the gate still precedes every `(app)` screen.
+MET — Spec 96 §9 "When `paywallStore.dismissed = true` AND `subscription_status === 'expired'`, the feed and flight board enter inline blur mode" — mobile/src/lib/schemas.ts:203 — the added field is on `LeadDetailCost` ("modeled_gfa_sqft: z.number().nullable().optional()"), not on profile status or paywallStore state, so blur and banner conditions are unchanged.
+MET — Spec 96 §10 Step 5 "`subscription_status` is NEVER written via `PATCH /api/user-profile`. It is written only by: (a) this webhook handler ... (b) the GET/PATCH handler for trial initiation (Step 4 above), and (c) the reactivation PATCH in Spec 97 §3.2" — src/lib/leads/lead-detail-query.ts:155 — the server change is a read-only projection ("sqmToSqftOrNull") on the lead-detail query, no write path to `user_profiles`.
+MET — Spec 96 §11 "Spec 91 — lead feed blocked when `subscription_status = 'expired'`" — mobile/maestro/lead-detail.yaml:48 — the touched lead-detail surface still asserts the cost and sqft blocks behind the existing `(app)` gate; no alternate entry to lead content is added.
+
+REJECT — Spec 96 §2 "`user_profiles.subscription_status` is checked on every app launch after auth." — the diff could be accused of exposing lead-detail content to an `expired` user by editing `mobile/app/(app)/[lead].tsx` — not a real issue, the Spec 96 gate lives in `(app)/_layout.tsx` and renders the paywall or inline blur before any child screen, and the diff adds no status read, bypass, or early return.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+
+---
+⏱  14965ms (15.0s)
+📊 Tokens — total: 25637, input: 22707, output: 2930, reasoning: 2247

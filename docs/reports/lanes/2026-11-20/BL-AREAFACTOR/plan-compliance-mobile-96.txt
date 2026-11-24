@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:37:12.070Z file_sha256=e4bd41fc650b85c6a919724ae5601d51815afc984cf188968e1e3ee029ae5493 prompt_sha256=7db990a040e370b8b00be526e10d91ea687ac5bd5b91e2090c07caec05c9e65e
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-plan-compliance-mobile-96.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — operator ruling MORNING-DECISIONS.md:241 "The conversion factor lives in content/settings, never in code" — src/app/api/leads/detail/[id]/route.ts "the lead-detail API serves an optional cost.modeled_gfa_sqft computed from SQM_TO_SQFT" — the brief alone names the new served field, no pasted clause or ruling names a new API field, so the added surface cannot be checked against any pasted text — keep it optional and land a dated note on the owning spec that names the field, or serve the existing value unconverted.
+
+DEFER severity=MED — operator ruling MORNING-DECISIONS.md:241 "The conversion factor lives in content/settings, never in code" — mobile/src/lib/leadDetailFormat.ts "mobile leadDetailFormat.ts:15 types 10.7639" — the removal of both typed copies is asserted by the brief, no diff is pasted, cannot see the deletion, cannot see the route reading the pinned setting at build time — attach the diff; a deleted constant is not evidenced by a task description.
+
+MET — operator ruling MORNING-DECISIONS.md:241 "The conversion factor lives in content/settings, never in code" — src/lib/parcels/geometry.ts "the pinned setting parcels_sqm_to_sqft is already read at src/lib/parcels/geometry.ts:6 (SQM_TO_SQFT)" — as described, the factor keeps its single source in the setting and the phone only formats a served number.
+
+REJECT — operator ruling MORNING-DECISIONS.md:241 — accused of leaving a code-resident factor served to clients at src/app/api/permits route.ts:267 (feet_per_metre) — the brief records it as "noted by the grounder, not in this task", a sibling route outside this change is not this change's clause.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 1   Unmet: 0
+
+---
+⏱  23264ms (23.3s)
+📊 Tokens — total: 23761, input: 19741, output: 4020, reasoning: 3584

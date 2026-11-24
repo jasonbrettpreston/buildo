@@ -7,11 +7,11 @@
     "proposal": {
       "path": "scripts/surfaces/_schema/report-v2-seed/schema-v2-proposal.json",
       "version": "v2-proposal-2026-10-20",
-      "sha256_16": "6827d1260661083d"
+      "sha256_16": "6ec23b201b0b7310"
     },
     "review": "scratchpad/report-review/REVIEW.md §6",
     "seeded": "2026-10-20",
-    "inputs_sha256_16": "bba92098d6e301c6"
+    "inputs_sha256_16": "e9c6f5069f9eb668"
   },
   "inputs": {
     "binding_sources": "scripts/surfaces/_schema/binding-sources.json",
@@ -1919,7 +1919,7 @@
             "ft²"
           ],
           "render": "rendered",
-          "note": "today the screen mixes formatSqm (lot) and formatSqft (GFA) — [parcelId].tsx:128-130"
+          "note": "today the screen mixes formatSqm (lot, square metres in) and formatServedSqft (GFA, served square feet in) — [parcelId].tsx:128-130"
         },
         {
           "path": "ui.format.area",

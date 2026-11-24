@@ -160,6 +160,12 @@ describe('toCoaLeadDetail — cost envelope', () => {
     expect(detail.cost!.range_high).toBeNull();
   });
 
+  it('serves modeled_gfa_sqft converted from the pinned factor, null when the area is null (FIX.AREA-FACTOR, fe.44)', () => {
+    expect(toCoaLeadDetail(sampleCoaRow).cost!.modeled_gfa_sqft).toBeCloseTo(263.71555, 5); // 24.5 m2 at the pinned 10.7639
+    const noArea = toCoaLeadDetail({ ...sampleCoaRow, modeled_gfa_sqm: null });
+    expect(noArea.cost!.modeled_gfa_sqft).toBeNull();
+  });
+
   it('returns cost: null when BOTH estimated_cost AND modeled_gfa_sqm are null', () => {
     const detail = toCoaLeadDetail({
       ...sampleCoaRow,

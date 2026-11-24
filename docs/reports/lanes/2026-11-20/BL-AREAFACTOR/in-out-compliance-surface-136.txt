@@ -1,0 +1,700 @@
+LIST surface-136 sha256:fbcffd241f1f5b3f62c781a4f84ca0392e424f828f444cbdc6f2daf74fd082d0 material sha256:bd4da5739e573d4d79e1dd86d92e2e511c4f5bbc829a0cb1296b4afd65de8f34 part 1 of 1
+RULE LIST surface-136 (docs/specs/02-web-admin/136_mcfrontend_handbook.md, sections 2. Rules), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+## 2. Rules
+
+- **fe.01** McFrontend is documents only now; the build starts after McBylaws increment 2 closes, with the 2026-11-02 infra freeze lifted for it by name; scope mobile, web, admin and PDF. Surface paths are held (pending globs) until Phase 1 opens.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-status.infra.test.ts · +4 dated notes
+
+- **fe.02** P1 Declared, not coded: a screen is a descriptor; the only code is the shared archetype components.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-generated-only.infra.test.ts · +2 dated notes
+
+- **fe.03** P2 Proven, not reviewed: declarations checked against live contracts and the catalogue; golden states; both-directions locks; observability inside.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/surface-validate.infra.test.ts · +1 dated note
+
+- **fe.04** P3 Fast: a REPORT performance budget (load, payload); a new field ships in hours. Payload is mechanical; load time and "hours" are PROSE-ONLY. Numbers are measured first, then ruled (Q-MF5).
+  Status: OWED · lock owed: src/tests/surfaces/budget.infra.test.ts
+
+- **fe.05** P4 Single source: the front end may show more, never derive differently; every number from McBylaws; no maths in the UI.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-no-maths.logic.test.ts · +1 dated note
+
+- **fe.06** P5 Honest display: disclosures, confidence, "at least", not_evaluated, not_modelled always shown; closed status list; oracle = catalogue flags.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts · +2 dated notes
+
+- **fe.07** P6 Same everywhere: mobile, web, admin and PDF render the same declaration; parity compares each target's real output.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/parity.golden.test.ts · +2 dated notes
+
+- **fe.08** Doc set: specs in docs/specs/02-web-admin; 135 = decisions register; 136 = generated handbook.
+  Status: RULED 2026-11-04
+
+- **fe.09** A separate decisions spec, 124a/69a form, with a Lock column that resolves.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/register-locks-resolve.infra.test.ts · +1 dated note
+
+- **fe.10** The generator lives in the spec: the REPORT section of Spec 126.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/handbook-rule-map.logic.test.ts · +1 dated note
+
+- **fe.11** The product (report page) goes first; the admin converts on touch, with no fixed admin pilot; /admin/surfaces is built when the admin next needs that view.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +2 dated notes
+
+- **fe.12** Admin market-metrics is DASHBOARD (126:207, :717); its descriptor's REPORT is an error fixed at conversion.
+  Status: OWED · lock owed: src/tests/surfaces/dashboard-not-report.logic.test.ts
+
+- **fe.13** surface-validate.mjs (MF-15) is the first gate McFrontend builds, part of the build after increment 2. Focus stays on McBylaws.
+  Status: RULED 2026-11-04 · Enforced by: src/tests/surfaces/surface-validate.logic.test.ts · +3 dated notes
+
+- **fe.14** LEAN: the report page converts first (generator, one REPORT renderer, goldens, locks); reuse the back-end machinery; other screens convert on touch.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +2 dated notes
+
+- **fe.15** "How we know it works": the McFront proof canaries a-f, EXECUTABLE (planted defect in a temp copy: non-zero exit; clean copy: zero), are in the plan's acceptance criteria.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfront-proof.infra.test.ts · +2 dated notes
+
+- **fe.16** Q-MF1: all McFrontend specs in docs/specs/02-web-admin; 135 = register; 136 = handbook. No tooling change.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/spec-paths.infra.test.ts · +1 dated note
+
+- **fe.17** Q-MF2: one card per building type, variants[] inside (roof form flat/pitched A/pitched B; unit class houseplex 2-4 at 4, 6 not_modelled), generated from the catalogue; headline flag emitted by the generator; ad slots outside the card list.
+  Status: OWED · lock owed: src/tests/surfaces/report-variants.logic.test.ts
+
+- **fe.18** Q-MF3 binding rule (core premise): every displayed field binds to a source in the closed set catalogue / content / user_input / ad_slot (and external_embed, the fifth source, by FE-21); the schema references the field only (no old engine names, no older-rule text, no code). Labels, help text and…
+  Status: RULED 2026-11-06 · Enforced by: src/tests/surfaces/report-binding.logic.test.ts · +2 dated notes
+
+- **fe.19** User inputs are shared, not private: an entered fact updates the shared database, raises that lot's confidence for every viewer, and keeps provenance (source user, entered_at). Confidence by source: estimated low, user medium, verified high. McBylaws re-evaluates (increment 6); McFrontend declares…
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/user-input-provenance.logic.test.ts · +2 dated notes
+
+- **fe.20** Conflict rule for user entries: verified permit/plan facts outrank user entries; the newest user entry is shown; earlier entries are kept in history so a bad entry can be reverted.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/user-entry-precedence.logic.test.ts · +2 dated notes
+
+- **fe.21** external_embed (map tiles, payment checkout, analytics) is the fifth binding source: each embed declared, never coded.
+  Status: OWED · lock owed: src/tests/surfaces/report-binding-embed.logic.test.ts
+
+- **fe.22** Ad targeting only on declared database keys; never on user-entered facts without consent.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/ad-targeting-keys.logic.test.ts · +1 dated note
+
+- **fe.23** Ad slots: own source (ad_slot) and disclosure (R-17), never inside a card (R-34), outside variants[] and the card list.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/ad-slot.golden.test.ts · +1 dated note
+
+- **fe.24** A new catalogue row reaches mobile, web, admin and PDF with zero front-end code; the renderer throws on an unknown field or status.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/new-row-zero-code.golden.test.ts · +4 dated notes
+
+- **fe.25** The 25 golden lots render end to end the McBylaws answer-key numbers on every target. Runs as a db-type test in a named CI step.
+  Status: OWED · lock owed: src/tests/surfaces/answer-key-e2e.db.test.ts
+
+- **fe.26** In-product error count and budget breach are shown on admin, through the real writer and reader. The on-screen part is a manual operator check (PROSE-ONLY).
+  Status: OWED · lock owed: src/tests/surfaces/error-count.db.test.ts
+
+- **fe.27** parcels is a source in the closed binding set: a field bound to a column of the parcels table (a DB field the consumer payload reads, Spec 100 §3.2 whitelist). A column that is not in the migrations, or a path not on the whitelist, fails.
+  Status: RULED 2026-11-06 · Enforced by: src/tests/surfaces/report-binding.logic.test.ts
+
+- **fe.28** none is a closed status value, "no reading on this node", valid only on the message node of a lifecycle tree (loading / miss / error); the tree carries lifecycle, closed loading | miss | error. Omission of status stays a build failure; every node carries one.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts
+
+- **fe.29** The report node contract has ONE home, scripts/surfaces/_schema/report-tree.schema.json (draft 2020-12, additionalProperties false): a tree is lifecycle? (loading | miss | error) plus nodes[]; each node requires field, source, label, value (string or null), status (the 11a.3 forms plus none),…
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts · +1 dated note
+
+- **fe.30** Report fields are generated from the catalogue, one home per fact. (1) Every effective-ON catalogue row (its switch ON and its building type ON) is a report field, automatically; off yields none; retirement is the switchboard row OFF, never a retired-rows list. (2)…
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-generator-fields.logic.test.ts · +1 dated note
+
+- **fe.31** Every MaxBLD page (a converted non-REPORT surface) is descriptor + content + standard library components configured by schema: descriptor valid with no UNRESEARCHED and no golden: "none"; in the converted manifest (two-direction totality); one props golden per reachable state per declared target,…
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/surface-conformance.logic.test.ts · +6 dated notes
+
+- **fe.32** contract is a binding kind: a displayed value may bind to a field of a declared CONTRACT descriptor's response projection; the member must exist in that descriptor; any other value fails.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/contract-binding.logic.test.ts · +2 dated notes
+
+- **fe.33** One render smoke per archetype per platform: each binding renders its archetype's goldens on each platform (web renderToStaticMarkup in the root suite; mobile jest-expo), and every displayed string, library default strings and form error messages included, comes from content.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/render-smoke.logic.test.ts · +2 dated notes
+
+- **fe.34** The v21 report PAGE tree has ONE contract, scripts/surfaces/_schema/report-page.schema.json, beside the node contract (FE-29; an ad section reuses its $defs/slot): the sections of the page table scripts/surfaces/_schema/report-page.json in screen order; each part is one shown text bound to a…
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.35** The REPORT loading state "What we checked" (MF-62): a lifecycle: loading tree may carry ONE root-only checked object (never a node, never on miss, error or a reading tree; the one-message-node rule unchanged): the title, the citywide and per-lot groups and the data dates, each line a content…
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/report-checked.logic.test.ts
+
+- **fe.36** Navigation is a route: a control that moves the user uses the platform router (web <Link>, redirect(), router.push/replace after an action; mobile expo-router with canGoBack() before back()); a view is never swapped by local state; local state is disclosure only; a navigating pressable has a role…
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/nav-by-route.logic.test.ts
+
+- **fe.37** A STATIC page may read declared stored values on the server: its values are content templates with one {value} slot filled on the server with a server-formatted string, each from a read declared in the page table and the page's server module; a failed read leaves its part out (never a 500, never a…
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/web-landing.logic.test.ts
+
+- **fe.38** Legacy values are neither sent nor shown on the live app (EI-D1). /api/parcels/lookup sends the legacy Spec 88 cost menu and the 12 cost scalars as null. It sends the legacy size headlines as null (keys kept for installed apps and declarations; CONSUMER_WITHHELD_LEGACY_COLS): opt_aor_*, opt_coa_*,…
+  Status: RULED 2026-11-12 · Enforced by: src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts · +1 dated note
+
+- **fe.39** Engine inputs bind (EI-D2..EI-D8). The report and its producer bind the final engine fields: one stored headline per lot and option. Size, status, reason and the CoA size come from Layer 3; cost comes from the Spec 88 scenario lines, joined by the producer (M-67 kept, EI-D8). The detail is…
+  Status: OWED · lock owed: src/tests/surfaces/engine-inputs-bind.logic.test.ts · +2 dated notes
+
+- **fe.40** McTest: the real app is proven wired by layers run against a separate local test stack, never the dev DB (API journeys, a dead-wire crawler, a lot sweep, stress, failure drills, phone runs). The cases are rows of one catalogue, tests/e2e/scenarios.json (data; no test code names a case). Every row…
+  Status: RULED 2026-11-12 · Enforced by: src/tests/mctest/catalogue.infra.test.ts
+
+- **fe.41** The REPORT page table gains the section kind summary (options at a glance, Daylight B): no data of its own; every item is a reference (ref, FE-18, FE-32 part kind) to a part of the option's BUILT section, never a copied value. A hidden option is in neither the list nor the count; a not-evaluated…
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.42** The REPORT page table gains the part kind drawing (lot views, From above): the server sends the drawing already built in a fixed 0..1000 frame (state, outline, one class per edge as explicit lines, envelope and footprints when it has them); the client only draws it (inline SVG on web,…
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.43** See details opens as its own sheet on web and mobile, by a second CLOSED layout key details_view (inline or sheet) in report-layout.json: web and mobile sheet, admin and pdf inline. No existing details value changes: the six readers of details: collapsed (report-page.logic.test.ts,…
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.44** Units across the whole report: store METRIC only. The page producer sends each number pre-formatted in both units; the client only switches which is shown, with no maths (Spec 128 Rule 16, FE-18); the conversion factor is content/settings, never code; one toggle covers every area and length and is…
+  Status: OWED · lock owed: src/tests/surfaces/report-units.logic.test.ts
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/backlog/tasks/task-411 - FIX.AREA-FACTOR-The-lead-detail-API-serves-the-area-already-converted-the-two-typed-phone-copies-of-the-factor-are-deleted.md b/backlog/tasks/task-411 - FIX.AREA-FACTOR-The-lead-detail-API-serves-the-area-already-converted-the-two-typed-phone-copies-of-the-factor-are-deleted.md
+index 56e85b462..005a7b5bf 100644
+--- a/backlog/tasks/task-411 - FIX.AREA-FACTOR-The-lead-detail-API-serves-the-area-already-converted-the-two-typed-phone-copies-of-the-factor-are-deleted.md	
++++ b/backlog/tasks/task-411 - FIX.AREA-FACTOR-The-lead-detail-API-serves-the-area-already-converted-the-two-typed-phone-copies-of-the-factor-are-deleted.md	
+@@ -7,12 +7,14 @@ status: RUNNING
+ assignee:
+   - '@lane-BL-AREAFACTOR'
+ created_date: '2026-11-20T18:27:00Z'
+-updated_date: '2026-11-20T18:33:00Z'
++updated_date: '2026-11-20T19:09:00Z'
+ labels:
+   - McFix
+   - McFix A
+ milestone: m-1
+ dependencies: []
++references:
++  - docs/reports/lanes/2026-11-20/BL-AREAFACTOR/REPORT.md
+ type: build
+ ordinal: 111012
+ ---
+@@ -20,7 +22,7 @@ ordinal: 111012
+ ## Description
+ 
+ <!-- SECTION:DESCRIPTION:BEGIN -->
+-Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder of task-395, 2026-11-20 (verify each fact before building): the earlier resolution (the factor reaches the phone as a generated-slice number) is false: neither screen has a slice. Facts: mobile leadDetailFormat.ts:15 types 10.7639 and is used by [lead].tsx via formatSqft on cost.modeled_gfa_sqm from GET /api/leads/detail/:id; parcelCostFormat.ts:11 types it too and is imported only by its own test and the web parity oracle src/tests/admin-report-preview-live.logic.test.ts:129; the pinned setting parcels_sqm_to_sqft is already read at src/lib/parcels/geometry.ts:6 (SQM_TO_SQFT). Build: the lead-detail API serves an optional cost.modeled_gfa_sqft computed from SQM_TO_SQFT; the phone Zod schema takes it and formatSqft only formats; both typed copies deleted; the parity test re-pointed to literal expected strings. No new surface, no slice. Rule: operator ruling MORNING-DECISIONS.md:241 'The conversion factor lives in content/settings, never in code'; Spec 136 fe.44. Also noted by the grounder, not in this task: the permits route serves feet_per_metre (route.ts:267) for client maths, which strains fe.44 the same way. Files: src/app/api/leads/detail/[id]/route.ts, mobile/src/lib/leadDetailFormat.ts, mobile/src/lib/parcelCostFormat.ts, src/tests/admin-report-preview-live.logic.test.ts
++Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder of task-395, 2026-11-20 (verify each fact before building): the earlier resolution (the factor reaches the phone as a generated-slice number) is false: neither screen has a slice. Facts: mobile leadDetailFormat.ts:15 types 10.7639 and is used by [lead].tsx via formatSqft on cost.modeled_gfa_sqm from GET /api/leads/detail/:id; parcelCostFormat.ts:11 types it too and is imported only by its own test and the web parity oracle src/tests/admin-report-preview-live.logic.test.ts:129; the pinned setting parcels_sqm_to_sqft is already read at src/lib/parcels/geometry.ts:6 (SQM_TO_SQFT). Build: the lead-detail API serves an optional cost.modeled_gfa_sqft computed from SQM_TO_SQFT; the phone Zod schema takes it and formatSqft only formats; both typed copies deleted; the parity test re-pointed to literal expected strings. No new surface, no slice. Rule: operator ruling MORNING-DECISIONS.md:241 'The conversion factor lives in content/settings, never in code'; Spec 136 fe.44. Also noted by the grounder, not in this task: the permits route serves feet_per_metre (route.ts:267) for client maths, which strains fe.44 the same way. Files: src/app/api/leads/detail/[id]/route.ts, mobile/src/lib/leadDetailFormat.ts, mobile/src/lib/parcelCostFormat.ts, src/tests/admin-report-preview-live.logic.test.ts, src/lib/leads/lead-detail-query.ts, src/app/api/leads/detail/[id]/types.ts, mobile/src/lib/schemas.ts, mobile/app/(app)/[lead].tsx, mobile/__tests__/leadDetailFormat.test.ts, mobile/__tests__/parcelCostFormat.test.ts, mobile/__tests__/useLeadDetail.test.ts, src/tests/leads-detail.infra.test.ts, src/tests/lead-detail-query.coa.infra.test.ts, mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx, scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json, scripts/surfaces/_schema/census/mobile-product.json, scripts/surfaces/_schema/report-presentation.json, scripts/surfaces/_schema/seed-report-v2.mjs, docs/specs/03-mobile/91_mobile_lead_feed.md, mobile/maestro/lead-detail.yaml
+ <!-- SECTION:DESCRIPTION:END -->
+ 
+ ## Definition of Done
+@@ -37,8 +39,21 @@ Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the
+ - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
+ <!-- DOD:END -->
+ 
++## Implementation Plan
++
++<!-- SECTION:PLAN:BEGIN -->
++PLAN task-411 (lane BL-AREAFACTOR). Rule: Spec 136 fe.44 (docs/specs/02-web-admin/136_mcfrontend_handbook.md:163 "the conversion factor is content/settings, never code"); operator ruling MORNING-DECISIONS.md:241 "The conversion factor lives in content/settings, never in code"; Spec 126 section 0a principle 1. Principles served: standardized, understandable, simple.
++Facts opened before building: route path GET /api/leads/detail/:id is src/app/api/leads/detail/[id]/route.ts (correct); the cost block is built in src/lib/leads/lead-detail-query.ts toCost (permit) and toCoaCost (CoA), so the Files line was extended through the CLI (lead-detail-query.ts, types.ts, mobile schemas.ts, [lead].tsx, three mobile tests, two server tests); route.ts itself needs no edit. SQM_TO_SQFT is read from the pinned setting at src/lib/parcels/geometry.ts:6. Phone copies: mobile/src/lib/leadDetailFormat.ts:15 (used by [lead].tsx:81) and mobile/src/lib/parcelCostFormat.ts:11 (formatSqft:86 imported only by its test and the web parity test :129; no screen).
++Steps (tests first, red through the real hooks):
++1. Server tests: toLeadDetail and toCoaLeadDetail serve cost.modeled_gfa_sqft = modeled_gfa_sqm * SQM_TO_SQFT (null when sqm null); the route test sees the field. Phone tests: formatSqft takes sqft and only formats; schema accepts and optional field; no factor constant in either helper; parity test uses literal expected strings (no import of the phone file).
++2. Build (as built, amended in the fix round 2026-11-20): lead-detail-query.ts imports SQM_TO_SQFT from @/lib/parcels/geometry and adds modeled_gfa_sqft to both cost maps (null when the area is null); types.ts has the field required on the server type (both producers set it); mobile schemas.ts adds it optional nullable (an older server or cached response omits it); [lead].tsx passes cost.modeled_gfa_sqft; leadDetailFormat.ts formatSqft(sqft) formats only, factor and its export deleted; parcelCostFormat.ts loses the factor and its square-metre formatSqft, and keeps one export renamed formatServedSqft (takes served square feet, name carries its unit) because the presentation registry names it as formats.area.alt_formatter (report-schema RS-4), renamed in the registry seed and JSON together; the contract is described with modeled_gfa_sqft in the mobile_lead_detail descriptor, the mobile-product census and Spec 91; maestro lead-detail.yaml comment corrected; web parity test: literal sq ft strings plus one web-to-phone assertion (formatServedSqft of the pinned-factor product equals the web fmt); one phone ui test for [lead].tsx (field present, null, absent; Mobile CI only).
++3. Checks the hooks run for the touched slices before and after; lens set at plan and output; FINDINGS.md untriaged; leave RUNNING, grounder owed. Phone tests cannot run locally: phone-test green is unproven until Mobile CI.
++<!-- SECTION:PLAN:END -->
++
+ ## Implementation Notes
+ 
+ <!-- SECTION:NOTES:BEGIN -->
+ 2026-11-20 taken on the board at lane launch (lane BL-AREAFACTOR, worktree /Users/brettpreston_macmini/Buildo-wt-areafactor, branch wf1/inc1b-areafactor), RR-0240
++2026-11-20 BL-AREAFACTOR facts opened before building: operator quote MORNING-DECISIONS.md:1476 "Let the grounder resolve them all as long as the result is compliant" and ruling MORNING-DECISIONS.md:241 "The conversion factor lives in content/settings, never in code" both checked on their lines; route path GET /api/leads/detail/:id is src/app/api/leads/detail/[id]/route.ts (matches the Files line) but the cost block is built in src/lib/leads/lead-detail-query.ts (toCost, toCoaCost), so the Files line was extended through the CLI (lead-detail-query.ts, [id]/types.ts, mobile schemas.ts, [lead].tsx, three mobile tests, two server tests); route.ts needs no edit. Facts 1-4 of the description confirmed: leadDetailFormat.ts typed 10.7639 and [lead].tsx called formatSqft(cost.modeled_gfa_sqm); parcelCostFormat.ts typed it and formatSqft was imported only by its test and the web parity test; SQM_TO_SQFT read at src/lib/parcels/geometry.ts:6.
++2026-11-20 BL-AREAFACTOR built: API serves optional cost.modeled_gfa_sqft (modeled_gfa_sqm times SQM_TO_SQFT; null when the area is null) for permit and CoA leads; phone schema takes it; formatSqft only formats; both typed factors deleted (parcelCostFormat.formatSqft stays exported, now taking square feet and only formatting, because the first commit attempt was refused by report-schema RS-4: the presentation registry scripts/surfaces/_schema/report-presentation.json:48 names it as formats.area.alt_formatter, a consumer the task facts missed); web parity test uses literal strings. Red proven by a refused commit attempt (2 server tests failed); phone tests cannot run locally, phone-test green is UNVERIFIED until Mobile CI. Lens set run (plan and output); findings untriaged in docs/reports/lanes/2026-11-20/BL-AREAFACTOR/FINDINGS.md. Task left RUNNING: grounder owed.
+ <!-- SECTION:NOTES:END -->
+diff --git a/docs/specs/03-mobile/91_mobile_lead_feed.md b/docs/specs/03-mobile/91_mobile_lead_feed.md
+index 3c07b0501..14160a76b 100644
+--- a/docs/specs/03-mobile/91_mobile_lead_feed.md
++++ b/docs/specs/03-mobile/91_mobile_lead_feed.md
+@@ -203,7 +203,7 @@ Whether tapped from the feed or the map, the user is routed to a comprehensive,
+ | **Response shape** | `{ data: LeadDetail, error: null, meta: null }` |
+ 
+ `LeadDetail` is defined in `src/app/api/leads/detail/[id]/types.ts` and includes:
+-`lead_id`, `lead_type`, `permit_num`, `revision_num`, `address`, `location: { lat, lng } | null`, `work_description`, `applicant` (reserved — currently null), `lifecycle_phase`, `lifecycle_stalled`, `target_window` (`'bid' | 'work' | null`), `opportunity_score`, `competition_count`, `predicted_start`, `p25_days`, `p75_days`, `cost: { estimated, tier, range_low, range_high, modeled_gfa_sqm } | null`, `neighbourhood: { name, avg_household_income, median_household_income, period_of_construction } | null`, `updated_at` (ISO 8601), `is_saved: boolean` (per-user save state — `lead_views.saved=true AND user_id=ctx.uid`; always non-null).
++`lead_id`, `lead_type`, `permit_num`, `revision_num`, `address`, `location: { lat, lng } | null`, `work_description`, `applicant` (reserved — currently null), `lifecycle_phase`, `lifecycle_stalled`, `target_window` (`'bid' | 'work' | null`), `opportunity_score`, `competition_count`, `predicted_start`, `p25_days`, `p75_days`, `cost: { estimated, tier, range_low, range_high, modeled_gfa_sqm, modeled_gfa_sqft } | null` (`modeled_gfa_sqft` is `modeled_gfa_sqm` already converted with the pinned setting `parcels_sqm_to_sqft`; the phone only formats it, Spec 136 fe.44), `neighbourhood: { name, avg_household_income, median_household_income, period_of_construction } | null`, `updated_at` (ISO 8601), `is_saved: boolean` (per-user save state — `lead_views.saved=true AND user_id=ctx.uid`; always non-null).
+ 
+ The handler joins `permits + cost_estimates + neighbourhoods + trade_forecasts` plus two LATERAL subqueries over `lead_views`: a `COUNT(DISTINCT user_id)` excluding the viewer for `competition_count`, and an `EXISTS` scoped to the viewer for `is_saved`. `target_window` and `opportunity_score` are read directly from `trade_forecasts` (already persisted there — not recomputed in JS).
+ 
+diff --git a/mobile/__tests__/leadDetailFormat.test.ts b/mobile/__tests__/leadDetailFormat.test.ts
+index c8e9095c8..0ff9eb2b1 100644
+--- a/mobile/__tests__/leadDetailFormat.test.ts
++++ b/mobile/__tests__/leadDetailFormat.test.ts
+@@ -2,49 +2,45 @@
+ // SPEC LINK: docs/specs/03-mobile/91_mobile_lead_feed.md §4.3
+ //             docs/specs/01-pipeline/83_lead_cost_model.md §2
+ 
++import fs from 'node:fs';
++import path from 'node:path';
+ import {
+-  SQM_TO_SQFT,
+   formatSqft,
+   formatIncome,
+   formatCostTier,
+   formatCurrencyAbbrev,
+ } from '@/lib/leadDetailFormat';
+ 
+-describe('SQM_TO_SQFT constant', () => {
+-  it('matches the canonical 1 m² = 10.7639 ft² (3-decimal precision)', () => {
+-    // Multi-Agent plan review flagged drift between 10.764 and 10.7639 in
+-    // separate plan sections; this constant is the single source of truth.
+-    expect(SQM_TO_SQFT).toBe(10.7639);
+-  });
+-});
+-
+-describe('formatSqft', () => {
+-  it('returns null for null input', () => {
++describe('formatSqft (the API serves square feet, FIX.AREA-FACTOR / fe.44: the phone only formats)', () => {
++  it('returns null for null and undefined input', () => {
+     expect(formatSqft(null)).toBeNull();
++    expect(formatSqft(undefined)).toBeNull();
+   });
+ 
+-  it('returns null for NaN', () => {
++  it('returns null for NaN and Infinity', () => {
+     expect(formatSqft(Number.NaN)).toBeNull();
+-  });
+-
+-  it('returns null for Infinity', () => {
+     expect(formatSqft(Number.POSITIVE_INFINITY)).toBeNull();
+   });
+ 
+-  it('formats 0 m² as "0 sq ft"', () => {
++  it('formats 0 as "0 sq ft"', () => {
+     expect(formatSqft(0)).toBe('0 sq ft');
+   });
+ 
+-  it('formats 100 m² as "1,076 sq ft" (rounded)', () => {
+-    expect(formatSqft(100)).toBe('1,076 sq ft');
++  it('rounds the served square feet: 1076.39 -> "1,076 sq ft"', () => {
++    expect(formatSqft(1076.39)).toBe('1,076 sq ft');
++  });
++
++  it('1533.85575 -> "1,534 sq ft" (typical small permit)', () => {
++    expect(formatSqft(1533.85575)).toBe('1,534 sq ft');
+   });
+ 
+-  it('formats 142.5 m² as "1,534 sq ft" (typical small permit)', () => {
+-    expect(formatSqft(142.5)).toBe('1,534 sq ft');
++  it('53819.5 -> "53,820 sq ft" (large project, thousand separator)', () => {
++    expect(formatSqft(53819.5)).toBe('53,820 sq ft');
+   });
+ 
+-  it('formats 5000 m² as "53,820 sq ft" (large project, thousand separator)', () => {
+-    expect(formatSqft(5000)).toBe('53,820 sq ft');
++  it('the helper types no conversion factor and exports none', () => {
++    const src = fs.readFileSync(path.join(__dirname, '../src/lib/leadDetailFormat.ts'), 'utf8');
++    expect(src).not.toMatch(/10\.76|SQM_TO_SQFT/);
+   });
+ });
+ 
+diff --git a/mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx b/mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx
+new file mode 100644
+index 000000000..11fb0dc82
+--- /dev/null
++++ b/mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx
+@@ -0,0 +1,72 @@
++// SPEC LINK: docs/specs/03-mobile/91_mobile_lead_feed.md §4.3 (Square Footage Projection);
++//            docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.44 (the API serves the converted area; the phone only formats).
++//
++// FIX.AREA-FACTOR (task-411): the lead detail screen shows the Square Footage section from cost.modeled_gfa_sqft as served, shows no section when
++// the field is null, and omits the section when the field is absent (an old or cached response). Runs only in Mobile CI (phone tests cannot run locally).
++require('react-native-css-interop/test');
++import * as React from 'react';
++import { render, screen } from '@testing-library/react-native';
++
++jest.mock('react-native-safe-area-context', () => {
++  const { View } = jest.requireActual('react-native');
++  return { SafeAreaView: View, useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) };
++});
++jest.mock('expo-router', () => ({ useRouter: () => ({ back: jest.fn() }), useLocalSearchParams: () => ({ id: '24-101234--01' }) }));
++jest.mock('@/hooks/useSaveLead', () => ({ useSaveLead: () => ({ mutate: jest.fn() }) }));
++jest.mock('@/lib/analytics', () => ({ track: jest.fn() }));
++jest.mock('@/components/feed/OpportunityRing', () => ({ OpportunityRing: () => null }));
++jest.mock('@/components/shared/SaveButton', () => ({ SaveButton: () => null }));
++let mockCost: Record<string, unknown> | null = null;
++jest.mock('@/hooks/useLeadDetail', () => ({
++  useLeadDetail: () => ({
++    data: {
++      lead_id: '24-101234--01',
++      lead_type: 'permit',
++      permit_num: '24-101234',
++      revision_num: '01',
++      address: '123 Main St',
++      location: { lat: 43.65, lng: -79.38 },
++      work_description: 'Two-storey rear addition',
++      applicant: null,
++      lifecycle_phase: 'P8',
++      lifecycle_stalled: false,
++      target_window: 'bid',
++      opportunity_score: 78,
++      competition_count: 4,
++      predicted_start: '2026-06-01',
++      p25_days: 28,
++      p75_days: 65,
++      cost: mockCost,
++      neighbourhood: null,
++      updated_at: '2026-04-29T10:00:00.000Z',
++      is_saved: false,
++    },
++    isLoading: false,
++    isError: false,
++  }),
++}));
++
++import LeadDetailScreen from '../app/(app)/[lead]';
++
++const COST = { estimated: 450000, tier: 'large', range_low: 380000, range_high: 520000, modeled_gfa_sqm: 142.5 };
++
++describe('lead detail screen: Square Footage section (FIX.AREA-FACTOR, fe.44)', () => {
++  it('shows the served square feet, formatted only', () => {
++    mockCost = { ...COST, modeled_gfa_sqft: 1533.85575 };
++    render(<LeadDetailScreen />);
++    expect(screen.getByTestId('lead-detail-sqft')).toBeTruthy();
++    expect(screen.getByText('1,534 sq ft')).toBeTruthy();
++  });
++
++  it('omits the section when the served square feet is null', () => {
++    mockCost = { ...COST, modeled_gfa_sqft: null };
++    render(<LeadDetailScreen />);
++    expect(screen.queryByTestId('lead-detail-sqft')).toBeNull();
++  });
++
++  it('omits the section when the field is absent (old or cached response); the phone does not convert modeled_gfa_sqm', () => {
++    mockCost = { ...COST };
++    render(<LeadDetailScreen />);
++    expect(screen.queryByTestId('lead-detail-sqft')).toBeNull();
++  });
++});
+diff --git a/mobile/__tests__/parcelCostFormat.test.ts b/mobile/__tests__/parcelCostFormat.test.ts
+index 9b94e28a0..af929b912 100644
+--- a/mobile/__tests__/parcelCostFormat.test.ts
++++ b/mobile/__tests__/parcelCostFormat.test.ts
+@@ -1,6 +1,8 @@
+ /** @jest-environment node */
+ // Jest tests — Parcel Cost Tool presentation helpers (Spec 100 §2.3/§2.4).
+ // SPEC LINK: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §6
++import fs from 'node:fs';
++import path from 'node:path';
+ import {
+   getCostLine,
+   costLineState,
+@@ -8,7 +10,7 @@ import {
+   isEnvelopeFallback,
+   formatCurrency,
+   formatFsi,
+-  formatSqft,
++  formatServedSqft,
+   formatSqm,
+   COST_LINE_ORDER,
+ } from '@/lib/parcelCostFormat';
+@@ -66,10 +68,12 @@ describe('formatters', () => {
+     expect(formatFsi('0.9')).toBe('0.90');
+     expect(formatFsi(null)).toBeNull();
+   });
+-  it('formatSqft / formatSqm', () => {
+-    expect(formatSqft(100)).toBe('1,076 sq ft');
++  it('formatServedSqft takes served square feet and only formats; formatSqm; no typed factor here (FIX.AREA-FACTOR, fe.44)', () => {
++    expect(formatServedSqft(1076.39)).toBe('1,076 sq ft');
++    expect(formatServedSqft(null)).toBeNull();
+     expect(formatSqm(400)).toBe('400 m²');
+-    expect(formatSqft(null)).toBeNull();
++    const src = fs.readFileSync(path.join(__dirname, '../src/lib/parcelCostFormat.ts'), 'utf8');
++    expect(src).not.toMatch(/10\.76|SQM_TO_SQFT/);
+   });
+ });
+ 
+diff --git a/mobile/__tests__/useLeadDetail.test.ts b/mobile/__tests__/useLeadDetail.test.ts
+index 990c15014..07a0d4914 100644
+--- a/mobile/__tests__/useLeadDetail.test.ts
++++ b/mobile/__tests__/useLeadDetail.test.ts
+@@ -64,6 +64,7 @@ const validDetail = {
+     range_low: 380000,
+     range_high: 520000,
+     modeled_gfa_sqm: 142.5,
++    modeled_gfa_sqft: 1533.85575,
+   },
+   neighbourhood: {
+     name: 'Annex',
+@@ -89,11 +90,18 @@ describe('fetchLeadDetail — Spec 91 §4.3.1', () => {
+       lead_type: 'permit',
+       address: '123 Main St',
+       is_saved: false,
+-      cost: { estimated: 450000, tier: 'large' },
++      cost: { estimated: 450000, tier: 'large', modeled_gfa_sqft: 1533.85575 },
+       neighbourhood: { name: 'Annex' },
+     });
+   });
+ 
++  it('keeps the served modeled_gfa_sqft and still parses a response without it (optional; FIX.AREA-FACTOR)', async () => {
++    const { modeled_gfa_sqft: _omit, ...costWithout } = validDetail.cost;
++    mockFetch.mockResolvedValueOnce({ data: { ...validDetail, cost: costWithout } });
++    const result = await fetchLeadDetail('24-101234--01');
++    expect(result.cost?.modeled_gfa_sqft).toBeUndefined();
++  });
++
+   it('percent-encodes id segments containing reserved characters', async () => {
+     // Permit IDs are typically `permit_num--revision_num` (hyphens only,
+     // unreserved per RFC 3986 — pass through unchanged). CoA IDs use the
+diff --git a/mobile/app/(app)/[lead].tsx b/mobile/app/(app)/[lead].tsx
+index 6a6546d1a..bb8ca4f2d 100644
+--- a/mobile/app/(app)/[lead].tsx
++++ b/mobile/app/(app)/[lead].tsx
+@@ -78,7 +78,7 @@ export default function LeadDetailScreen() {
+   const costEstimated = formatCurrencyAbbrev(cost?.estimated ?? null);
+   const costRangeLow = formatCurrencyAbbrev(cost?.range_low ?? null);
+   const costRangeHigh = formatCurrencyAbbrev(cost?.range_high ?? null);
+-  const sqftLabel = formatSqft(cost?.modeled_gfa_sqm ?? null);
++  const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);
+ 
+   // Per Multi-Agent Review null-handling rules: a section header renders
+   // only when at least one leaf field has a non-null value. Avoids
+diff --git a/mobile/maestro/lead-detail.yaml b/mobile/maestro/lead-detail.yaml
+index 934acbe10..6b01989d7 100644
+--- a/mobile/maestro/lead-detail.yaml
++++ b/mobile/maestro/lead-detail.yaml
+@@ -45,7 +45,7 @@ appId: ca.maxbld.app
+ - assertVisible:
+     id: "lead-detail-cost"
+ 
+-# Spec 91 §4.3 — Square Footage Projection (cost.modeled_gfa_sqm × 10.7639).
++# Spec 91 §4.3 — Square Footage Projection (cost.modeled_gfa_sqft, served already converted; the phone only formats).
+ - assertVisible:
+     id: "lead-detail-sqft"
+ 
+diff --git a/mobile/src/lib/leadDetailFormat.ts b/mobile/src/lib/leadDetailFormat.ts
+index e06e2e33b..27a8ca027 100644
+--- a/mobile/src/lib/leadDetailFormat.ts
++++ b/mobile/src/lib/leadDetailFormat.ts
+@@ -9,14 +9,13 @@
+ 
+ // Spec 83 §2 reports `effective_area_sqm` (mapped to `cost.modeled_gfa_sqm`
+ // in the API) in m². Spec 91 §4.3 specifies the mobile UI as "Square Footage
+-// Projection" → ft² for North American user. Conversion factor:
+-// 1 m² = 10.7639104167097 ft². Three decimals is enough precision for any
+-// realistic floor area at integer-rounded display.
+-export const SQM_TO_SQFT = 10.7639;
+-
+-export function formatSqft(sqm: number | null): string | null {
+-  if (sqm === null || !Number.isFinite(sqm)) return null;
+-  return `${Math.round(sqm * SQM_TO_SQFT).toLocaleString()} sq ft`;
++// Projection" → ft² for North American user. The API serves the area already
++// converted (`cost.modeled_gfa_sqft`, the pinned setting parcels_sqm_to_sqft);
++// this helper only formats it — no conversion factor lives on the phone
++// (Spec 136 fe.44: "the conversion factor is content/settings, never code").
++export function formatSqft(sqft: number | null | undefined): string | null {
++  if (sqft === null || sqft === undefined || !Number.isFinite(sqft)) return null;
++  return `${Math.round(sqft).toLocaleString()} sq ft`;
+ }
+ 
+ // Currency for neighbourhood incomes (Spec 57 — annual CAD from Census XLSX).
+diff --git a/mobile/src/lib/parcelCostFormat.ts b/mobile/src/lib/parcelCostFormat.ts
+index f3f686255..d4ab43387 100644
+--- a/mobile/src/lib/parcelCostFormat.ts
++++ b/mobile/src/lib/parcelCostFormat.ts
+@@ -8,8 +8,6 @@
+ 
+ import type { ParcelCostLine, ParcelCostMenu } from '@/lib/schemas';
+ 
+-const SQM_TO_SQFT = 10.7639;
+-
+ // The 13 cost-menu lines in display order (Spec 88 PARCEL_COST_LINES) + human labels.
+ export const COST_LINE_ORDER = [
+   'max_build', 'coa_build', 'addition', 'gut', 'garden_suite', 'laneway_suite',
+@@ -83,11 +81,13 @@ export function formatFsi(v: number | string | null | undefined): string | null
+   return (n as number).toFixed(2);
+ }
+ 
+-export function formatSqft(sqm: number | string | null | undefined): string | null {
+-  if (sqm == null) return null;
+-  const n = typeof sqm === 'string' ? Number(sqm) : sqm;
++// Square feet arrive already converted by the API (fe.44: the factor is the pinned setting parcels_sqm_to_sqft, never typed here); this only formats.
++// Kept exported because the report presentation registry names it as the alt formatter of formats.area (scripts/analysis/report-schema.mjs RS-4). The name carries its unit: the input is square feet as served, never square metres (formatSqm takes square metres).
++export function formatServedSqft(sqft: number | string | null | undefined): string | null {
++  if (sqft == null) return null;
++  const n = typeof sqft === 'string' ? Number(sqft) : sqft;
+   if (!Number.isFinite(n)) return null;
+-  return `${Math.round((n as number) * SQM_TO_SQFT).toLocaleString()} sq ft`;
++  return `${Math.round(n as number).toLocaleString()} sq ft`;
+ }
+ 
+ export function formatSqm(sqm: number | string | null | undefined): string | null {
+diff --git a/mobile/src/lib/schemas.ts b/mobile/src/lib/schemas.ts
+index ed1e82bc5..670b101a0 100644
+--- a/mobile/src/lib/schemas.ts
++++ b/mobile/src/lib/schemas.ts
+@@ -200,6 +200,8 @@ export const LeadDetailCostSchema = z.object({
+   range_low: z.number().nullable(),
+   range_high: z.number().nullable(),
+   modeled_gfa_sqm: z.number().nullable(),
++  // served already converted by the API (fe.44: no conversion on the phone); optional so an older server still parses
++  modeled_gfa_sqft: z.number().nullable().optional(),
+ });
+ 
+ export const LeadDetailNeighbourhoodSchema = z.object({
+diff --git a/scripts/surfaces/_schema/census/mobile-product.json b/scripts/surfaces/_schema/census/mobile-product.json
+index 29d5ea17d..7bac4e464 100644
+--- a/scripts/surfaces/_schema/census/mobile-product.json
++++ b/scripts/surfaces/_schema/census/mobile-product.json
+@@ -1423,6 +1423,7 @@
+         "cost.range_low",
+         "cost.range_high",
+         "cost.modeled_gfa_sqm",
++        "cost.modeled_gfa_sqft",
+         "neighbourhood.name",
+         "neighbourhood.avg_household_income",
+         "neighbourhood.median_household_income",
+diff --git a/scripts/surfaces/_schema/report-presentation.json b/scripts/surfaces/_schema/report-presentation.json
+index 09c058b63..e8b98b2a1 100644
+--- a/scripts/surfaces/_schema/report-presentation.json
++++ b/scripts/surfaces/_schema/report-presentation.json
+@@ -45,7 +45,7 @@
+     },
+     "area": {
+       "formatter": "formatSqm",
+-      "alt_formatter": "formatSqft",
++      "alt_formatter": "formatServedSqft",
+       "file": "mobile/src/lib/parcelCostFormat.ts"
+     },
+     "length": {
+diff --git a/scripts/surfaces/_schema/seed-report-v2.mjs b/scripts/surfaces/_schema/seed-report-v2.mjs
+index b5c57326a..7cb4aaf31 100644
+--- a/scripts/surfaces/_schema/seed-report-v2.mjs
++++ b/scripts/surfaces/_schema/seed-report-v2.mjs
+@@ -604,7 +604,7 @@ const pres = {
+   disclosure_texts: { generated_from: 'spec78.P5.12', note: 'code → {template, slots, importance, mandatory} parsed from Spec 78 P5.12 by the generator; filled server-side from disclosure_params', importance_default: 'normal' },
+   formats: {
+     area_unit: { default: 'm²', options: ['m²', 'ft²'], note: 'today the screen mixes formatSqm (lot) and formatSqft (GFA), [parcelId].tsx:128-130' },
+-    area: { formatter: 'formatSqm', alt_formatter: 'formatSqft', file: 'mobile/src/lib/parcelCostFormat.ts' },
++    area: { formatter: 'formatSqm', alt_formatter: 'formatServedSqft', file: 'mobile/src/lib/parcelCostFormat.ts' },
+     length: { formatter: null, pattern: '{v} m', note: 'no formatter yet' },
+     fsi: { formatter: 'formatFsi', file: 'mobile/src/lib/parcelCostFormat.ts' },
+     currency: { formatter: 'formatCurrency', file: 'mobile/src/lib/parcelCostFormat.ts' },
+diff --git a/scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json b/scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json
+index 11393712d..f2a9395b4 100644
+--- a/scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json
++++ b/scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json
+@@ -99,6 +99,7 @@
+       "cost.range_low",
+       "cost.range_high",
+       "cost.modeled_gfa_sqm",
++      "cost.modeled_gfa_sqft",
+       "neighbourhood.name",
+       "neighbourhood.avg_household_income",
+       "neighbourhood.median_household_income",
+diff --git a/src/app/api/leads/detail/[id]/types.ts b/src/app/api/leads/detail/[id]/types.ts
+index 955a8097d..6cadd8c36 100644
+--- a/src/app/api/leads/detail/[id]/types.ts
++++ b/src/app/api/leads/detail/[id]/types.ts
+@@ -11,6 +11,8 @@ export interface LeadDetailCost {
+   range_low: number | null;
+   range_high: number | null;
+   modeled_gfa_sqm: number | null;
++  /** modeled_gfa_sqm already converted with the pinned factor parcels_sqm_to_sqft (fe.44: the client never converts). Both producers always set it (null when the area is null); the phone schema stays optional for an older server. */
++  modeled_gfa_sqft: number | null;
+ }
+ 
+ export interface LeadDetailNeighbourhood {
+diff --git a/src/lib/leads/lead-detail-query.ts b/src/lib/leads/lead-detail-query.ts
+index f957d5e8d..b2479b675 100644
+--- a/src/lib/leads/lead-detail-query.ts
++++ b/src/lib/leads/lead-detail-query.ts
+@@ -12,6 +12,7 @@ import type {
+   LeadDetailCost,
+   LeadDetailNeighbourhood,
+ } from '@/app/api/leads/detail/[id]/types';
++import { SQM_TO_SQFT } from '@/lib/parcels/geometry';
+ 
+ /**
+  * Raw row shape returned by `pool.query<LeadDetailRow>(LEAD_DETAIL_SQL, …)`.
+@@ -150,6 +151,11 @@ function composeAddress(
+   return composed.length > 0 ? composed : fallback;
+ }
+ 
++/** The area served already converted (fe.44: the phone only formats); the factor is the pinned parcels_sqm_to_sqft read by src/lib/parcels/geometry.ts. */
++function sqmToSqftOrNull(sqm: number | null): number | null {
++  return sqm === null ? null : sqm * SQM_TO_SQFT;
++}
++
+ function toCost(row: LeadDetailRow): LeadDetailCost | null {
+   // Surface the cost block only when at least one cost field is populated;
+   // an all-null block from the LEFT JOIN with no matching cost_estimates
+@@ -170,6 +176,7 @@ function toCost(row: LeadDetailRow): LeadDetailCost | null {
+     range_low: toNumberOrNull(row.cost_range_low),
+     range_high: toNumberOrNull(row.cost_range_high),
+     modeled_gfa_sqm: toNumberOrNull(row.modeled_gfa_sqm),
++    modeled_gfa_sqft: sqmToSqftOrNull(toNumberOrNull(row.modeled_gfa_sqm)),
+   };
+ }
+ 
+@@ -345,6 +352,7 @@ function toCoaCost(row: CoaLeadDetailRow): LeadDetailCost | null {
+     range_low: null,
+     range_high: null,
+     modeled_gfa_sqm: toNumberOrNull(row.modeled_gfa_sqm),
++    modeled_gfa_sqft: sqmToSqftOrNull(toNumberOrNull(row.modeled_gfa_sqm)),
+   };
+ }
+ 
+diff --git a/src/tests/admin-report-preview-live.logic.test.ts b/src/tests/admin-report-preview-live.logic.test.ts
+index b8e94bf51..7a84e659c 100644
+--- a/src/tests/admin-report-preview-live.logic.test.ts
++++ b/src/tests/admin-report-preview-live.logic.test.ts
+@@ -19,6 +19,7 @@ import { createRequire } from 'node:module';
+ vi.mock('@/lib/logger', () => ({ logError: vi.fn(), logWarn: vi.fn(), logInfo: vi.fn() }));
+ 
+ import { formatPageRule as formatPageRuleWith, PAGE_RULES, TEXT_RULES } from '@/lib/report-projection/format';
++import { SQM_TO_SQFT } from '@/lib/parcels/geometry';
+ import { CURRENT_SEED_SHAS } from '@/lib/report-projection/seed-shas';
+ import { pageBindings, pageOptions, projectStoredPage, SQFT_PER_M2, type StoredRow, type LotStamp } from '@/lib/report-projection/project';
+ // FIX.PROJ (task-372): the formatter takes the factor as a parameter (it imports nothing); the page reads it once in project.ts.
+@@ -124,14 +125,15 @@ describe('F: the FE-05 server formatter (outside the no-maths directories)', ()
+     expect([...bound].sort()).toEqual([...PAGE_RULES, ...TEXT_RULES, 'reason_text'].sort()); // K2: the closed text rules and the reason rule (project.ts)
+     for (const r of PAGE.fe05_flagged_rules as string[]) expect(bound.has(r)).toBe(false);
+   });
+-  it('matches the mobile helpers digit for digit on shared samples (parity; mobile untouched)', async () => {
+-    // a runtime path: the root tsconfig excludes mobile/ (its @/ alias is the app's); vitest loads the file and erases its type-only import
++  it('formats square feet to literal expected strings (FIX.AREA-FACTOR: the phone no longer types the factor, so its helper is not the oracle) and matches the mobile m2 helper', async () => {
++    // a runtime path: the root tsconfig excludes mobile/ (its @/ alias is the app's); the runner loads the file and erases its type-only import
+     const MOBILE = path.join(ROOT, 'mobile/src/lib/parcelCostFormat.ts');
+-    const { formatSqft, formatSqm } = (await import(MOBILE)) as { formatSqft: (m: number) => string | null; formatSqm: (m: number) => string | null };
+-    for (const m of [0, 1, 9.29, 99.96, 120, 248.05, 284, 395.6, 1000, 5000, 92903.04]) {
+-      expect(`${fmt('area_sqft', m)} sq ft`).toBe(formatSqft(m));
+-      expect(fmt('area_m2', m)).toBe(formatSqm(m));
+-    }
++    const { formatSqm, formatServedSqft } = (await import(MOBILE)) as { formatSqm: (m: number) => string | null; formatServedSqft: (sqft: number) => string | null };
++    const SQFT: Array<[number, string]> = [[0, '0'], [1, '11'], [9.29, '100'], [99.96, '1,076'], [120, '1,292'], [248.05, '2,670'], [284, '3,057'], [395.6, '4,258'], [1000, '10,764'], [5000, '53,820'], [92903.04, '999,999']];
++    for (const [m, expected] of SQFT) expect(`${fmt('area_sqft', m)} sq ft`).toBe(`${expected} sq ft`);
++    for (const [m] of SQFT) expect(fmt('area_m2', m)).toBe(formatSqm(m));
++    // parity (web to phone): the phone formatter fed the pinned-factor product, as the API serves it, prints what the web page prints
++    for (const [m] of SQFT) expect(formatServedSqft(m * SQM_TO_SQFT)).toBe(`${fmt('area_sqft', m)} sq ft`);
+   });
+   it('lives outside the four directories the no-maths lock scans, and the formatter imports nothing', () => {
+     const lock = fs.readFileSync('src/tests/surfaces/report-no-maths.logic.test.ts', 'utf8');
+diff --git a/src/tests/lead-detail-query.coa.infra.test.ts b/src/tests/lead-detail-query.coa.infra.test.ts
+index 25fb817ed..d2bddbf5d 100644
+--- a/src/tests/lead-detail-query.coa.infra.test.ts
++++ b/src/tests/lead-detail-query.coa.infra.test.ts
+@@ -160,6 +160,12 @@ describe('toCoaLeadDetail — cost envelope', () => {
+     expect(detail.cost!.range_high).toBeNull();
+   });
+ 
++  it('serves modeled_gfa_sqft converted from the pinned factor, null when the area is null (FIX.AREA-FACTOR, fe.44)', () => {
++    expect(toCoaLeadDetail(sampleCoaRow).cost!.modeled_gfa_sqft).toBeCloseTo(263.71555, 5); // 24.5 m2 at the pinned 10.7639
++    const noArea = toCoaLeadDetail({ ...sampleCoaRow, modeled_gfa_sqm: null });
++    expect(noArea.cost!.modeled_gfa_sqft).toBeNull();
++  });
++
+   it('returns cost: null when BOTH estimated_cost AND modeled_gfa_sqm are null', () => {
+     const detail = toCoaLeadDetail({
+       ...sampleCoaRow,
+diff --git a/src/tests/leads-detail.infra.test.ts b/src/tests/leads-detail.infra.test.ts
+index 95869d4d6..d96f7e708 100644
+--- a/src/tests/leads-detail.infra.test.ts
++++ b/src/tests/leads-detail.infra.test.ts
+@@ -121,6 +121,21 @@ describe('GET /api/leads/detail/[id] — 200', () => {
+     expect(body.data.cost.modeled_gfa_sqm).toBe(142.5);
+   });
+ 
++  it('serves the area already converted: cost.modeled_gfa_sqft is modeled_gfa_sqm times the pinned factor (FIX.AREA-FACTOR, fe.44); null when the area is null', async () => {
++    mockedGetUserContext.mockResolvedValueOnce(sampleContext);
++    mockedPool.query.mockResolvedValueOnce({ rowCount: 1, rows: [sampleRow] });
++    const res = await GET(makeRequest(), makeContext('24 101234--01'));
++    const body = (await readJson(res)) as { data: { cost: { modeled_gfa_sqft: number } } };
++    expect(body.data.cost.modeled_gfa_sqft).toBeCloseTo(1533.85575, 5); // 142.5 m2 at the pinned 10.7639
++
++    mockedGetUserContext.mockResolvedValueOnce(sampleContext);
++    mockedPool.query.mockResolvedValueOnce({ rowCount: 1, rows: [{ ...sampleRow, modeled_gfa_sqm: null }] });
++    const res2 = await GET(makeRequest(), makeContext('24 101234--01'));
++    const body2 = (await readJson(res2)) as { data: { cost: { modeled_gfa_sqm: number | null; modeled_gfa_sqft: number | null } } };
++    expect(body2.data.cost.modeled_gfa_sqm).toBeNull();
++    expect(body2.data.cost.modeled_gfa_sqft).toBeNull();
++  });
++
+   it('returns cost: null when no cost_estimates row matched', async () => {
+     mockedGetUserContext.mockResolvedValueOnce(sampleContext);
+     mockedPool.query.mockResolvedValueOnce({
+

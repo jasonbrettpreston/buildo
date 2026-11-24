@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:37:12.044Z file_sha256=0bd8586aec6c3a6593879624dfbc13319bb3fe0ed2cc19336ed9d040d61d13e1 prompt_sha256=a4538143c828b2ee651fc053fddb28e625980a1796df57a2fe0420ed2e0beee0
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-plan-compliance-eng-s1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — operator ruling MD:241 "The conversion factor lives in content/settings, never in code" — src/tests/admin-report-preview-live.logic.test.ts:129 "the parity test re-pointed to literal expected strings" — a literal expected sqft string re-encodes the 10.7639 factor inside code, so the oracle freezes the conversion and drifts silently from parcels_sqm_to_sqft — re-point the oracle at the served cost.modeled_gfa_sqft, or assert only the format (separator and unit), never the converted number.
+
+DEFER severity=MED — operator ruling MD:241 "The conversion factor lives in content/settings, never in code" — mobile/src/lib/parcelCostFormat.ts:11 "parcelCostFormat.ts:11 types it too and is imported only by its own test and the web parity oracle" — the Files list names parcelCostFormat.ts but not the test that imports it, so the deleted typed copy can survive as that test's hardcoded expectations — add that test file to the Files list and state its expected values come from the served value or the pinned setting.
+
+DEFER severity=MED — operator ruling MD:241 "The conversion factor lives in content/settings, never in code" — src/app/api/permits/[id]/route.ts:267 "the permits route serves feet_per_metre (route.ts:267) for client maths, which strains fe.44 the same way" — the ruling stays unmet in the same repo after this change and the card assigns no task to it, so the "never in code" clause is only partly satisfied by task-411 — file a follow-up task or extend task-411 to stop serving feet_per_metre for client maths.
+
+DEFER severity=LOW — operator ruling MD:241 "The conversion factor lives in content/settings, never in code" — src/lib/parcels/geometry.ts:6 "the pinned setting parcels_sqm_to_sqft is already read at src/lib/parcels/geometry.ts:6 (SQM_TO_SQFT)" — no diff is pasted, so I cannot see that SQM_TO_SQFT is read from settings at request or boot time rather than typed as a literal, which is exactly what the ruling forbids — paste the geometry.ts hunk showing the settings read.
+
+DEFER severity=LOW — Spec 136 fe.44 — NONE — cannot see the clause text, the card cites "Spec 136 fe.44" without its words, so compliance with it is not judgeable in this run — paste fe.44 into the context, or confirm in the card that it restates MD:241.
+
+MET — 1.2 Component Isolation "Shared UI components (src/components/ui/) must remain pure and stateless where possible" — src/app/api/leads/detail/[id]/route.ts — the conversion moves to the API; no shared UI component is touched or made to fetch.
+
+MET — 1.3 Design System Fidelity "font-mono is reserved strictly for data values (permit numbers, distances, currency amounts, timestamps)" — mobile/src/lib/leadDetailFormat.ts:15 "formatSqft" — sqft remains a formatted data value in a lib, no font class is applied to a label, heading or button.
+
+MET — 1.3 Touch Targets "All Pressable and TouchableOpacity elements must satisfy a minimum tappable area of 44px x 44px" — mobile/src/lib/leadDetailFormat.ts "Files: src/app/api/leads/detail/[id]/route.ts, mobile/src/lib/leadDetailFormat.ts" — no interactive element is added or altered, so no tap target changes.
+
+MET — 1.3 401 interceptor "must call firebase.auth().currentUser?.getIdToken(true) to force a token refresh" — src/app/api/leads/detail/[id]/route.ts — the change adds a response field only, fetchWithAuth and the auth path are untouched.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+
+---
+⏱  44380ms (44.4s)
+📊 Tokens — total: 18902, input: 10656, output: 8246, reasoning: 7372

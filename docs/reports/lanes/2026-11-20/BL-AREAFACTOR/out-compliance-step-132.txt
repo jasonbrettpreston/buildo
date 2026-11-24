@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.866Z file_sha256=1a247afa7568a90316b3b0a799e2c8ae866fb26128a99801a84a553f828a3b16 prompt_sha256=5a6c249d978f3fc41d55f0607861552b735d049d68d9798c86fc959d7f7f7a7d
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-step-132.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — operator ruling MORNING-DECISIONS.md:241 as quoted in the pasted plan "The conversion factor lives in content/settings, never in code" — scripts/surfaces/_schema/seed-report-v2.mjs:607 "note: 'today the screen mixes formatSqm (lot) and formatSqft (GFA), [parcelId].tsx:128-130'" and mobile/src/lib/parcelCostFormat.ts:86 "export function formatServedSqft(" — the parcel screen call site of `formatSqft` named by the diff's own registry note is in no hunk of this diff, so the rename deletes the export that screen calls (or, if it imported the leadDetailFormat copy, it now feeds m² into a sq-ft formatter), and the "no factor on the phone" sweep is incomplete — grep the phone for `formatSqft` and update `[parcelId].tsx` (or keep a correctly-named alias) before merge
+
+DEFER severity=MED — x-rulings.4 "each set of rulings (a review-page export or a chat ruling with its quote, and any later amendment with its quote) is committed verbatim as `docs/reports/decisions/<date>-<slug>.json`" — plan line "Rule: operator ruling MORNING-DECISIONS.md:241 'The conversion factor lives in content/settings, never in code'; Spec 136 fe.44." — the governing ruling is cited by a scratch-queue file line (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:241), not by a committed decision-log stem#id, so no `--check` can prove the citation resolves — record the decision under docs/reports/decisions and cite its `<log stem>#<decision id>`
+
+DEFER severity=MED — core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero." — src/tests/leads-detail.infra.test.ts:129 "expect(body.data.cost.modeled_gfa_sqft).toBeCloseTo(1533.85575, 5); // 142.5 m2 at the pinned 10.7639" — the new server tests fix the factor's product as a literal, so they pass with a factor typed in `lead-detail-query.ts` and fail when the setting is retuned; the setting read itself (`src/lib/parcels/geometry.ts:6`) is in no hunk, cannot see it — assert against the setting or a `logic_variables` row so the externalization is what is tested
+
+DEFER severity=MED — x-verify.1 "cited ids and quotes, red-first tests red on the parent, counts and exit codes reproduced). The report lives at `docs/reports/verification/<branch>.md`" — notes line "phone tests cannot run locally, phone-test green is UNVERIFIED until Mobile CI" — every phone-side claim (new screen test, deleted factor, renamed export) rests on test runs that were never executed, and no verification report path appears in the diff — run the phone suite in Mobile CI on the lane commit and commit the verification report before any integrate branch
+
+DEFER severity=MED — core.14 "Declared equals witnessed." — mobile/maestro/lead-detail.yaml:48 old line "# Spec 91 §4.3 — Square Footage Projection (cost.modeled_gfa_sqm × 10.7639)." — the only Spec 91 edit is the response-shape row at 91:206, while §4.3 itself, the section both this comment and the new test's SPEC LINK cite, is in no hunk, cannot see it updated, so the spec may still declare the phone-side conversion — update Spec 91 §4.3 in the same commit
+
+DEFER severity=LOW — core.14 "Declared equals witnessed." — mobile/src/lib/schemas.ts:204 "modeled_gfa_sqft: z.number().nullable().optional()," vs docs/specs/03-mobile/91_mobile_lead_feed.md:206 "`cost: { estimated, tier, range_low, range_high, modeled_gfa_sqm, modeled_gfa_sqft } | null`" — the response spec declares the field unconditionally while the client contract calls it optional, two declarations of one field that disagree — state the optionality (older server or cached response) in Spec 91 or make the field required
+
+MET — operator ruling MORNING-DECISIONS.md:241 as quoted in the plan — mobile/src/lib/leadDetailFormat.ts — "export const SQM_TO_SQFT = 10.7639;" is deleted and `formatSqft` only rounds and formats a served value
+
+MET — Spec 136 fe.44 as quoted in the plan "the conversion factor is content/settings, never code" — src/lib/leads/lead-detail-query.ts — the conversion happens once, server side, through `import { SQM_TO_SQFT } from '@/lib/parcels/geometry'`, applied to both `toCost` and `toCoaCost`
+
+MET — core.14 "Declared equals witnessed." — scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json and scripts/surfaces/_schema/census/mobile-product.json — "cost.modeled_gfa_sqft" is declared in both the descriptor and the census, matching the served field
+
+REJECT — core.1 to core.18, the archetype clauses and the cross-cutting clauses — the change is accused of declaring no step descriptor, compute module or emits — this diff converts no pipeline step, no descriptor claim is made, so those clauses do not bind it
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 1
+
+---
+⏱  87094ms (87.1s)
+📊 Tokens — total: 44519, input: 27253, output: 17266, reasoning: 15984

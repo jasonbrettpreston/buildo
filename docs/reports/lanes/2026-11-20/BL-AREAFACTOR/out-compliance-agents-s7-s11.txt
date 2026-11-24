@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.724Z file_sha256=63d90f73742ba1a26522a1388c6f04b553957bf29d14ef285bbbb481cf7621b9 prompt_sha256=94cc71d73f7a35acd7a10ceeb50238068de8a9a86ad0f9f1407ce74d96e123af
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §7.2 "Ground-truth gates Compliance (§5.1/§5.2): validate the spec against reality before checking code against the spec." — task-411 NOTES "Task left RUNNING: grounder owed." — no grounder ran at either altitude; only the DeepSeek lens set is recorded, so nothing has validated the served value or `geometry.ts:6` against reality before this compliance check — run Integration/Reality-Check on the worktree (execute the route, read the pinned setting) and record the output before output review.
+
+BUG severity=HIGH — §7.4 "Every DeepSeek finding is adjudicated by a tool-having grounder before folding" and §7.6 "BUG → WF3 before Green Light; DEFER → `review_followups.md` with reasons." — task-411 NOTES "Lens set run (plan and output); findings untriaged in docs/reports/lanes/2026-11-20/BL-AREAFACTOR/FINDINGS.md." — the lens findings are neither grounder-adjudicated nor triaged while the fold (rename plus registry, descriptor, census, Spec 91, maestro edits) has already been built — adjudicate each finding by a grounder, split BUG/DEFER, file rejections with reasons.
+
+BUG severity=HIGH — §11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't" — task-411 PLAN "Phone tests cannot run locally: phone-test green is unproven until Mobile CI." against mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx:53 "expect(screen.getByText('1,534 sq ft')).toBeTruthy();" — the phone-side claims (served sqft renders, helper types no factor) are asserted but never executed, and the two source-grep assertions are runnable today by plain grep — execute the two greps and the mobile jest suite on a mobile-capable runner, paste rc, before any pass.
+
+BUG severity=HIGH — §11.2 "After folding any review round, and BEFORE implementation: one grounder re-executes every claim in the fold + one cross-read adversary checks the folded decisions PAIRWISE" — task-411 NOTES "(as built, amended in the fix round 2026-11-20): the first commit attempt was refused by report-schema RS-4" — a fold changed the export name and four registry or descriptor files with no re-execution and no pairwise cross-read recorded — run both §11.2 agents on the folded set before the output round.
+
+BUG severity=HIGH — §11.2 "an expanded edit set kills every restated scope claim ('the three SET terms. Nothing else.' survived one fold past its own falsification)" — task-411 Description "Build: ... both typed copies deleted; the parity test re-pointed to literal expected strings. No new surface, no slice." — the Files line was extended but the Build paragraph still omits the formatServedSqft export and the registry, seed, descriptor, census, Spec 91 and maestro edits, so the restated scope is stale after the fold — restate the Build paragraph to the full 21-file set.
+
+DEFER severity=MED — §11.1 "a data claim carries its query **run** (host + `current_database()` printed — lessons `:83`)" — src/tests/leads-detail.infra.test.ts:126 "mockedPool.query.mockResolvedValueOnce({ rowCount: 1, rows: [sampleRow] });" — the claim that permit and CoA leads are served modeled_gfa_sqft rests on mocked rows, with no run against a real database — run the detail query once on the dev DB and paste the served field for one lead.
+
+DEFER severity=MED — operator ruling MORNING-DECISIONS.md:241 "The conversion factor lives in content/settings, never in code" — src/tests/lead-detail-query.coa.infra.test.ts:164 "expect(toCoaLeadDetail(sampleCoaRow).cost!.modeled_gfa_sqft).toBeCloseTo(263.71555, 5); // 24.5 m2 at the pinned 10.7639" — two new tests hard-code the converted product, so the pinned factor sits in code and a settings change fails the suite — derive the expectation from SQM_TO_SQFT, the setting reader, instead of the literal.
+
+DEFER severity=LOW — §7.10 C2 "a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha (form: `R-KG (124a; :1015 at <sha>)`)" — task-411 PLAN "Rule: Spec 136 fe.44 (docs/specs/02-web-admin/136_mcfrontend_handbook.md:163 "the conversion factor is content/settings, never code")" — the line hints carry no commit sha, so the C2 citation form is unmet — append `at <sha>` to the fe.44 and MORNING-DECISIONS.md:241 citations.
+
+MET — §7.1 "both mandatory per WF (§6.4)" — task-411 "## Implementation Plan" section plus NOTES "Lens set run (plan and output)" — both altitudes are covered.
+MET — §7.4 "Run the set at plan AND output for WF1/WF2" — task-411 NOTES same line — the narrow lens set ran at both altitudes.
+MET — §7.7 "Compose the smallest DIVERSE panel that covers this change's actual risks" — task-411 NOTES "Lens set run" — the lens set, not the full roster.
+MET — §11.4 "The failing tests ... are written INTO the plan" — task-411 PLAN step 1 "Server tests: toLeadDetail and toCoaLeadDetail serve cost.modeled_gfa_sqft ... Phone tests: formatSqft takes sqft and only formats" — cases and expectations live in the plan.
+MET — §7.10 (a) "No recommendation goes to the operator without its rule quoted with `file:line`" — task-411 PLAN "Spec 136 fe.44 (docs/specs/02-web-admin/136_mcfrontend_handbook.md:163 ...)" — the rule is quoted with path and line.
+MET — §11.8 MCINC-4 "Red tests first, then the code" — task-411 NOTES "Red proven by a refused commit attempt (2 server tests failed)" — server red landed before the build.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 7
+
+---
+⏱  68247ms (68.2s)
+📊 Tokens — total: 34431, input: 20400, output: 14031, reasoning: 12586

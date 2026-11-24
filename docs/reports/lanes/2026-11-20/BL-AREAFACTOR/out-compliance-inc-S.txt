@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.759Z file_sha256=7f42c98258428b9d155975f119bebb52b8e00b115e24037ad9df689a55a867bc prompt_sha256=66550ea2644ecdb3fec1a40d035fc07ffaa38d48caf094c2797cac741a49e910
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — F-SHELL "Product shelf and parcel-tool screens: ParcelShelf (Lookup, Tracked Lots, Account), tracked.tsx and account.tsx (example rows): PARTLY: shelf built; tracked and account are stubs" — scripts/surfaces/_schema/seed-report-v2.mjs:606 "area_unit: { default: 'm²', options: ['m²', 'ft²'], note: 'today the screen mixes formatSqm (lot) and formatSqft (GFA), [parcelId].tsx:128-130' }" — the rename of parcelCostFormat.formatSqft to formatServedSqft leaves the caller the retained note names, mobile/app/(app)/[parcelId].tsx:128-130, untouched by any diff line, so either that screen stops compiling or the task claim "no screen" is false — add [parcelId].tsx to the Files list and pass it served square feet, or delete the note and record that no screen imports this helper.
+
+DEFER severity=MED — formats.area registry contract '"formatter": "formatSqm", "alt_formatter": "formatServedSqft", "file": "mobile/src/lib/parcelCostFormat.ts"' — scripts/surfaces/_schema/report-presentation.json:46 '"alt_formatter": "formatServedSqft"' — the alt formatter of a key whose primary formatter takes m² now expects square feet, so any renderer that passes the stored m² value prints a figure 10.7639x too small and labels it sq ft — state in the registry entry and seed note that alt_formatter receives served square feet, and confirm the renderer converts first (renderer not in this diff, cannot see).
+
+DEFER severity=LOW — Spec 136 fe.44 "the conversion factor is content/settings, never code" and MORNING-DECISIONS.md:241, quoted only inside the material, not in the pasted context — "backlog/tasks/task-411 ...:25 "Rule: operator ruling MORNING-DECISIONS.md:241 'The conversion factor lives in content/settings, never in code'; Spec 136 fe.44"" — the governing clause and the operator line are never pasted, so the quote's fidelity and the ruling's scope cannot be checked against source — paste MORNING-DECISIONS.md:241 and 136_mcfrontend_handbook.md:163 into the context or confirm both verbatim before merge.
+
+MET — fe.44 as quoted, "the conversion factor is content/settings, never code" — src/lib/leads/lead-detail-query.ts:154 — "return sqm === null ? null : sqm * SQM_TO_SQFT;" with the constant imported at :15 from @/lib/parcels/geometry, so the API converts with the pinned setting and no typed factor.
+
+MET — Spec 91 as amended, "modeled_gfa_sqft is modeled_gfa_sqm already converted with the pinned setting parcels_sqm_to_sqft; the phone only formats it" — mobile/src/lib/leadDetailFormat.ts:15 — "export function formatSqft(sqft: number | null | undefined): string | null" formats only, the 10.7639 export is deleted, and both producers set the field (lead-detail-query.ts toCost and toCoaCost).
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 3   Unmet: 0
+
+---
+⏱  60902ms (60.9s)
+📊 Tokens — total: 30564, input: 18987, output: 11577, reasoning: 10810

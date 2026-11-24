@@ -1423,6 +1423,7 @@
         "cost.range_low",
         "cost.range_high",
         "cost.modeled_gfa_sqm",
+        "cost.modeled_gfa_sqft",
         "neighbourhood.name",
         "neighbourhood.avg_household_income",
         "neighbourhood.median_household_income",

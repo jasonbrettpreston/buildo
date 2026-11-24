@@ -11,6 +11,8 @@ export interface LeadDetailCost {
   range_low: number | null;
   range_high: number | null;
   modeled_gfa_sqm: number | null;
+  /** modeled_gfa_sqm already converted with the pinned factor parcels_sqm_to_sqft (fe.44: the client never converts). Both producers always set it (null when the area is null); the phone schema stays optional for an older server. */
+  modeled_gfa_sqft: number | null;
 }
 
 export interface LeadDetailNeighbourhood {

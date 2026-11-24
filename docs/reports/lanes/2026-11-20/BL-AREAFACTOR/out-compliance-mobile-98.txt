@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.802Z file_sha256=8f2379879c025857953a3a58f03bb878d920722c91159a5cb7379855ee669ca8 prompt_sha256=0d718eaaa79a9adc41f70fed85eee6f9ff8bd9b5106ebbd14927b7b5b8f6b0d8
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-mobile-98.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 98 §5 "`npm run typecheck` (TypeScript compiler)" — mobile/src/lib/parcelCostFormat.ts "export function formatSqft(sqm: number | string | null | undefined): string | null {" together with scripts/surfaces/_schema/seed-report-v2.mjs:606 "note: 'today the screen mixes formatSqm (lot) and formatSqft (GFA), [parcelId].tsx:128-130'" — the export this diff deletes is named by the diff's own retained registry line as one the parcel screen calls, [parcelId].tsx is absent from the Files line, so either typecheck fails on a dead import or the screen silently prints m² as sq ft — read mobile/app/(app)/[parcelId].tsx:128-130 and migrate it to modeled_gfa_sqft (or keep the conversion at that call site) inside this change.
+DEFER severity=LOW — no pasted clause names a presentation formatter registry (walk step 4) — scripts/surfaces/_schema/report-presentation.json:48 "\"alt_formatter\": \"formatServedSqft\"" — formats.area now pairs the m² formatter formatSqm with an alt formatter whose input unit is served ft², a contract change no pasted clause authorizes and no pasted test pins — either move the ft² view to its own key carrying its unit, or state the new input unit on the registry entry.
+MET — Spec 98 §4 "UI component snapshot testing is deliberately excluded" — mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx:58 — assertions are getByTestId/getByText only, no snapshot file.
+MET — Spec 98 §4.1 "`parcelCostFormat.test.ts`: envelope-fallback label ... currency/FSI/area formatters" — mobile/__tests__/parcelCostFormat.test.ts:71 — area formatters still asserted after the rename (formatServedSqft, formatSqm).
+MET — Spec 98 §4.1 "§8.5 ... every `create<*Store>(` in `mobile/src/store/*.ts`" — no path under mobile/src/store/ appears in the diff, so the enumeration test's count is untouched.
+MET — Spec 98 §4 dated note "adds it as a dev dependency (`@testing-library/react-native` 13.3.3 with `react-test-renderer` 19.1.0)" — mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx:8 "import { render, screen } from '@testing-library/react-native';" — the new screen test uses the tool the ruling names.
+REJECT — Spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)" — that the new [lead].tsx test is a forbidden UI test duplicating Maestro's lead-detail.yaml sqft assertion — the 2026-11-10 ruling in §4 says "a render smoke ... and a screen-behaviour test are not snapshots", and the test pins the null and absent field cases the Maestro flow cannot express.
+REJECT — Spec 98 §4.1 "every implementation MUST satisfy" §8.1-§8.5 — that the diff ships no idempotency, router-arm, gate-stability or store-reset tests — the change touches no bridge, no AuthGate arm, no render gate and no store, and the §8 text itself is not pasted.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  66272ms (66.3s)
+📊 Tokens — total: 28949, input: 15792, output: 13157, reasoning: 12364

@@ -8,8 +8,6 @@
 
 import type { ParcelCostLine, ParcelCostMenu } from '@/lib/schemas';
 
-const SQM_TO_SQFT = 10.7639;
-
 // The 13 cost-menu lines in display order (Spec 88 PARCEL_COST_LINES) + human labels.
 export const COST_LINE_ORDER = [
   'max_build', 'coa_build', 'addition', 'gut', 'garden_suite', 'laneway_suite',
@@ -83,11 +81,13 @@ export function formatFsi(v: number | string | null | undefined): string | null 
   return (n as number).toFixed(2);
 }
 
-export function formatSqft(sqm: number | string | null | undefined): string | null {
-  if (sqm == null) return null;
-  const n = typeof sqm === 'string' ? Number(sqm) : sqm;
+// Square feet arrive already converted by the API (fe.44: the factor is the pinned setting parcels_sqm_to_sqft, never typed here); this only formats.
+// Kept exported because the report presentation registry names it as the alt formatter of formats.area (scripts/analysis/report-schema.mjs RS-4). The name carries its unit: the input is square feet as served, never square metres (formatSqm takes square metres).
+export function formatServedSqft(sqft: number | string | null | undefined): string | null {
+  if (sqft == null) return null;
+  const n = typeof sqft === 'string' ? Number(sqft) : sqft;
   if (!Number.isFinite(n)) return null;
-  return `${Math.round((n as number) * SQM_TO_SQFT).toLocaleString()} sq ft`;
+  return `${Math.round(n as number).toLocaleString()} sq ft`;
 }
 
 export function formatSqm(sqm: number | string | null | undefined): string | null {

@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.910Z file_sha256=dc339223a9d521496a3927421de1cd801a739fb6634fee0d751f5e0872e76f84 prompt_sha256=169144e34970269012e2cae24a47cccb9ca5c9b1b9fe9797e7aaedf6dca72518
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-surface-126-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — §11b.2 "REPORT goldens are unchanged" — scripts/surfaces/_schema/report-presentation.json:48 "\"alt_formatter\": \"formatServedSqft\"" — the presentation registry now names a formatter whose input is square feet, replacing one that took square metres (mobile/src/lib/parcelCostFormat.ts:84 "export function formatServedSqft(sqft: number | string | null | undefined)"), and the diff updates no caller and no REPORT golden, so any REPORT surface feeding formats.area.alt_formatter a square-metre value now prints a number 10.7639 times too small — confirm the only consumers pass served square feet, or update them and re-stamp the REPORT goldens.
+
+DEFER severity=LOW — operator ruling quoted in the material, "The conversion factor lives in content/settings, never in code" — src/tests/leads-detail.infra.test.ts:128 "toBeCloseTo(1533.85575, 5); // 142.5 m2 at the pinned 10.7639" — the factor is typed again in two test expectations and one parity test multiplies by SQM_TO_SQFT (src/tests/admin-report-preview-live.logic.test.ts:127 "formatServedSqft(m * SQM_TO_SQFT)"), so the invariant is held by copied literals rather than derived from the pinned setting — acceptable for red evidence, but note the literal will drift if parcels_sqm_to_sqft is ever changed in admin.
+
+MET — §11b.1 Import boundary "Library imports are allowed only in the declared binding modules" — src/lib/leads/lead-detail-query.ts:15 "import { SQM_TO_SQFT } from '@/lib/parcels/geometry';" — an internal first-party module import, not a library import, so the import boundary is untouched.
+
+MET — §11b.1 "No hand-built standard component" — the whole diff — no component, archetype, binding or wrapper is added; two phone helpers already existed and are shrunk.
+
+REJECT — §11b.7 "Outside the MaxBLD set. Buildo's lead-gen pages are not MaxBLD pages and are not listed above: ... lead detail /(app)/[lead]?id=" — that the change edits a Buildo lead-gen screen and its descriptor — the pasted text says these pages are outside the MaxBLD set; it lists them as not-listed, it does not fence them, and the fences that would apply (scope D, Spec 128 R-03) are not pasted.
+
+REJECT — §11b.2 Content "every user-visible string comes from a content file" — that mobile/src/lib/leadDetailFormat.ts:18 types " sq ft" in code — this clause binds MaxBLD pages (§11b.3 pages of the parcel product), and the pasted context states lead detail is not a MaxBLD page, so the clause does not reach it.
+
+REJECT — §11b.2 Locks "no maths in bindings (FE-05)" / §11b.6 "no maths in bindings" — that the diff moves a multiplication around — the diff moves the maths to the server and removes it from the phone (mobile/src/lib/leadDetailFormat.ts, parcelCostFormat.ts), and neither phone helper is a declared binding for a MaxBLD descriptor.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  28855ms (28.9s)
+📊 Tokens — total: 40029, input: 34437, output: 5592, reasoning: 4830

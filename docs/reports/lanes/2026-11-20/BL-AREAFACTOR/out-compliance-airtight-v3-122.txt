@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.741Z file_sha256=32a0369cff066c42fbf59f660ed52f9a12bca0aa5e3328c8d079ef11c7e96995 prompt_sha256=45749a6fedd36e7fe2ef1f63314a31d457985f4f4f2b48eff00556c2d9a9f103
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-airtight-v3-122.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 122 §5.5 (scope) "Enforced by `scripts/ast-grep-rules/compute-shape.yml` over `scripts/lib/compute/**` (driver: `scripts/hooks/check-step-shape.mjs`, always blocking — the directory IS the scope, no `converted.json` entry needed)" — NONE — no file in this diff is under `scripts/lib/compute/**`, is a step file under `scripts/steps/**`, or enters `converted[]`/`pending[]`, so none of the six compute-shape rules, the V3 conversion checklist line or the `compute-literals.mjs` gate reaches this change and the run returns no compliance signal for it — the clauses the change actually answers to (the diff's own quotes of Spec 136 fe.44 "the conversion factor is content/settings, never code" and MORNING-DECISIONS.md:241) are not pasted, so re-scope this list to 136 fe.44 and the MORNING-DECISIONS.md:241 ruling before merge.
+
+DEFER severity=LOW — 122 §5.5 (clause 6, tunables) "Every tunable goes through `ctx.config` (§1.2a P4 addendum, Pilot 1 P4 remediation 2026-08-25)" — src/tests/admin-report-preview-live.logic.test.ts "for (const [m] of SQFT) expect(formatServedSqft(m * SQM_TO_SQFT)).toBe(`${fmt('area_sqft', m)} sq ft`);" — the one numeric-factor multiplication added by this diff sits in a test that multiplies by the imported pinned factor, and the pasted rule 6 bounds `ctx.config` reads only inside `scripts/lib/compute/**`, so there is no pasted clause to judge this line against — leave it to the lens that owns fe.44, do not raise it under §5.5.
+
+MET — 122 §5.5 rule 2 "there is **no `console.*`**" — mobile/src/lib/leadDetailFormat.ts, mobile/src/lib/parcelCostFormat.ts, src/lib/leads/lead-detail-query.ts (whole hunks) — no `console.*` added anywhere in the diff (scope note: these files are outside the pasted rule's `scripts/lib/compute/**` directory, so this is confirmation, not a test of the rule).
+
+REJECT — 122 §5.5 rule 3 "Banned outright: bare `fetch(`, `Date.now()`, `new Date(`, `process.env`, and `require()` of `pg` / `dotenv` / `fs` / `child_process`" — the change is accused of nothing here — the only `fs`/`path` imports added are in `mobile/__tests__/*` for source-text assertions, and the rule's listed `require()` ban is scoped to `scripts/lib/compute/**` modules, which this diff never touches.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 0 (8 pasted sub-clauses examined, none binds the diff)   Unmet: 0
+
+---
+⏱  14899ms (14.9s)
+📊 Tokens — total: 17008, input: 14255, output: 2753, reasoning: 2065

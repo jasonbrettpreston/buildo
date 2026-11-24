@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.884Z file_sha256=e4bd4ef2ecd166e3c3e5b5ad3474958eb630d428b6b48694dbfd3ca636cb2542 prompt_sha256=bd515c2991a81d2dd5010209492bff06cd453e9c94c7eff7fe822306a19b68de
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-surface-126-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 §0b item 5 "The server formats every value; the UI does no maths. FE-05 (Spec 135:27); a page part is the server-formatted string as sent, and a number throws (FE-34). A display transform lives on the server or in content, never in a binding." — mobile/app/(app)/[lead].tsx:81 "const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);" — the API now serves a bare number (1533.85575) and the phone applies `Math.round(sqft).toLocaleString()` and appends "sq ft", a display transform in a binding, so "the server-formatted string as sent" is unmet — serve a formatted string produced by the same area_sqft rule the web page uses (server-side) and have the binding print it unchanged.
+
+BUG severity=HIGH — Spec 126 §3.4 "Under **R-03 the fence holds**: Spec 100 §1 states the tool *"is **not** coupled to the Lead Feed, Flight Center, or LeadDetail"*, and this spec does not reverse that." and "`LeadDetailSchema`'s 20 fields gain no parcel reference" — src/lib/leads/lead-detail-query.ts:15 "import { SQM_TO_SQFT } from '@/lib/parcels/geometry';" — LeadDetail's response is now derived from the parcel programme's pinned setting parcels_sqm_to_sqft, coupling the fenced LeadDetail path to the parcel tool and adding a parcel-derived field to it with no operator ruling taken against Specs 77/91 — record the ruling that reverses the fence for this field, or source the factor without importing the parcel tool's module.
+
+DEFER severity=MED — Spec 126 §3.1 "`inputs.field_whitelist` (must equal the contract's)" and "`response.projection` (explicit pick-by-name whitelist)" — scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json:102 ""cost.modeled_gfa_sqft"," — the surface whitelist and the response type gained the field but no contract descriptor for /api/leads/detail/:id appears in the diff (cannot see one), so the whitelist cannot equal the contract's projection — add model_gfa_sqft to the route's contract descriptor and run surface-validate.mjs --check.
+
+DEFER severity=MED — Spec 126 §0a principle 6 "Same everywhere: mobile, web, admin and PDF render the same declaration; parity is a test (Spec 128 Rule 15)." — src/tests/admin-report-preview-live.logic.test.ts:133 "for (const [m] of SQFT) expect(formatServedSqft(m * SQM_TO_SQFT)).toBe(`${fmt('area_sqft', m)} sq ft`);" — parity is asserted only on the helper over 11 samples, while the render test that would prove the screen is admitted unrun: "phone tests cannot run locally, phone-test green is UNVERIFIED until Mobile CI" — attach a green Mobile CI run for mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx before merge.
+
+DEFER severity=LOW — Spec 126 §2 "source of record `scripts/surfaces/_schema/surface-census.json`, drift-locked by `src/tests/surface-registry.infra.test.ts`" — scripts/surfaces/_schema/census/mobile-product.json:1426 ""cost.modeled_gfa_sqft"," — the census source of record is edited and no regenerated docs/reports/generated/127-surface-registry.md appears in the diff (cannot see one) — regenerate the registry report in the same commit or state why the lock does not cover this field.
+
+DEFER severity=LOW — Spec 126 §0b item 1 "No McFrontend work starts without its row in `.cursor/MCFRONTEND-QUEUE.md`" — the plan line "PLAN task-411 (lane BL-AREAFACTOR). Rule: Spec 136 fe.44 ... ; Spec 126 section 0a principle 1." — the plan invokes Spec 126 §0a as its rule while the only row is backlog task-411 and no MF queue row is cited — name the queue row or drop the Spec 126 §0a citation.
+
+MET — Spec 126 §0a principle 1 "Declared, not coded: a screen is a descriptor; the only code is the shared archetype components" — scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json:102 — the served field is declared in the descriptor and the census, not derived in the page.
+
+MET — Spec 126 §0b item 6 "Every operator ruling is recorded verbatim, dated, landed and cited." — backlog/tasks/task-411:22 "Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant"" — both rulings are quoted with their record line and carried into the plan and notes.
+
+MET — Spec 126 §0b item 2 "red first, each lock proven in both directions" — Implementation Notes "Red proven by a refused commit attempt (2 server tests failed)" — the red step is evidenced by a refused commit rather than asserted.
+
+REJECT — Spec 126 §0b item 3 "Every page is descriptor + content + standard components configured by schema" — the change edits page code at mobile/app/(app)/[lead].tsx:81 — not a real issue, because mobile_lead_detail is scope D and §2.0 says "Those surfaces convert under this same standard in a later programme", so the conversion standard does not yet bind its page code.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 6
+
+---
+⏱  66736ms (66.7s)
+📊 Tokens — total: 46720, input: 32510, output: 14210, reasoning: 12918

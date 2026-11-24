@@ -187,7 +187,7 @@ Whether tapped from the feed or the map, the user is routed to a comprehensive, 
 * **Core Project Intelligence:**
     * **Project Details:** Full permit description and builder/applicant entity (if unmasked).
     * **Cost Estimate:** The algorithmic `estimated_cost` and designated `cost_tier`.
-    * **Square Footage Projection:** The calculated geometric footprint (`sq_footage`) of the target build.
+    * **Square Footage Projection:** The calculated geometric footprint (`sq_footage`) of the target build. Served as `cost.modeled_gfa_sqft` in square feet (the API computes it from `modeled_gfa_sqm` with the pinned setting `parcels_sqm_to_sqft`); `null` when the area is `null`; optional for an older or cached response, in which case the section is omitted. The phone only formats it.
     * **Target Start Date:** The `predicted_start` date derived from the V2 backend pipeline. Displayed in `font-mono text-amber-500`.
     * **Neighborhood Profile:** Macro-data about the build location (e.g., income tier, neighborhood development trends, surrounding active permits).
 * **Primary Call to Action:**
@@ -203,7 +203,7 @@ Whether tapped from the feed or the map, the user is routed to a comprehensive, 
 | **Response shape** | `{ data: LeadDetail, error: null, meta: null }` |
 
 `LeadDetail` is defined in `src/app/api/leads/detail/[id]/types.ts` and includes:
-`lead_id`, `lead_type`, `permit_num`, `revision_num`, `address`, `location: { lat, lng } | null`, `work_description`, `applicant` (reserved — currently null), `lifecycle_phase`, `lifecycle_stalled`, `target_window` (`'bid' | 'work' | null`), `opportunity_score`, `competition_count`, `predicted_start`, `p25_days`, `p75_days`, `cost: { estimated, tier, range_low, range_high, modeled_gfa_sqm } | null`, `neighbourhood: { name, avg_household_income, median_household_income, period_of_construction } | null`, `updated_at` (ISO 8601), `is_saved: boolean` (per-user save state — `lead_views.saved=true AND user_id=ctx.uid`; always non-null).
+`lead_id`, `lead_type`, `permit_num`, `revision_num`, `address`, `location: { lat, lng } | null`, `work_description`, `applicant` (reserved — currently null), `lifecycle_phase`, `lifecycle_stalled`, `target_window` (`'bid' | 'work' | null`), `opportunity_score`, `competition_count`, `predicted_start`, `p25_days`, `p75_days`, `cost: { estimated, tier, range_low, range_high, modeled_gfa_sqm, modeled_gfa_sqft } | null` (`modeled_gfa_sqft` is in square feet and is computed by the API as `modeled_gfa_sqm` times the pinned setting `parcels_sqm_to_sqft`; it is `null` when the area is `null` and is optional for an older or cached response, which the phone shows as no Square Footage section; the phone only formats it, never converts, Spec 136 fe.44), `neighbourhood: { name, avg_household_income, median_household_income, period_of_construction } | null`, `updated_at` (ISO 8601), `is_saved: boolean` (per-user save state — `lead_views.saved=true AND user_id=ctx.uid`; always non-null).
 
 The handler joins `permits + cost_estimates + neighbourhoods + trade_forecasts` plus two LATERAL subqueries over `lead_views`: a `COUNT(DISTINCT user_id)` excluding the viewer for `competition_count`, and an `EXISTS` scoped to the viewer for `is_saved`. `target_window` and `opportunity_score` are read directly from `trade_forecasts` (already persisted there — not recomputed in JS).
 

@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:37:12.152Z file_sha256=4b4c63ca3413baa3a93ac1c5816485a7fc301e324d193fa85c5728a7b45714f3 prompt_sha256=3f1f48d287183fe990b3bd268630f9f7707938c44ebe84eb742eed8c874e4419
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-plan-compliance-surface-126-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 §11a.7 note MF-83 (3) "units: store metric, send both, the client only switches (FE-44, ruled, not built here)." — "the parity test re-pointed to literal expected strings" — the oracle's expected square-foot strings have no stated provenance; if a literal is derived from 10.7639 the typed factor survives inside src/tests/admin-report-preview-live.logic.test.ts:129, the very import the task deletes, and the "both typed copies deleted" claim is false — state in the plan that the oracle reads SQM_TO_SQFT (or the pinned parcels_sqm_to_sqft row) or that each literal is a recorded API fixture value, and name the test line that replaces :129
+
+BUG severity=HIGH — Spec 126 §11a.7 note (5) "A value is shown as the producer sent it: `String(n)` plus the declared unit; null shows the content dash; no rounding (Spec 128 Rule 16)." — "the lead-detail API serves an optional cost.modeled_gfa_sqft computed from SQM_TO_SQFT; the phone Zod schema takes it and formatSqft only formats" — no rounding rule is stated anywhere: a metre value converted gives fractional square feet, which formatSqft must either print in full or round, and rounding in formatSqft would be client maths — state that formatSqft prints String(value) with no rounding, or add the declared rounding rule to the setting row and prove it server-side
+
+BUG severity=HIGH — Spec 126 §11a.7 note (5) "null shows the content dash" — "the lead-detail API serves an optional cost.modeled_gfa_sqft" — an optional field can be absent, and the plan does not say what the phone shows when it is: undefinied, a blank, or the dash — add to the plan that the absent case renders the content dash text (bound to `content`, not typed) and that the Zod schema accepts the absent key
+
+DEFER severity=MED — Spec 126 §11a "Scope: the REPORT archetype only (card answer Q-MFS a, lean McFrontend)." — "Files: src/app/api/leads/detail/[id]/route.ts, mobile/src/lib/leadDetailFormat.ts" — the surface under change is the admin lead-detail API and the phone lead-detail screen, not the REPORT archetype, so no pasted clause names it; the clause the task itself cites (MORNING-DECISIONS.md:241, Spec 136 fe.44) is not pasted — cannot see the governing text; paste it or accept that this review only tests the §11a unit and value clauses by analogy
+
+DEFER severity=LOW — Spec 126 §11a.6 "The UI computes none of these. A sum in any file is a Rule 16 failure (Spec 128)." — "the permits route serves feet_per_metre (route.ts:267) for client maths, which strains fe.44 the same way" — a same-shape client-side conversion is flagged and left in place — it sits outside this task's declared file list, so record it against a permits-route task rather than widening this one
+
+REJECT — Spec 126 §11a.1 "Every displayed field binds to a source. The schema references the field and nothing else: no old engine names, no older-rule text, no code." — the change is accused of adding a binding member outside the CLOSED set by serving cost.modeled_gfa_sqft — the closed set governs the source, not the unit, and the new field is the same catalogue reading as modeled_gfa_sqm in the second unit, so no new source is added
+
+MET — Spec 126 §11a.7 note MF-83 (3) — "the lead-detail API serves an optional cost.modeled_gfa_sqft computed from SQM_TO_SQFT" — metric is kept and imperial is added, so the server sends both units
+MET — Spec 126 §11a.6 "The UI computes none of these. A sum in any file is a Rule 16 failure (Spec 128)." — "formatSqft only formats" — the multiplication moves out of the phone into the API, so the phone does no conversion
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 3
+
+---
+⏱  38299ms (38.3s)
+📊 Tokens — total: 29448, input: 22755, output: 6693, reasoning: 5729

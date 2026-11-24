@@ -9,14 +9,13 @@
 
 // Spec 83 §2 reports `effective_area_sqm` (mapped to `cost.modeled_gfa_sqm`
 // in the API) in m². Spec 91 §4.3 specifies the mobile UI as "Square Footage
-// Projection" → ft² for North American user. Conversion factor:
-// 1 m² = 10.7639104167097 ft². Three decimals is enough precision for any
-// realistic floor area at integer-rounded display.
-export const SQM_TO_SQFT = 10.7639;
-
-export function formatSqft(sqm: number | null): string | null {
-  if (sqm === null || !Number.isFinite(sqm)) return null;
-  return `${Math.round(sqm * SQM_TO_SQFT).toLocaleString()} sq ft`;
+// Projection" → ft² for North American user. The API serves the area already
+// converted (`cost.modeled_gfa_sqft`, the pinned setting parcels_sqm_to_sqft);
+// this helper only formats it — no conversion factor lives on the phone
+// (Spec 136 fe.44: "the conversion factor is content/settings, never code").
+export function formatSqft(sqft: number | null | undefined): string | null {
+  if (sqft === null || sqft === undefined || !Number.isFinite(sqft)) return null;
+  return `${Math.round(sqft).toLocaleString()} sq ft`;
 }
 
 // Currency for neighbourhood incomes (Spec 57 — annual CAD from Census XLSX).

@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-20T19:12:36.129Z file_sha256=bd4da5739e573d4d79e1dd86d92e2e511c4f5bbc829a0cb1296b4afd65de8f34 prompt_sha256=6f2490bead7f8a853c7b08ad4cf8c1c3ab8879f807be1f77172503da9f318fab
+🔍 Lens review of docs/reports/reviews/task-411/diff-2026-11-20.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — mobile/src/lib/leadDetailFormat.ts:17 "export function formatSqft(sqft: number | null | undefined): string | null" keeps the same export name while its input unit flips from m² to ft²; the repo's own presentation note names another GFA call site — scripts/surfaces/_schema/seed-report-v2.mjs:606 "note: 'today the screen mixes formatSqm (lot) and formatSqft (GFA), [parcelId].tsx:128-130'" — and that file is not in the Files line and cannot be seen in the diff — if [parcelId].tsx still calls formatSqft, the person on the parcel cost screen sees the square-metre number printed as sq ft (142 "sq ft" where the lot/GFA is 1,534 sq ft, about 10.8x low) with no error raised — update that call site (pass served square feet or use formatSqm) or confirm the note is stale and correct it.
+
+DEFER severity=MED — mobile/src/lib/schemas.ts:204 "modeled_gfa_sqft: z.number().nullable().optional()" vs Spec 91 as updated in this diff "cost: { estimated, tier, range_low, range_high, modeled_gfa_sqm, modeled_gfa_sqft } | null" — on a cached or older-server response that omits the field the Square Footage row disappears silently while modeled_gfa_sqm is present, so a returning person loses the area with no message and no way to tell why — design text is silent on a fallback and the app is not in use (RR-0328), so note it for the grounder rather than build it now.
+
+REJECT — mobile/__tests__/leadDetailFormat.test.ts:28 "expect(formatSqft(1533.85575)).toBe('1,534 sq ft')" — it reads as if the person's area changed from a converted number to a raw one — 142.5 × 10.7639 = 1533.85575 rounds to the same 1,534, so the person sees the identical figure and the change matches fe.44 "the conversion factor is content/settings, never code".
+
+VERDICT: FAIL on the person's experience
+States checked: lead detail answered with served sq ft, answered with area null (row hidden), cached or older response without the field (row hidden), empty cost block, back and repeat visit, parcel cost screen GFA call site (cannot see [parcelId].tsx)   Dead ends found: 0
+
+---
+⏱  46679ms (46.7s)
+📊 Tokens — total: 22614, input: 14224, output: 8390, reasoning: 7828

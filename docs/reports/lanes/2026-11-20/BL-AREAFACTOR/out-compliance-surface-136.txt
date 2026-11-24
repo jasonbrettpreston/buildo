@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.922Z file_sha256=c3a0c003747e9310fe5db7bfab68b3f401c5c65497482709891c9e46634b830c prompt_sha256=0db577823b6a0f3e8d4741336536b22db1896aa240ab9d881d592f1c8af1f6e6
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-surface-136.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — fe.44 "the conversion factor is content/settings, never code" — src/lib/leads/lead-detail-query.ts "import { SQM_TO_SQFT } from '@/lib/parcels/geometry';" — the factor now enters the API through a named code constant and the diff never shows the pinned setting parcels_sqm_to_sqft being read (geometry.ts:6 is outside the diff, cannot see it), so the clause rests on an unseen source — add a lock assertion that SQM_TO_SQFT equals the pinned setting value (or show the setting read in the diff) so the factor is proven content/settings and not a renamed literal.
+
+DEFER severity=MED — fe.44 "the conversion factor is content/settings, never code" (the plan's own fact "no screen") — scripts/surfaces/_schema/seed-report-v2.mjs "area_unit: { default: 'm²', options: ['m²', 'ft²'], note: 'today the screen mixes formatSqm (lot) and formatSqft (GFA), [parcelId].tsx:128-130' }" — a screen caller of the renamed formatSqft is named in the same file the diff edits, so the rename either breaks that import or feeds square metres into a square-feet formatter (a wrong unit on a second surface) — verify and update [parcelId].tsx:128-130 and this note, or record why the note is stale.
+
+DEFER severity=LOW — fe.31 "one props golden per reachable state per declared target" — scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json "+      \"cost.modeled_gfa_sqft\"," — the descriptor declares the new field and three reachable states (present, null, absent) but the diff ships only a jest behaviour test and no props golden appears — add the per-state props goldens (or state why the behaviour test is the target's golden).
+
+DEFER severity=LOW — fe.33 "every displayed string, library default strings and form error messages included, comes from content" — mobile/src/lib/leadDetailFormat.ts "return `${Math.round(sqft).toLocaleString()} sq ft`;" — the unit label on a touched line is still a code literal, so the displayed string does not come from content — move " sq ft" (and the m² label) into content, or record that this screen sits outside fe.33's archetype scope.
+
+MET — fe.44 — mobile/__tests__/leadDetailFormat.test.ts "expect(src).not.toMatch(/10\.76|SQM_TO_SQFT/);" — both typed phone copies of 10.7639 are deleted from leadDetailFormat.ts and parcelCostFormat.ts and a test refuses their return.
+
+MET — fe.44 — mobile/app/(app)/[lead].tsx "const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);" — the client receives the converted area and only rounds/formats it, no maths in the UI.
+
+MET — fe.44 "store METRIC only" — src/app/api/leads/detail/[id]/types.ts "modeled_gfa_sqft: number | null;" — the stored column stays metric, the served projection carries the converted value beside modeled_gfa_sqm.
+
+MET — fe.32 — src/app/api/leads/detail/[id]/types.ts "modeled_gfa_sqft: number | null;" — the newly displayed field binds to a member that exists in the declared response projection and is added to the descriptor and census in the same diff.
+
+REJECT — fe.44 — the change does not send both units pre-formatted and adds no area/length toggle — the clause opens "Units across the whole report"; this diff is the mobile lead detail screen (Spec 91) plus its lead-detail API, so the both-units and toggle mandates do not bind it and only the factor sentence does.
+
+REJECT — fe.38 — serving modeled_gfa_sqm next to the new modeled_gfa_sqft could be read as shipping a legacy value — fe.38 names the Spec 88 cost menu and 12 scalars (opt_aor_*, opt_coa_*); modeled_gfa_sqm is the live metric value, not a withheld legacy column.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 44   Unmet: 0
+
+---
+⏱  70201ms (70.2s)
+📊 Tokens — total: 30783, input: 16770, output: 14013, reasoning: 13047

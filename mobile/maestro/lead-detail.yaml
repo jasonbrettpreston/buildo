@@ -45,7 +45,7 @@ appId: ca.maxbld.app
 - assertVisible:
     id: "lead-detail-cost"
 
-# Spec 91 §4.3 — Square Footage Projection (cost.modeled_gfa_sqm × 10.7639).
+# Spec 91 §4.3 — Square Footage Projection (cost.modeled_gfa_sqft, served already converted; the phone only formats).
 - assertVisible:
     id: "lead-detail-sqft"
 

@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T19:12:36.128Z file_sha256=bd4da5739e573d4d79e1dd86d92e2e511c4f5bbc829a0cb1296b4afd65de8f34 prompt_sha256=aab1995fe1309611697609856bf6303ea29eca3a8c6e40fa67624561107502db
+🔍 Lens review of docs/reports/reviews/task-411/diff-2026-11-20.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — mobile/src/lib/leadDetailFormat.ts:15 "export function formatSqft(sqft: number | null | undefined): string | null {" / mobile/src/lib/parcelCostFormat.ts:86 "export function formatServedSqft(sqft: number | string | null | undefined): string | null {" — both formatters were kept or renamed but their input unit silently changed from m² to served ft², and the registry's own note still names a screen caller: scripts/surfaces/_schema/seed-report-v2.mjs:606 "note: 'today the screen mixes formatSqm (lot) and formatSqft (GFA), [parcelId].tsx:128-130'"; cannot see [parcelId].tsx, so an import not updated fails the build or silently prints m² as "sq ft" — grep mobile/app for formatSqft and formatServedSqft, update [parcelId].tsx (and the stale note) or keep a converting wrapper for the metric caller.
+
+DEFER severity=MED — scripts/surfaces/_schema/report-presentation.json:46 "\"alt_formatter\": \"formatServedSqft\"" — the area pair now mixes units, formatter formatSqm takes m² and alt_formatter takes served ft², so any consumer that switches units by calling alt_formatter on the stored metric area prints m² as ft² — record the expected input unit in the registry (or keep the alt formatter taking m² and let the producer convert).
+
+DEFER severity=LOW — src/lib/leads/lead-detail-query.ts:179 "modeled_gfa_sqft: sqmToSqftOrNull(toNumberOrNull(row.modeled_gfa_sqm))," (same at :355 in toCoaCost) — toNumberOrNull runs twice on the same column because line 178/354 already sets modeled_gfa_sqm from it — read the column once into a const and feed both fields.
+
+DEFER severity=NIT — mobile/app/(app)/[lead].tsx:81 "const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);" — formatSqft now accepts undefined, so the "?? null" fallback is dead — pass cost?.modeled_gfa_sqft directly.
+
+DEFER severity=NIT — mobile/__tests__/useLeadDetail.test.ts:99 "const { modeled_gfa_sqft: _omit, ...costWithout } = validDetail.cost;" — the _omit binding is never read — harmless omit idiom, but it depends on lint ignoreRestSiblings being on; drop it if the mobile lint config does not set that.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- A function named formatSqft had its input unit changed from m² to served ft², and the registry note names [parcelId].tsx:128-130 as a caller; un-updated callers break the build or mislabel m² as sq ft.
+- The presentation registry now pairs formatSqm (metric) with formatServedSqft (already-converted ft²) under formats.area with no stated input contract.
+- The new null/absent branches for [lead].tsx are proven only by a phone test that cannot run locally, so the absent-field path is unverified until Mobile CI.
+
+---
+⏱  96716ms (96.7s)
+📊 Tokens — total: 34816, input: 14208, output: 20608, reasoning: 19873

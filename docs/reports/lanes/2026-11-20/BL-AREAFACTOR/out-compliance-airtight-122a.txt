@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.723Z file_sha256=a0ee3097a4e3337f51cc616647ddb539da29ba1d4e536814467df64df0e3dc63 prompt_sha256=4bd578643afa4aa70d207f6a863ea8e080b6cd2f74349824672ea35d3133d7ad
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-airtight-122a.txt (model: deepseek-reasoner)
+
+DEFER severity=NIT — §A26 "the codes judge the parse tree and the AST, never keyword-matched prose" — mobile/__tests__/leadDetailFormat.test.ts:36 "expect(src).not.toMatch(/10\.76|SQM_TO_SQFT/);" — the only guard that "no factor lives on the phone" is a keyword regex over source text, the shape A26 rejects for purity judging; it binds nothing (a jest test, not a gate) but a renamed or re-derived factor passes it silently — replace with an AST or exported-symbol check, or drop it and rely on the deleted export.
+
+MET — §A26 code table G9 "A function-scope tunable const" — src/lib/leads/lead-detail-query.ts:154 "return sqm === null ? null : sqm * SQM_TO_SQFT;" with "import { SQM_TO_SQFT } from '@/lib/parcels/geometry';" — no numeric const is added in function scope; the factor arrives from the pinned setting read at src/lib/parcels/geometry.ts:6.
+
+MET — §A26 G1–G5 "SQL over `pipeline_runs`/`sync_runs`/`logic_variables`/`schema_migrations`/`trade_configurations`" — src/lib/leads/lead-detail-query.ts:179 "modeled_gfa_sqft: sqmToSqftOrNull(toNumberOrNull(row.modeled_gfa_sqm))," — the change adds no SQL text, no `.query(`, no DDL, txn, clock or direct write; it maps an already-selected column.
+
+MET — §A27 item 13 "A test that needs Postgres is `*.db.test.ts`" — src/tests/leads-detail.infra.test.ts:124 "mockedPool.query.mockResolvedValueOnce({ rowCount: 1, rows: [sampleRow] });" — the new cases stub the pool and the user context, so no live DB is required and no per-file package.json list is added.
+
+REJECT — §A27 item 13 "A test that needs Postgres is `*.db.test.ts`" — that the two added cases in leads-detail.infra.test.ts and lead-detail-query.coa.infra.test.ts belong in `*.db.test.ts` — they replace `pool.query` with `mockResolvedValueOnce`, so the rule is not triggered.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+
+Scope note encoded per the format's own rule: the clauses that actually bind this change (Spec 136 fe.44 "The conversion factor lives in content/settings, never in code", MORNING-DECISIONS.md:241, Spec 91 §4.3) are not pasted in the context block, so they are not judged here; only Appendix §A26 and §A27 are, and neither governs a lead-detail API field.
+
+---
+⏱  34167ms (34.2s)
+📊 Tokens — total: 22881, input: 16340, output: 6541, reasoning: 5888

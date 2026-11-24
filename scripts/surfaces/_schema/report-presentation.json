@@ -41,11 +41,12 @@
         "m²",
         "ft²"
       ],
-      "note": "today the screen mixes formatSqm (lot) and formatSqft (GFA), [parcelId].tsx:128-130"
+      "note": "today the screen mixes formatSqm (lot, square metres in) and formatServedSqft (GFA, served square feet in), [parcelId].tsx:128-130"
     },
     "area": {
       "formatter": "formatSqm",
-      "alt_formatter": "formatSqft",
+      "alt_formatter": "formatServedSqft",
+      "alt_formatter_input": "square feet as served by the API (never square metres; the factor is the pinned setting parcels_sqm_to_sqft)",
       "file": "mobile/src/lib/parcelCostFormat.ts"
     },
     "length": {

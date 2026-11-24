@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:37:12.055Z file_sha256=289f11f383ca2df23306db1e2c994c4f00106adfdbb4ae3593c9b8287424fba7 prompt_sha256=64d4fc82953871a3bf65e1f0bdf1a7d7eafdf60ac41c9158a71438ed996e0595
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-plan-compliance-eng-s5.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — §5.3 Red-Green "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails." — NONE — "Build: the lead-detail API serves an optional cost.modeled_gfa_sqft computed from SQM_TO_SQFT; the phone Zod schema takes it and formatSqft only formats; both typed copies deleted" — the card names no failing test authored and run before the route/format change, only a post-hoc re-point of an existing test, so the golden rule is unmet on the face of the material — add to the card an ordered step: write the red test, run it, capture the failure, then build.
+
+BUG severity=HIGH — §5.5 "*.infra.test.ts (no DB) | API envelope / query shape / error paths (§5.3 unhappy-path-first)" — NONE — "Files: src/app/api/leads/detail/[id]/route.ts" — the change alters the API envelope of GET /api/leads/detail/:id by adding a served field, and the material names no *.infra.test.ts at all, so the new envelope and its error path are unproven at the layer that proves them — name a new src/app/api/leads/detail/[id]/*.infra.test.ts asserting the field present/absent and the unhappy (bad id, missing auth) response first.
+
+BUG severity=HIGH — §5.2 "*.logic.test.ts | Pure functions, scoring, classification | Any pure/derivation logic" — NONE — "the parity test re-pointed to literal expected strings" — the derivation (sqm to sqft from SQM_TO_SQFT) changes hands from two typed constants to the route plus a formatter, and the only test touched is an existing re-pointed parity test, so no .logic.test.ts pins the derived value on happy plus edge inputs — add a .logic.test.ts that pins the converted value for known sqm inputs and the null/absent case.
+
+DEFER severity=MED — §5.5 "Parity battery | Two surfaces that MUST agree stay in lockstep: dual code paths (§7), seed JSON ↔ TS LOGIC_VAR_DEFAULTS, and generated doc ↔ its generator" — NONE — "the pinned setting parcels_sqm_to_sqft is already read at src/lib/parcels/geometry.ts:6 (SQM_TO_SQFT)" — re-pointing the oracle to literal expected strings leaves the served value and the phone output with no drift guard against a settings change, the literals silently rot when the setting moves — keep a parity assertion that the route output equals the formatter output for the same record instead of hand-written numbers.
+
+DEFER severity=MED — §5.2 "*.regression.test.ts | Pin a load-bearing behavior a diff must NOT retire | When altering/deleting code the Regression Guardian flags as a fence" — NONE — "both typed copies deleted" — deleting the constants that [lead].tsx currently reaches via formatSqft retires a load-bearing path with no named regression lock on the phone still showing a square-feet figure when the API omits the field — name the regression test that pins the existing display value before deleting the copies.
+
+DEFER severity=LOW — §5.1 "You MUST always import typed factories from src/tests/factories.ts" — NONE — "Files: ... src/tests/admin-report-preview-live.logic.test.ts" — no diff or test body is pasted, so factory use in the touched test cannot be seen, this is unverified rather than unmet — include the test diff in the material under review so §5.1 can be checked.
+
+REJECT — Spec 136 fe.44 — the change is accused of straining the conversion-factor clause the same way the permits route feet_per_metre does (route.ts:267) — that clause is not in the pasted context and the material itself scopes it out ("Also noted by the grounder, not in this task"), so it is not mine to judge.
+
+MET — §5.4 — NONE — "insert it, and verify DB contents" has no object here: the change seeds no DB scenario, so no scripts/seed-[scenario].js is owed.
+
+MET — §5.2 DB replay row — NONE — no migration touches schema, constraints or indexes in the named files, so BUILDO_TEST_DB=1 npm run test:db is not mandated.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+
+---
+⏱  23506ms (23.5s)
+📊 Tokens — total: 15256, input: 11030, output: 4226, reasoning: 3236

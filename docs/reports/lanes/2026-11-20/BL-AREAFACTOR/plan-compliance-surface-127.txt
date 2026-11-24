@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:37:12.139Z file_sha256=9b5b370b5e3b0c6386945d3a1c4f9b5c31af9b4daff24a0c835107c720b0b4cd prompt_sha256=b39588e0656fe98939869a0f0cdc7cc4ae6cf82f7ba7b60d2824636e810c66f8
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-plan-compliance-surface-127.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 127 §4.3 "The fingerprint spans **descriptor + contract descriptor + the archetype component + the format helpers**, so any of those changing forces a recapture" — "Files: src/app/api/leads/detail/[id]/route.ts, mobile/src/lib/leadDetailFormat.ts, mobile/src/lib/parcelCostFormat.ts, src/tests/admin-report-preview-live.logic.test.ts" — the brief edits a format helper and the contract route but names no golden recapture and no fingerprint restamp — add the lead-detail golden recapture (API fixture + rendered tree) and the fingerprint-diff note to the build steps.
+
+BUG severity=HIGH — Spec 127 §3 S8 "zero unexplained diffs across the golden PAIR (API response fixture + rendered-tree snapshot); fingerprint gate over descriptor + contract descriptor + archetype component + format helpers." — "the lead-detail API serves an optional cost.modeled_gfa_sqft computed from SQM_TO_SQFT" — a new rendered value on the lead-detail surface changes the rendered-tree golden, and the brief explains it only in prose with no golden diff and no Defect Ledger id — require the S8 diff row naming the new field as an explained diff before merge.
+
+BUG severity=HIGH — Spec 127 §4.2 "Every hand-written constant frozen at PH-0 step 6 is classified with the closed set: `preserved-in-runner | preserved-in-validator | preserved-in-compute | encoded-as-descriptor-field | encoded-as-deviation | knowingly-retired`." — "both typed copies deleted" — the two transcriptions are deleted with no recorded disposition, so the closed-set ledger is bypassed rather than updated — record `knowingly-retired` or `encoded-as-descriptor-field` for leadDetailFormat.ts:15 and parcelCostFormat.ts:11 before the delete lands.
+
+DEFER severity=MED — Spec 127 §4.1 "**A different party adjudicates than the one that discovered.**" and "The adjudicator is named and dated in the assessment report." — "Resolved by the separate grounder of task-395, 2026-11-20 (verify each fact before building)" — the grounder that discovered the facts also fixes the resolution that becomes the build spec, and no adjudicator or assessment report is named — name a second party and a date in the card before build.
+
+DEFER severity=MED — Spec 127 §8.5 "A conversion that does not move its registry row has not been recorded." — "No new surface, no slice." — the card asserts the touched surface needs no registry movement, so the change leaves no recorded trace in the census row — update the lead-detail row (states, category answers that stop being `_unanswered_`, owns.components) in the same commit, or state in the card why the row is provably unaffected.
+
+DEFER severity=MED — Spec 127 §6 "A conversion is accepted when, in one command and one commit: 1. ... scores ≥14/17 with S6–S8 full" — "## Acceptance criteria" (section present and empty) — no acceptance criterion binds the build, so not one of the eight §6 items can fail — fill the section with item 4 (`npm run typecheck`, `npm run lint`, `npx vitest related <changed files> --run`) and the §5 `surface-validate.mjs --check` run as the minimum.
+
+DEFER severity=LOW — Spec 127 §3.1 S-parity "for a surface declaring more than one `render.targets[]` entry, the golden projections for each target are **equal on the shared field set**." — "the parity test re-pointed to literal expected strings" — re-pointing the oracle at literals removes the shared-source comparison and the new field is served but not compared across declared targets — keep one cross-target comparison of the sqft projection, or record in the card that the shared field set is unchanged and why.
+
+DEFER severity=NIT — Spec 127 §1 "A surface's conversion is evidenced by artifacts, never by prose." — "Resolved by the separate grounder of task-395, 2026-11-20 (verify each fact before building): the earlier resolution ... is false: neither screen has a slice" — the resolution rests on narrative plus four line refs, not on a generated artifact — attach the census/grep output or a `--check` run that proves neither screen has a slice.
+
+MET — Spec 127 §4.2 "read ... 'compute' as *the server-side projection assembler*" — src/lib/parcels/geometry.ts:6 (cited in the brief) — the factor is read from the pinned setting server-side, so the new field is computed where the spec places compute.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 6
+
+---
+⏱  44978ms (45.0s)
+📊 Tokens — total: 31994, input: 23340, output: 8654, reasoning: 7607

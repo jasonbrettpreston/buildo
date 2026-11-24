@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-20T18:36:05.793Z file_sha256=62e97acc906379f9ff7ea612e1ada2c63cc8a779bed1add3f4c3a96f8275bc75 prompt_sha256=1bcab7f46a4fb8824d3ea08ede412a32530903f024f671d5e128ad6df2b6cbb3
+🔍 Lens review of docs/reports/reviews/task-411/context-2026-11-20.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — Step 2 *(`leadDetailFormat.ts` `formatSqft(sqft)`)* — API serves `modeled_gfa_sqft = null when sqm null` and the Zod field is `optional nullable`, but the plan never states what `formatSqft(null|undefined)` renders — the phone will show `undefined ft²`/`NaN` for any lot with a null GFA — specify a fallback (`—`/empty) and add a null-case phone unit test.
+
+BUG severity=MED — Step 1+2 *(`[lead].tsx` passes `cost.modeled_gfa_sqft`; MMKV cache)* — a lead-detail response cached before the API change lacks `modeled_gfa_sqft`; the optional schema accepts it and hands `undefined` to `formatSqft` — bump/invalidate the cache version key, or rely on the null-safe formatter from the finding above.
+
+BUG severity=MED — Step 2 (deploy order) — if the phone build ships before the server serves `modeled_gfa_sqft`, or either is rolled back independently, the phone reads `undefined`; the plan states no ordering — document server-first deploy (or make `formatSqft` null-safe so any order is safe) as the rollback path.
+
+DEFER severity=MED — Step 3 *("phone-test green is unproven until Mobile CI")* — the whole phone half (null case, "no factor constant" assertion, signature change) has no pre-merge green, so a broken phone edit merges undetected — move the null-case into a CI-runnable assertion and require a Mobile CI pass before merge.
+
+DEFER severity=MED — Step 2 *(`parcelCostFormat.ts` `formatSqft` deleted, "no screen uses it")* — deleting an exported symbol rests on an unverified usage claim; a hidden importer breaks compile — `grep -rn "formatSqft\|parcelCostFormat" mobile/src/` before deleting.
+
+DEFER severity=MED — Step 2 *(`SQM_TO_SQFT` from `geometry.ts:6`)* — assumes `pinnedSetting('parcels_sqm_to_sqft')` resolves to a finite number; a missing/mis-typed seed value makes every served area `NaN` — eval the constant or grep the seed before building.
+
+DEFER severity=MED — Step 2 (sibling to fe.44) — other hardcoded conversion literals (length ft/m, weight) remain and strain the same "factor lives in settings" rule; the operator ruling covers all lengths — one `grep -rn "10.7639\|3.2808\|2.2046"` enumerates siblings to file now.
+
+DEFER severity=MED — Plan facts *(route.ts:267 `feet_per_metre`, "not in this task")* — the plan names this fe.44 sibling but defers without a tracked id; if untracked it recurs as the identical violation — confirm a task/decision id exists before closing task-411.
+
+DEFER severity=LOW — Step 2 *(parity test :129 re-pointed to literal strings)* — removes the web↔phone cross-check; if the settings factor later changes, the two sides can diverge with no test catching it — keep one shared-fixture assertion or add a dated note on the lost guard.
+
+DEFER severity=LOW — Step 2 *(`toCost`/`toCoaCost`)* — assumes these are the only producers of `modeled_gfa_sqm`; a third builder would serve sqm without the new sqft — `grep -rn "modeled_gfa_sqm" src/` to confirm no other producer.
+
+NIT severity=NIT — Step 2 (rounding) — server returns full-precision `sqm * factor`, phone rounds; if the pinned factor ≠ the old literal `10.7639` the displayed integer can shift by 1 — confirm the seed value equals `10.7639`.
+
+VERDICT: FAIL on plan-readiness for implementation
+Top 3 operational blockers (if FAIL):
+- `formatSqft` null/undefined contract unspecified while the API deliberately serves `null` sqft (renders `undefined ft²`).
+- Phone half has no local green — the null regression ships with no pre-merge safety net.
+- Deploy/cache ordering: stale `lead-detail` response (or phone-first ship) lacks `modeled_gfa_sqft` → `undefined` render.
+Top 3 unverified data premises (if any, regardless of verdict):
+- "No screen imports `parcelCostFormat.formatSqft`" → `grep -rn "formatSqft\|parcelCostFormat" mobile/src/`.
+- "`SQM_TO_SQFT` is a finite number" → `node -e "const {SQM_TO_SQFT}=require('./src/lib/parcels/geometry');console.log(SQM_TO_SQFT)"` (or grep the seed for `parcels_sqm_to_sqft`).
+- "`toCost`/`toCoaCost` are the only servers of `modeled_gfa_sqm`" → `grep -rn "modeled_gfa_sqm" src/`.
+
+---
+⏱  49989ms (50.0s)
+📊 Tokens — total: 20425, input: 11745, output: 8680, reasoning: 7539

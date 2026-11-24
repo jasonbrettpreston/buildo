@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.917Z file_sha256=bab19360382f6f746e2752677a11e5828791c4603c7b33cc600a157de78f1199 prompt_sha256=9dae943dfc4a0e789365305fb254c493474a32b298b417c610bf0bf54406cc64
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-surface-135-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Q-MB44 "MB-44 delivers the report as stored data; it is displayed only through the McFrontend REPORT renderer (MF-14)" — scripts/surfaces/_schema/report-presentation.json:46-48 "''formatter'': ''formatSqm'', / ''alt_formatter'': ''formatServedSqft''" — the REPORT area slot now pairs a metre-taking formatter with a square-feet-only one, so any stored m² value the renderer resolves through alt_formatter prints a number 10.76 times too small labelled "sq ft", and no pasted clause authorises changing that slot — keep a metre-taking alt formatter registered for the report's stored area values and add a separate square-feet helper for the lead detail screen.
+
+DEFER severity=MED — Q-MB44 "McBylaws owns the numbers; McFrontend owns the display" — scripts/surfaces/_schema/seed-report-v2.mjs:606 "area_unit: { default: 'm²', options: ['m²', 'ft²'], note: 'today the screen mixes formatSqm (lot) and formatSqft (GFA), [parcelId].tsx:128-130' }" — the next line renames the formatter away from formatSqft while this note still asserts formatSqft is in use on the parcel screen, so the seed contradicts the change's own claim that no screen imports it — rewrite or drop the note in the same edit so the seed names only formatters that still exist.
+
+DEFER severity=MED — Out-of-Scope Files "Spec 136 (the generated handbook): its generator is Phase 1 code (MF-18)" — scripts/surfaces/_schema/seed-report-v2.mjs:607 "area: { formatter: 'formatSqm', alt_formatter: 'formatServedSqft', file: 'mobile/src/lib/parcelCostFormat.ts' }" — the diff edits the report seed and the presentation registry; I cannot see whether these files sit inside the frozen Phase 1 generator, so this edit may land out of scope — name the generator's file set and, if these two files are in it, hold the edits until the freeze lift.
+
+DEFER severity=LOW — Q-MB44 "Recorded as a dated note under MB-44 in `.cursor/MCBYLAWS-QUEUE.md` and as MF-09 in `.cursor/MCFRONTEND-QUEUE.md`; no FE row" — backlog/tasks/task-411 "Rule: Spec 136 fe.44 (docs/specs/02-web-admin/136_mcfrontend_handbook.md:163 ''the conversion factor is content/settings, never code''); operator ruling MORNING-DECISIONS.md:241" — this run's pasted context carries no fe.44 and no MORNING-DECISIONS.md:241, so the rule the change rests on cannot be checked here and no row recording this report-presentation change appears in the queue source the register names — paste the ruling and fe.44 into the next run, or record the change under `.cursor/MCFRONTEND-QUEUE.md` as the clause's pattern does.
+
+MET — Out-of-Scope Files (McBylaws gate and its policy) — whole diff — no hunk touches gate.mjs, cite-parse.mjs, prereg-name.mjs, arm Q, mcbylaws/protected-paths.json or .husky/*.
+
+MET — Target Files (documents only; no code lands with it) — whole diff — no hunk in docs/specs/02-web-admin/135_mcfrontend_decisions_register.md.
+
+MET — Q-MB44 ("no FE row") — whole diff — the change creates no FE row.
+
+REJECT — Target Files "this register (documents only; no code lands with it)" — accused of landing code under a documents-only surface — the diff has no hunk in the register, so no code lands with it; the code belongs to task-411, a different card.
+
+REJECT — Q-MB44 — accused of moving the conversion factor out of content/settings into code — the pasted Q-MB44 words say only that McBylaws owns the numbers and McFrontend owns the display; "The conversion factor lives in content/settings, never in code" is MORNING-DECISIONS.md:241 and is not pasted.
+
+REJECT — Cross-Spec Dependencies "`.cursor/MCFRONTEND-QUEUE.md`: the one source of MF task ids" — accused of landing a mobile change with no MF id — the clause names the queue as the id source, not that every mobile edit must carry an MF id, and task-411 carries a backlog id.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 0
+
+---
+⏱  70946ms (70.9s)
+📊 Tokens — total: 27121, input: 13192, output: 13929, reasoning: 12874

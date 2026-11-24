@@ -1,0 +1,14 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.768Z file_sha256=7b3318c97aef6efde6096b6b0adec081a62ac445e499a79132a84ba34a76ff4e prompt_sha256=d2ae82989eb567981177a2fe19204192c42861cf170f2fd4a3a42a1a7bf9a9fe
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+REJECT — Spec 136 fe.44 / MORNING-DECISIONS.md:241 "The conversion factor lives in content/settings, never in code" — the diff deletes the phone typed 10.7639 (mobile/src/lib/leadDetailFormat.ts) and serves modeled_gfa_sqft from the API — the clause text is not in the pasted context, it appears only inside the material under review, so it is not mine to judge; the pasted glossary imposes no obligation on a lead-detail API field.
+DEFER severity=LOW — lock / lock-db / check / hook "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/leads-detail.infra.test.ts "it('serves the area already converted: cost.modeled_gfa_sqft is modeled_gfa_sqm times the pinned factor (FIX.AREA-FACTOR, fe.44)" — the new fe.44 test names the rule id and asserts it, but the material never states whether an `.infra.test.ts` file is run by `npm test` (lock) or by `npm run test:db` (lock-db), so the enforcement kind cannot be checked — record the enforcement kind for fe.44 against this test in the rule map or the report.
+DEFER severity=NIT — five words "STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates" — backlog/tasks/task-411 (PLAN line 1, Implementation Plan) "Principles served: standardized, understandable, simple." — "simple" is outside the closed five-word set, so the plan names a principle gate V cannot score — drop "simple" or map it to one of the five words.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 2   Unmet: 0
+
+---
+⏱  23630ms (23.6s)
+📊 Tokens — total: 18842, input: 14323, output: 4519, reasoning: 4093

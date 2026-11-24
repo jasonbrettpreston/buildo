@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.875Z file_sha256=af8d44109119d4c0efa1dd398e6bfa7746b5a2d9d222e208edbeac62d2a3a1b4 prompt_sha256=5b00d44168ed86122dab1861d8013c49113b499b4aa0995487dbb0ea04520f89
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-surface-126-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §5.0 ONE-SOURCE "nothing in that fan-out is hand-written, and nothing in it is a second declaration" — mobile/src/lib/schemas.ts:204 "modeled_gfa_sqft: z.number().nullable().optional()," against src/app/api/leads/detail/[id]/types.ts:15 "modeled_gfa_sqft: number | null;" — the field is declared a second time by hand and the phone copy is looser than the server it mirrors (the §5.2 measured defect: "the client is looser than the server it mirrors"), so a response the server cannot produce still parses green — generate the mobile mirror from the CONTRACT descriptor per §5.2, or at minimum make the phone declaration non-optional so drift fails the Zod parse.
+
+DEFER severity=MED — §5.0 consequence 1 "A census row IS a descriptor ... There is no re-keying step between 'reviewed in the registry' and 'read by the engine'" — scripts/surfaces/_schema/census/mobile-product.json:1426 "cost.modeled_gfa_sqft" and scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json:102 "cost.modeled_gfa_sqft" — one whitelist value hand-added to both the shard and the emitted descriptor, two hand-edits where the both-directions check expects one source and a regeneration — regenerate one from the other and show the --check output instead of co-editing both.
+
+DEFER severity=MED — §9 Behavioral Contract item 4 "apply inputs.field_whitelist, which must equal the contract's" — mobile_lead_detail.descriptor.json:102 "cost.modeled_gfa_sqft" — no CONTRACT descriptor change appears anywhere in the material (cannot see the leads-detail contract descriptor), so the surface whitelist now names a field the contract's response projection is not shown to declare — add the field to the CONTRACT descriptor's response projection in the same change, or drop it from the surface whitelist.
+
+DEFER severity=MED — §5.7 "a value in two places is a drift source, which §5.2 measured four times over" — docs/specs/03-mobile/91_mobile_lead_feed.md:206 "cost: { estimated, tier, range_low, range_high, modeled_gfa_sqm, modeled_gfa_sqft } | null" — the field list is now maintained by hand in prose as well as in the descriptor, the census, types.ts and the Zod mirror, precisely the duplication §5.7 deletes from Spec 100 §3.2 — replace the prose field list with a pointer to the descriptor.
+
+DEFER severity=MED — §5.6 "The fingerprint spans descriptor + contract descriptor + the archetype component + the format helpers" — mobile/src/lib/parcelCostFormat.ts:86 "export function formatServedSqft(sqft: number | string | null | undefined): string | null {" — an exported format helper named in the presentation registry and in the golden fingerprint is renamed and the descriptor whitelist changes, with no golden recapture and no source_fingerprint update in the material — recapture the affected surface's golden pair and show the new fingerprint, or state in the material that no golden covers these files.
+
+DEFER severity=MED — §5.0 "A validator in a test that re-implements the rules is banned; the test imports the same module the engine does" — mobile/__tests__/leadDetailFormat.test.ts:42 "expect(src).not.toMatch(/10\.76|SQM_TO_SQFT/);" and the same source-grep added at mobile/__tests__/parcelCostFormat.test.ts:77 — the no-factor rule is now enforced by two ad-hoc text scans that miss other spellings of a factor (for example 3.28084 squared), a second and weaker declaration of one rule — extend the existing lock (src/tests/surfaces/report-no-maths.logic.test.ts, visible in the material) or import one shared checker instead of grepping per file.
+
+DEFER severity=LOW — §5.0 fan-out "docs/reports/generated/127-surface-registry.md the reviewable registry" — NONE — a changed surface descriptor lands with no regenerated registry artifact and nothing in the material shows the generator re-run (cannot see whether verify's --check covers it) — run the registry generator and include the regenerated file or its clean --check output.
+
+DEFER severity=LOW — §5.0a "a `--check`-capable generator that throws on bidirectional mismatch ... `npm run logic-var-groups -- --check` exits 1 when stale" — scripts/surfaces/_schema/seed-report-v2.mjs:607 "area: { formatter: 'formatSqm', alt_formatter: 'formatServedSqft', file: 'mobile/src/lib/parcelCostFormat.ts' }" and scripts/surfaces/_schema/report-presentation.json:48 "\"alt_formatter\": \"formatServedSqft\"" — one registry value edited by hand at both the seed and the emitted JSON, with no --check shown proving regeneration rather than co-editing — show the generator --check run, or if that JSON is not generated, say so and treat it as a second declaration.
+
+MET — §5.3 "The server returns the projected screen JSON; the client renders it through a small archetype component set; there is no client business logic" — src/lib/leads/lead-detail-query.ts:151 "function sqmToSqftOrNull(sqm: number | null): number | null {" — conversion now happens server-side and mobile/src/lib/leadDetailFormat.ts:17 only formats.
+
+MET — §5.0 "There is one source, and everything else is emitted from it" — src/lib/leads/lead-detail-query.ts:16 "import { SQM_TO_SQFT } from '@/lib/parcels/geometry';" — the factor is read from the one pinned-setting source, and both typed phone copies are deleted.
+
+MET — §9 Edge Cases "Schema drift ... never a blank screen" — mobile/app/(app)/[lead].tsx:81 "const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);" — an absent or null served value renders no section rather than a crash or a wrong figure.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 8
+
+---
+⏱  56227ms (56.2s)
+📊 Tokens — total: 40627, input: 28780, output: 11847, reasoning: 10426

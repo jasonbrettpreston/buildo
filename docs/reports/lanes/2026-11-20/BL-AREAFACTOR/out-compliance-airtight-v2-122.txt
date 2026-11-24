@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.738Z file_sha256=b562ba2ff661a1d29eb4fb2793dfaa646c14198d3dc36dc69ab2b7f49b248f21 prompt_sha256=5492a1005f0679235fa67e359da0256ed01c6d1f4c581f56771d46a973b3bdab
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-airtight-v2-122.txt (model: deepseek-reasoner)
+
+MET — operator ruling MORNING-DECISIONS.md:241 "The conversion factor lives in content/settings, never in code" — mobile/src/lib/leadDetailFormat.ts "no conversion factor lives on the phone" and mobile/src/lib/parcelCostFormat.ts "-const SQM_TO_SQFT = 10.7639;" — both typed phone copies are deleted, the factor is read server-side from the pinned setting (src/lib/leads/lead-detail-query.ts "+import { SQM_TO_SQFT } from '@/lib/parcels/geometry';"), and the deletion is locked by mobile/__tests__/leadDetailFormat.test.ts "expect(src).not.toMatch(/10\.76|SQM_TO_SQFT/)".
+
+MET — Spec 136 fe.44 "the conversion factor is content/settings, never code" (quoted in the material) — src/lib/leads/lead-detail-query.ts "modeled_gfa_sqft: sqmToSqftOrNull(toNumberOrNull(row.modeled_gfa_sqm))" — the served value is produced once on the server from the pinned factor for both producers (toCost and toCoaCost), not on the client.
+
+MET — 6.6.1(a) "declared == observed at column level" for the surface declaration this diff edits — scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json "+ \"cost.modeled_gfa_sqft\"," — the declared served-field list gains the field in the same diff that makes it observed, witnessed by src/tests/leads-detail.infra.test.ts "expect(body.data.cost.modeled_gfa_sqft).toBeCloseTo(1533.85575, 5)".
+
+MET — 6.6.1(e) src/ SQL ledger catalog membership, "fails on any column the ledger records as read or written on a table that docs/reports/witness/_catalog.json lists but whose column list lacks it" — src/lib/leads/lead-detail-query.ts diff contains no SQL text or new column reference, only "sqm === null ? null : sqm * SQM_TO_SQFT" in JS — so src-sql-ledger --check gains no new column to fail on.
+
+REJECT — 6.6.1(a)/(c) "100% mechanical: generated from code/runtime or witnessed from executed SQL, never hand-authored" — accused of hand-authoring registry rows (scripts/surfaces/_schema/census/mobile-product.json, the F90 surface descriptor, report-presentation.json alt_formatter rename) — these are surface descriptor/census/presentation declarations, not a sources-chain step's four-part registry or the §6 cross-step ledger, so the mechanical-only rule does not reach them.
+
+REJECT — 6.6.1(c) "no registry or ledger row may be described as accurate unless it is generated, enforced or witnessed" — accused of asserting an accurate row by hand-editing a declaration — the value the declaration now names is witnessed in the same diff by three executed tests (src/tests/leads-detail.infra.test.ts, src/tests/lead-detail-query.coa.infra.test.ts, mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx), and no chain registry or ledger row is claimed anywhere in the material.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 0
+
+---
+⏱  35737ms (35.7s)
+📊 Tokens — total: 20100, input: 15731, output: 4369, reasoning: 3618

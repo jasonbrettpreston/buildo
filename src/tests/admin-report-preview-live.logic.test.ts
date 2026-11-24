@@ -22,6 +22,7 @@ import { createRequire } from 'node:module';
 vi.mock('@/lib/logger', () => ({ logError: vi.fn(), logWarn: vi.fn(), logInfo: vi.fn() }));
 
 import { formatPageRule as formatPageRuleWith, PAGE_RULES, TEXT_RULES } from '@/lib/report-projection/format';
+import { SQM_TO_SQFT } from '@/lib/parcels/geometry';
 import { CURRENT_SEED_SHAS } from '@/lib/report-projection/seed-shas';
 import { pageBindings, pageOptions, projectStoredPage, SQFT_PER_M2, type StoredRow, type LotStamp } from '@/lib/report-projection/project';
 // FIX.PROJ (task-372): the formatter takes the factor as a parameter (it imports nothing); the page reads it once in project.ts.
@@ -127,14 +128,15 @@ describe('F: the FE-05 server formatter (outside the no-maths directories)', () 
     expect([...bound].sort()).toEqual([...PAGE_RULES, ...TEXT_RULES, 'reason_text'].sort()); // K2: the closed text rules and the reason rule (project.ts)
     for (const r of PAGE.fe05_flagged_rules as string[]) expect(bound.has(r)).toBe(false);
   });
-  it('matches the mobile helpers digit for digit on shared samples (parity; mobile untouched)', async () => {
-    // a runtime path: the root tsconfig excludes mobile/ (its @/ alias is the app's); vitest loads the file and erases its type-only import
+  it('formats square feet to literal expected strings (FIX.AREA-FACTOR: the phone no longer types the factor, so its helper is not the oracle) and matches the mobile m2 helper', async () => {
+    // a runtime path: the root tsconfig excludes mobile/ (its @/ alias is the app's); the runner loads the file and erases its type-only import
     const MOBILE = path.join(ROOT, 'mobile/src/lib/parcelCostFormat.ts');
-    const { formatSqft, formatSqm } = (await import(MOBILE)) as { formatSqft: (m: number) => string | null; formatSqm: (m: number) => string | null };
-    for (const m of [0, 1, 9.29, 99.96, 120, 248.05, 284, 395.6, 1000, 5000, 92903.04]) {
-      expect(`${fmt('area_sqft', m)} sq ft`).toBe(formatSqft(m));
-      expect(fmt('area_m2', m)).toBe(formatSqm(m));
-    }
+    const { formatSqm, formatServedSqft } = (await import(MOBILE)) as { formatSqm: (m: number) => string | null; formatServedSqft: (sqft: number) => string | null };
+    const SQFT: Array<[number, string]> = [[0, '0'], [1, '11'], [9.29, '100'], [99.96, '1,076'], [120, '1,292'], [248.05, '2,670'], [284, '3,057'], [395.6, '4,258'], [1000, '10,764'], [5000, '53,820'], [92903.04, '999,999']];
+    for (const [m, expected] of SQFT) expect(`${fmt('area_sqft', m)} sq ft`).toBe(`${expected} sq ft`);
+    for (const [m] of SQFT) expect(fmt('area_m2', m)).toBe(formatSqm(m));
+    // parity (web to phone): the phone formatter fed the pinned-factor product, as the API serves it, prints what the web page prints
+    for (const [m] of SQFT) expect(formatServedSqft(m * SQM_TO_SQFT)).toBe(`${fmt('area_sqft', m)} sq ft`);
   });
   it('lives outside the four directories the no-maths lock scans, and the formatter imports nothing', () => {
     const lock = fs.readFileSync('src/tests/surfaces/report-no-maths.logic.test.ts', 'utf8');

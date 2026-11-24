@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-20T18:36:05.793Z file_sha256=62e97acc906379f9ff7ea612e1ada2c63cc8a779bed1add3f4c3a96f8275bc75 prompt_sha256=d594479fbf99f454dfe18d0fecea367fb362bcb74bce784c34a6383f54a1527b
+🔍 Lens review of docs/reports/reviews/task-411/context-2026-11-20.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — PLAN task-411 step 2 "mobile schemas.ts LeadDetailCostSchema adds optional nullable modeled_gfa_sqft; [lead].tsx passes cost.modeled_gfa_sqft" vs design "The page producer sends each number pre-formatted in both units (metric and imperial); the client only switches which one is shown, with no maths" — with the factor gone the client cannot fill a missing value and the plan never says what the person sees when the field is null or absent (sqm null on a permit, older response), so the area line on the lead detail screen can read blank, "null ft²" or "NaN" — state the null rendering explicitly (row hidden or a plain not-available line) and pin it in the phone test.
+
+DEFER severity=MED — PLAN task-411 step 2 "the parity test re-pointed to literal strings (no import of the phone file)" — the one check that the phone and the web report show the same area for a lot is removed in the same change that leaves the phone formatting the number itself, so the two surfaces can drift and every test stays green — keep one assertion comparing the phone helper's output to the web oracle value, even with the expectation written as a literal.
+
+DEFER severity=MED — PLAN task-411 step 2 "adds modeled_gfa_sqft to both cost maps ... formatSqft only formats" — fe.44's "pre-formatted in both units" half is still not met: the phone receives a bare number and picks the decimals and the unit word, so the same lot can read 1,180 sqft on the phone and 1,180.4 ft² on the report — rationale: moving the factor is this task and is an improvement, but the formatting half should be recorded as still open, not read as closed.
+
+DEFER severity=LOW — PLAN task-411 step 2 "leadDetailFormat.ts formatSqft(sqft) with the factor and its export deleted" — every area on the lead detail screen now derives from the pinned setting parcels_sqm_to_sqft, so if that value differs from the 10.7639 typed today the person sees a different figure for every lot after deploy with no line of copy explaining it — rationale: the setting is the ruled source, but note the visible shift so it is not later read as a calculation bug.
+
+REJECT — PLAN task-411 step 2 "parcelCostFormat.ts loses the factor and its unused formatSqft (no screen uses it)" — deleting this second copy looks like it strips area display from a screen, but nothing imports it except its own test and the parity oracle, so no state the person reaches changes — harmless, and it matches fe.44 "the conversion factor is content/settings, never code".
+
+VERDICT: FAIL on the person's experience
+States checked: lead detail first view with numbers, lead detail with modeled_gfa_sqm null or the sqft field absent, lead detail repeat visit and back (unchanged), loading (unchanged), API error (unchanged), web report parity view. Dead ends found: 0
+
+---
+⏱  41138ms (41.1s)
+📊 Tokens — total: 26341, input: 19559, output: 6782, reasoning: 6120

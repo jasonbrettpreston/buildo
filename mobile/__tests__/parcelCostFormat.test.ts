@@ -1,6 +1,8 @@
 /** @jest-environment node */
 // Jest tests — Parcel Cost Tool presentation helpers (Spec 100 §2.3/§2.4).
 // SPEC LINK: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §6
+import fs from 'node:fs';
+import path from 'node:path';
 import {
   getCostLine,
   costLineState,
@@ -8,7 +10,7 @@ import {
   isEnvelopeFallback,
   formatCurrency,
   formatFsi,
-  formatSqft,
+  formatServedSqft,
   formatSqm,
   COST_LINE_ORDER,
 } from '@/lib/parcelCostFormat';
@@ -66,10 +68,12 @@ describe('formatters', () => {
     expect(formatFsi('0.9')).toBe('0.90');
     expect(formatFsi(null)).toBeNull();
   });
-  it('formatSqft / formatSqm', () => {
-    expect(formatSqft(100)).toBe('1,076 sq ft');
+  it('formatServedSqft takes served square feet and only formats; formatSqm; no typed factor here (FIX.AREA-FACTOR, fe.44)', () => {
+    expect(formatServedSqft(1076.39)).toBe('1,076 sq ft');
+    expect(formatServedSqft(null)).toBeNull();
     expect(formatSqm(400)).toBe('400 m²');
-    expect(formatSqft(null)).toBeNull();
+    const src = fs.readFileSync(path.join(__dirname, '../src/lib/parcelCostFormat.ts'), 'utf8');
+    expect(src).not.toMatch(/10\.76|SQM_TO_SQFT/);
   });
 });
 

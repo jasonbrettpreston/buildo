@@ -64,6 +64,7 @@ const validDetail = {
     range_low: 380000,
     range_high: 520000,
     modeled_gfa_sqm: 142.5,
+    modeled_gfa_sqft: 1533.85575,
   },
   neighbourhood: {
     name: 'Annex',
@@ -89,9 +90,16 @@ describe('fetchLeadDetail — Spec 91 §4.3.1', () => {
       lead_type: 'permit',
       address: '123 Main St',
       is_saved: false,
-      cost: { estimated: 450000, tier: 'large' },
+      cost: { estimated: 450000, tier: 'large', modeled_gfa_sqft: 1533.85575 },
       neighbourhood: { name: 'Annex' },
     });
+  });
+
+  it('keeps the served modeled_gfa_sqft and still parses a response without it (optional; FIX.AREA-FACTOR)', async () => {
+    const { modeled_gfa_sqft: _omit, ...costWithout } = validDetail.cost;
+    mockFetch.mockResolvedValueOnce({ data: { ...validDetail, cost: costWithout } });
+    const result = await fetchLeadDetail('24-101234--01');
+    expect(result.cost?.modeled_gfa_sqft).toBeUndefined();
   });
 
   it('percent-encodes id segments containing reserved characters', async () => {

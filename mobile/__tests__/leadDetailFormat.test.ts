@@ -2,49 +2,45 @@
 // SPEC LINK: docs/specs/03-mobile/91_mobile_lead_feed.md §4.3
 //             docs/specs/01-pipeline/83_lead_cost_model.md §2
 
+import fs from 'node:fs';
+import path from 'node:path';
 import {
-  SQM_TO_SQFT,
   formatSqft,
   formatIncome,
   formatCostTier,
   formatCurrencyAbbrev,
 } from '@/lib/leadDetailFormat';
 
-describe('SQM_TO_SQFT constant', () => {
-  it('matches the canonical 1 m² = 10.7639 ft² (3-decimal precision)', () => {
-    // Multi-Agent plan review flagged drift between 10.764 and 10.7639 in
-    // separate plan sections; this constant is the single source of truth.
-    expect(SQM_TO_SQFT).toBe(10.7639);
-  });
-});
-
-describe('formatSqft', () => {
-  it('returns null for null input', () => {
+describe('formatSqft (the API serves square feet, FIX.AREA-FACTOR / fe.44: the phone only formats)', () => {
+  it('returns null for null and undefined input', () => {
     expect(formatSqft(null)).toBeNull();
+    expect(formatSqft(undefined)).toBeNull();
   });
 
-  it('returns null for NaN', () => {
+  it('returns null for NaN and Infinity', () => {
     expect(formatSqft(Number.NaN)).toBeNull();
-  });
-
-  it('returns null for Infinity', () => {
     expect(formatSqft(Number.POSITIVE_INFINITY)).toBeNull();
   });
 
-  it('formats 0 m² as "0 sq ft"', () => {
+  it('formats 0 as "0 sq ft"', () => {
     expect(formatSqft(0)).toBe('0 sq ft');
   });
 
-  it('formats 100 m² as "1,076 sq ft" (rounded)', () => {
-    expect(formatSqft(100)).toBe('1,076 sq ft');
+  it('rounds the served square feet: 1076.39 -> "1,076 sq ft"', () => {
+    expect(formatSqft(1076.39)).toBe('1,076 sq ft');
   });
 
-  it('formats 142.5 m² as "1,534 sq ft" (typical small permit)', () => {
-    expect(formatSqft(142.5)).toBe('1,534 sq ft');
+  it('1533.85575 -> "1,534 sq ft" (typical small permit)', () => {
+    expect(formatSqft(1533.85575)).toBe('1,534 sq ft');
   });
 
-  it('formats 5000 m² as "53,820 sq ft" (large project, thousand separator)', () => {
-    expect(formatSqft(5000)).toBe('53,820 sq ft');
+  it('53819.5 -> "53,820 sq ft" (large project, thousand separator)', () => {
+    expect(formatSqft(53819.5)).toBe('53,820 sq ft');
+  });
+
+  it('the helper types no conversion factor and exports none', () => {
+    const src = fs.readFileSync(path.join(__dirname, '../src/lib/leadDetailFormat.ts'), 'utf8');
+    expect(src).not.toMatch(/10\.76|SQM_TO_SQFT/);
   });
 });
 

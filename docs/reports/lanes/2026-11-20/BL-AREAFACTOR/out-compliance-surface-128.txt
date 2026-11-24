@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.905Z file_sha256=2d2cb319736417a19424b2af170790a14938c2e2d575f43bc25f2cbab0e991b4 prompt_sha256=fdfb7fbc8fbc5353e2cb3b63f1c4cf501ef9da8f3c5ccfa087215733aacfd290
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-surface-128.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 128 §2.2a rule 16 "Formatting is the only transformation, from one named helper with its own test (output = input digits only)" — scripts/surfaces/_schema/report-presentation.json "area": { "formatter": "formatSqm", "alt_formatter": "formatServedSqft" } — the `area` format key now carries a primary formatter whose input is m² and an alt formatter whose input is ft², with no declared input unit on the row, so any consumer that resolves `alt_formatter` for the stored m² value prints a ~10.76x wrong number under the "sq ft" label instead of failing — declare the alt formatter's input unit on the registry row (or keep the alt formatter m²-taking and convert server-side at the call site) and regenerate the registry.
+
+BUG severity=HIGH — Spec 128 §3 rule B4 "A descriptor, contract descriptor, archetype component or format-helper edit after capture forces a recapture. This is mechanical (`source_fingerprint` over `fingerprint_files[]`), not a reviewer's judgment" — scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json "+        "cost.modeled_gfa_sqft"," plus the format-helper edit in mobile/src/lib/parcelCostFormat.ts — the change edits a descriptor and a named format helper and carries no recaptured golden or fingerprint refresh, so B4 is unmet by construction — recapture the goldens for this surface and include them in the diff (or show the fingerprint set excludes both files).
+
+BUG severity=MED — Spec 128 §2 rule 4 "which fields render, in which order, with which labels, is a declaration the server owns ... The measured defect: one contract declared at four sites, locked at one" — scripts/surfaces/_schema/census/mobile-product.json "+        "cost.modeled_gfa_sqft"," — the new field is hand-declared at five sites (Spec 91 line 206 prose, the descriptor, the census, src/app/api/leads/detail/[id]/types.ts, mobile/src/lib/schemas.ts) and nothing locks them to agree, which is rule 4's measured defect repeating — add a check asserting the five field sets are equal (descriptor = census = wire type = client schema) and cite it in the diff.
+
+BUG severity=MED — Spec 128 §2.2a rule 19 "Generated output is byte-identical to a regenerate (`--check`, pre-commit and CI, the 132/133 pattern)" — scripts/surfaces/_schema/seed-report-v2.mjs "area_unit: { default: 'm²', options: ['m²', 'ft²'], note: 'today the screen mixes formatSqm (lot) and formatSqft (GFA), [parcelId].tsx:128-130' }" — the registry JSON and its generator were both hand-edited with no `--check` result shown, and the untouched sibling note still names `formatSqft`, a symbol this diff deletes from that file, so the regenerated declaration is stale — run the generator `--check`, update the `area_unit` note to the surviving symbol, and show the command green.
+
+BUG severity=MED — Spec 128 §2 rule 12 "a surface declares what the user sees when it fails ... An unhandled state is a FAIL, not a blank screen" — mobile/src/lib/schemas.ts "modeled_gfa_sqft: z.number().nullable().optional()," — the field is required on the producer ("both producers always set it") and unconditional in the descriptor's field list, but optional on the client and the absent case renders as a silently missing section, a divergence with no declared posture and no `deviations[]` row — declare the absent/null posture in the descriptor (a written "none"-style answer) or make the client schema required and state why.
+
+DEFER severity=LOW — Spec 128 §2 rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an `on_invalid` posture" — src/lib/leads/lead-detail-query.ts "import { SQM_TO_SQFT } from '@/lib/parcels/geometry';" — the diff shows the factor resolved through an import but cannot see the `logic_variables` row, its bounds or its `on_invalid` posture for `parcels_sqm_to_sqft` — cite the registry row and its posture in the diff so presence/validity is visible to the lock, not inferred from a module constant name.
+
+MET — Spec 128 §2 rule 2 "The client is just glass ... everything else is server-projected" — mobile/src/lib/leadDetailFormat.ts — the conversion leaves the client (formatSqft formats only) and the served area is computed server-side, which is the rule's direction.
+
+MET — Spec 128 §2.2a rule 16 "it does not add, subtract, round or compare to produce a displayed number" (client helper arm) — mobile/__tests__/parcelCostFormat.test.ts "expect(src).not.toMatch(/10\.76|SQM_TO_SQFT/);" — the typed factor is deleted from both phone helpers with a test asserting its absence.
+
+REJECT — Spec 128 §2.2a rule 16 — the change is accused of breaking the no-maths rule by introducing a multiplication — the multiplication sits in the API producer (src/lib/leads/lead-detail-query.ts), not in the scanned projection dirs or a REPORT surface, and moving a displayed number's derivation to the server is exactly what rule 2 requires.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 5
+
+---
+⏱  50376ms (50.4s)
+📊 Tokens — total: 44103, input: 34001, output: 10102, reasoning: 8838

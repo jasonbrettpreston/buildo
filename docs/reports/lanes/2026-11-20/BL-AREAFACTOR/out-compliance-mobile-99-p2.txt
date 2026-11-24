@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.805Z file_sha256=99ca7a77236f4e019ffc158eabc8edbf1bfcfa8f95585380e280ebdb32619c75 prompt_sha256=ff4f196cab32dea8e52452a3de050098ba2e8d2b4d318597e30241cdca1092f2
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-mobile-99-p2.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none found; no pasted clause is violated by a defect in this diff; 0 CRIT/HIGH findings.
+
+DEFER severity=LOW — §9.18 "bumped persister `buster` to `'wf3-pii-strip-1'` to flush the pre-WF3 persisted blob from existing clients on cold-boot, since `shouldDehydrateQuery` does NOT filter rehydration READS" — mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx:68 "omits the section when the field is absent (old or cached response); the phone does not convert modeled_gfa_sqm" — the new served field rides a query the MMKV persister still caches (only `['user-profile']` is filtered per §9.18) and the change adds no buster bump or migrate, so upgraders lose the Square Footage section until that cached entry refetches — safe to defer because the payload stays parsable via mobile/src/lib/schemas.ts:204 "modeled_gfa_sqft: z.number().nullable().optional()" and the gap self-heals on next fetch.
+
+REJECT — §10 Out-of-Scope Files "All `mobile/src/store/*.ts` — modified in §9.3 / §9.5 followups, not here ... `mobile/src/lib/debug/stateDebug.ts`" — accused of editing a lib file inside the spec's out-of-scope set by touching `mobile/src/lib/schemas.ts` — not a real issue, the enumeration names only `mobile/src/store/*.ts` and `stateDebug.ts`, and neither is in this diff.
+
+REJECT — §10 "Authorized amendment process: any change to §3 (Field Ownership Matrix), §4 (Bridge Patterns), or §5 (Routing Authority Rules) requires a WF1 amendment with adversarial review" — accused of amending a governed spec without a WF1 — not a real issue, the edited spec is docs/specs/03-mobile/91_mobile_lead_feed.md:206, none of Spec 99 §3/§4/§5 is touched.
+
+MET — §10 Out-of-Scope Files "All `mobile/app/**/_layout.tsx` — already fixed in prior WF3; further changes per §9.4" — mobile/app/(app)/[lead].tsx:81 "const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);" — the only app/ file edited is the lead detail screen, no `_layout.tsx` and no onboarding screen.
+MET — §9.15 "atomic-selector mandate — globs `mobile/app/**/*.tsx` + `mobile/src/components/**/*.tsx`; flags any `useXStore()` zero-arg whole-store read per §6.1" — the [lead].tsx hunk adds no store hook call, only a field read on an already-fetched `cost` object.
+MET — §9.13 "Parses Zod schema field names + §3.1 table column 1; asserts setEqual ... 0 drift across 27 fields" — mobile/src/lib/schemas.ts:204 adds the field to `LeadDetailCostSchema`, not to the user-profile schema or §3.1 matrix, so the 27-field setEqual is unchanged.
+MET — §9.19 "extracted `clearLocalSessionState()` module-scope helper containing the full fan-out; both paths now invoke it" (symmetric-paths principle) — the two server producers are both updated: src/lib/leads/lead-detail-query.ts:179 "modeled_gfa_sqft: sqmToSqftOrNull(toNumberOrNull(row.modeled_gfa_sqm))," and src/lib/leads/lead-detail-query.ts:355 same line in `toCoaCost`.
+MET — §9.20 "Persist `migrate` functions and one-time MMKV cleanup helpers KEPT for upgrader safety (existing v0 clients still need them)" — the phone schema makes the new field optional so pre-deploy payloads still parse, and the deleted export is the typed factor only, which has no persisted-state obligation.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 1
+
+---
+⏱  47709ms (47.7s)
+📊 Tokens — total: 27770, input: 17809, output: 9961, reasoning: 9028

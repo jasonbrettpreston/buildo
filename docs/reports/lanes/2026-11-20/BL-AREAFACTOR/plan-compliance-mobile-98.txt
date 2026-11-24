@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:37:12.098Z file_sha256=dd656d14475bf12df0e13c219f4c0e2e5a37cc7ce5d84302250ba5e5f249f58b prompt_sha256=b52d7baf6a928cbe9f19d35ce30f5cc4ed9622b4e709e03c3369589bcb97c9fc
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-plan-compliance-mobile-98.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 98 §4.1 "`parcelCostFormat.test.ts`: envelope-fallback label ("maximum envelope" when `opt_aor` null), absent ≠ `fits:false`, `getCostLine`/`costLineState`, currency/FSI/area formatters" — plan "Files: src/app/api/leads/detail/[id]/route.ts, mobile/src/lib/leadDetailFormat.ts, mobile/src/lib/parcelCostFormat.ts, src/tests/admin-report-preview-live.logic.test.ts" — the plan deletes the typed factor at parcelCostFormat.ts:11 from the very module this required boundary covers and neither that test file nor a run of it is a plan step, so nothing shows the required boundary still holds — add mobile/__tests__/parcelCostFormat.test.ts to Files and state per assertion whether it changes or holds after the constant is deleted.
+
+DEFER severity=MED — Spec 98 §4 "**Location:** `mobile/__tests__/`" — plan "the parity test re-pointed to literal expected strings" with "Acceptance criteria" left empty — the only test the plan touches is the web oracle at src/tests/, while the mobile behaviour that actually changes (formatSqft now formats only) has no test step and no acceptance criterion — name the mobile unit test for formatSqft pass-through and for the absent modeled_gfa_sqft path, and one acceptance criterion that runs it.
+
+DEFER severity=LOW — Spec 98 §4.1 dated note "No Maestro flow covers parcel-tool today." — plan "parcelCostFormat.ts:11 types it too and is imported only by its own test and the web parity oracle src/tests/admin-report-preview-live.logic.test.ts:129" — once the constant goes, the unit test is the sole guard on the area formatter, and the plan treats that test as untouched rather than as the guard of record — record in the plan that the unit test, not the parity oracle, is the residual guard for parcel-tool area formatting.
+
+MET — Spec 98 §4 "UI component snapshot testing is deliberately excluded" — plan "the parity test re-pointed to literal expected strings" — the only test change replaces an imported oracle with literal expected strings, so no snapshot is introduced.
+
+MET — Spec 98 §4.1 "§8.5 — store-enumeration grep test (`mobile/__tests__/storeReset.coverage.test.ts`)" — plan "No new surface, no slice" and the Files list names no mobile/src/store file — no store is created or removed, so the enumeration count is unchanged.
+
+MET — Spec 98 §3.2 "The following YAML flows must pass cleanly before any production release" — plan "No new surface, no slice" — none of the five named flows is created, renamed or re-flagged, so the §3.1 clearState expectations are untouched.
+
+REJECT — Spec 98 §3.2 "`scroll-feed.yaml`: `clearState: false`. Validates infinite scrolling, empty states (NO LEADS IN RANGE), and tap-to-save interactions" — that the plan must extend a launch-blocker flow because the lead detail is reached from the feed — §3.2's five flows do not include the lead detail and §4's own note says "No Maestro flow covers parcel-tool today", so the spec does not require a flow for every changed surface.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 2
+
+---
+⏱  47986ms (48.0s)
+📊 Tokens — total: 21933, input: 12826, output: 9107, reasoning: 8347

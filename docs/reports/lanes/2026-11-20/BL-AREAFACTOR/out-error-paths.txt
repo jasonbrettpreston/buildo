@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T19:12:36.130Z file_sha256=bd4da5739e573d4d79e1dd86d92e2e511c4f5bbc829a0cb1296b4afd65de8f34 prompt_sha256=fc2f712b0d4a9d761a0a5017a669ab96afb57d673544dc0fc333acce9b264c1c
+🔍 Lens review of docs/reports/reviews/task-411/diff-2026-11-20.txt (model: deepseek-reasoner)
+
+```
+BUG severity=HIGH — src/lib/leads/lead-detail-query.ts "+import { SQM_TO_SQFT } from '@/lib/parcels/geometry';" — the conversion factor is resolved at module load (src/lib/parcels/geometry.ts:6 "pinnedSetting(seed ..., 'parcels_sqm_to_sqft')"), so a missing or malformed parcels_sqm_to_sqft now throws while GET /api/leads/detail/:id is being loaded and every lead detail request 500s, losing the whole screen (address, cost, neighbourhood) instead of only the square footage row; before this diff that route never touched geometry.ts — fail closed per field: read the factor inside sqmToSqftOrNull in a try/catch (or resolve it lazily) and return null when it is unavailable, and add a route test that GET still returns 200 with modeled_gfa_sqft null when the setting is absent
+BUG severity=MED — src/lib/leads/lead-detail-query.ts "return sqm === null ? null : sqm * SQM_TO_SQFT;" — the null test is the only guard, so a NaN or Infinity modeled_gfa_sqm (Postgres numeric accepts both) yields NaN/Infinity in an object typed number, the JSON encoder happens to turn that into null on the wire, but any in-process reader or a future non-JSON sink sees NaN and the type lies — guard with Number.isFinite(sqm) and return null for non-finite input, and add the NaN/Infinity case to the two new infra tests
+DEFER severity=LOW — mobile/src/lib/leadDetailFormat.ts "if (sqft === null || sqft === undefined || !Number.isFinite(sqft)) return null;" — only null and non-finite hide the row, so a negative served area renders "-1,076 sq ft" and the Square Footage section shows a number that cannot be true (the server guard in sqmToSqftOrNull passes negatives through unchanged) — decide explicitly whether a non-positive modeled_gfa_sqft hides the row, since zero is already asserted as "0 sq ft"
+REJECT — mobile/src/lib/schemas.ts "modeled_gfa_sqft: z.number().nullable().optional()," — a response from an older server or a stale cached payload carries no modeled_gfa_sqft, so the screen silently loses the Square Footage row until refetch — handled: it degrades closed (no wrong number, the phone never converts modeled_gfa_sqm itself) and the new ui test asserts the absent-field case omits the section
+REJECT — src/lib/leads/lead-detail-query.ts "function sqmToSqftOrNull(sqm: number | null): number | null {" — double-submit or repeated GET is the only write-like path here and it is not a write — handled: GET /api/leads/detail/:id is read-only, the conversion is a pure function of modeled_gfa_sqm, no counted event or row is touched, so two taps, two tabs or a retried request return the identical value and no dedup key is needed
+```
+
+VERDICT: FAIL on error-path safety
+Paths walked: missing pinned setting at route import (error), null modeled_gfa_sqm (empty), absent modeled_gfa_sqft from old server or cache (empty), NaN/Infinity area, negative area, retried and concurrent GET (no write, no counted event, no dedup key needed)   Unguarded: 2
+
+---
+⏱  30302ms (30.3s)
+📊 Tokens — total: 19549, input: 14225, output: 5324, reasoning: 4557

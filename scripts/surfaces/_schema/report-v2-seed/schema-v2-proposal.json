@@ -1295,7 +1295,7 @@
      "format.area_unit",
      "m² | ft²",
      "proposed",
-     "today the screen mixes formatSqm (lot) and formatSqft (GFA) — [parcelId].tsx:128-130"
+     "today the screen mixes formatSqm (lot, square metres in) and formatServedSqft (GFA, served square feet in) — [parcelId].tsx:128-130"
     ],
     [
      "Value formatters",

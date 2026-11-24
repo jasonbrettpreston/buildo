@@ -1,0 +1,13 @@
+base b702912b1 (wf2/board merge-base), compared against HEAD (which already carries every earlier golden change of this lane: none); golden files changed: 105; fingerprint-only changes (the fingerprint object differs; every other byte equal): 105; other changes: 0
+105 files changed, 210 insertions(+), 210 deletions(-)
+diff --git a/src/tests/fixtures/surfaces/report/not_permitted.web.json b/src/tests/fixtures/surfaces/report/not_permitted.web.json
+index a5f11dee2..a8015b9f4 100644
+--- a/src/tests/fixtures/surfaces/report/not_permitted.web.json
++++ b/src/tests/fixtures/surfaces/report/not_permitted.web.json
+@@ -30 +30 @@
+-      "scripts/surfaces/_schema/report-presentation.json": "e151b5ccd11cd137",
++      "scripts/surfaces/_schema/report-presentation.json": "1bb5243d98a65391",
+@@ -32 +32 @@
+-      "scripts/surfaces/_schema/report-v2.decl.json": "2d447d5c81933b29"
++      "scripts/surfaces/_schema/report-v2.decl.json": "f84a9c765e77f654"
+

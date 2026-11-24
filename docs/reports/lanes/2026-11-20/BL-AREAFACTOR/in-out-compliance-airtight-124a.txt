@@ -1,0 +1,611 @@
+LIST airtight-124a sha256:d23e60962618f5f543170f62ed5782edb06ac8b15442fd016c37734a377a9129 material sha256:bd4da5739e573d4d79e1dd86d92e2e511c4f5bbc829a0cb1296b4afd65de8f34 part 1 of 1
+RULE LIST airtight-124a (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md, sections Appendix §B10; Appendix §B12), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+## Appendix §B10 — Register rows R-AX…R-BH (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-17
+
+Moved from Spec 124 — Phase 4 step 0 (QUEUE 2026-10-17, operator y "M24 as the first commit of phase 4"): Spec 124 had 1 line / ~37 B of arm (iv) headroom after N6 (R-CY…R-DH) and owes the phase-4 rows (LDG-10 witness reconciliation first). Rows R-AX…R-BH (the next contiguous block after M21; R-BI was reserved and never written) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) resolves them in 124a LIVE REGISTER sections. New rows are still added to Spec 124 §5.
+
+| R-AX | **A frozen `execution.*` POSTURE enum is `executed` only where a named executor or a NAMED DECLARED CHECK consumes it; a value with neither is `retire`d in place, and a step declaring a tolerant posture (`skip`/`quarantine`) must CITE the check that bounds it.** R-X's registry is extended to the posture enums it named as "not yet built", in its own file (`execution-posture-disposition.json`, closed menu `executed`\|`descriptive`\|`retire`) rather than in `write-class-disposition.json`, mirroring R-AJ's split for the duration declarations. **Measured 2026-09-21:** `on_row_error` and `on_row_error_max_pct` had **zero** readers in `scripts/lib/**` and `scripts/analysis/step-validate.mjs` while 18/18 converted steps declared them; `quarantine` had **zero** declarers and no sink (Spec 120 §6's `step_quarantine` unbuilt; migrations 245-247 consumed by unrelated work) — `retire`d in place, never pruned (R-X). **The runner is NOT the enforcer, and that is a ruling, not an omission:** across the ten runner entry points only `runIngestPhase`'s validate phase does per-row work (`index.js:670`), and it already counts and gates; all other per-row work is compute's, so **R-AT**'s "ownership is by USE, never by declared class" makes a `ctx.rowError()` seam a counter the runner does not produce — the same class-gated form R-AT records as tried and REFUTED. The bound is enforced where it already lived: a FAIL-severity declared check (§7 rung (b)), now CITED by the new `execution.on_row_error_why.liveness {kind:"check", ref}` and verified by `step-validate` fast invariant **#27 ROW-ERROR-GATE** (renumbered live from the plan's working #26, which pre-existing WF3 COUNTER-ROOT already occupied — measured 2026-09-21). Rung (c) (`limit_from_config`) holds for both live citations landed by this WF2 (`load_ravines`/`ravine_geometry_skipped_pct`, `compute_parcel_cost_estimates`/`engine_error_count`) — invariant #27 requires only a real FAIL-severity, bound-carrying check, not a config-resolved one, so a future citation whose check has a literal (not config-driven) bound still passes; `enrich_parcels`' own truthing (`fail_fast`→`skip`, citing `opt_config_engine_errors`, which carries a FAIL-severity `limit` but no `limit_from_config` yet — F-4) is PREPARED (descriptor edit, why-text, both register rows written) but its golden recapture is a genuine `--full` 5-pass recompute that did not complete inside this session's time budget (still executing after 25+ minutes, within the plan's own ~40-minute worst-case estimate, §4) — landed separately, own follow-up commit, not abandoned or re-drafted. The two live literal `on_row_error_max_pct` values (`load_ravines` 0.05, `compute_parcel_cost_estimates` 0) each **duplicated** a registered logic variable and are deleted as **Rule 3** violations; the field stays in the schema as `x-banned-for-new`. Separately fixed, **F-1, HIGH:** the `if/then` at `step.schema.json` (`on_row_error`/`on_row_error_max_pct`) used `properties` where its three siblings use `required`, so `skip`/`quarantine` with **no** bound at all validated (AJV-proven live against `compute_centroids` pre-fix, and against the fixed schema post-fix, both directions). Paid as **RE-FREEZE #12** (one additive field carrying `x-ruling`, one conditional rewritten, one `x-banned-for-new` marker) — `--refresh` + Spec 122 §8 amended in the same commit (R-E lock). Locks L1.1-L5.2 (execution-posture-disposition.infra.test.ts) + the invariant's own self-test arms, all RED-first. | §5 R-X (this row is its named generalization for the posture enums); §2 Rule 1 (nothing hidden), Rule 3 (no literal threshold), Rule 4 (the rule is written down as a check's `why`); R-AT (counter ownership) | `scripts/steps/_schema/execution-posture-disposition.json`; `src/tests/execution-posture-disposition.infra.test.ts`; `scripts/analysis/step-validate.mjs` #27; Spec 122 §8 RE-FREEZE #12; Spec 120 §3.2/§4.1a③/§6 |
+
+| R-AY | **A step that produces a PRICED or MODELLED output declares the PRODUCT POPULATION it is for, as a bound on its own producing step, and every pass deriving from the same source honours the same bound.** A population is a declared predicate over registered logic variables (never a literal, never an id accept-list), it carries a reset arm for rows that leave it, and a parcel outside it stores the declared "not modelled" sentinel with a typed reason — never a stale value and never a priced one. An id accept-list that exists to excuse out-of-population outputs is retired by the bound, not curated. **Founding measurement (2026-09-21):** `enrich_parcels` had already ruled 26,203 parcels out of the max-build model (`emit=false`, 6,397 of them `lot_too_large`) while `compute_parcel_cost_estimates` priced reno menus on 18,529 of them — $77,593,312,011.51 of $598.7 B in `cost_gut_total`, including 103 of 103 parcels above $50 M and all 42 ids of `COST_ADDITION_GT50M_LEGIT`. **Landed:** the population bound (Spec 88 §2.1) gained `max_buildable_gfa_sqm IS NOT NULL` (in the max-build model) AND `cur_floor_gfa_sqm <= product_scope_max_existing_gfa_sqm` (new logic variable, default 750, exclusive) alongside the existing `upper(zoning_class) LIKE 'R%'` filter — result: 26,525 menus retracted, $80.43 B, 0 lines > $10 M; `COST_ADDITION_GT50M_LEGIT` (42 accepted ids) retired whole, dissolved by the bound rather than curated down. *Amends:* §2 Rules 1 and 3; §7 Step 2 rung (a). *Locks:* both-directions in `src/tests/steps/compute_parcel_cost_estimates/violations.test.ts` + `logic-var-parity.logic.test.ts`. **§4.6 recurrence:** the same bound must be honoured by slice 1's apportionment and by enrich-permits §4D propagation — neither is built yet; named here so the NEXT pass that derives from this source cannot silently skip the bound the way `compute_parcel_cost_estimates` originally did. | §2 Rule 1, Rule 3; §7 Step 2 rung (a) | Spec 88 §2.1/§2.4/§2.5/§2.8-§2.11; `ffeb703b` (S0.2, bound + retract arm), `2301f4a7` (S0.4, accept-list retired); `src/tests/steps/compute_parcel_cost_estimates/violations.test.ts`; `src/tests/logic-var-parity.logic.test.ts` |
+| R-AZ | **A per-invocation ROW CAP (`--limit=N`) is NOT a step-standard override and is RETIRED BY STANDARD at conversion — declared as a `deviations[]` entry (the `compute_parcel_cost_estimates` 2026-09-21 DRY-RUN entry is the template), never carried, never given a schema home.** Adjudicated 2026-09-23 against Rule 1's rung ladder (and Spec 122's `io_budget` precedent — no field is invented before the rungs are exhausted): **(a) `config.logic_variables[]`** (Rule 3 names "limit" a tunable) REJECTED — a cap is a per-invocation debug bound, not a steady-state value; a standing admin row makes every scheduled run silently partial (the `LINK_MASSING_FORCE_FULL`-left-standing class `override_force_full_present` exists to catch) and is a false affordance under R-A. **(a′) `execution.invocation`** REJECTED — a per-chain argv PIN for manifest↔descriptor drift, not a runtime-read value. **Enforced by (2026-10-03, WF3 chain_args, LP-D17):** `scripts/analysis/generate-chain-args.mjs --check`, a pre-commit line after `src-sql-ledger.mjs --check` (position locked GREEN/RED in `src/tests/hooks-composition.infra.test.ts`). For every step in `converted.json`, `manifest.json` `chain_args` is GENERATED from `execution.invocation` (a chain with non-empty `argv` ⇒ a key; `--write` rewrites only the drifted entry); the invocation's chains must equal the manifest chains that list the slug; a declared or manifest-`env` `PIPELINE_CHAIN` must be absent or equal the chain. Fixtures both directions: `src/tests/chain-args-generated.infra.test.ts`. NOT covered: unconverted steps' hand-written `chain_args`. Found by `link_parcels`, whose descriptor `sources.argv ["--full"]` had no manifest counterpart from conversion (b37087f3) until this gate, so run-chain never passed it. **(a″) `override.dry_run`'s argv arm** REJECTED — `^--[a-z][a-z0-9-]*$` is a bare flag, it cannot carry a value. **(a‴) `execution.phases[].scope`** REJECTED — the frozen `full\|incremental\|deferred` enum is WHICH rows are eligible, not how many. **(b)/(c)** inexpressible as a check or a shape rule. **(d) a new `override.row_cap` arm with `x-ruling`** REJECTED on cost vs need, not expressibility: a capped run is a PARTIAL-POPULATION WRITE with no truthful ledger form — `source-version.js#readPriorRunMeta` selects the latest `status='completed'` row with no other filter, so the capped run becomes the next run's drift/trigger baseline and a trend input, and it can never be a G8 golden input; honouring it generically means a seam in the runner-injected `passCtx.stream`, which cannot cap a set-based pass, so honesty would need a per-pass "streams" declaration on top of the arm, plus `records_meta.row_cap`, an audit row, baseline exclusion, a RE-FREEZE entry, baseline regen, validator matrix and locks (~12 artifacts). **Need, measured 2026-09-23:** ONE converted step of 18 ever had it, operator-debug only, never chain-passed (`manifest.json chain_args` carries no `--limit`), and that step already retired it as a declared deviation with Spec 88's as-built §"Every run is a full run (D1)" agreeing; four UNCONVERTED scripts still carry it (`compute-coa-cost-estimates.js`, `compute-cost-estimates.js`, `enrich-web-search.js`, `enrich-wsib.js`) and retire it at conversion under THIS row rather than re-opening the Ask per step. **The standard debug affordances are** `override.dry_run` (the harness end-to-end, zero writes — R-AV's closed half) and the `src/tests/steps/<slug>/` fixture tier (compute on a bounded population); a bounded PRODUCTION run is not something the standard offers. **Consequences:** R-AV's "regains `--dry-run`/`--limit`" clause is struck to `--dry-run` only; `programme-items.json` `B2-DRYRUN-SEAM` narrows and flips BUILT; the five ENRICHERs' `dry_run` declaration revisits stay a separately owed item. **Spec 120 is the programme's precursor, not an owner** (operator, 2026-09-23) — owners are 122 (runner library, schema), 124, 88, 123 PH-5. | §2 Rule 1 rung ladder, Rule 3, Rule 12 / `override`; R-A; R-AV; Spec 122 §5.1 (no per-step escape hatch) | `scripts/analysis/generate-chain-args.mjs`; `scripts/steps/_schema/step.schema.json` (unchanged — no RE-FREEZE); `scripts/lib/source-version.js#readPriorRunMeta`; `scripts/lib/step/index.js` `passCtx.stream`; `scripts/compute-parcel-cost-estimates.descriptor.json` `deviations[]`; `src/tests/spec124-register-rulings.logic.test.ts` |
+| R-BA | **"McDonald's Airtight" — a step-standard item that no machine checks is not part of the standard.** Five words, each a `step-validate.mjs --step=<slug>` PASS/FAIL line drawn ONLY from a CLOSED answer set (never prose): STANDARDIZED (gate A closed check bounds; gate I registry coverage), OBSERVABLE (gate C emits≡declared; gate D generated consumer registry), SCALABLE (gate B `on_invalid` enum; gate E compute-literal ban), UNDERSTANDABLE (gate F scorecard floor 14/17 + LF-only; gate J spec-staged hook), ACCURATE (gate G forced-nonzero capture + explained G8 diffs; gate K red-first proof is a committed vitest JSON artifact, never the bare word RED). Every gate's closed set is one of: `limit_from_config`/a declared variable, an exact zero-tolerance string, or a dated row in the ONE shared allowlist `scripts/steps/_schema/standard-gates-ledger.json` (`scripts/analysis/gates/ledger.mjs`) — never a bare literal or an unenforced checklist line. An ORPHAN row (its violation since fixed) is RED (R-X closing-row posture) — the remediation commit that fixes a violation deletes its own row. **Scope (operator, 2026-09-26):** every gate is a HARD STOP — no ledger rows permitted — for steps in development now (`load_centreline`, `massing`, `neighbourhoods`) and every future conversion, and it applies **from ① (amended 2026-09-27):** `step-validate --step=<slug>` and the pre-commit `--staged` run evaluate a PENDING slug that has a descriptor exactly as if converted (the registry gates read `converted.json` through `scripts/analysis/gates/converted-set.mjs` with the slug registered), so an in-development step meets every gate at its next commit (its declared R-K stage still excludes the capture-derived gates #30/#31/#38-#41 as it does G7/G8; `--all` is never overlaid) — superseding discovery at ③ and the separate gate-B/D reruns at cutover; on the 20 already-converted steps, CRITICAL/HIGH findings get a quick fix now and every remaining finding lands as a DATED ledger row closing at "chain_sources conversion complete" (R-AQ). Status below. | §2 Rule 1, Rule 3, Rule 10, Rule 13; §7 rung ladder | `.cursor/wf2_conversion_standard_gates_active_task.md`; `scripts/analysis/gates/ledger.mjs` |
+| R-BB | **OWNER-SPEC-DIFF — a cutover's owner-spec diff is a commit gate, never a commit-message claim (2026-09-29).** A change set that appends a file to `converted.json` `converted[]` must stage every spec whose system-map Implementation cell names that file (`archive/` rows excluded), OR that file's census row declares `spec_diff: "N-A"` + `spec_diff_reason` (≥ 20 chars; legal only on a `status: "converted"` row). Fast invariant **#43**, COMMIT-SCOPED: `step-validate.mjs --staged` runs it before its no-target early return (pre-commit judges index vs HEAD, pre-push HEAD~1..HEAD) and a FAIL is a hard stop; it is never a `fastInvariants()` scorecard row, because its answer depends on git state. `npm run cutover` names the owner specs in its closing note. **Replaces** Spec 123 §7 row 9(b)'s "or 'N-A' stated in the body" convention (missed at batch-2 rows 2.1/2.2, repaired by `e053102c`); Spec 123 is at its byte budget, so this row is where that amendment lives. (The R-BA status table below belongs to R-BA.) | Amends: Spec 123 §7 row 9(b) | `scripts/analysis/gates/owner-spec-diff.mjs`; `src/tests/owner-spec-diff.{logic,infra}.test.ts`; programme item `B2-OWNER-SPEC-DIFF` |
+| R-BC | **CHAIN COMPLETION — a chain is complete only when (a)+(b)+(c)+(d) all hold, each a mechanical gate; "complete" is never asserted (operator ruling 2026-09-29).** **(a) CONVERTED:** every `manifest.chains.<chain>` slug's `manifest.scripts[slug].file` is in `converted.json` `converted[]`, except a declared `step-archetype-census.json` `exemptions[]` row (`python_step_excluded` / `no_file` / `runner_owned`). **(b) NO LEDGER:** zero `standard-gates-ledger.json` rows whose `step` is a chain step — every `pending_remediation`/`pending_recapture` row names its closing brief, and completion is the point they must all be closed. **(c) LEDGER COMPLETE:** programme item `LDG-10` — all five Spec 122 §6 edge classes proven complete on fixtures in both directions: table edges reconcile declared reads/writes with runtime lineage (`records_meta.pipeline_meta`), zero undeclared; `records_meta` contracts with zero undeclared readers including readers outside the chain (gate D, invariant #31, widened from `records_meta` keys to table readers); version pins/watermarks declared in `staleness`; every derived join key has an invalidator (re-verify the Spec 122 §6.4a centroid gap against migration 245's trigger arm); ordering derived from declared edges, replacing the hand-written `chain.logic.test.ts` chain-order assertions. Detail: Spec 122 §6.6. **(d) CLOUD ACCEPTED:** the per-slug ACC-1 table for every chain step (R-AQ.1; programme item `EP-PIN-D17`'s flip clause, `scripts/analysis/chain-end-synthesis.mjs`). **Measured 2026-09-29, sources (28 slugs):** (a) FAIL — 4 unconverted (`load_heritage`, `enrich_centreline`, `load_wsib`, `load_zoning`), `reconcile` exempt; (b) FAIL — 160 rows; (c) FAIL — LDG-10 NOT_STARTED; (d) FAIL — EP-PIN-D17 PARTIAL. Both LDG-10 and EP-PIN-D17 are `cutover_prereq` items blocking every census `C6` slug, so `checkCutoverPrereqs` stops a post-sources cutover until (c) and (d) close. (a)/(b) have no programme item of their own yet — they are read directly from the two JSON registries. **APPENDED 2026-09-29 (operator) — a fifth condition, (e), and a strict-zero ruling; the lead's "(a)+(b)+(c)+(d)" now reads "(a)–(e)".** **(e) TOOLING INTEGRATED** — programme item `CHAIN-TOOLING`, checked ONCE at chain end, must not slow anything: (1) every fast invariant / generated-artifact drift check introduced during the chain (e.g. #43 OWNER-SPEC-DIFF; any planned generated-Target-Files drift check) runs at pre-commit, locked by extending `src/tests/hooks-composition.infra.test.ts` — no new machinery; (2) pre-commit checks are FILE-ONLY (no DB, no network; DB checks belong to `npm run test:db` or `npm run cloud:pre`), and measured pre-commit wall time stays ≤ +10% vs the chain-start baseline, measured before/after (the budget); (3) `node scripts/ai-env-check.mjs` prints one status line per chain derived from the registries — converted count, open ledger rows, LDG-10 status, cloud-acceptance status; (4) `cloud:pre`'s `seed_rows_present` covers EVERY key in `scripts/seeds/logic_variables.json`, not only converted descriptors' `config.logic_variables[]` (`scripts/analysis/cloud-pre-dispatch.mjs`) — closes the gap where the runner-owned reconcile vars `run_stranded_after_minutes` / `run_heartbeat_fresh_minutes` are seeded but unchecked. **Strict zero, no allowlists:** (b) admits NO ledger row of any disposition — pending or permanent (`non_tunable`, `physical_constant`, `unit_conversion`, `coordinate_reference`); (c) LDG-10 has NO allowlist or exception file — zero undeclared edges in every edge class. A gate or edge that genuinely cannot be met is fixed by changing the gate or the descriptor through a Spec 124 §5 row plus an `Operator-Ruling:` commit trailer, never by a parked row. (Grounded 2026-09-29: the trailer is NEW — zero `Operator-Ruling:` trailers in the last 300 commits and no hook reads one yet; there is no invariant "#42 defect-prefix" — the nearest gate is #36 DEFECT-ID-UNIQUENESS; #43 already runs at pre-commit via `step-validate.mjs --staged --fast`; no pre-commit wall-time baseline is recorded anywhere yet, so CHAIN-TOOLING takes the first measurement.) | Amends: R-AQ / R-AQ.1 ("end of conversion" now defined); Spec 122 §6 (completeness gated) | `scripts/steps/_schema/programme-items.json` LDG-10, EP-PIN-D17; `scripts/steps/_schema/converted.json`; `scripts/steps/_schema/step-archetype-census.json` `exemptions[]`; `scripts/steps/_schema/standard-gates-ledger.json`; Spec 122 §6.6; programme item `CHAIN-TOOLING`; `src/tests/hooks-composition.infra.test.ts`; `scripts/ai-env-check.mjs`; `scripts/analysis/cloud-pre-dispatch.mjs` |
+| R-BD | **Retired input argv ↔ declared filesystem input — a GOLD-PRE capture taken with a retired input argv stands in for its declared invocation only under a closed predicate (operator ruling 2026-09-29; discoverer: load_wsib ② seat + research seat; adjudicator: operator, §4.2).** GOLD-PRE matches `${chain}::${args}` exactly, but a legacy loader that loads ONLY via an input argv (load_wsib `--file <csv>` — the WSIB CSV cannot be downloaded) cannot be captured with the converted step's declared args. A PRE doc stands in for declared key `chain::<declared args>` iff ALL hold: **(a)** same chain, and args = the declared args + exactly one `[flag, path]` pair whose `flag` appears verbatim (token-bounded) in some descriptor `deviations[].from` (load_wsib WS-D4 names `--file`); **(b)** the descriptor declares exactly one `inputs.reads.externals[]` of `kind:"filesystem"`, and `path`'s basename matches that external's `path` basename under `resolveLocalSource` semantics (stem `*`, stem case-insensitive, `.ext` case-sensitive); **(c)** every PRE `table_state[].content_hash` equals the paired POST doc's (same key; table sets equal, non-empty). No md5 clause (operator declined). No `GOLD_PRE_KNOWN_GAPS` pin (R-BA/R-BC). A mode flag (`--full`) is never a pair — enrich_parcels' pin is untouched. | Amends: Spec 122 §5.3 / R-C / G8 (GOLD-PRE) | `scripts/analysis/step-validate.mjs` `retiredInputPreMatch`, `computePreInvocationsMissing`; `src/tests/gold-pre-retired-input.logic.test.ts` |
+| R-BE | **Generated step Target Files — a step's files, data and edges are generated into its owner spec, never hand-listed (2026-09-30, WF2 generated Target Files).** Census `owner_specs` (entries AND exemptions) names each sources step's owner spec(s); `npm run target-files` writes a `generated:target-files` block first under each owner spec's `### Target Files` — files = the `computeSourceFingerprint` inputs (`capture-step-golden.js` helpers) + `src/tests/steps/<slug>/`; data/upstream/downstream = the cross-step ledger (`stepUpstreams`, CREATE migration per table); consumers = `consumer-registry.json` — and a `generated:chain-members:<chain>` block in Specs 41–44. One home: a generated path hand-listed in any Target Files span is RED. `--check` is its own pre-commit line (a spec-, census- or snapshot-only commit never reaches `fastInvariants()`); cutover and ledger `--refresh` regenerate. `npm run step:registry -- <slug\|path>` prints the sub-list byte-identical plus an advisory grep; a PreToolUse hook shows it on a session's first read/edit of a step file. **Retired knowingly:** #43's system-map inference (#43 reads census `owner_specs`) and touching Spec 43 on every sources cutover; a spec whose only diff is inside its generated blocks, and `00_system_map.md`, no longer count as a spec touch (#43, gate J1). #43 owners = UNION of base and staged census rows (`owner-spec-diff.mjs` header). | Amends: R-BB; R-BA gate J1; satisfies R-BC(e)(1)'s Target-Files drift check | `scripts/analysis/gates/{step-registry,generated-blocks}.mjs`; `scripts/analysis/{generate-target-files,step-registry}.mjs`; `scripts/hooks/step-registry-context.{sh,mjs}`; `src/tests/{step-registry.logic,generate-target-files.infra,step-registry-hook.logic}.test.ts`; programme item `GEN-TARGET-FILES` |
+| R-BF | **McDonald's Airtight V2 (registry & cross-step) = R-BA + every step-registry and cross-step-ledger row generated or witnessed, never hand-kept; declared == observed (operator 2026-09-30, named 2026-10-01).** Status NOT MET; full text Spec 122 §6.6.1. | Amends: R-BA (registry/ledger truth word); R-BE; LDG-10 | Spec 122 §6.6.1 |
+| R-BG | **#44 witness truthfulness — the gate observes what a step really does; it is changed by a §5 row + `Operator-Ruling:` trailer, never bent per step (operator 2026-10-02, WF3 witness-unblock).** (i) check (b) honours `written:"db_default"` in both directions: a db_default column is not required in the traced write, and a traced write of it is a `b:` violation; (ii) the resolver resolves every statement of a multi-statement text, CTE names bind through enclosing and sibling scopes, function-alias column lists bind, and session temp tables bind like CTEs (a temp that shadows a catalog table is FAIL:INPUT); (iii) PRODUCER is tested on comment-stripped text (string literals and dollar-quoted bodies kept); (iv) a prior-run baseline is status ∈ {completed, completed_with_warnings}, never completed_with_errors, never a run carrying the `write_skipped_pre_write_warn` audit row. Locks: R1–R4, R17 (C1); R5–R7, R14, R16, R20–R22, C-a–C-c (C2/C2b/C2c); R8, R9, R15, R19 (C3; R15 replaces the ⑦e source-text lock with an AST lock). R10–R13, R18 (C4). Runner-owned ledger writes (a standalone run's own `pipeline_runs` INSERT/UPDATE, `writes: {}`) are not step writes for checks (c)/(d) — lock: "gate #44 — runner-owned ledger writes are not step writes" in `src/tests/sql-witness-gate.logic.test.ts`. | Amends: R-BF; Spec 122 §6.6.1(e) | Spec 122 §6.6.1(e) |
+| R-BH | **Phase 2 DERIVE (registry truth, 2026-10-03, plan folds 8–17) — a descriptor value a machine can derive or check is gated; a value nothing checks is labelled declared-only.** **Enforced** by fast invariant #47 MODE-EMITS-TYPE (`scripts/analysis/gates/mode-emits-type.mjs`; hard stop per slug, no allowlist): (i) `staleness.mode_select` — LINK or MATCHER ⇒ `tri_state`, or `none` only beside an `outputs.invalidates[]` row `by: "full_rescan"` (the runner's `resolveLinkGate` then resolves every run `full`, reason `full_rescan`, and refuses a `retract: "all"` target); INGESTOR with a `staleness.trigger[]` entry `signal: "source_validator"` ⇒ `skip`; every other case ⇒ `none`; (ii) each golden POST `records_meta` value of a declared `emits[]` key matches its `type` — `null` passes any type, an integer passes `number`, any other mismatch is RED; key presence stays gate C's, and a capture that does not parse or carries no `records_meta` object is skipped by this check. Locks M1–M9, E1–E6, C1–C2, L1–L2 in `src/tests/gate-mode-emits-type.infra.test.ts`. (iii) `scripts/lib/massing-full-gate.js` is deleted; locks R1–R6 in `src/tests/link-massing-mode-gate.logic.test.ts` (R6: link_massing keeps "`logic_version` ≠ `none` ⇔ a `code_version` trigger"). **Declared-only (no gate built at drafting):** that rule for every other step and `fingerprint_inputs` = real imports (P2-C3); `last_measured` from captures (P2-C4); manifest `step_timeout_minutes` generated from the descriptor (P2-C2). `staleness-disposition.json`'s `fingerprint_inputs` rows stay `descriptive` (gate I #34 checks that each row is adjudicated, not that the input is read). | Amends: R-AJ; plan fold 8 item 8 (LINK ⇒ `tri_state`, widened by fold 17 item 1) | Spec 122 §6.6.1(f) |
+
+
+---
+
+## Appendix §B12 — Register rows R-BZ…R-CP (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-18
+
+Moved from Spec 124 — Runner lane (operator y 2026-10-18, runner-lane ruling 17): Spec 124 was at 371/380 lines and owes the runner-lane rows (R-DM and the drafts allocated from R-DX) beside the badges lane R-DW. Rows R-BZ…R-CP (the next contiguous block after M25) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) resolves them in 124a LIVE REGISTER sections. New rows are still added to Spec 124 §5.
+
+| R-BZ | **Compute purity is a closed answer (operator 2026-10-10; McDonald's Airtight V3, operator 2026-10-11).** Gate E (SCALABLE, fast invariant #32) widens from the literal ban to codes G0–G13 (122a §A26): `compute-purity.mjs` over compute and its `require` closure, plus ast-grep siblings in `compute-shape.yml`. Ledger keys `<rule>@<fp>#<n>` / `<rule>@<line text>#<n>`; `matchLedger` lets one row cover one violation (C2). Purity rows close on their seam's `programme-items.json` id (CP-S1…S5, CP-PLANA, CP-PERMITS) and are RED once that item is BUILT, SUPERSEDED or missing (C3). A function-scope tunable const is a bypass (Rule 3, Q5). `mPerDegLat = 111320` (load_parcels, metres per degree of latitude) is a `physical_constant`. R-BA's hard stop is narrowed for purity codes only, on a closed list: enrich_centreline, massing, load_heritage, load_centreline, neighbourhoods, load_zoning (Q6 A); every other post-2026-09-26 or future conversion needs ZERO findings. #44 compute-attributed FAILs turn hard at max(CP-S1, P1-C9). | Rules 2, 3; amends R-BA, R-BG | 122a §A26; 122 §5 |
+| R-CA | **Compute-layer corrections to reality (operator 2026-10-10).** (i) An ASSERT compute may read through `ctx.pool` read-only, every relation declared, no DML/DDL/txn/maintenance (G4, G5); §3's "no `ctx.pool` reachable" was never true. (ii) Spec 122 §5.6 "never writes a row" STANDS: ENRICHER `passes[].run(client)` writes are interim, ledgered, and move behind the library write seam (CP-S3). | Rule 2, §3 | 122a §A26 |
+| R-CB | **R-BG(iv) is a baseline rule; seam/ordering reads accept every finished status (operator 2026-10-12, purity seam S1 OQ-1, ruled for 122/122a/124/124a compliance).** R-BG(iv)'s status set {completed, completed_with_warnings}, never completed_with_errors, never a `write_skipped_pre_write_warn` run, governs PRIOR-RUN BASELINES only (the one run-history reader `readRunHistory`, `scripts/lib/step/ledger.js`). An ordering/seam read (`checkSeam`, `scripts/lib/step/seam.js`) is not a baseline: it accepts every finished status {completed, completed_with_warnings, completed_with_errors} — a covered FAIL run is a finished run (122a:572) — and adopts only the shared warn-skip predicate and the `id DESC` tie-break. Locks: `src/tests/ledger-reader.logic.test.ts` (baseline set), a green lock in `src/tests/step-seam.logic.test.ts` (cwe stays accepted). S1-P (2026-10-13): `ctx.producer` / `readRunHistory` take an explicit closed `statuses` list per read, default the R-BG(iv) baseline; an activity or verdict read declares its wider terminal set in the descriptor pin (`staleness.pins[].statuses`), never the baseline. | Clarifies: R-BG (iv) scope | Spec 122a:572 |
+| R-CC | **A chain-run step row's status is derived from its verdict; the literal `'completed'` is retired (operator 2026-10-12, purity seam S1 OQ-6, per 122a:571-572).** `run-chain.js` writes each step row's status from ONE fold over that run's `records_meta.audit_table.rows` (the stored `.verdict` is cross-checked; a mismatch writes a `verdict_mismatch` audit row) — closed mapping: PASS→`completed`; WARN→`completed_with_warnings`; covered FAIL (step exit 0, fold FAIL)→`completed_with_errors`; SKIP→`completed`; UNKNOWN / null / missing or empty `audit_table` / unrecognised status / malformed summary→`completed_with_warnings` plus a `verdict_unavailable{reason}` audit row (null ≠ PASS, never `completed`). A thrown or non-zero step stays `failed`; `deferred_to_full` is untouched. Chain status equals the fold over the step-row statuses of that run (failed > completed_with_errors > completed_with_warnings > completed). `runLedgerGateDecision`'s upstream predicates KEEP the O-6 fail-safe (bare `'completed'`; widening them was measured 2026-10-01 to flip compute_centroids and link_parcel_addresses RUN→SKIP): a downstream of a `completed_with_warnings` / `completed_with_errors` upstream RUNs (operator confirmed "keep" 2026-10-12, Q-S1-a — the cost is extra downstream runs, never a wrong skip). Forward-only: history is not backfilled. Locks: run-chain status tests per mapping row (red-first where the status differs from today's literal), a chain⇔step invariant test, a seeded test that a completed_with_warnings upstream (with or without changes) forces RUN (O-6 fail-safe); the `run-chain-budget.logic` / `chain-cascade.integration` source scans updated knowingly. | Amends: R-BG (iv) consumers; Spec 122a:571-572 enforced in code | Spec 122a:571-572 |
+| R-CD | **An ASSERT's snapshot upsert is a compute-returned plan the runner executes (operator 2026-10-12, purity seam S2 Q4).** assert_engine_health returns `write_plan {table, sql, rows, report_check}`; `runWritePlan` runs it per-row autocommit on the pool (txn_scope `none`), stops at the first failing row, reports the declared `report_check` through `ctx.report` (one WARN row) and threads `records_meta.records_updated`; no compute-side DML. | R-BZ G5/G13 | `rcd-write-plan.logic`, `aeh-write-plan.logic` |
+| R-CE | **A calendar date derives from `ctx.clock` in the zone named by `pipeline_timezone` (operator 2026-10-12 / 2026-10-13, S2 Q5 + F3-2).** Bound as parameters (`to_timestamp($ms / 1000) AT TIME ZONE $zone`); `captured_at` binds the clock too; no `CURRENT_DATE`/`NOW()` in compute; the zone is never a literal. `pipeline_timezone` is the first string-typed logic variable: a seed `type: "string"` + closed `enum` (UTC · America/Toronto, default UTC = the measured session zone), declared with `enum` and `on_invalid: "fail"` only (schema-enforced). | Rule 3; R-BZ G6 | `aeh-clock-date.logic`, `string-logic-variable.logic` |
+| R-CF | **A session GUC a read depends on is declared (operator 2026-10-12, S2).** `execution.read_gucs[] {read, name, value}` against a closed allowlist (initially `enable_indexscan = off`); the runner issues SET/RESET around that read on its pinned client; compute holds no SET/RESET text (G4). RE-FREEZE. | R-BZ G4 | `step-schema.logic`, refresh_snapshot locks |
+| R-CG | **`execution.maintenance` may declare a dynamic-target arm (operator 2026-10-12; measurement ruled 2026-10-13, S2 F3-3).** `{operation, select: "dead_tuple_ratio", limit_from_config, why}` — the runner selects every public table with `n_live_tup > 0` and dead/(live+dead) above the named variable after compute, for ASSERT as well as ENRICHER, and writes one `sys_maintenance_selected_<op>` row even when nothing is selected. ONE fleet measurement, dead/(live+dead) (`scripts/lib/dead-tuple-ratio.js`, Spec 122a:391-396), shared by runner, AEH, `/api/quality` and the anomaly detector. RE-FREEZE. | R-BZ G4/G7 | `maintenance-dynamic-arm.logic`, `dead-ratio-one-measurement.logic` |
+| R-CH | **A vocab-coverage read is a runner-owned READ ONLY snapshot (operator 2026-10-12, S2).** `ctx.readSnapshot` (BEGIN READ ONLY, `SET LOCAL statement_timeout` from `execution.statement_timeout_minutes_from_config`, ROLLBACK) for ASSERT steps; the shared lib exposes a never-throwing client core that the legacy wrapper (`vocab-coverage-pool.js`) wraps outside the compute closure. | R-BZ G1/G4 | `read-snapshot.logic`, `vocab-coverage-core.logic` |
+| R-CI | **Scope-ledger hygiene DELETEs are library-owned ledger statements (operator 2026-10-12, S3).** EP-D10 prune and the step-start retire run in `scripts/lib/step/scope-retire.js` on a declared write target recorded in `write_discipline.why` / `before_image_why`; they never go through `ctx.retract`, and the descriptor's no-DELETE claim is corrected in the same landing. | R-BZ G5 | `purity-s3-exec-seam.logic`, enrich_parcels D20 |
+| R-CJ | **A guard-suppressed hygiene action emits one WARN row naming the guard's answer (operator 2026-10-12, S3).** `scope_retire_lock_held` carries `holder_run_id` and `rows_retained` (0 written as 0); no row when the guard is not tripped; null counters mean the probe did not run. | Rule 10 | enrich_parcels violations |
+| R-CK | **An ENRICHER pass DML runs through `ctx.exec(writesRef, sql, params)` (operator 2026-10-12, S3; wording ruled 2026-10-13).** The seam validates the declared target and the verb (UPDATE/INSERT/DELETE), executes on the pass client and returns the result; it is counter-neutral — counters stay pass-derived; compute never calls `client.query` for DML. | R-BZ G5; Spec 122a §A26 G5 | `purity-s3-exec-seam.logic` |
+| R-CL | **A uniqueness invariant over a declared read table is a `checks[]` row, not a compute throw (operator 2026-10-12, S4; refined 2026-10-13).** Its measurement read is declared under `checks[].reads` (R-BJ); unless the table's own key enforces it — then the key is cited and locked (e.g. `archetype_cost_rates.archetype` PRIMARY KEY, migration 205 + a live `pg_constraint` test) and no check is added. | Rule 10 | `cost-meta-no-logic-variables.logic`, DB PK test |
+| R-CM | **`ctx.config.$meta` is a library-owned, read-only map of declared logic-variable stamps (operator 2026-10-12, S4).** `updated_at` rides the SAME `logic_variables` statement as the value (F11 holds), non-enumerable so config stamps and hashes are unchanged; compute reads stamps from it, never `logic_variables` SQL; hooks receive `{pool, config, producer}`, never a bare pool. | R-BZ G1/G8 | `config-meta.logic` |
+| R-CN | **A gate-E ledger row names the file it allows (operator 2026-10-12; amends R-BZ's key).** A gate-E row carries `file`, the repo-relative posix path; `step` equals its basename (`validateRow`; a non-E row carrying `file` is refused). `matchLedger` keys gate E on `(step, file, item)`, and the `#n` ordinal counts per file (`gateEOrdinal`). So one row allows one site in one file (C2), and a same-named file in another directory is never covered. All 172 gate-E rows were re-keyed mechanically from their unique current finding (0 ambiguous, measured 2026-10-12); `filed`/`step`/`item` are unchanged, so the V3 freeze holds. | Rule 1; amends R-BZ | `ledger-key-file.logic.test.ts`; `ledger.mjs` selfTest (11/11b) |
+| R-CO | **A test never writes a before-image into the real golden tree (operator 2026-10-14; amends R-M's test surface).** Every vitest file runs inside a per-file before-image sandbox installed by `src/tests/setup.ts` (`src/tests/helpers/before-image-sandbox.ts`): fs calls on a path inside `docs/reports/golden/<slug>/before-image/` resolve under a per-file `os.tmpdir()` root that `afterAll` removes, while the library still returns its repo-relative path. The library (`write.js#persistBeforeImageRows`) is unchanged, so `lib_fingerprint` does not move. Real-run before-images stay local: `.gitignore` covers `docs/reports/golden/*/before-image/`. | Rule 4; amends R-M (Spec 124a) | `before-image-test-isolation.infra.test.ts` (real disk, unmapped `lstat`: no file after the writer runs on a real slug) |
+| R-CP | **A live test asserts that its child process completed before it asserts on that process's output (operator 2026-10-14; closes LM-D14's test-side recurrence).** A test that spawns `step-validate.mjs` (or another long CLI) first proves the run finished: no spawn error, no signal, an expected exit code, the summary header, and at least one score row per converted step (`notLookedReasons(run, convertedCount)` in `src/tests/helpers/step-validate-run.ts` returns `[]`). Only then does it assert on the output. An absence-only assertion (`not.toMatch(FAIL)`, `not.toContain(downgrade)`) is never sufficient alone. Spawn timeouts sit above the measured run time (420 s against 214 s). | Rule 4; §7 LM-D14 | `gate-score-floor` T6, `gate-captures` T6e, `gate-registries` T8b, `gate-five-words` T5/T5b, `programme-backlog` RED-proof P9, `deepseek-exec-fences` F14; each proven red by a killed/crashed-run mutant |
+
+
+---
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/backlog/tasks/task-411 - FIX.AREA-FACTOR-The-lead-detail-API-serves-the-area-already-converted-the-two-typed-phone-copies-of-the-factor-are-deleted.md b/backlog/tasks/task-411 - FIX.AREA-FACTOR-The-lead-detail-API-serves-the-area-already-converted-the-two-typed-phone-copies-of-the-factor-are-deleted.md
+index 56e85b462..005a7b5bf 100644
+--- a/backlog/tasks/task-411 - FIX.AREA-FACTOR-The-lead-detail-API-serves-the-area-already-converted-the-two-typed-phone-copies-of-the-factor-are-deleted.md	
++++ b/backlog/tasks/task-411 - FIX.AREA-FACTOR-The-lead-detail-API-serves-the-area-already-converted-the-two-typed-phone-copies-of-the-factor-are-deleted.md	
+@@ -7,12 +7,14 @@ status: RUNNING
+ assignee:
+   - '@lane-BL-AREAFACTOR'
+ created_date: '2026-11-20T18:27:00Z'
+-updated_date: '2026-11-20T18:33:00Z'
++updated_date: '2026-11-20T19:09:00Z'
+ labels:
+   - McFix
+   - McFix A
+ milestone: m-1
+ dependencies: []
++references:
++  - docs/reports/lanes/2026-11-20/BL-AREAFACTOR/REPORT.md
+ type: build
+ ordinal: 111012
+ ---
+@@ -20,7 +22,7 @@ ordinal: 111012
+ ## Description
+ 
+ <!-- SECTION:DESCRIPTION:BEGIN -->
+-Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder of task-395, 2026-11-20 (verify each fact before building): the earlier resolution (the factor reaches the phone as a generated-slice number) is false: neither screen has a slice. Facts: mobile leadDetailFormat.ts:15 types 10.7639 and is used by [lead].tsx via formatSqft on cost.modeled_gfa_sqm from GET /api/leads/detail/:id; parcelCostFormat.ts:11 types it too and is imported only by its own test and the web parity oracle src/tests/admin-report-preview-live.logic.test.ts:129; the pinned setting parcels_sqm_to_sqft is already read at src/lib/parcels/geometry.ts:6 (SQM_TO_SQFT). Build: the lead-detail API serves an optional cost.modeled_gfa_sqft computed from SQM_TO_SQFT; the phone Zod schema takes it and formatSqft only formats; both typed copies deleted; the parity test re-pointed to literal expected strings. No new surface, no slice. Rule: operator ruling MORNING-DECISIONS.md:241 'The conversion factor lives in content/settings, never in code'; Spec 136 fe.44. Also noted by the grounder, not in this task: the permits route serves feet_per_metre (route.ts:267) for client maths, which strains fe.44 the same way. Files: src/app/api/leads/detail/[id]/route.ts, mobile/src/lib/leadDetailFormat.ts, mobile/src/lib/parcelCostFormat.ts, src/tests/admin-report-preview-live.logic.test.ts
++Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder of task-395, 2026-11-20 (verify each fact before building): the earlier resolution (the factor reaches the phone as a generated-slice number) is false: neither screen has a slice. Facts: mobile leadDetailFormat.ts:15 types 10.7639 and is used by [lead].tsx via formatSqft on cost.modeled_gfa_sqm from GET /api/leads/detail/:id; parcelCostFormat.ts:11 types it too and is imported only by its own test and the web parity oracle src/tests/admin-report-preview-live.logic.test.ts:129; the pinned setting parcels_sqm_to_sqft is already read at src/lib/parcels/geometry.ts:6 (SQM_TO_SQFT). Build: the lead-detail API serves an optional cost.modeled_gfa_sqft computed from SQM_TO_SQFT; the phone Zod schema takes it and formatSqft only formats; both typed copies deleted; the parity test re-pointed to literal expected strings. No new surface, no slice. Rule: operator ruling MORNING-DECISIONS.md:241 'The conversion factor lives in content/settings, never in code'; Spec 136 fe.44. Also noted by the grounder, not in this task: the permits route serves feet_per_metre (route.ts:267) for client maths, which strains fe.44 the same way. Files: src/app/api/leads/detail/[id]/route.ts, mobile/src/lib/leadDetailFormat.ts, mobile/src/lib/parcelCostFormat.ts, src/tests/admin-report-preview-live.logic.test.ts, src/lib/leads/lead-detail-query.ts, src/app/api/leads/detail/[id]/types.ts, mobile/src/lib/schemas.ts, mobile/app/(app)/[lead].tsx, mobile/__tests__/leadDetailFormat.test.ts, mobile/__tests__/parcelCostFormat.test.ts, mobile/__tests__/useLeadDetail.test.ts, src/tests/leads-detail.infra.test.ts, src/tests/lead-detail-query.coa.infra.test.ts, mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx, scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json, scripts/surfaces/_schema/census/mobile-product.json, scripts/surfaces/_schema/report-presentation.json, scripts/surfaces/_schema/seed-report-v2.mjs, docs/specs/03-mobile/91_mobile_lead_feed.md, mobile/maestro/lead-detail.yaml
+ <!-- SECTION:DESCRIPTION:END -->
+ 
+ ## Definition of Done
+@@ -37,8 +39,21 @@ Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the
+ - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
+ <!-- DOD:END -->
+ 
++## Implementation Plan
++
++<!-- SECTION:PLAN:BEGIN -->
++PLAN task-411 (lane BL-AREAFACTOR). Rule: Spec 136 fe.44 (docs/specs/02-web-admin/136_mcfrontend_handbook.md:163 "the conversion factor is content/settings, never code"); operator ruling MORNING-DECISIONS.md:241 "The conversion factor lives in content/settings, never in code"; Spec 126 section 0a principle 1. Principles served: standardized, understandable, simple.
++Facts opened before building: route path GET /api/leads/detail/:id is src/app/api/leads/detail/[id]/route.ts (correct); the cost block is built in src/lib/leads/lead-detail-query.ts toCost (permit) and toCoaCost (CoA), so the Files line was extended through the CLI (lead-detail-query.ts, types.ts, mobile schemas.ts, [lead].tsx, three mobile tests, two server tests); route.ts itself needs no edit. SQM_TO_SQFT is read from the pinned setting at src/lib/parcels/geometry.ts:6. Phone copies: mobile/src/lib/leadDetailFormat.ts:15 (used by [lead].tsx:81) and mobile/src/lib/parcelCostFormat.ts:11 (formatSqft:86 imported only by its test and the web parity test :129; no screen).
++Steps (tests first, red through the real hooks):
++1. Server tests: toLeadDetail and toCoaLeadDetail serve cost.modeled_gfa_sqft = modeled_gfa_sqm * SQM_TO_SQFT (null when sqm null); the route test sees the field. Phone tests: formatSqft takes sqft and only formats; schema accepts and optional field; no factor constant in either helper; parity test uses literal expected strings (no import of the phone file).
++2. Build (as built, amended in the fix round 2026-11-20): lead-detail-query.ts imports SQM_TO_SQFT from @/lib/parcels/geometry and adds modeled_gfa_sqft to both cost maps (null when the area is null); types.ts has the field required on the server type (both producers set it); mobile schemas.ts adds it optional nullable (an older server or cached response omits it); [lead].tsx passes cost.modeled_gfa_sqft; leadDetailFormat.ts formatSqft(sqft) formats only, factor and its export deleted; parcelCostFormat.ts loses the factor and its square-metre formatSqft, and keeps one export renamed formatServedSqft (takes served square feet, name carries its unit) because the presentation registry names it as formats.area.alt_formatter (report-schema RS-4), renamed in the registry seed and JSON together; the contract is described with modeled_gfa_sqft in the mobile_lead_detail descriptor, the mobile-product census and Spec 91; maestro lead-detail.yaml comment corrected; web parity test: literal sq ft strings plus one web-to-phone assertion (formatServedSqft of the pinned-factor product equals the web fmt); one phone ui test for [lead].tsx (field present, null, absent; Mobile CI only).
++3. Checks the hooks run for the touched slices before and after; lens set at plan and output; FINDINGS.md untriaged; leave RUNNING, grounder owed. Phone tests cannot run locally: phone-test green is unproven until Mobile CI.
++<!-- SECTION:PLAN:END -->
++
+ ## Implementation Notes
+ 
+ <!-- SECTION:NOTES:BEGIN -->
+ 2026-11-20 taken on the board at lane launch (lane BL-AREAFACTOR, worktree /Users/brettpreston_macmini/Buildo-wt-areafactor, branch wf1/inc1b-areafactor), RR-0240
++2026-11-20 BL-AREAFACTOR facts opened before building: operator quote MORNING-DECISIONS.md:1476 "Let the grounder resolve them all as long as the result is compliant" and ruling MORNING-DECISIONS.md:241 "The conversion factor lives in content/settings, never in code" both checked on their lines; route path GET /api/leads/detail/:id is src/app/api/leads/detail/[id]/route.ts (matches the Files line) but the cost block is built in src/lib/leads/lead-detail-query.ts (toCost, toCoaCost), so the Files line was extended through the CLI (lead-detail-query.ts, [id]/types.ts, mobile schemas.ts, [lead].tsx, three mobile tests, two server tests); route.ts needs no edit. Facts 1-4 of the description confirmed: leadDetailFormat.ts typed 10.7639 and [lead].tsx called formatSqft(cost.modeled_gfa_sqm); parcelCostFormat.ts typed it and formatSqft was imported only by its test and the web parity test; SQM_TO_SQFT read at src/lib/parcels/geometry.ts:6.
++2026-11-20 BL-AREAFACTOR built: API serves optional cost.modeled_gfa_sqft (modeled_gfa_sqm times SQM_TO_SQFT; null when the area is null) for permit and CoA leads; phone schema takes it; formatSqft only formats; both typed factors deleted (parcelCostFormat.formatSqft stays exported, now taking square feet and only formatting, because the first commit attempt was refused by report-schema RS-4: the presentation registry scripts/surfaces/_schema/report-presentation.json:48 names it as formats.area.alt_formatter, a consumer the task facts missed); web parity test uses literal strings. Red proven by a refused commit attempt (2 server tests failed); phone tests cannot run locally, phone-test green is UNVERIFIED until Mobile CI. Lens set run (plan and output); findings untriaged in docs/reports/lanes/2026-11-20/BL-AREAFACTOR/FINDINGS.md. Task left RUNNING: grounder owed.
+ <!-- SECTION:NOTES:END -->
+diff --git a/docs/specs/03-mobile/91_mobile_lead_feed.md b/docs/specs/03-mobile/91_mobile_lead_feed.md
+index 3c07b0501..14160a76b 100644
+--- a/docs/specs/03-mobile/91_mobile_lead_feed.md
++++ b/docs/specs/03-mobile/91_mobile_lead_feed.md
+@@ -203,7 +203,7 @@ Whether tapped from the feed or the map, the user is routed to a comprehensive,
+ | **Response shape** | `{ data: LeadDetail, error: null, meta: null }` |
+ 
+ `LeadDetail` is defined in `src/app/api/leads/detail/[id]/types.ts` and includes:
+-`lead_id`, `lead_type`, `permit_num`, `revision_num`, `address`, `location: { lat, lng } | null`, `work_description`, `applicant` (reserved — currently null), `lifecycle_phase`, `lifecycle_stalled`, `target_window` (`'bid' | 'work' | null`), `opportunity_score`, `competition_count`, `predicted_start`, `p25_days`, `p75_days`, `cost: { estimated, tier, range_low, range_high, modeled_gfa_sqm } | null`, `neighbourhood: { name, avg_household_income, median_household_income, period_of_construction } | null`, `updated_at` (ISO 8601), `is_saved: boolean` (per-user save state — `lead_views.saved=true AND user_id=ctx.uid`; always non-null).
++`lead_id`, `lead_type`, `permit_num`, `revision_num`, `address`, `location: { lat, lng } | null`, `work_description`, `applicant` (reserved — currently null), `lifecycle_phase`, `lifecycle_stalled`, `target_window` (`'bid' | 'work' | null`), `opportunity_score`, `competition_count`, `predicted_start`, `p25_days`, `p75_days`, `cost: { estimated, tier, range_low, range_high, modeled_gfa_sqm, modeled_gfa_sqft } | null` (`modeled_gfa_sqft` is `modeled_gfa_sqm` already converted with the pinned setting `parcels_sqm_to_sqft`; the phone only formats it, Spec 136 fe.44), `neighbourhood: { name, avg_household_income, median_household_income, period_of_construction } | null`, `updated_at` (ISO 8601), `is_saved: boolean` (per-user save state — `lead_views.saved=true AND user_id=ctx.uid`; always non-null).
+ 
+ The handler joins `permits + cost_estimates + neighbourhoods + trade_forecasts` plus two LATERAL subqueries over `lead_views`: a `COUNT(DISTINCT user_id)` excluding the viewer for `competition_count`, and an `EXISTS` scoped to the viewer for `is_saved`. `target_window` and `opportunity_score` are read directly from `trade_forecasts` (already persisted there — not recomputed in JS).
+ 
+diff --git a/mobile/__tests__/leadDetailFormat.test.ts b/mobile/__tests__/leadDetailFormat.test.ts
+index c8e9095c8..0ff9eb2b1 100644
+--- a/mobile/__tests__/leadDetailFormat.test.ts
++++ b/mobile/__tests__/leadDetailFormat.test.ts
+@@ -2,49 +2,45 @@
+ // SPEC LINK: docs/specs/03-mobile/91_mobile_lead_feed.md §4.3
+ //             docs/specs/01-pipeline/83_lead_cost_model.md §2
+ 
++import fs from 'node:fs';
++import path from 'node:path';
+ import {
+-  SQM_TO_SQFT,
+   formatSqft,
+   formatIncome,
+   formatCostTier,
+   formatCurrencyAbbrev,
+ } from '@/lib/leadDetailFormat';
+ 
+-describe('SQM_TO_SQFT constant', () => {
+-  it('matches the canonical 1 m² = 10.7639 ft² (3-decimal precision)', () => {
+-    // Multi-Agent plan review flagged drift between 10.764 and 10.7639 in
+-    // separate plan sections; this constant is the single source of truth.
+-    expect(SQM_TO_SQFT).toBe(10.7639);
+-  });
+-});
+-
+-describe('formatSqft', () => {
+-  it('returns null for null input', () => {
++describe('formatSqft (the API serves square feet, FIX.AREA-FACTOR / fe.44: the phone only formats)', () => {
++  it('returns null for null and undefined input', () => {
+     expect(formatSqft(null)).toBeNull();
++    expect(formatSqft(undefined)).toBeNull();
+   });
+ 
+-  it('returns null for NaN', () => {
++  it('returns null for NaN and Infinity', () => {
+     expect(formatSqft(Number.NaN)).toBeNull();
+-  });
+-
+-  it('returns null for Infinity', () => {
+     expect(formatSqft(Number.POSITIVE_INFINITY)).toBeNull();
+   });
+ 
+-  it('formats 0 m² as "0 sq ft"', () => {
++  it('formats 0 as "0 sq ft"', () => {
+     expect(formatSqft(0)).toBe('0 sq ft');
+   });
+ 
+-  it('formats 100 m² as "1,076 sq ft" (rounded)', () => {
+-    expect(formatSqft(100)).toBe('1,076 sq ft');
++  it('rounds the served square feet: 1076.39 -> "1,076 sq ft"', () => {
++    expect(formatSqft(1076.39)).toBe('1,076 sq ft');
++  });
++
++  it('1533.85575 -> "1,534 sq ft" (typical small permit)', () => {
++    expect(formatSqft(1533.85575)).toBe('1,534 sq ft');
+   });
+ 
+-  it('formats 142.5 m² as "1,534 sq ft" (typical small permit)', () => {
+-    expect(formatSqft(142.5)).toBe('1,534 sq ft');
++  it('53819.5 -> "53,820 sq ft" (large project, thousand separator)', () => {
++    expect(formatSqft(53819.5)).toBe('53,820 sq ft');
+   });
+ 
+-  it('formats 5000 m² as "53,820 sq ft" (large project, thousand separator)', () => {
+-    expect(formatSqft(5000)).toBe('53,820 sq ft');
++  it('the helper types no conversion factor and exports none', () => {
++    const src = fs.readFileSync(path.join(__dirname, '../src/lib/leadDetailFormat.ts'), 'utf8');
++    expect(src).not.toMatch(/10\.76|SQM_TO_SQFT/);
+   });
+ });
+ 
+diff --git a/mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx b/mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx
+new file mode 100644
+index 000000000..11fb0dc82
+--- /dev/null
++++ b/mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx
+@@ -0,0 +1,72 @@
++// SPEC LINK: docs/specs/03-mobile/91_mobile_lead_feed.md §4.3 (Square Footage Projection);
++//            docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.44 (the API serves the converted area; the phone only formats).
++//
++// FIX.AREA-FACTOR (task-411): the lead detail screen shows the Square Footage section from cost.modeled_gfa_sqft as served, shows no section when
++// the field is null, and omits the section when the field is absent (an old or cached response). Runs only in Mobile CI (phone tests cannot run locally).
++require('react-native-css-interop/test');
++import * as React from 'react';
++import { render, screen } from '@testing-library/react-native';
++
++jest.mock('react-native-safe-area-context', () => {
++  const { View } = jest.requireActual('react-native');
++  return { SafeAreaView: View, useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) };
++});
++jest.mock('expo-router', () => ({ useRouter: () => ({ back: jest.fn() }), useLocalSearchParams: () => ({ id: '24-101234--01' }) }));
++jest.mock('@/hooks/useSaveLead', () => ({ useSaveLead: () => ({ mutate: jest.fn() }) }));
++jest.mock('@/lib/analytics', () => ({ track: jest.fn() }));
++jest.mock('@/components/feed/OpportunityRing', () => ({ OpportunityRing: () => null }));
++jest.mock('@/components/shared/SaveButton', () => ({ SaveButton: () => null }));
++let mockCost: Record<string, unknown> | null = null;
++jest.mock('@/hooks/useLeadDetail', () => ({
++  useLeadDetail: () => ({
++    data: {
++      lead_id: '24-101234--01',
++      lead_type: 'permit',
++      permit_num: '24-101234',
++      revision_num: '01',
++      address: '123 Main St',
++      location: { lat: 43.65, lng: -79.38 },
++      work_description: 'Two-storey rear addition',
++      applicant: null,
++      lifecycle_phase: 'P8',
++      lifecycle_stalled: false,
++      target_window: 'bid',
++      opportunity_score: 78,
++      competition_count: 4,
++      predicted_start: '2026-06-01',
++      p25_days: 28,
++      p75_days: 65,
++      cost: mockCost,
++      neighbourhood: null,
++      updated_at: '2026-04-29T10:00:00.000Z',
++      is_saved: false,
++    },
++    isLoading: false,
++    isError: false,
++  }),
++}));
++
++import LeadDetailScreen from '../app/(app)/[lead]';
++
++const COST = { estimated: 450000, tier: 'large', range_low: 380000, range_high: 520000, modeled_gfa_sqm: 142.5 };
++
++describe('lead detail screen: Square Footage section (FIX.AREA-FACTOR, fe.44)', () => {
++  it('shows the served square feet, formatted only', () => {
++    mockCost = { ...COST, modeled_gfa_sqft: 1533.85575 };
++    render(<LeadDetailScreen />);
++    expect(screen.getByTestId('lead-detail-sqft')).toBeTruthy();
++    expect(screen.getByText('1,534 sq ft')).toBeTruthy();
++  });
++
++  it('omits the section when the served square feet is null', () => {
++    mockCost = { ...COST, modeled_gfa_sqft: null };
++    render(<LeadDetailScreen />);
++    expect(screen.queryByTestId('lead-detail-sqft')).toBeNull();
++  });
++
++  it('omits the section when the field is absent (old or cached response); the phone does not convert modeled_gfa_sqm', () => {
++    mockCost = { ...COST };
++    render(<LeadDetailScreen />);
++    expect(screen.queryByTestId('lead-detail-sqft')).toBeNull();
++  });
++});
+diff --git a/mobile/__tests__/parcelCostFormat.test.ts b/mobile/__tests__/parcelCostFormat.test.ts
+index 9b94e28a0..af929b912 100644
+--- a/mobile/__tests__/parcelCostFormat.test.ts
++++ b/mobile/__tests__/parcelCostFormat.test.ts
+@@ -1,6 +1,8 @@
+ /** @jest-environment node */
+ // Jest tests — Parcel Cost Tool presentation helpers (Spec 100 §2.3/§2.4).
+ // SPEC LINK: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §6
++import fs from 'node:fs';
++import path from 'node:path';
+ import {
+   getCostLine,
+   costLineState,
+@@ -8,7 +10,7 @@ import {
+   isEnvelopeFallback,
+   formatCurrency,
+   formatFsi,
+-  formatSqft,
++  formatServedSqft,
+   formatSqm,
+   COST_LINE_ORDER,
+ } from '@/lib/parcelCostFormat';
+@@ -66,10 +68,12 @@ describe('formatters', () => {
+     expect(formatFsi('0.9')).toBe('0.90');
+     expect(formatFsi(null)).toBeNull();
+   });
+-  it('formatSqft / formatSqm', () => {
+-    expect(formatSqft(100)).toBe('1,076 sq ft');
++  it('formatServedSqft takes served square feet and only formats; formatSqm; no typed factor here (FIX.AREA-FACTOR, fe.44)', () => {
++    expect(formatServedSqft(1076.39)).toBe('1,076 sq ft');
++    expect(formatServedSqft(null)).toBeNull();
+     expect(formatSqm(400)).toBe('400 m²');
+-    expect(formatSqft(null)).toBeNull();
++    const src = fs.readFileSync(path.join(__dirname, '../src/lib/parcelCostFormat.ts'), 'utf8');
++    expect(src).not.toMatch(/10\.76|SQM_TO_SQFT/);
+   });
+ });
+ 
+diff --git a/mobile/__tests__/useLeadDetail.test.ts b/mobile/__tests__/useLeadDetail.test.ts
+index 990c15014..07a0d4914 100644
+--- a/mobile/__tests__/useLeadDetail.test.ts
++++ b/mobile/__tests__/useLeadDetail.test.ts
+@@ -64,6 +64,7 @@ const validDetail = {
+     range_low: 380000,
+     range_high: 520000,
+     modeled_gfa_sqm: 142.5,
++    modeled_gfa_sqft: 1533.85575,
+   },
+   neighbourhood: {
+     name: 'Annex',
+@@ -89,11 +90,18 @@ describe('fetchLeadDetail — Spec 91 §4.3.1', () => {
+       lead_type: 'permit',
+       address: '123 Main St',
+       is_saved: false,
+-      cost: { estimated: 450000, tier: 'large' },
++      cost: { estimated: 450000, tier: 'large', modeled_gfa_sqft: 1533.85575 },
+       neighbourhood: { name: 'Annex' },
+     });
+   });
+ 
++  it('keeps the served modeled_gfa_sqft and still parses a response without it (optional; FIX.AREA-FACTOR)', async () => {
++    const { modeled_gfa_sqft: _omit, ...costWithout } = validDetail.cost;
++    mockFetch.mockResolvedValueOnce({ data: { ...validDetail, cost: costWithout } });
++    const result = await fetchLeadDetail('24-101234--01');
++    expect(result.cost?.modeled_gfa_sqft).toBeUndefined();
++  });
++
+   it('percent-encodes id segments containing reserved characters', async () => {
+     // Permit IDs are typically `permit_num--revision_num` (hyphens only,
+     // unreserved per RFC 3986 — pass through unchanged). CoA IDs use the
+diff --git a/mobile/app/(app)/[lead].tsx b/mobile/app/(app)/[lead].tsx
+index 6a6546d1a..bb8ca4f2d 100644
+--- a/mobile/app/(app)/[lead].tsx
++++ b/mobile/app/(app)/[lead].tsx
+@@ -78,7 +78,7 @@ export default function LeadDetailScreen() {
+   const costEstimated = formatCurrencyAbbrev(cost?.estimated ?? null);
+   const costRangeLow = formatCurrencyAbbrev(cost?.range_low ?? null);
+   const costRangeHigh = formatCurrencyAbbrev(cost?.range_high ?? null);
+-  const sqftLabel = formatSqft(cost?.modeled_gfa_sqm ?? null);
++  const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);
+ 
+   // Per Multi-Agent Review null-handling rules: a section header renders
+   // only when at least one leaf field has a non-null value. Avoids
+diff --git a/mobile/maestro/lead-detail.yaml b/mobile/maestro/lead-detail.yaml
+index 934acbe10..6b01989d7 100644
+--- a/mobile/maestro/lead-detail.yaml
++++ b/mobile/maestro/lead-detail.yaml
+@@ -45,7 +45,7 @@ appId: ca.maxbld.app
+ - assertVisible:
+     id: "lead-detail-cost"
+ 
+-# Spec 91 §4.3 — Square Footage Projection (cost.modeled_gfa_sqm × 10.7639).
++# Spec 91 §4.3 — Square Footage Projection (cost.modeled_gfa_sqft, served already converted; the phone only formats).
+ - assertVisible:
+     id: "lead-detail-sqft"
+ 
+diff --git a/mobile/src/lib/leadDetailFormat.ts b/mobile/src/lib/leadDetailFormat.ts
+index e06e2e33b..27a8ca027 100644
+--- a/mobile/src/lib/leadDetailFormat.ts
++++ b/mobile/src/lib/leadDetailFormat.ts
+@@ -9,14 +9,13 @@
+ 
+ // Spec 83 §2 reports `effective_area_sqm` (mapped to `cost.modeled_gfa_sqm`
+ // in the API) in m². Spec 91 §4.3 specifies the mobile UI as "Square Footage
+-// Projection" → ft² for North American user. Conversion factor:
+-// 1 m² = 10.7639104167097 ft². Three decimals is enough precision for any
+-// realistic floor area at integer-rounded display.
+-export const SQM_TO_SQFT = 10.7639;
+-
+-export function formatSqft(sqm: number | null): string | null {
+-  if (sqm === null || !Number.isFinite(sqm)) return null;
+-  return `${Math.round(sqm * SQM_TO_SQFT).toLocaleString()} sq ft`;
++// Projection" → ft² for North American user. The API serves the area already
++// converted (`cost.modeled_gfa_sqft`, the pinned setting parcels_sqm_to_sqft);
++// this helper only formats it — no conversion factor lives on the phone
++// (Spec 136 fe.44: "the conversion factor is content/settings, never code").
++export function formatSqft(sqft: number | null | undefined): string | null {
++  if (sqft === null || sqft === undefined || !Number.isFinite(sqft)) return null;
++  return `${Math.round(sqft).toLocaleString()} sq ft`;
+ }
+ 
+ // Currency for neighbourhood incomes (Spec 57 — annual CAD from Census XLSX).
+diff --git a/mobile/src/lib/parcelCostFormat.ts b/mobile/src/lib/parcelCostFormat.ts
+index f3f686255..d4ab43387 100644
+--- a/mobile/src/lib/parcelCostFormat.ts
++++ b/mobile/src/lib/parcelCostFormat.ts
+@@ -8,8 +8,6 @@
+ 
+ import type { ParcelCostLine, ParcelCostMenu } from '@/lib/schemas';
+ 
+-const SQM_TO_SQFT = 10.7639;
+-
+ // The 13 cost-menu lines in display order (Spec 88 PARCEL_COST_LINES) + human labels.
+ export const COST_LINE_ORDER = [
+   'max_build', 'coa_build', 'addition', 'gut', 'garden_suite', 'laneway_suite',
+@@ -83,11 +81,13 @@ export function formatFsi(v: number | string | null | undefined): string | null
+   return (n as number).toFixed(2);
+ }
+ 
+-export function formatSqft(sqm: number | string | null | undefined): string | null {
+-  if (sqm == null) return null;
+-  const n = typeof sqm === 'string' ? Number(sqm) : sqm;
++// Square feet arrive already converted by the API (fe.44: the factor is the pinned setting parcels_sqm_to_sqft, never typed here); this only formats.
++// Kept exported because the report presentation registry names it as the alt formatter of formats.area (scripts/analysis/report-schema.mjs RS-4). The name carries its unit: the input is square feet as served, never square metres (formatSqm takes square metres).
++export function formatServedSqft(sqft: number | string | null | undefined): string | null {
++  if (sqft == null) return null;
++  const n = typeof sqft === 'string' ? Number(sqft) : sqft;
+   if (!Number.isFinite(n)) return null;
+-  return `${Math.round((n as number) * SQM_TO_SQFT).toLocaleString()} sq ft`;
++  return `${Math.round(n as number).toLocaleString()} sq ft`;
+ }
+ 
+ export function formatSqm(sqm: number | string | null | undefined): string | null {
+diff --git a/mobile/src/lib/schemas.ts b/mobile/src/lib/schemas.ts
+index ed1e82bc5..670b101a0 100644
+--- a/mobile/src/lib/schemas.ts
++++ b/mobile/src/lib/schemas.ts
+@@ -200,6 +200,8 @@ export const LeadDetailCostSchema = z.object({
+   range_low: z.number().nullable(),
+   range_high: z.number().nullable(),
+   modeled_gfa_sqm: z.number().nullable(),
++  // served already converted by the API (fe.44: no conversion on the phone); optional so an older server still parses
++  modeled_gfa_sqft: z.number().nullable().optional(),
+ });
+ 
+ export const LeadDetailNeighbourhoodSchema = z.object({
+diff --git a/scripts/surfaces/_schema/census/mobile-product.json b/scripts/surfaces/_schema/census/mobile-product.json
+index 29d5ea17d..7bac4e464 100644
+--- a/scripts/surfaces/_schema/census/mobile-product.json
++++ b/scripts/surfaces/_schema/census/mobile-product.json
+@@ -1423,6 +1423,7 @@
+         "cost.range_low",
+         "cost.range_high",
+         "cost.modeled_gfa_sqm",
++        "cost.modeled_gfa_sqft",
+         "neighbourhood.name",
+         "neighbourhood.avg_household_income",
+         "neighbourhood.median_household_income",
+diff --git a/scripts/surfaces/_schema/report-presentation.json b/scripts/surfaces/_schema/report-presentation.json
+index 09c058b63..e8b98b2a1 100644
+--- a/scripts/surfaces/_schema/report-presentation.json
++++ b/scripts/surfaces/_schema/report-presentation.json
+@@ -45,7 +45,7 @@
+     },
+     "area": {
+       "formatter": "formatSqm",
+-      "alt_formatter": "formatSqft",
++      "alt_formatter": "formatServedSqft",
+       "file": "mobile/src/lib/parcelCostFormat.ts"
+     },
+     "length": {
+diff --git a/scripts/surfaces/_schema/seed-report-v2.mjs b/scripts/surfaces/_schema/seed-report-v2.mjs
+index b5c57326a..7cb4aaf31 100644
+--- a/scripts/surfaces/_schema/seed-report-v2.mjs
++++ b/scripts/surfaces/_schema/seed-report-v2.mjs
+@@ -604,7 +604,7 @@ const pres = {
+   disclosure_texts: { generated_from: 'spec78.P5.12', note: 'code → {template, slots, importance, mandatory} parsed from Spec 78 P5.12 by the generator; filled server-side from disclosure_params', importance_default: 'normal' },
+   formats: {
+     area_unit: { default: 'm²', options: ['m²', 'ft²'], note: 'today the screen mixes formatSqm (lot) and formatSqft (GFA), [parcelId].tsx:128-130' },
+-    area: { formatter: 'formatSqm', alt_formatter: 'formatSqft', file: 'mobile/src/lib/parcelCostFormat.ts' },
++    area: { formatter: 'formatSqm', alt_formatter: 'formatServedSqft', file: 'mobile/src/lib/parcelCostFormat.ts' },
+     length: { formatter: null, pattern: '{v} m', note: 'no formatter yet' },
+     fsi: { formatter: 'formatFsi', file: 'mobile/src/lib/parcelCostFormat.ts' },
+     currency: { formatter: 'formatCurrency', file: 'mobile/src/lib/parcelCostFormat.ts' },
+diff --git a/scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json b/scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json
+index 11393712d..f2a9395b4 100644
+--- a/scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json
++++ b/scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json
+@@ -99,6 +99,7 @@
+       "cost.range_low",
+       "cost.range_high",
+       "cost.modeled_gfa_sqm",
++      "cost.modeled_gfa_sqft",
+       "neighbourhood.name",
+       "neighbourhood.avg_household_income",
+       "neighbourhood.median_household_income",
+diff --git a/src/app/api/leads/detail/[id]/types.ts b/src/app/api/leads/detail/[id]/types.ts
+index 955a8097d..6cadd8c36 100644
+--- a/src/app/api/leads/detail/[id]/types.ts
++++ b/src/app/api/leads/detail/[id]/types.ts
+@@ -11,6 +11,8 @@ export interface LeadDetailCost {
+   range_low: number | null;
+   range_high: number | null;
+   modeled_gfa_sqm: number | null;
++  /** modeled_gfa_sqm already converted with the pinned factor parcels_sqm_to_sqft (fe.44: the client never converts). Both producers always set it (null when the area is null); the phone schema stays optional for an older server. */
++  modeled_gfa_sqft: number | null;
+ }
+ 
+ export interface LeadDetailNeighbourhood {
+diff --git a/src/lib/leads/lead-detail-query.ts b/src/lib/leads/lead-detail-query.ts
+index f957d5e8d..b2479b675 100644
+--- a/src/lib/leads/lead-detail-query.ts
++++ b/src/lib/leads/lead-detail-query.ts
+@@ -12,6 +12,7 @@ import type {
+   LeadDetailCost,
+   LeadDetailNeighbourhood,
+ } from '@/app/api/leads/detail/[id]/types';
++import { SQM_TO_SQFT } from '@/lib/parcels/geometry';
+ 
+ /**
+  * Raw row shape returned by `pool.query<LeadDetailRow>(LEAD_DETAIL_SQL, …)`.
+@@ -150,6 +151,11 @@ function composeAddress(
+   return composed.length > 0 ? composed : fallback;
+ }
+ 
++/** The area served already converted (fe.44: the phone only formats); the factor is the pinned parcels_sqm_to_sqft read by src/lib/parcels/geometry.ts. */
++function sqmToSqftOrNull(sqm: number | null): number | null {
++  return sqm === null ? null : sqm * SQM_TO_SQFT;
++}
++
+ function toCost(row: LeadDetailRow): LeadDetailCost | null {
+   // Surface the cost block only when at least one cost field is populated;
+   // an all-null block from the LEFT JOIN with no matching cost_estimates
+@@ -170,6 +176,7 @@ function toCost(row: LeadDetailRow): LeadDetailCost | null {
+     range_low: toNumberOrNull(row.cost_range_low),
+     range_high: toNumberOrNull(row.cost_range_high),
+     modeled_gfa_sqm: toNumberOrNull(row.modeled_gfa_sqm),
++    modeled_gfa_sqft: sqmToSqftOrNull(toNumberOrNull(row.modeled_gfa_sqm)),
+   };
+ }
+ 
+@@ -345,6 +352,7 @@ function toCoaCost(row: CoaLeadDetailRow): LeadDetailCost | null {
+     range_low: null,
+     range_high: null,
+     modeled_gfa_sqm: toNumberOrNull(row.modeled_gfa_sqm),
++    modeled_gfa_sqft: sqmToSqftOrNull(toNumberOrNull(row.modeled_gfa_sqm)),
+   };
+ }
+ 
+diff --git a/src/tests/admin-report-preview-live.logic.test.ts b/src/tests/admin-report-preview-live.logic.test.ts
+index b8e94bf51..7a84e659c 100644
+--- a/src/tests/admin-report-preview-live.logic.test.ts
++++ b/src/tests/admin-report-preview-live.logic.test.ts
+@@ -19,6 +19,7 @@ import { createRequire } from 'node:module';
+ vi.mock('@/lib/logger', () => ({ logError: vi.fn(), logWarn: vi.fn(), logInfo: vi.fn() }));
+ 
+ import { formatPageRule as formatPageRuleWith, PAGE_RULES, TEXT_RULES } from '@/lib/report-projection/format';
++import { SQM_TO_SQFT } from '@/lib/parcels/geometry';
+ import { CURRENT_SEED_SHAS } from '@/lib/report-projection/seed-shas';
+ import { pageBindings, pageOptions, projectStoredPage, SQFT_PER_M2, type StoredRow, type LotStamp } from '@/lib/report-projection/project';
+ // FIX.PROJ (task-372): the formatter takes the factor as a parameter (it imports nothing); the page reads it once in project.ts.
+@@ -124,14 +125,15 @@ describe('F: the FE-05 server formatter (outside the no-maths directories)', ()
+     expect([...bound].sort()).toEqual([...PAGE_RULES, ...TEXT_RULES, 'reason_text'].sort()); // K2: the closed text rules and the reason rule (project.ts)
+     for (const r of PAGE.fe05_flagged_rules as string[]) expect(bound.has(r)).toBe(false);
+   });
+-  it('matches the mobile helpers digit for digit on shared samples (parity; mobile untouched)', async () => {
+-    // a runtime path: the root tsconfig excludes mobile/ (its @/ alias is the app's); vitest loads the file and erases its type-only import
++  it('formats square feet to literal expected strings (FIX.AREA-FACTOR: the phone no longer types the factor, so its helper is not the oracle) and matches the mobile m2 helper', async () => {
++    // a runtime path: the root tsconfig excludes mobile/ (its @/ alias is the app's); the runner loads the file and erases its type-only import
+     const MOBILE = path.join(ROOT, 'mobile/src/lib/parcelCostFormat.ts');
+-    const { formatSqft, formatSqm } = (await import(MOBILE)) as { formatSqft: (m: number) => string | null; formatSqm: (m: number) => string | null };
+-    for (const m of [0, 1, 9.29, 99.96, 120, 248.05, 284, 395.6, 1000, 5000, 92903.04]) {
+-      expect(`${fmt('area_sqft', m)} sq ft`).toBe(formatSqft(m));
+-      expect(fmt('area_m2', m)).toBe(formatSqm(m));
+-    }
++    const { formatSqm, formatServedSqft } = (await import(MOBILE)) as { formatSqm: (m: number) => string | null; formatServedSqft: (sqft: number) => string | null };
++    const SQFT: Array<[number, string]> = [[0, '0'], [1, '11'], [9.29, '100'], [99.96, '1,076'], [120, '1,292'], [248.05, '2,670'], [284, '3,057'], [395.6, '4,258'], [1000, '10,764'], [5000, '53,820'], [92903.04, '999,999']];
++    for (const [m, expected] of SQFT) expect(`${fmt('area_sqft', m)} sq ft`).toBe(`${expected} sq ft`);
++    for (const [m] of SQFT) expect(fmt('area_m2', m)).toBe(formatSqm(m));
++    // parity (web to phone): the phone formatter fed the pinned-factor product, as the API serves it, prints what the web page prints
++    for (const [m] of SQFT) expect(formatServedSqft(m * SQM_TO_SQFT)).toBe(`${fmt('area_sqft', m)} sq ft`);
+   });
+   it('lives outside the four directories the no-maths lock scans, and the formatter imports nothing', () => {
+     const lock = fs.readFileSync('src/tests/surfaces/report-no-maths.logic.test.ts', 'utf8');
+diff --git a/src/tests/lead-detail-query.coa.infra.test.ts b/src/tests/lead-detail-query.coa.infra.test.ts
+index 25fb817ed..d2bddbf5d 100644
+--- a/src/tests/lead-detail-query.coa.infra.test.ts
++++ b/src/tests/lead-detail-query.coa.infra.test.ts
+@@ -160,6 +160,12 @@ describe('toCoaLeadDetail — cost envelope', () => {
+     expect(detail.cost!.range_high).toBeNull();
+   });
+ 
++  it('serves modeled_gfa_sqft converted from the pinned factor, null when the area is null (FIX.AREA-FACTOR, fe.44)', () => {
++    expect(toCoaLeadDetail(sampleCoaRow).cost!.modeled_gfa_sqft).toBeCloseTo(263.71555, 5); // 24.5 m2 at the pinned 10.7639
++    const noArea = toCoaLeadDetail({ ...sampleCoaRow, modeled_gfa_sqm: null });
++    expect(noArea.cost!.modeled_gfa_sqft).toBeNull();
++  });
++
+   it('returns cost: null when BOTH estimated_cost AND modeled_gfa_sqm are null', () => {
+     const detail = toCoaLeadDetail({
+       ...sampleCoaRow,
+diff --git a/src/tests/leads-detail.infra.test.ts b/src/tests/leads-detail.infra.test.ts
+index 95869d4d6..d96f7e708 100644
+--- a/src/tests/leads-detail.infra.test.ts
++++ b/src/tests/leads-detail.infra.test.ts
+@@ -121,6 +121,21 @@ describe('GET /api/leads/detail/[id] — 200', () => {
+     expect(body.data.cost.modeled_gfa_sqm).toBe(142.5);
+   });
+ 
++  it('serves the area already converted: cost.modeled_gfa_sqft is modeled_gfa_sqm times the pinned factor (FIX.AREA-FACTOR, fe.44); null when the area is null', async () => {
++    mockedGetUserContext.mockResolvedValueOnce(sampleContext);
++    mockedPool.query.mockResolvedValueOnce({ rowCount: 1, rows: [sampleRow] });
++    const res = await GET(makeRequest(), makeContext('24 101234--01'));
++    const body = (await readJson(res)) as { data: { cost: { modeled_gfa_sqft: number } } };
++    expect(body.data.cost.modeled_gfa_sqft).toBeCloseTo(1533.85575, 5); // 142.5 m2 at the pinned 10.7639
++
++    mockedGetUserContext.mockResolvedValueOnce(sampleContext);
++    mockedPool.query.mockResolvedValueOnce({ rowCount: 1, rows: [{ ...sampleRow, modeled_gfa_sqm: null }] });
++    const res2 = await GET(makeRequest(), makeContext('24 101234--01'));
++    const body2 = (await readJson(res2)) as { data: { cost: { modeled_gfa_sqm: number | null; modeled_gfa_sqft: number | null } } };
++    expect(body2.data.cost.modeled_gfa_sqm).toBeNull();
++    expect(body2.data.cost.modeled_gfa_sqft).toBeNull();
++  });
++
+   it('returns cost: null when no cost_estimates row matched', async () => {
+     mockedGetUserContext.mockResolvedValueOnce(sampleContext);
+     mockedPool.query.mockResolvedValueOnce({
+
