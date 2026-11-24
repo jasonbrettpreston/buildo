@@ -7,12 +7,9 @@ status: DONE
 assignee:
   - '@lane-BL-R7a'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-24T14:42:00Z'
+updated_date: '2026-11-24T18:41:00Z'
 due_date: '2026-11-26'
 labels:
-  - F
-  - plan:CHK.3
-  - evidence:built
   - dead
 milestone: m-0
 dependencies:

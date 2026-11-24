@@ -7,10 +7,8 @@ status: DONE
 assignee:
   - '@lane-BL-R11'
 created_date: '2026-11-19T15:20:00Z'
-updated_date: '2026-11-24T14:42:00Z'
+updated_date: '2026-11-24T18:41:00Z'
 labels:
-  - follow-up
-  - McFixReborn
   - dead
 milestone: m-1
 dependencies: []

@@ -7,10 +7,8 @@ status: MERGED
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-24T14:42:00Z'
+updated_date: '2026-11-24T18:40:00Z'
 labels:
-  - F
-  - plan:INFRA.4
   - dead
 milestone: m-0
 dependencies:

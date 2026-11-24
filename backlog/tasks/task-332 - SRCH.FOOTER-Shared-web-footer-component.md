@@ -10,11 +10,8 @@ status: BUILT
 assignee:
   - '@lane-BL-FOOTER'
 created_date: '2026-11-19T15:44:00Z'
-updated_date: '2026-11-24T14:42:00Z'
+updated_date: '2026-11-24T18:41:00Z'
 labels:
-  - S
-  - plan:SRCH.FOOTER
-  - McFixReborn
   - dead
 milestone: m-1
 dependencies: []

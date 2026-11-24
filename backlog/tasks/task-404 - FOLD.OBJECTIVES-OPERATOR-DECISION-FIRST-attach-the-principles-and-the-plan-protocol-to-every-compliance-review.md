@@ -6,10 +6,8 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T16:34:00Z'
-updated_date: '2026-11-24T14:42:00Z'
+updated_date: '2026-11-24T18:41:00Z'
 labels:
-  - McFix
-  - McFix Z
   - dead
 milestone: m-1
 dependencies: []

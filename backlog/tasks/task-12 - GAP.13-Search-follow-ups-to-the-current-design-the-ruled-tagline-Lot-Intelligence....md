@@ -7,14 +7,9 @@ status: DONE
 assignee:
   - '@lane-BL-GAP13'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-24T14:42:00Z'
+updated_date: '2026-11-24T18:40:00Z'
 due_date: '2026-11-26'
 labels:
-  - S
-  - plan:GAP.13
-  - evidence:ready
-  - unverified
-  - McFixReborn
   - dead
 milestone: m-1
 dependencies: []

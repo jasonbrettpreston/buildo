@@ -6,12 +6,8 @@ title: >-
 status: DONE
 assignee: []
 created_date: '2026-11-19T21:32:00Z'
-updated_date: '2026-11-24T14:42:00Z'
+updated_date: '2026-11-24T18:41:00Z'
 labels:
-  - S
-  - plan:SRCH.A6
-  - operator
-  - McFixReborn
   - dead
 milestone: m-1
 dependencies: []
