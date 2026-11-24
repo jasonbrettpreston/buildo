@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T19:26:18.671Z file_sha256=389fb35ab78a38eeb5c9dbc892dc088c0191f5496e84d12892b85976838de6ed prompt_sha256=617a8eb97188340521606dcda1542c40139bc36727f52247c72a486cfa01933b
+🔍 Lens review of docs/reports/reviews/task-457/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=MED — plan §3 step 2 "It resets with every new fetch: a new query, a remount or a refocus." — the zero-429 auto-retry rides TanStack failureCount, so every refocus, remount or refetch re-arms it and a server that keeps answering 0 gets a fresh retry each focus, exceeding AC2 "only once" across a session — gate it on a value that survives refetch (a query meta flag or a ref set once per query mount), not the per-fetch count.
+
+DEFER severity=LOW — plan §3 step 3 "const t = setTimeout(() => setWaitError(new NetworkError('task-457: the semi page wait limit')), SEMI_CONTINUE_WAIT_MS)" — the limit firing is shown to the user but nothing logs or records it, so a recurring open-ended wait is invisible in diagnostics — route the timeout through whatever client log already exists, or state that none does.
+
+DEFER severity=LOW — plan §3 step 3 "}, [situation.state]);" — the timer arms from the first 'loading' render and is not re-armed when a background refetch starts while state stays 'loading', so a legitimate slow fetch begun at t=59 s still shows the error at t=60 s — decide and record whether the limit runs from page open (per task text) or from the latest attempt.
+
+DEFER severity=LOW — plan §6 "(rate_limited, no button) is unchanged." — a zero-second 429 on the semi page itself still dead-ends at a notice with no button, so handleRetry is never reachable for it and nothing retries — accept and annotate on task-450, or give that notice the same Try again.
+
+DEFER severity=LOW — plan §2 "With a disabled query (no access token, :106) the result is the same." — cannot see whether refetch() issues a request when the query is disabled; if it does not, Try again only re-arms the 60 s wait with no fetch and the user loops — have the grounder confirm refetch fires without a token, else show a distinct message.
+
+REJECT — plan §3 step 3 "setWaitError(null); void refetch()" — a double tap on Try again looks like it could fire two searches — handled: clearing waitError flips situation back to 'loading' which removes the retry button, and a refetch on the same query key dedups to one in-flight GET, no write or count doubled.
+
+REJECT — plan §3 step 2 "return failureCount === 0" — looks like the retry could loop on a persistent zero 429 — handled: at failureCount 1 it returns false so at most one retry per fetch, and the request is a GET with no counted write.
+
+VERDICT: PASS on error-path safety
+Paths walked: synthesized timeout (effect arm/fire/cleanup), empty (no data reads as loading), zero-429 retry bound, refocus/refetch re-arm, double-submit on Try again, offline paused retry, disabled/no-token retry, data-after-limit precedence   Unguarded: 2
+
+---
+⏱  80705ms (80.7s)
+📊 Tokens — total: 32682, input: 18129, output: 14553, reasoning: 13874

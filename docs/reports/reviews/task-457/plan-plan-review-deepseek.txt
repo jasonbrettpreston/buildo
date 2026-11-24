@@ -1,0 +1,45 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-24T19:26:18.667Z file_sha256=389fb35ab78a38eeb5c9dbc892dc088c0191f5496e84d12892b85976838de6ed prompt_sha256=fca05494a3f21fde3862acfbcd93988a3f49468048200fc17482509c71f63795
+🔍 Lens review of docs/reports/reviews/task-457/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — Plan §3 step 3 (:41–44) — `waitError` is not masked while `isFetching` is true, so on the primary recovery path (offline → error at 60 s → reconnect refocus/auto-refetch, or the auth token arriving at :106 re-enabling the query) the page shows "Couldn't reach the lot service. Check your connection and try again." for the whole (possibly slow) refetch instead of "Searching"; it self-heals only when data lands — Fix: gate the wait error on fetch state, e.g. `const shown = submitError ?? error ?? (data || isFetching ? null : waitError)`, or clear `waitError` in an effect the moment `isFetching` turns true.
+
+BUG severity=MED — Plan §3 step 3 / §2 "error, unexpected" — AC1's mechanism (a bare `NetworkError` draws `unexpected → plain_error + Try again`) is asserted from `parcelSearchMatch.ts:298–302`, but the plan never quotes semiQuestion.ts's own error→flag classifier, which is what actually consumes `error: shown`; if that classifier doesn't match a plain `NetworkError` into the "unexpected" branch, the message/button never appear — Fix: read semiQuestion.ts's classifier (~:74–100) and confirm (or add) the default `unexpected` branch handles `NetworkError`; T1 already red-checks "parcel-semi-retry is shown," so make that assertion the gate.
+
+BUG severity=MED — Plan §2 "no data with an id reads as loading" — a lookup that returns `null` data with no error for a genuinely missing/stale parcel id is indistinguishable from "offline"; the timer will then mislabel a data miss as a connection fault ("Check your connection and try again") after 60 s — Fix: confirm the lookup route returns an error (not null data) for a not-found id, or branch "data present but no form / id unknown" to a distinct state rather than the wait time limit.
+
+DEFER severity=MED — Plan §2 / §6 — the plan states "our server always sends 60" (error-mapping.ts:46–48, route.ts:90) yet the reported bug is "reads Try again in 0s"; the origin of the observed 0 (intermediary CDN/WAF, dev admin, or a future sender) is never identified, so the retry may be unreachable in prod or fire repeatedly against an unknown 0-emitter — Rationale: bounded to +1 request per fetch chain, but reconcile the source before claiming AC2 is a production fix rather than defensive code.
+
+DEFER severity=MED — Plan §3 step 2 / T3 — "once" is enforced as `failureCount === 0`, so a zero-429 that arrives as the second failure (after a 0-then-retried 500) gets zero automatic retries; AC2's literal "a zero-second rate limit retries once" is not met in that chain — Rationale: the per-chain cap is the safer reading, but T3 should document the 500-then-0 chain as intentional so it isn't flagged as a miss at output review.
+
+DEFER severity=LOW — Plan §3 step 1 / search notice — `err.retryAfterSeconds === 0` is strict equality; if `retryAfterSeconds` can ever be a float that the notice floors to "0s" (SearchBinding.tsx:131–132, :252), the text says "0s" while the retry never fires — Fix: confirm `retryAfterSeconds` is always an integer (parcelSearchMatch.ts:299), else use `Math.floor(err.retryAfterSeconds) === 0`.
+
+DEFER severity=LOW — Plan §6 / T5 — "Advance 1000 ms" targets TanStack `retryDelay(0) = 1000 ms` at the exact boundary; the retry timer is scheduled a microtask after the first failure, so 1000 ms can flake — Fix: advance `retryDelay + 1` or import/derive the configured delay in the test.
+
+DEFER severity=LOW — Plan §9 — "RN onlineManager reads online under jest" is UNVERIFIED; if it reads offline the new fetch is paused, T5/T6 make 0 requests, and the red→green premise fails silently — Fix: add a one-line `onlineManager.isOnline()` assertion or `onlineManager.setOnline(true)` in the test setup before T5/T6.
+
+DEFER severity=LOW — Plan §8 choice 2 / §2 — the same "0s and nothing retries" pattern exists on the semi-page lookup and the report fetch (429 → "Try again in 0s," no button); the plan scopes retry to search only — Rationale: RR-0456 says "retries the search," but confirm this doesn't leave the operator's original 0s complaint half-fixed on the semi page he reported it from.
+
+DEFER severity=LOW — Plan §2 "SearchBinding.tsx:86–87" — the search page's own offline spinner may share the "no data, no error, not fetching → loading forever" root cause (AC1 only fixes the semi page); if SearchBinding keys its spinner on `isFetching` it is safe (paused → false), but the plan doesn't say — Rationale: sibling of the fixed bug; verify SearchBinding's loading condition so the same open-ended wait isn't left live on search.
+
+DEFER severity=LOW — Plan §3 step 3 / backgrounded app — RN timers are suspended while the app is backgrounded, so a semi page backgrounded at t=30 s will not fire the limit until foregrounding, showing "Searching" past 60 s wall-clock if the user returns briefly — Rationale: acceptable for a UI bound, but note it so "the wait stops after the limit" isn't read as wall-clock-precise.
+
+REJECT — Plan §3 step 3 / cleanup — concern that a leaked timer fires an error after data has loaded is not real: `data ? null : waitError` masks `waitError` whenever `data` is present, so even if `useEffect` cleanup regressed no spurious error surfaces once the question renders.
+
+REJECT — Plan §3 step 2 — a retry storm is impossible: the retry is hard-bounded to `failureCount === 0`, so each fetch chain sends exactly one extra request with no loop, escalation, or cross-query fan-out.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- `waitError` is shown during an in-flight refetch (reconnect/refocus/auth-token-enable); the page displays "Couldn't reach…" instead of "Searching" on the very recovery path the feature exists for, and no test covers it — mask on `isFetching`.
+- A `null`-data/no-error lookup (missing/stale parcel) is mislabeled as a connection fault after 60 s — confirm the lookup returns an error for not-found or add a distinct state.
+- The 0-second origin is unreconciled: the plan says the server always sends 60, so either AC2 is unreachable defensive code or it fires against an unknown intermediary — verify where the observed 0 comes from.
+
+Top 3 unverified data premises (regardless of verdict):
+- semiQuestion.ts classifies a bare `NetworkError` as `unexpected → plain_error`: read the classifier and confirm the default branch; verification is `grep -n "unexpected\|instanceof NetworkError\|classifyParcel" mobile/src/lib/semiQuestion.ts` and check the branch that handles a non-RateLimit/non-Entitlement error.
+- `onlineManager` is online under jest for T5/T6: verification is a one-line `expect(onlineManager.isOnline()).toBe(true)` in `mobile/__tests__/useAnswerParcelLookup.hook.test.tsx` setup, or an explicit `onlineManager.setOnline(true)`.
+- Deployed search API Retry-After is always 60 (never 0 from a proxy): verification is `curl -sI https://<search-host>/<lookup-route> | grep -i retry-after` against a deliberate 429 (or inspect the CDN/WAF config in front of `lookup route.ts:90`), plus `grep -n "retryAfter\|Retry-After" mobile/src/lib/apiClient.ts` to confirm the missing-header→60 default at :43–44.
+
+---
+⏱  130453ms (130.5s)
+📊 Tokens — total: 43117, input: 19015, output: 24102, reasoning: 22247

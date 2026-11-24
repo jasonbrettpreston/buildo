@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T19:26:18.667Z file_sha256=389fb35ab78a38eeb5c9dbc892dc088c0191f5496e84d12892b85976838de6ed prompt_sha256=0c5f6726186f5f9429c45b60b557bbe5159f56eee3bbe9961bf7f4c507fcf239
+🔍 Lens review of docs/reports/reviews/task-457/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan §2 "If the retry is refused again (failure count 1), the hook returns false, the query errors with RateLimitError(0), and today's "Too many searches. Try again in 0s." shows. There is no further automatic retry." vs design "Q5 retry once auto at zero" — after the one automatic retry is refused, the person is told "Try again in 0s" with no button and nothing retrying, so the only instruction on screen is already expired and reads as false — when the single retry is refused, do not print a 0 s countdown; show the approved rate-limit notice with no wait time, without adding a second retry.
+
+DEFER severity=MED — plan §3 step 3 ":79 retry: if (submitError != null) setSubmitError(null); else { setWaitError(null); void refetch(); }" — a waitError left from the 60 s timeout is never cleared in the submitError branch, so the first Try again after a failed answer resurfaces the old notice and issues no fetch, and the button looks dead until pressed a second time — clear waitError in both branches.
+
+DEFER severity=MED — plan §6 "The semi page's own "Try again in 0s" (rate_limited, no button) is unchanged." — a person who meets a zero-second rate limit on the semi question page sees "Try again in 0s" with no control and nothing auto-retrying, the same trap AC2 fixes on the search — RR-0456 named only the search so this is outside the ruled scope, but it should be put to the operator rather than left unnamed.
+
+DEFER severity=MED — plan §2 "With a disabled query (no access token, :106) the result is the same." — a person whose token is gone now waits 60 s and is shown "Couldn’t reach the lot service. Check your connection and try again." with Try again, a loop that cannot succeed and blames a connection that is fine — the tokenless state must not end in a connection message; it needs a way forward that matches its cause.
+
+DEFER severity=LOW — plan §6 "Try again while still offline: the query stays paused and the 60 s starts again. It is honest and costs nothing." — having just been told to check their connection, an offline person presses Try again and watches a bare "Searching" for another full minute with no sign it cannot succeed — the repeat offline attempt should not present a full 60 s wait as if it might succeed.
+
+REJECT — plan §2 "text state.error "Couldn’t reach the lot service. Check your connection and try again."" — a 60 s timeout on a working but slow connection will blame the person's own connection — this is the approved generated slice string reused unchanged, the card asks for a could-not-load message with Try again, and no new content key is due, so it matches the design.
+
+VERDICT: FAIL on the person's experience
+States checked: first view with lookup in flight, Searching, timeout error at 60 s, question/ask, answer submit error, Try again, offline, rate limit with seconds, zero-second rate limit on search, zero-second rate limit on semi page, retry in flight, second zero refusal, no access token, late data after the limit, back/remount, repeat visit   Dead ends found: 3
+
+---
+⏱  67535ms (67.5s)
+📊 Tokens — total: 29926, input: 18128, output: 11798, reasoning: 11068
