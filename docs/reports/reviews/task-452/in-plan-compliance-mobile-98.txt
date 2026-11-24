@@ -1,4 +1,4 @@
-LIST mobile-98 sha256:0e487889e7048c130b95af155cb1835627709a1b162ded29c1bc1cdee0d1feda material sha256:cb2e71c3e1ca9929c15258d341af31007e4290d074314f95bfe88b1caaca7f89 part 1 of 1
+LIST mobile-98 sha256:a010fdfa188dfac4360838474341fb6806166b923ed9830a9eb35708bed7824d material sha256:cb2e71c3e1ca9929c15258d341af31007e4290d074314f95bfe88b1caaca7f89 part 1 of 1
 RULE LIST mobile-98 (docs/specs/03-mobile/98_mobile_testing_protocol.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
 
 # Spec 98 — Mobile Testing Protocol & Local Environment
@@ -124,6 +124,8 @@ The boundaries below are illustrative examples within those mandates.
 **Pre-Build Checks:** EAS Build runs the above sequence natively before attempting an iOS/Android build. If tests fail, the build is aborted to save queue time and credits.
 
 **E2E Automation (Phase 2):** Maestro tests will be integrated into GitHub Actions via Maestro Cloud to run automatically against staging builds.
+
+> Dated note 2026-11-24 (task-462, RR-0462, step 4 of the approved quick plan): the phone typecheck and phone tests also run before every push, as steps `mobile-typecheck` and `mobile-tests` of `.husky/pre-push-checks.sh` (before the web suite, no coverage written); Mobile CI still runs after the push.
 
 ## 6. Historical Context & Past Issues
 To prevent future developers from falling into the same local development traps, we document the major environment issues that forced the transition to this protocol.
