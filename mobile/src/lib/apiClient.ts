@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/react-native';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
-import { ApiError, AccountDeletedError, RateLimitError, NetworkError } from '@/lib/errors';
+import { ApiError, AccountDeletedError, RateLimitError, NetworkError, ReportLimitError, SubscriptionRequiredError } from '@/lib/errors';
 
 // Spec 99 §9.6 amendment: error classes moved to `@/lib/errors` (a leaf
 // module with zero side-effect imports). Re-exported here for backward
@@ -9,7 +9,7 @@ import { ApiError, AccountDeletedError, RateLimitError, NetworkError } from '@/l
 // from '@/lib/apiClient'`. Pure modules + their unit tests should import
 // from `@/lib/errors` directly to avoid pulling supabase/MMKV into the
 // import graph.
-export { ApiError, AccountDeletedError, RateLimitError, NetworkError };
+export { ApiError, AccountDeletedError, RateLimitError, NetworkError, ReportLimitError, SubscriptionRequiredError };
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://buildo.app';
 
@@ -57,8 +57,16 @@ async function fetchWithAuthInternal<T>(
           Number(errObj.days_remaining ?? 0),
         );
       }
+      // task-452 SEARCHFIX.4 (AC1): the two parcel 403s keep their code as their own ApiError subclasses; the limit's details are taken only when typed right.
+      if (errObj?.code === 'REPORT_LIMIT_REACHED') {
+        const details = (errObj.details ?? null) as Record<string, unknown> | null;
+        const limit = details?.reportsLimit;
+        const resets = details?.resetsOn;
+        throw new ReportLimitError(typeof limit === 'number' && Number.isFinite(limit) ? limit : null, typeof resets === 'string' ? resets : null);
+      }
+      if (errObj?.code === 'SUBSCRIPTION_REQUIRED') throw new SubscriptionRequiredError();
     } catch (e) {
-      if (e instanceof AccountDeletedError) throw e;
+      if (e instanceof AccountDeletedError || e instanceof ApiError) throw e;
     }
     throw new ApiError(403, 'Forbidden');
   }

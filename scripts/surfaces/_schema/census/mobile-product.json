@@ -14920,7 +14920,8 @@
         "components": [
           "mobile/src/components/surfaces/LotMapBinding.tsx",
           "mobile/src/components/surfaces/SemiQuestionBinding.tsx",
-          "mobile/src/components/surfaces/PageTableBinding.tsx"
+          "mobile/src/components/surfaces/PageTableBinding.tsx",
+          "mobile/src/components/surfaces/WallBinding.tsx"
         ]
       },
       "owner": "Admin domain (Spec 126 §14 Target Files) — the conversion programme owns the row; no individual owner is named by Specs 126/127/128.",
@@ -15336,6 +15337,327 @@
       "why": "Shared rendering infrastructure: the binding every mobile REPORT surface renders through.",
       "feature": "F14",
       "build_order": 3145,
+      "leakage": "none",
+      "product_questions": "none",
+      "review": {
+        "status": "unreviewed"
+      }
+    }
+  },
+  {
+    "kind": "SURFACE",
+    "status": "generated",
+    "docs": {
+      "purpose": "The wall a refused lot lookup shows on the phone (task-452 SEARCHFIX.4; RR-0443, RR-0444 2b, RR-0466). At the monthly report limit the person sees one neutral notice: \"You’ve used all {limit} reports\" as its emphasised first line, \"Your count resets on {date}.\" smaller beneath it, then \"Lot reports you’ve opened this month stay available.\", \"Your Tracked Lots remain.\" and \"Your plan is managed on the web for changes.\", and a Go to Tracked Lots button. With an expired subscription the notice is the reactivate sentence and the same plan line, with the same button. No top-up or upgrade control until the buying work (RR-0454 item 3). Drawn in place of the search page, and on the report screen under its Back bar while no report is shown.",
+      "data_story": "It reads one contract, GET /api/parcels/entitlement (contract_parcels_entitlement), through useParcelEntitlement (the query key the search page already reads, so no extra request). The count is reportsLimit and the date is the server label resetsOnDisplay (RR-0310); the 403 body of the lookup carries its own limit and ISO date, kept on ReportLimitError and never drawn. Which wall shows is searchWall (mobile/src/lib/parcelSearchMatch.ts) over the lookup error class and that read. It emits **no analytics event**.",
+      "under_126": "**CONVERTED (SEARCHFIX.4)** — LIST, drawn from the rows of screens.mobile_parcel_wall in scripts/surfaces/_schema/static-page.json by pageProps (PageTableBinding.tsx) through WallBinding.tsx and the shared SurfaceRenderer.tsx, the second screens row after the semi page (task-357 ruling, MD:1476). It owns no component and has no route of its own: two mounts (the search page and the report route) draw it through useWallState.ts."
+    },
+    "evidence": {
+      "files": [
+        "mobile/src/hooks/useWallState.ts",
+        "mobile/src/components/surfaces/WallBinding.tsx",
+        "mobile/src/lib/parcelSearchMatch.ts",
+        "mobile/src/lib/errors.ts",
+        "mobile/app/(app)/parcel-tool/index.tsx",
+        "mobile/app/(app)/parcel-tool/[parcelId].tsx",
+        "mobile/src/components/surfaces/ReportPageHost.tsx"
+      ],
+      "contracts": [
+        "mobile/src/hooks/useWallState.ts — useParcelEntitlement() (GET /api/parcels/entitlement)"
+      ],
+      "tables": [
+        "src/lib/entitlements/index.ts — readParcelToolUsage (the entitlements row of product parcel_tool)"
+      ],
+      "gate": [
+        "src/app/api/parcels/lookup/route.ts:112 — reportLimitReached",
+        "src/features/leads/api/error-mapping.ts:29 — SUBSCRIPTION_REQUIRED",
+        "src/features/leads/api/error-mapping.ts:38 — REPORT_LIMIT_REACHED"
+      ],
+      "states": [
+        "mobile/src/lib/parcelSearchMatch.ts — searchWall",
+        "mobile/__tests__/fixtures/wall.situations.json — goldens"
+      ],
+      "emits": [
+        "mobile/src/hooks/useWallState.ts — no track() call"
+      ]
+    },
+    "identity": {
+      "id": "mobile_parcel_wall",
+      "route": "mobile/app/(app)/parcel-tool/index.tsx",
+      "archetype": "LIST",
+      "platforms": [
+        "mobile"
+      ],
+      "owns": {
+        "components": []
+      },
+      "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-16)",
+      "spec": "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md",
+      "spec_refs": [
+        "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4",
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1",
+        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7"
+      ],
+      "spec_version": "0-draft",
+      "versioning": {
+        "answer": "none",
+        "why": "It reads the entitlement read as parsed by ParcelToolEntitlementSchema (a plain object, additive_only); a field it needs that is null draws no wall (today’s notice stays).",
+        "evidence": [
+          "mobile/src/lib/schemas.ts — ParcelToolEntitlementSchema"
+        ]
+      },
+      "ref": "S-096"
+    },
+    "inputs": {
+      "answer": "contract",
+      "why": "One GET /api/parcels/entitlement through useParcelEntitlement, the same TanStack entry the search page reads; plus the lookup error class its host passes in (ReportLimitError or SubscriptionRequiredError from mobile/src/lib/apiClient.ts).",
+      "evidence": [
+        "mobile/src/hooks/useWallState.ts — useParcelEntitlement()",
+        "mobile/src/hooks/useParcelLookup.ts — export function useParcelEntitlement"
+      ],
+      "contract_ref": [
+        "/api/parcels/entitlement"
+      ],
+      "query_key": [
+        "parcel-entitlement"
+      ],
+      "field_whitelist": [
+        "status",
+        "reportsLimit",
+        "resetsOnDisplay"
+      ],
+      "tables": [
+        {
+          "table": "entitlements",
+          "columns": [
+            "user_id",
+            "product",
+            "status",
+            "plan_key",
+            "current_period_end"
+          ],
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+          "evidence": [
+            "src/lib/entitlements/index.ts — readParcelToolUsage"
+          ]
+        }
+      ]
+    },
+    "outputs": {
+      "answer": "none",
+      "why": "It writes nothing. The only action is Go to Tracked Lots, a tab switch (router.navigate to PARCEL_TAB_ROUTE.tracked); it records no recent search.",
+      "evidence": [
+        "mobile/src/hooks/useWallState.ts — push: router.navigate"
+      ],
+      "contract_ref": [],
+      "tables": []
+    },
+    "state": {
+      "answer": "none",
+      "why": "No store and no field of its own: it reads the existing entitlement query and the lookup error its host already holds.",
+      "evidence": [
+        "mobile/src/hooks/useWallState.ts"
+      ],
+      "fields": []
+    },
+    "staleness": {
+      "answer": "query_cache",
+      "why": "useParcelEntitlement declares staleTime ENTITLEMENT_STALE_MS (the search slice config entitlement_stale_ms, 0) and is re-read on focus of the search page.",
+      "evidence": [
+        "mobile/src/hooks/useParcelLookup.ts — staleTime: ENTITLEMENT_STALE_MS"
+      ],
+      "offline": "blocked",
+      "stale_time_ms": 0,
+      "gc_time_ms": 86400000
+    },
+    "guards": {
+      "session": {
+        "answer": "entitled",
+        "why": "It shows only after the lookup route refused: the 403 is the gate (a display, never a gate on the phone); the tab gate and the parcel-tool Stack are inherited.",
+        "evidence": [
+          "src/app/api/parcels/lookup/route.ts:112",
+          "mobile/app/(app)/_layout.tsx:236-265"
+        ]
+      },
+      "rls_class": {
+        "answer": "B",
+        "why": "entitlements is read as the table owner through the entitlement route; no client read.",
+        "evidence": [
+          "src/lib/entitlements/index.ts — readParcelToolUsage"
+        ]
+      },
+      "disclosure": "none",
+      "entitlement": {
+        "product": "parcel_tool",
+        "statuses": [
+          "trial",
+          "active",
+          "past_due",
+          "admin_managed"
+        ],
+        "on_missing": "403"
+      },
+      "flag": "none",
+      "permission": "none",
+      "rate_bucket": "none — the wall makes no request of its own; the entitlement read is the search page’s"
+    },
+    "render": {
+      "targets": [
+        "screen"
+      ],
+      "projection": "none",
+      "breakpoints": "mobile_first",
+      "export": "none",
+      "list": {
+        "item_archetype": "one notice and one button",
+        "pagination": "none",
+        "recycling": "none — one notice"
+      }
+    },
+    "checks": [
+      {
+        "id": "parcelwall_read_not_403",
+        "kind": "empty_state",
+        "severity": "FAIL",
+        "blocking": true,
+        "when": "pre",
+        "why": "RR-0310: the count and the date are the entitlement read’s served values; the 403’s own values are never drawn and a failed read keeps today’s notice. Locked by mobile/__tests__/parcelSearchMatch.test.ts (searchWall) and parcelSearchScreen.behaviour.test.tsx."
+      },
+      {
+        "id": "parcelwall_reactivate_only_expired",
+        "kind": "empty_state",
+        "severity": "FAIL",
+        "blocking": true,
+        "when": "pre",
+        "why": "RR-0444 2b: the reactivate state shows only for an expired subscription; no plan (task-357), an active status and a failed read keep today’s notice. Locked by mobile/__tests__/parcelSearchMatch.test.ts."
+      }
+    ],
+    "invariants": "none",
+    "plausibility": "none",
+    "states": [
+      {
+        "name": "rate_limited",
+        "golden": "rate_limited"
+      },
+      {
+        "name": "unauthorized",
+        "golden": "unauthorized"
+      }
+    ],
+    "errors": {
+      "answer": "inline",
+      "why": "The wall is itself the declared failure UI of two refusals: the report limit (rate_limited) and an expired subscription (unauthorized). Every other failure keeps the host’s own notice.",
+      "evidence": [
+        "mobile/src/lib/parcelSearchMatch.ts — searchWall"
+      ],
+      "classes": [
+        {
+          "class": "403",
+          "ui": "REPORT_LIMIT_REACHED: the limit notice with the read’s count and date, the two lead lines, the plan line and Go to Tracked Lots. SUBSCRIPTION_REQUIRED with status expired: the reactivate sentence, the plan line and Go to Tracked Lots."
+        }
+      ]
+    },
+    "emits": {
+      "answer": "none",
+      "why": "No client analytics; the wall emits nothing.",
+      "evidence": [
+        "mobile/src/hooks/useWallState.ts"
+      ],
+      "analytics": [],
+      "ledger_events": [],
+      "breadcrumbs": []
+    },
+    "offers": {
+      "answer": "none",
+      "why": "No sponsored placement is rendered.",
+      "evidence": [
+        "mobile/src/components/surfaces/WallBinding.tsx"
+      ]
+    },
+    "metering": {
+      "answer": "none",
+      "why": "The wall counts nothing; the lookup route counts a produced report and sends the limit 403 (F02).",
+      "evidence": [
+        "src/app/api/parcels/lookup/route.ts:97-112"
+      ]
+    },
+    "config": {
+      "answer": "none",
+      "why": "No tunable: the wall reads no setting of its own.",
+      "evidence": [
+        "mobile/src/components/surfaces/WallBinding.tsx"
+      ]
+    },
+    "sharing": {
+      "answer": "shared",
+      "why": "It shares contract_parcels_entitlement and its query with the search page (S-002).",
+      "evidence": [
+        "mobile/src/hooks/useParcelLookup.ts — useParcelEntitlement"
+      ],
+      "surfaces": [
+        "mobile_parcel_search"
+      ]
+    },
+    "a11y": {
+      "touch_target_min_px": 44,
+      "labels": "complete",
+      "dark_mode": "hardcoded",
+      "reduced_motion": "none",
+      "i18n": "none",
+      "safe_area": [
+        "top"
+      ]
+    },
+    "deviations": [
+      {
+        "from": "Spec 126 §11a.1 closed binding set: a client derivation picks the state",
+        "why": "searchWall (mobile/src/lib/parcelSearchMatch.ts) maps the lookup error class and the entitlement read to the flags limit and reactivate (the closed list WALL_FLAG_NAMES); task-357 extends this row by a dated note with no_plan.",
+        "adjudicated_by": "task-452 plan grounder (v1 mobile-99-p1#5 CONFIRMED; RR-0444 2b, RR-0455, RR-0466)",
+        "date": "2026-11-24"
+      }
+    ],
+    "limitations": [
+      {
+        "what": "A failed entitlement read keeps today’s notice even at the limit: the count and date are drawn only from the read.",
+        "measured": "mobile/src/lib/parcelSearchMatch.ts searchWall returns null on isError.",
+        "check_id": "parcelwall_read_not_403"
+      },
+      {
+        "what": "No top-up or upgrade control and no way to sign up: both wait for the buying work (RR-0454 items 3 and 4); the no-plan page is task-357.",
+        "measured": "mobile/src/components/surfaces/WallBinding.tsx WALL_FLAG_NAMES holds limit and reactivate only.",
+        "check_id": "parcelwall_reactivate_only_expired"
+      }
+    ],
+    "interpretation": "none",
+    "notes": "SEARCHFIX.4 (task-452). One layout, two states, phone first; the web keeps its one not-entitled notice until its switch-on (RR-0455 item 1).",
+    "x-draft": {
+      "shard": "mobile-product",
+      "files": [
+        "mobile/src/hooks/useWallState.ts",
+        "mobile/src/components/surfaces/WallBinding.tsx"
+      ],
+      "loc": 0,
+      "call_idiom": "hook",
+      "stores": [],
+      "measured_states": [
+        "rate_limited",
+        "unauthorized"
+      ],
+      "measured_gate": {
+        "session": "required",
+        "entitlement": "parcel_tool",
+        "flag": "none",
+        "permission": "none"
+      }
+    },
+    "programme": {
+      "scope": "parcel_product",
+      "phase": "B2",
+      "why": "The refusal screens of the parcel tool entry flow (objective G.6).",
+      "feature": "F01",
+      "build_order": 1015,
       "leakage": "none",
       "product_questions": "none",
       "review": {

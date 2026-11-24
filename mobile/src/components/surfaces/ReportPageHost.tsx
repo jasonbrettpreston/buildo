@@ -19,6 +19,7 @@ import BottomSheet, { BottomSheetBackdrop, BottomSheetView, type BottomSheetBack
 import { SurfaceRenderer, type ReportActions, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
 import { backProps, lifecycleProps, reportProps, REPORT_UI_CLOSED, type LifecycleState, type PageView, type ReportUi } from '@/components/surfaces/ReportBinding';
 import { REPORT_HEX as H, REPORT_PAGE_LAYOUT as L } from '@/constants/reportPage';
+import type { WallView } from '@/hooks/useWallState';
 
 const COMPONENTS = { View, SurfaceRenderer, BottomSheet, BottomSheetView, BottomSheetBackdrop };
 const NO_DATA = { contract: {}, derived: {} };
@@ -31,8 +32,10 @@ export const REPORT_UI = {
   closeDetail: (u: ReportUi): ReportUi => ({ ...u, panel: {}, how: {} }),
 };
 
-export function ReportPageHost({ view, lifecycle, content, onRetry, onBack }: {
-  view: PageView | null; lifecycle: LifecycleState; content: Record<string, string>; onRetry: () => void; onBack: () => void;
+/** task-452 SEARCHFIX.4: `wall` (from useWallState) is the report-limit or reactivate wall of a refused lookup, drawn with its own tree, content, data and
+ *  actions (this host's content lacks the wall keys and ReportActions lack push). It replaces the lifecycle only while no report is shown. */
+export function ReportPageHost({ view, lifecycle, content, onRetry, onBack, wall }: {
+  view: PageView | null; lifecycle: LifecycleState; content: Record<string, string>; onRetry: () => void; onBack: () => void; wall?: WallView | null;
 }) {
   const [ui, setUi] = React.useState<ReportUi>(REPORT_UI_CLOSED);
   const [sheetOpen, setSheetOpen] = React.useState(false);
@@ -62,7 +65,11 @@ export function ReportPageHost({ view, lifecycle, content, onRetry, onBack }: {
     return (
       <Box className={L.host} testID="report-host">
         {top}
-        <Renderer tree={lifecycleProps(lifecycle) as SurfaceTree} content={content} data={NO_DATA} actions={actions} />
+        {wall ? (
+          <Renderer tree={wall.tree} content={wall.content} data={wall.data} actions={wall.actions} />
+        ) : (
+          <Renderer tree={lifecycleProps(lifecycle) as SurfaceTree} content={content} data={NO_DATA} actions={actions} />
+        )}
       </Box>
     );
   }

@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SFX4'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T20:55:00Z'
+updated_date: '2026-11-24T20:57:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -390,4 +390,12 @@ rg#4 MED folded owed now (not at lan
 2026-11-24 taken on the board at lane launch (lane BL-SFX4, worktree /Users/brettpreston_macmini/Buildo-wt-sfx4, branch wf2/inc1b-sfx4), RR-0240
 
 Lane BL-SFX4 commit 1 (plan step 11, first commit): the three useParcelEntitlement cites in census/contracts.json move from useParcelLookup.ts:162 to :168; the emit run rewrote the F02 entitlement descriptor and 127-surface-registry.md. Red: fix-tune D15 condition read in memory before the edit (hook line 168, descriptor :162). Green: the same read after the emit; registry --check clean, consumer-registry --check fresh.
+
+Tests first (lane BL-SFX4): phone red run 16 failed / 161 passed of 177 in 8 files (lane proof red.out); web red: the refused commit attempt with only the test and task files staged, Test Files 4 failed, Tests 6 failed | 122 passed (red-web.out).
+
+Lane BL-SFX4 work commit (RR-0466 card, plan sha256:7a8c2de9fe27). Deviation 1: ReportPageHost's wall prop and useWallState's WallView are { tree, content, data, actions }, not { tree, content, actions }: the notice text vars resolve contract refs (contract_parcels_entitlement.reportsLimit, .resetsOnDisplay) from the renderer's data, so without data the count and date cannot draw; for the validating grounder to rule. Deviation 2: the key walker's red-first could not be shown on the limit golden (the PageTableBinding key fix went in before any wall golden existed); the evidence is the in-memory probe (keys n-text x3 DUPLICATE before, n-text, n-text-1, n-text-2 after) and the walker's planted RED case; accepted by the orchestrator. Deviation 3: the ENTRY_OFF apiClient case asserts the prototype is ApiError itself so it is green before and after (as planned). Measured: surface-validate --check S-desc examined 34 (converted 18), S-screen 18 surfaces 102 goldens, S-sbind 18 surfaces 443 strings, S-page 2 of 2; semi capture --check ok (8) after the key fix and the role classes; phone: 13 touched files 282 of 282, full local phone run 59 files 905 of 905 (RR-0460); mobile tsc clean. S-096 claimed in the ID ledger.
+
+Deviation 4: surface-conformance.logic.test.ts C-7 pins the live descriptor count (172 -> 173, +mobile_parcel_wall); the plan's pin list did not name it; the first work-commit attempt's related run refused on it (expected 173 to be 172).
+
+CHK.3: WallBinding.tsx lands with the policy-ledger row chk3-new-component (ruling MD:2026-11-20:1476, the operator's delegation, plan step 6). The ruling is a delegation; the operator's confirmation of the file is asked on his return, and nothing is pushed before it.
 <!-- SECTION:NOTES:END -->

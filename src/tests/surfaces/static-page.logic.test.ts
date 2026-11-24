@@ -84,8 +84,16 @@ describe('T1 the page table against the contract', () => {
       ['a screen platform outside web and mobile', (t) => { t.screens.mobile_parcel_semi_question.platforms = ['tablet']; }],
       ['the old field name targets', (t) => { t.screens.mobile_parcel_semi_question.targets = ['mobile']; }],
       ['a screen with no sections', (t) => { t.screens.mobile_parcel_semi_question.sections = []; }],
+      // task-452 (RR-0466, MD:2410-2413; dated 2026-11-24): a notice text part's role is one of text, title, small.
+      ['a notice text part with a role outside text, title, small', (t) => { t.screens.mobile_parcel_semi_question.sections[2].parts[0].role = 'heading'; }],
     ];
     for (const [why, f] of plants) { const t = clone(TABLE); f(t); expect([why, validate(t)]).toEqual([why, false]); }
+  });
+  it('task-452 (RR-0466): a notice text part may take the role title or small (the emphasised first line and the smaller line beneath it)', () => {
+    for (const role of ['title', 'small']) {
+      const t = clone(TABLE); t.screens.mobile_parcel_semi_question.sections[2].parts[0].role = role;
+      expect([role, validate(t), validate.errors ?? null]).toEqual([role, true, null]);
+    }
   });
 });
 
@@ -100,21 +108,30 @@ describe('T2 totality: the table and the converted STATIC surfaces, both ways', 
 
 describe('T9 the interactive screens (PAGE.TABLE, task-390)', () => {
   const read = (p: string): string => fs.readFileSync(path.join(ROOT, p), 'utf8');
-  const BINDING = 'mobile/src/components/surfaces/SemiQuestionBinding.tsx';
-  const ID = 'mobile_parcel_semi_question';
+  // task-452 (SEARCHFIX.4; dated 2026-11-24; prior text kept: the table held the semi screen alone, `expect(Object.keys(SCREENS)).toEqual([ID])`): the wall
+  // S-096 is the second screens row (task-357 ruling, MD:1476). Every check below runs for EACH id against its own binding; no id is skipped.
+  const BINDINGS: Record<string, string> = {
+    mobile_parcel_semi_question: 'mobile/src/components/surfaces/SemiQuestionBinding.tsx',
+    mobile_parcel_wall: 'mobile/src/components/surfaces/WallBinding.tsx',
+  };
+  const IDS = Object.keys(BINDINGS);
   const SCREENS = TABLE.screens as Json;
   it('every screen is a converted LIST surface of the phone, drawn on the phone only, with its row set copied to the generated slice', () => {
-    expect(Object.keys(SCREENS)).toEqual([ID]);
-    const d = rj(`scripts/surfaces/parcel_product/F01/surfaces/${ID}.descriptor.json`);
-    expect([MANIFEST.converted.includes(ID), d.identity.archetype, d.identity.platforms]).toEqual([true, 'LIST', ['mobile']]);
-    expect([SCREENS[ID].platforms, SCREENS[ID].targets]).toEqual([['mobile'], undefined]);
-    expect(SCREENS[ID].binding).toBe(BINDING);
-    expect(rj(`mobile/src/generated/surfaces/${ID}.json`).page).toEqual(SCREENS[ID]);
+    expect(Object.keys(SCREENS)).toEqual(IDS);
+    for (const ID of IDS) {
+      const d = rj(`scripts/surfaces/parcel_product/F01/surfaces/${ID}.descriptor.json`);
+      expect([ID, MANIFEST.converted.includes(ID), d.identity.archetype, d.identity.platforms]).toEqual([ID, true, 'LIST', ['mobile']]);
+      expect([ID, SCREENS[ID].platforms, SCREENS[ID].targets]).toEqual([ID, ['mobile'], undefined]);
+      expect([ID, SCREENS[ID].binding]).toEqual([ID, BINDINGS[ID]]);
+      expect([ID, rj(`mobile/src/generated/surfaces/${ID}.json`).page]).toEqual([ID, SCREENS[ID]]);
+    }
   });
-  it('the binding keeps flags and values only: no JSX element names and no content key typed in it', () => {
-    const b = read(BINDING);
-    expect(b).not.toMatch(/node\('(Button|Alert|AlertDescription|Text|View)'/);
-    expect(b).not.toMatch(/content\('[a-z]+\./);
+  it('each binding keeps flags and values only: no JSX element names and no content key typed in it', () => {
+    for (const ID of IDS) {
+      const b = read(BINDINGS[ID] as string);
+      expect([ID, /node\('(Button|Alert|AlertDescription|Text|View)'/.test(b)]).toEqual([ID, false]);
+      expect([ID, /content\('[a-z]+\./.test(b)]).toEqual([ID, false]);
+    }
   });
 });
 

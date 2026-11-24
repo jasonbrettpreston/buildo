@@ -15,7 +15,7 @@ import { BackHandler } from 'react-native';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import { ReportPageHost, REPORT_UI } from '@/components/surfaces/ReportPageHost';
-import { SurfaceRenderer, type ReportActions, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
+import { SurfaceRenderer, type ReportActions, type SurfaceActions, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
 import { LIFECYCLE_CONTENT_KEYS, REPORT_SLICE, REPORT_UI_CLOSED, SCREEN_CONTENT_KEYS, type LifecycleState, type PageView } from '@/components/surfaces/ReportBinding';
 
 // The published mock has no __esModule flag, so its `default` is spread under one for the default import.
@@ -188,5 +188,46 @@ describe('MF-48 lifecycle states and the action table', () => {
     const r = (t: SurfaceTree) => () => render(<SurfaceRenderer tree={t} content={{}} data={data} actions={a} />);
     expect(r(btn({ action: 'toggle_panel', option: 'o1', panel: 'notes' }, 'x'))).toThrow('unknown panel "notes"');
     expect(r(btn({ action: 'select', parcelId: 'P' }, 'y'))).toThrow('unknown action "select"'); // MF-48 Stage B: retry and back are REPORT actions now
+  });
+});
+
+// task-452 SEARCHFIX.4 (AC2, AC3): the report screen draws the wall through ReportPageHost's `wall` prop ({ tree, content, data, actions }, all from
+// useWallState: the host's own content lacks the wall keys and ReportActions lack push). It replaces the lifecycle only while no report is shown.
+describe('task-452 the wall prop', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { WALL_SLICE, wallData, wallProps } = require('@/components/surfaces/WallBinding') as typeof import('@/components/surfaces/WallBinding');
+  const limit = { kind: 'limit' as const, reportsLimit: 10, resetsOnDisplay: '9 Dec 2026' };
+  const wallOf = (actions: SurfaceActions) => ({ tree: wallProps(limit) as SurfaceTree, content: WALL_SLICE.content, data: wallData(limit), actions });
+  const navigate = jest.fn();
+  const ACTIONS: SurfaceActions = { change_input: NOOP, set_input: NOOP, retry: NOOP, select: NOOP, back: NOOP, push: (route: string) => navigate(route) };
+  beforeEach(() => navigate.mockClear());
+
+  it('no view: the wall and Back show, not the lifecycle error; the read\'s count, date and plan line are drawn; Go to Tracked Lots calls push', () => {
+    render(<ReportPageHost view={null} lifecycle="error" content={CONTENT} onRetry={NOOP} onBack={NOOP} wall={wallOf(ACTIONS)} />);
+    expect(screen.getByTestId('report-back')).toBeTruthy();
+    expect(screen.getByTestId('parcel-wall-limit')).toBeTruthy();
+    expect(screen.queryByTestId('report-error')).toBeNull();
+    expect(screen.queryByText(lifecycle.error as string)).toBeNull();
+    expect(screen.getByText('You’ve used all 10 reports')).toBeTruthy();
+    expect(screen.getByText('Your count resets on 9 Dec 2026.')).toBeTruthy();
+    expect(screen.getByText('Your plan is managed on the web for changes.')).toBeTruthy();
+    fireEvent.press(screen.getByTestId('parcel-wall-tracked'));
+    expect(navigate).toHaveBeenCalledWith('/(app)/parcel-tool/tracked');
+  });
+  it('with a view the report stays: a shown report is never replaced by the wall', () => {
+    render(<ReportPageHost view={view('page_v21')} lifecycle="loading" content={CONTENT} onRetry={NOOP} onBack={NOOP} wall={wallOf(ACTIONS)} />);
+    expect(screen.getByTestId('report-page')).toBeTruthy();
+    expect(screen.queryByTestId('parcel-wall-screen')).toBeNull();
+  });
+  it('a wall whose actions lack push throws on the wall tree (the renderer fence, SurfaceRenderer.tsx unknown action)', () => {
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const { push: _push, ...noPush } = ACTIONS;
+    expect(() => render(<ReportPageHost view={null} lifecycle="error" content={CONTENT} onRetry={NOOP} onBack={NOOP} wall={wallOf(noPush as unknown as SurfaceActions)} />)).toThrow('unknown action "push"');
+  });
+  it('no wall: on wait the route passes the loading lifecycle, which shows loading and not the error text', () => {
+    render(<ReportPageHost view={null} lifecycle="loading" content={CONTENT} onRetry={NOOP} onBack={NOOP} />);
+    expect(screen.getByTestId('report-spinner')).toBeTruthy();
+    expect(screen.queryByText(lifecycle.error as string)).toBeNull();
+    expect(screen.queryByTestId('parcel-wall-screen')).toBeNull();
   });
 });

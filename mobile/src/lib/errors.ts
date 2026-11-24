@@ -21,6 +21,31 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * task-452 SEARCHFIX.4 (RR-0444 2b): the parcel 403 for a parcel_tool holder at this month's allowance (src/features/leads/api/error-mapping.ts
+ * reportLimitReached, code REPORT_LIMIT_REACHED). Still an ApiError(403), so every `instanceof ApiError` reader is unchanged. It keeps the 403's own
+ * limit and reset date (null when the body did not carry them typed right); the wall draws the entitlement read's values, never these (RR-0310).
+ */
+export class ReportLimitError extends ApiError {
+  readonly code = 'REPORT_LIMIT_REACHED';
+  constructor(
+    public readonly reportsLimit: number | null,
+    public readonly resetsOn: string | null,
+  ) {
+    super(403, 'Forbidden');
+    this.name = 'ReportLimitError';
+  }
+}
+
+/** task-452: the parcel 403 for a person without an active parcel_tool subscription (error-mapping.ts forbiddenSubscription, code SUBSCRIPTION_REQUIRED). */
+export class SubscriptionRequiredError extends ApiError {
+  readonly code = 'SUBSCRIPTION_REQUIRED';
+  constructor() {
+    super(403, 'Forbidden');
+    this.name = 'SubscriptionRequiredError';
+  }
+}
+
 export class AccountDeletedError extends Error {
   constructor(
     public readonly account_deleted_at: string,

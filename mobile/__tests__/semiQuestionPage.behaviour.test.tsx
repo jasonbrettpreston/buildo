@@ -35,7 +35,7 @@ const mockSetQueryData = jest.fn();
 jest.mock('@/hooks/useParcelLookup', () => {
   class ParcelLookupSchemaError extends Error {}
   const { boundedWait, SEMI_CONTINUE_WAIT_MS } = jest.requireActual('@/lib/semiQuestion');
-  return { ParcelLookupSchemaError, useAnswerParcelLookup: () => ({ mutateAsync: (parcelId: string) => { mockAnswerCalls.push(parcelId); return boundedWait(mockFetchLookup({ parcelId, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS); } }), fetchParcelLookup: (...a: unknown[]) => mockFetchLookup(...a), useParcelLookup: (id: string | undefined) => { mockCalls.push(id); return mockHook; }, useSetParcelLookup: () => (id: string, result: unknown) => mockSetQueryData(['parcel-lookup', id], result) };
+  return { ParcelLookupSchemaError, useAnswerParcelLookup: () => ({ mutateAsync: (parcelId: string) => { mockAnswerCalls.push(parcelId); return boundedWait(mockFetchLookup({ parcelId, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS); } }), fetchParcelLookup: (...a: unknown[]) => mockFetchLookup(...a), useParcelLookup: (id: string | undefined) => { mockCalls.push(id); return mockHook; }, useSetParcelLookup: () => (id: string, result: unknown) => mockSetQueryData(['parcel-lookup', id], result), useParcelEntitlement: () => ({ data: undefined, isFetching: false, isError: false }) }; // task-452: the report route reads the entitlement through useWallState
 });
 jest.mock('@/components/surfaces/ReportPageHost', () => {
   const { View } = jest.requireActual('react-native');

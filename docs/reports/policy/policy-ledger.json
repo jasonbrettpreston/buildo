@@ -6,6 +6,12 @@
       "item": "mobile/src/components/surfaces/PageTableBinding.tsx",
       "ruling": "MD:2026-11-20:1444",
       "quote": "yes approved"
+    },
+    {
+      "rule": "chk3-new-component",
+      "item": "mobile/src/components/surfaces/WallBinding.tsx",
+      "ruling": "MD:2026-11-20:1476",
+      "quote": "Let the grounder resolve them all as long as the result is compliant"
     }
   ]
 }

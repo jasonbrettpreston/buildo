@@ -782,7 +782,12 @@
                 ],
                 "properties": {
                   "role": {
-                    "const": "text"
+                    "$comment": "task-452 (dated 2026-11-24; operator RR-0466, MORNING-DECISIONS.md:2410-2413; prior text kept: const text): a notice text part is text, title (the emphasised first line) or small (the smaller line beneath it); PageTableBinding.tsx picks the class by role; no new kind.",
+                    "enum": [
+                      "text",
+                      "title",
+                      "small"
+                    ]
                   },
                   "content": {
                     "$ref": "#/$defs/contentKey"

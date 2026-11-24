@@ -26,11 +26,13 @@ jest.mock('expo-router', () => ({
   useRouter: () => ({ replace: mockReplace, back: mockBack, push: jest.fn(), canGoBack: () => mockCanGoBack }),
   useLocalSearchParams: () => mockParams,
 }));
-type Hook = { data: unknown; isError: boolean; refetch: jest.Mock };
+type Hook = { data: unknown; isError: boolean; refetch: jest.Mock; error?: unknown };
 let mockHook: Hook = { data: undefined, isError: false, refetch: jest.fn() };
+// task-452: the entitlement read the route's wall waits on (useWallState).
+let mockEntitlement: { data: unknown; isFetching: boolean; isError: boolean } = { data: undefined, isFetching: false, isError: false };
 const mockIds: unknown[] = [];
 const mockSemi: unknown[] = [];
-jest.mock('@/hooks/useParcelLookup', () => ({ useParcelLookup: (id: unknown, semi?: unknown) => { mockIds.push(id); mockSemi.push(semi); return mockHook; } }));
+jest.mock('@/hooks/useParcelLookup', () => ({ useParcelLookup: (id: unknown, semi?: unknown) => { mockIds.push(id); mockSemi.push(semi); return mockHook; }, useParcelEntitlement: () => mockEntitlement }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Screen = require('../app/(app)/parcel-tool/[parcelId]').default as React.ComponentType;
@@ -54,6 +56,7 @@ const LEGACY = /Max build FSI|Max buildable GFA|As-of-right|Max build storeys|Co
 beforeEach(() => {
   mockReplace.mockClear(); mockBack.mockClear(); mockCanGoBack = true; mockIds.length = 0; mockSemi.length = 0; mockParams = { parcelId: 'PIN-777' };
   mockHook = { data: undefined, isError: false, refetch: jest.fn() };
+  mockEntitlement = { data: undefined, isFetching: false, isError: false };
 });
 const noLegacy = (): void => expect(screen.queryAllByText(LEGACY)).toEqual([]);
 
@@ -151,5 +154,31 @@ describe('T-B2 Back is a route (FE-36; NAV-AUDIT #3, the MF-53 rule)', () => {
     fireEvent.press(screen.getByTestId('report-back'));
     expect(mockBack).not.toHaveBeenCalled();
     expect(mockReplace.mock.calls).toEqual([['/(app)/parcel-tool']]);
+  });
+});
+
+// task-452 SEARCHFIX.4 (AC2; plan section 6 report-mount cases): the wiring of the real route. A refused lookup (ReportLimitError) with nothing cached shows the
+// wall once the entitlement read has answered; while the read is pending the route shows the loading lifecycle, never the error one (no error flash).
+describe('task-452 the report route draws the wall', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { ReportLimitError } = require('@/lib/errors') as typeof import('@/lib/errors');
+  const refused = (): void => { mockHook = { data: undefined, isError: true, error: new ReportLimitError(10, '2026-12-09T05:00:00.000Z'), refetch: jest.fn() }; };
+  it('a limit 403 with an answered read shows the wall with the read\'s count and date, Back, and not the error text', () => {
+    refused();
+    mockEntitlement = { data: { status: 'active', reportsLimit: 10, resetsOnDisplay: '9 Dec 2026' }, isFetching: false, isError: false };
+    render(<Screen />);
+    expect(screen.getByTestId('parcel-wall-limit')).toBeTruthy();
+    expect(screen.getByText('You’ve used all 10 reports')).toBeTruthy();
+    expect(screen.getByText('Your count resets on 9 Dec 2026.')).toBeTruthy();
+    expect(screen.getByTestId('report-back')).toBeTruthy();
+    expect(screen.queryByText(LIFE.error as string)).toBeNull();
+  });
+  it('the same refusal with the read pending shows the loading lifecycle, not the error one', () => {
+    refused();
+    mockEntitlement = { data: undefined, isFetching: true, isError: false };
+    render(<Screen />);
+    expect(screen.getByTestId('report-loading')).toBeTruthy();
+    expect(screen.queryByTestId('report-error')).toBeNull();
+    expect(screen.queryByTestId('parcel-wall-screen')).toBeNull();
   });
 });

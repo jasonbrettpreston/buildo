@@ -19,7 +19,8 @@ jest.mock('expo-router', () => ({
 }));
 type Hook = { data: unknown; isError: boolean; isFetching: boolean; refetch: jest.Mock };
 let mockHook: Hook = { data: undefined, isError: false, isFetching: false, refetch: jest.fn() };
-jest.mock('@/hooks/useParcelLookup', () => ({ useParcelLookup: () => mockHook }));
+// task-452: the route also reads the entitlement read through useWallState (no refusal here, so no wall).
+jest.mock('@/hooks/useParcelLookup', () => ({ useParcelLookup: () => mockHook, useParcelEntitlement: () => ({ data: undefined, isFetching: false, isError: false }) }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Screen = require('../app/(app)/parcel-tool/[parcelId]').default as React.ComponentType;

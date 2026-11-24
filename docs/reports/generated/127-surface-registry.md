@@ -17,7 +17,7 @@ This is the **reviewable projection of the surface census** — the application 
 
 It is **not** a design document and it is **not** a plan. It is an inventory you can argue with. Each entry states what something is, who it is for, what it reads and writes, and what happens to it under the Spec 126 surface standard — so that the argument happens **here**, before anything is built, rather than in a code review six weeks later.
 
-There are **95 surfaces, 71 contracts and 6 jobs** in it today.
+There are **96 surfaces, 71 contracts and 6 jobs** in it today.
 
 ### 0.2 Why it exists
 
@@ -205,10 +205,10 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 | Kind | Count |
 |---|---:|
-| SURFACE | 95 |
+| SURFACE | 96 |
 | CONTRACT | 71 |
 | JOB | 6 |
-| **Total** | **172** |
+| **Total** | **173** |
 
 ### 2.1 By archetype
 
@@ -219,7 +219,7 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 | `DETAIL` | SURFACE | 6 | 0 | 0 | 6 |
 | `FORM` | SURFACE | 6 | 1 | 7 | 14 |
 | `GATE` | SURFACE | 9 | 0 | 0 | 9 |
-| `LIST` | SURFACE | 9 | 7 | 4 | 20 |
+| `LIST` | SURFACE | 9 | 7 | 5 | 21 |
 | `MUTATION` | CONTRACT | 20 | 7 | 0 | 27 |
 | `QUERY` | CONTRACT | 33 | 2 | 0 | 35 |
 | `REPORT` | SURFACE | 2 | 5 | 0 | 7 |
@@ -233,19 +233,19 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 ### 2.2 Research progress
 
-**32 of 172 rows fully researched · 140 still open · 443 unresearched fields in total.**
+**33 of 173 rows fully researched · 140 still open · 443 unresearched fields in total.**
 
 Every open field is the literal string `UNRESEARCHED` in the census — never a blank and never a guess — so the number below is a count of real work, not an estimate.
 
 | Shard | Rows | Fully researched | Rows with an open field | Unresearched fields |
 |---|---:|---:|---:|---:|
-| `mobile-product.json` | 41 | 11 | 30 | 63 |
+| `mobile-product.json` | 42 | 12 | 30 | 63 |
 | `web-product.json` | 22 | 11 | 11 | 92 |
 | `admin-existing.json` | 15 | 0 | 15 | 74 |
 | `admin-new.json` | 17 | 9 | 8 | 15 |
 | `contracts.json` | 71 | 1 | 70 | 168 |
 | `jobs.json` | 6 | 0 | 6 | 31 |
-| **total** | **172** | **32** | **140** | **443** |
+| **total** | **173** | **33** | **140** | **443** |
 
 **What is left, grouped by REASON.** Every remaining field is open for one of a small number of reasons, and they are not equally actionable — three are lookups a researcher can finish, and one is an escalation that needed a ruling.
 
@@ -266,7 +266,7 @@ Every open field is the literal string `UNRESEARCHED` in the census — never a 
 |---|---:|---|
 | exists | 127 | the code is in the tree today |
 | new | 28 | specified, not built |
-| generated | 17 | will be rendered from descriptors, not hand-written |
+| generated | 18 | will be rendered from descriptors, not hand-written |
 
 ---
 
@@ -276,11 +276,11 @@ A reader opening this document sees 137 entries and cannot tell the parcel cost 
 
 | § | Scope | Rows | Researched | Tables reached | Governed by Spec 126? |
 |---|---|---:|---:|---:|---|
-| **A** | `parcel_product` | 19 | 16 (84%) | 13 | yes |
+| **A** | `parcel_product` | 20 | 17 (85%) | 13 | yes |
 | **B** | `parcel_admin` | 26 | 9 (35%) | 20 | yes |
 | **C** | `platform_shared` | 80 | 7 (9%) | 43 | yes |
 | **D** | `estate_other` | 47 | 0 (0%) | 41 | **no** — inventory + seam only (R-03) |
-| | **total** | **172** | **32** | | |
+| | **total** | **173** | **33** | | |
 
 **The pilot is [`S-001`](#s-001) `mobile_parcel_detail`** — The full story of one building lot, assembled for a homeowner or buyer. It is the one surface in the estate marked `programme.pilot: true`.
 
@@ -320,7 +320,7 @@ The path from a customer tapping a screen to the pipeline step that built what t
 
 One line per entry in scopes A, B and C, organised **scope → type → build order**. `build_order` is derived, not chosen: scope rank × 1000 + feature rank × 10 + kind rank, where the kind rank puts **tables before contracts before surfaces before admin** — it answers *"what must exist before this can be built"*. Follow an id to its detail in §3.
 
-**§A `parcel_product` (19)**
+**§A `parcel_product` (20)**
 
 | id | type | name | archetype | feature | build | researched | detail |
 |---|---|---|---|---|---:|---:|---|
@@ -329,6 +329,7 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`S-002`](#s-002) | surface | `mobile_parcel_search` | `SEARCH` | `F01` address-lookup | 1013 | 100% | [detail](#s-002) |
 | [`S-004`](#s-004) | surface | `shell_parcel_tool_stack` | `SHELL` | `F01` address-lookup | 1013 | 100% | [detail](#s-004) |
 | [`S-093`](#s-093) | surface | `mobile_parcel_semi_question` | `LIST` | `F01` address-lookup | 1014 | 100% | [detail](#s-093) |
+| [`S-096`](#s-096) | surface | `mobile_parcel_wall` | `LIST` | `F01` address-lookup | 1015 | 100% | [detail](#s-096) |
 | [`C-001`](#c-001) | contract | `contract_parcels_lookup` | `QUERY` | `F02` parcel-report | 1022 | 97% | [detail](#c-001) |
 | [`C-069`](#c-069) | contract | `contract_parcels_entitlement` | `QUERY` | `F02` parcel-report | 1023 | 97% | [detail](#c-069) |
 | [`S-001`](#s-001) | surface | `mobile_parcel_detail` **(pilot)** | `REPORT` | `F02` parcel-report | 1023 | 100% | [detail](#s-001) |
@@ -522,7 +523,7 @@ Spec 125 §2 recommends building schemas **by feature, so a feature can be remov
 
 | Feature | Scope | Entries (linked, in build order) | Contracts | Tables reached | Removing it deletes |
 |---|---|---|---:|---:|---|
-| **F01** address-lookup | `parcel_product` | [`S-073`](#s-073) · [`S-071`](#s-071) · [`S-002`](#s-002) · [`S-004`](#s-004) · [`S-093`](#s-093) | 0 | 5 | 5 descriptor(s), and would orphan 1 table(s): `parcel_lot_form` |
+| **F01** address-lookup | `parcel_product` | [`S-073`](#s-073) · [`S-071`](#s-071) · [`S-002`](#s-002) · [`S-004`](#s-004) · [`S-093`](#s-093) · [`S-096`](#s-096) | 0 | 6 | 6 descriptor(s), and would orphan 1 table(s): `parcel_lot_form` |
 | **F02** parcel-report | `parcel_product` | [`C-001`](#c-001) · [`S-001`](#s-001) · [`C-069`](#c-069) · [`S-086`](#s-086) · [`S-094`](#s-094) · [`C-070`](#c-070) | 3 | 9 | 6 descriptor(s), 3 contract(s), and would orphan no table — every table it touches is shared |
 | **F03** pdf-export | `parcel_product` | [`S-009`](#s-009) | 0 | 2 | 1 descriptor(s), and would orphan 1 table(s): `pdf_exports` |
 | **F04** sponsor-placements | `parcel_product` | [`S-003`](#s-003) · [`S-006`](#s-006) · [`S-013`](#s-013) · [`S-017`](#s-017) · [`C-066`](#c-066) · [`C-067`](#c-067) · [`C-068`](#c-068) · [`S-081`](#s-081) · [`S-080`](#s-080) | 3 | 5 | 9 descriptor(s), 3 contract(s), and would orphan 3 table(s): `advertisers` · `placements` · `offers` |
@@ -597,7 +598,7 @@ Where the **measured** behaviour contradicts what a MaxBLD user would reasonably
 
 The estate shares one repository; it does not share one programme. Sections A–C are what **Spec 126 governs**. Section D is the other product — inventoried so a shared contract or an orphan is visible, and deliberately rendered in one line each rather than in full (Spec 126 §2; the fence is Spec 128 R-03).
 
-### §A `parcel_product` — the MaxBLD parcel cost tool (19)
+### §A `parcel_product` — the MaxBLD parcel cost tool (20)
 
 **This is the programme.** The surfaces, contracts and jobs a customer of the parcel tool touches, plus the five business requirements that hang off them: the metered lookup, the PDF sent to a client, the ad placements, and the Vercel web front door. Governed by Spec 100 and Spec 126; batched first by Spec 127 §4.4.
 
@@ -989,6 +990,80 @@ ICONS. The shelf was specified with @expo/vector-icons Ionicons (compass / bookm
 **Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`](../../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md) · files: `mobile/app/(app)/parcel-tool/semi-question.tsx` · `mobile/src/components/surfaces/SemiQuestionBinding.tsx` · `mobile/src/lib/semiQuestion.ts` · `mobile/src/lib/lotForm.ts`
 
 > ⚠️ SEMI-B (operator "semi all y" and "semi ask a", 2026-11-13). The mini page of the address-lookup flow, modelled on S-071 (MF-53). The report mount [parcelId].tsx replaces itself with this page once, on the first settled data, when lotForm.unsure is true and the route has no `semi` param; Continue replaces this page with the report carrying semi=answered (and lotFormOverride for yes and no). Archetype LIST: radio cards and one Continue, like the lot cards.
+
+<a id="s-096"></a>
+
+###### `S-096` `mobile_parcel_wall`
+
+**Programme.** `S-096` · scope `parcel_product` · feature `F01` · build order 1015 · batch `B2` · review `unreviewed` — The refusal screens of the parcel tool entry flow (objective G.6).
+
+**What it is.** The wall a refused lot lookup shows on the phone (task-452 SEARCHFIX.4; RR-0443, RR-0444 2b, RR-0466). At the monthly report limit the person sees one neutral notice: "You’ve used all {limit} reports" as its emphasised first line, "Your count resets on {date}." smaller beneath it, then "Lot reports you’ve opened this month stay available.", "Your Tracked Lots remain." and "Your plan is managed on the web for changes.", and a Go to Tracked Lots button. With an expired subscription the notice is the reactivate sentence and the same plan line, with the same button. No top-up or upgrade control until the buying work (RR-0454 item 3). Drawn in place of the search page, and on the report screen under its Back bar while no report is shown.
+
+**What it reads and writes.** It reads one contract, GET /api/parcels/entitlement (contract_parcels_entitlement), through useParcelEntitlement (the query key the search page already reads, so no extra request). The count is reportsLimit and the date is the server label resetsOnDisplay (RR-0310); the 403 body of the lookup carries its own limit and ISO date, kept on ReportLimitError and never drawn. Which wall shows is searchWall (mobile/src/lib/parcelSearchMatch.ts) over the lookup error class and that read. It emits **no analytics event**.
+
+**Under Spec 126.** **CONVERTED (SEARCHFIX.4)** — LIST, drawn from the rows of screens.mobile_parcel_wall in scripts/surfaces/_schema/static-page.json by pageProps (PageTableBinding.tsx) through WallBinding.tsx and the shared SurfaceRenderer.tsx, the second screens row after the semi page (task-357 ruling, MD:1476). It owns no component and has no route of its own: two mounts (the search page and the report route) draw it through useWallState.ts.
+
+**kind** SURFACE · **archetype** `LIST` · **platforms** `mobile` · **status** generated · **lines** 0 · **shard** `mobile-product` · **researched** ✅ every field
+
+**Gate.** auth class **entitled** (It shows only after the lookup route refused: the 403 is the gate (a display, never a gate on the phone); the tab gate and the parcel-tool Stack are inherited.) · session **required** · entitlement parcel_tool · flag none · device permission none
+
+**Calls.** `/api/parcels/entitlement` — idiom: hook
+
+**Components owned.** —
+
+**Emits.** —
+
+**Render states seen in code.** `rate_limited` · `unauthorized`
+
+**Data lineage.**
+
+| | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
+|---|---|---|---|---|---|---|
+| reads | `entitlements` | `user_id` · `product` · `status` · `plan_key` · `current_period_end` | `user_id` · `product` · `status` · `stripe_subscription_id` · `current_period_end` · `trial_started_at` · `last_stripe_event_at` · `created_at` · `updated_at` | `none` | `n/a` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md` |
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `mobile/src/hooks/useWallState.ts` · `mobile/src/components/surfaces/WallBinding.tsx` · `mobile/src/lib/parcelSearchMatch.ts` · `mobile/src/lib/errors.ts` · `mobile/app/(app)/parcel-tool/index.tsx` · `mobile/app/(app)/parcel-tool/[parcelId].tsx` · `mobile/src/components/surfaces/ReportPageHost.tsx` |
+| `contracts` | `mobile/src/hooks/useWallState.ts — useParcelEntitlement() (GET /api/parcels/entitlement)` |
+| `tables` | `src/lib/entitlements/index.ts — readParcelToolUsage (the entitlements row of product parcel_tool)` |
+| `gate` | `src/app/api/parcels/lookup/route.ts:112 — reportLimitReached` · `src/features/leads/api/error-mapping.ts:29 — SUBSCRIPTION_REQUIRED` · `src/features/leads/api/error-mapping.ts:38 — REPORT_LIMIT_REACHED` |
+| `states` | `mobile/src/lib/parcelSearchMatch.ts — searchWall` · `mobile/__tests__/fixtures/wall.situations.json — goldens` |
+| `emits` | `mobile/src/hooks/useWallState.ts — no track() call` |
+| `spec_refs` | `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4` · `docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1` · `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `contract` | One GET /api/parcels/entitlement through useParcelEntitlement, the same TanStack entry the search page reads; plus the lookup error class its host passes in (ReportLimitError or SubscriptionRequiredError from mobile/src/lib/apiClient.ts). — `mobile/src/hooks/useWallState.ts — useParcelEntitlement()`, `mobile/src/hooks/useParcelLookup.ts — export function useParcelEntitlement` |
+| 3 | `outputs` | `none` | It writes nothing. The only action is Go to Tracked Lots, a tab switch (router.navigate to PARCEL_TAB_ROUTE.tracked); it records no recent search. — `mobile/src/hooks/useWallState.ts — push: router.navigate` |
+| 4 | `state` | `none` | No store and no field of its own: it reads the existing entitlement query and the lookup error its host already holds. — `mobile/src/hooks/useWallState.ts` |
+| 5 | `staleness` | `query_cache` | useParcelEntitlement declares staleTime ENTITLEMENT_STALE_MS (the search slice config entitlement_stale_ms, 0) and is re-read on focus of the search page. — `mobile/src/hooks/useParcelLookup.ts — staleTime: ENTITLEMENT_STALE_MS` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `inline` | The wall is itself the declared failure UI of two refusals: the report limit (rate_limited) and an expired subscription (unauthorized). Every other failure keeps the host’s own notice. — `mobile/src/lib/parcelSearchMatch.ts — searchWall` |
+| 13 | `emits` | `none` | No client analytics; the wall emits nothing. — `mobile/src/hooks/useWallState.ts` |
+| 14 | `offers` | `none` | No sponsored placement is rendered. — `mobile/src/components/surfaces/WallBinding.tsx` |
+| 15 | `metering` | `none` | The wall counts nothing; the lookup route counts a produced report and sends the limit 403 (F02). — `src/app/api/parcels/lookup/route.ts:97-112` |
+| 16 | `config` | `none` | No tunable: the wall reads no setting of its own. — `mobile/src/components/surfaces/WallBinding.tsx` |
+| 17 | `sharing` | `shared` | It shares contract_parcels_entitlement and its query with the search page (S-002). — `mobile/src/hooks/useParcelLookup.ts — useParcelEntitlement` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`](../../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md) · files: `mobile/src/hooks/useWallState.ts` · `mobile/src/components/surfaces/WallBinding.tsx`
+
+> ⚠️ SEARCHFIX.4 (task-452). One layout, two states, phone first; the web keeps its one not-entitled notice until its switch-on (RR-0455 item 1).
 
 <a id="c-001"></a>
 
@@ -7211,7 +7286,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Calls.** —
 
-**Components owned.** `mobile/src/components/surfaces/LotMapBinding.tsx` · `mobile/src/components/surfaces/SemiQuestionBinding.tsx` · `mobile/src/components/surfaces/PageTableBinding.tsx`
+**Components owned.** `mobile/src/components/surfaces/LotMapBinding.tsx` · `mobile/src/components/surfaces/SemiQuestionBinding.tsx` · `mobile/src/components/surfaces/PageTableBinding.tsx` · `mobile/src/components/surfaces/WallBinding.tsx`
 
 **Emits.** —
 
@@ -9900,7 +9975,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 | `data_quality_snapshots` | `id` · `snapshot_date` · `total_permits` · `active_permits` · `permits_with_trades` · `trade_matches_total` · `trade_avg_confidence` · `trade_tier1_count` · `trade_tier2_count` · `trade_tier3_count` · `permits_with_builder` · `builders_total` · `builders_enriched` · `builders_with_phone` · `builders_with_email` · `builders_with_website` · `builders_with_google` · `builders_with_wsib` · `permits_with_parcel` · `parcel_exact_matches` · `parcel_name_matches` · `parcel_avg_confidence` · `permits_with_neighbourhood` · `permits_geocoded` · `coa_total` · `coa_linked` · `coa_avg_confidence` · `coa_high_confidence` · `coa_low_confidence` · `permits_updated_24h` · `permits_updated_7d` · `permits_updated_30d` · `last_sync_at` · `last_sync_status` · `created_at` · `parcel_spatial_matches` · `permits_with_scope` · `scope_project_type_breakdown` · `building_footprints_total` · `parcels_with_buildings` · `permits_with_scope_tags` · `scope_tags_top` · `permits_with_detailed_tags` · `trade_residential_classified` · `trade_residential_total` · `trade_commercial_classified` · `trade_commercial_total` · `null_description_count` · `null_builder_name_count` · `null_est_const_cost_count` · `null_street_num_count` · `null_street_name_count` · `null_geo_id_count` · `violation_cost_out_of_range` · `violation_future_issued_date` · `violation_missing_status` · `violations_total` · `schema_column_counts` · `sla_permits_ingestion_hours` · `inspections_total` · `inspections_permits_scraped` · `inspections_outstanding_count` · `inspections_passed_count` · `inspections_not_passed_count` · `cost_estimates_total` · `cost_estimates_from_permit` · `cost_estimates_from_model` · `cost_estimates_null_cost` · `timing_calibration_total` · `timing_calibration_avg_sample` · `timing_calibration_freshness_hours` · `cost_estimates_liar_gate_overrides` · `cost_estimates_zero_total_bypass` · `parcels_total` · `permits_active_distinct` · `map_areas_total` · `zoning_layer_version` · `permits_last_seen_at` · `coa_last_seen_at` | `web_landing` · `admin_data_quality` · `contract_quality` | `contract_quality_refresh` |
 | `device_tokens` | `id` · `user_id` · `push_token` · `platform` · `created_at` · `updated_at` | `admin_notifications` · `admin_user_detail` · `contract_admin_notifications` · `contract_admin_notifications_test_send` | `overlay_notification_permission_modal` · `shell_app_root` · `contract_notifications_register` |
 | `entities` | `id` · `legal_name` · `trade_name` · `name_normalized` · `entity_type` · `primary_phone` · `primary_email` · `website` · `linkedin_url` · `google_place_id` · `google_rating` · `google_review_count` · `is_wsib_registered` · `permit_count` · `first_seen_at` · `last_seen_at` · `last_enriched_at` · `photo_url` · `photo_validated_at` | `mobile_lead_feed` · `web_builder_detail` · `web_builders_list` · `web_dashboard` · `web_permit_detail` · `admin_data_quality` · `admin_flight_center` · `admin_lead_feed` · `admin_lead_feed_inspector` · `contract_admin_builders` · `contract_admin_leads_inspect_id` · `contract_admin_leads_test_feed` · `contract_admin_stats` · `contract_builders` · `contract_builders_id` · `contract_entities` · `contract_entities_id` · `contract_leads_feed` · `contract_permits_id` · `contract_quality_refresh` | `contract_admin_builders` |
-| `entitlements` | `user_id` · `product` · `status` · `stripe_subscription_id` · `current_period_end` · `trial_started_at` · `last_stripe_event_at` · `created_at` · `updated_at` | `mobile_flight_board` · `mobile_lead_feed` · `mobile_settings` · `overlay_paywall` · `shell_app_root` · `shell_app_tabs` · `web_subscribe_success` · `admin_lead_feed_inspector` · `admin_user_detail` · `admin_users` · `contract_admin_users` · `contract_admin_users_uid` · `contract_admin_users_uid_subscription_events` · `contract_admin_users_uid_subscription_reconcile` · `contract_leads_detail_id` · `contract_leads_feed` · `contract_leads_flight_board` · `contract_leads_flight_board_detail_id` · `contract_leads_save` · `contract_leads_search` · `contract_leads_view` · `contract_parcels_lookup` · `contract_parcels_entitlement` · `contract_subscribe_session` · `contract_user_profile` · `contract_user_profile_reactivate` · `contract_webhooks_stripe` | `shell_app_root` · `admin_user_detail` · `admin_users` · `contract_admin_users` · `contract_admin_users_uid` · `contract_admin_users_uid_subscription_reconcile` · `contract_user_profile` · `contract_user_profile_delete` · `contract_user_profile_reactivate` · `contract_webhooks_stripe` |
+| `entitlements` | `user_id` · `product` · `status` · `stripe_subscription_id` · `current_period_end` · `trial_started_at` · `last_stripe_event_at` · `created_at` · `updated_at` | `mobile_flight_board` · `mobile_lead_feed` · `mobile_settings` · `overlay_paywall` · `shell_app_root` · `shell_app_tabs` · `mobile_parcel_wall` · `web_subscribe_success` · `admin_lead_feed_inspector` · `admin_user_detail` · `admin_users` · `contract_admin_users` · `contract_admin_users_uid` · `contract_admin_users_uid_subscription_events` · `contract_admin_users_uid_subscription_reconcile` · `contract_leads_detail_id` · `contract_leads_feed` · `contract_leads_flight_board` · `contract_leads_flight_board_detail_id` · `contract_leads_save` · `contract_leads_search` · `contract_leads_view` · `contract_parcels_lookup` · `contract_parcels_entitlement` · `contract_subscribe_session` · `contract_user_profile` · `contract_user_profile_reactivate` · `contract_webhooks_stripe` | `shell_app_root` · `admin_user_detail` · `admin_users` · `contract_admin_users` · `contract_admin_users_uid` · `contract_admin_users_uid_subscription_reconcile` · `contract_user_profile` · `contract_user_profile_delete` · `contract_user_profile_reactivate` · `contract_webhooks_stripe` |
 | `entity_contacts` | `id` · `entity_id` · `contact_type` · `contact_value` · `source` · `contributed_by` · `verified` · `created_at` | `web_builder_detail` · `contract_builders_id` | `contract_admin_builders` |
 | `entity_projects` | `id` · `entity_id` · `permit_num` · `revision_num` · `coa_file_num` · `role` · `observed_at` | `mobile_lead_feed` · `web_builder_detail` · `web_builders_list` · `admin_lead_feed` · `contract_admin_leads_test_feed` · `contract_builders` · `contract_builders_id` · `contract_entities` · `contract_entities_id` · `contract_leads_feed` · `contract_permits_id` | — |
 | `lead_trades` | `id` · `lead_id` · `trade_id` · `tier` · `confidence` · `is_active` · `phase` · `lead_score` · `classified_at` · `attachment_basis` | `admin_flight_center` · `admin_flight_center` · `admin_lead_feed_inspector` · `contract_admin_leads_inspect_id` · `contract_admin_leads_watchlist` · `contract_admin_suppliers_leads` | — |
@@ -9977,7 +10052,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 
 Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src/components/**` appears in exactly **one** surface's `owns.components[]`. A file claimed by two surfaces makes this generator throw; a file claimed by **none** is listed here. Review question 5 of §0.6.
 
-**This section must be empty.** It is asserted empty by `src/tests/surface-registry.infra.test.ts`. Today it is **not** — 11 of 75 component files have no declared owner, which is the measurement R-13 exists to retire, stated rather than hidden.
+**This section must be empty.** It is asserted empty by `src/tests/surface-registry.infra.test.ts`. Today it is **not** — 11 of 76 component files have no declared owner, which is the measurement R-13 exists to retire, stated rather than hidden.
 
 | Component file | Owner |
 |---|---|
@@ -10014,4 +10089,4 @@ Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src
 
 ---
 
-*Generated from 172 census rows and 272 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*
+*Generated from 173 census rows and 272 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*
