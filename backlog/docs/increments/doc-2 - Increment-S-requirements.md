@@ -3,7 +3,7 @@ id: doc-2
 title: Increment S requirements
 type: specification
 created_date: '2026-11-19T04:56:00Z'
-updated_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-24T15:52:00Z'
 ---
 # Increment S requirements
 
@@ -161,3 +161,8 @@ Search first: the current search pages = latest rendering small-pages-v8 ("MaxBL
 | G Hand-off to the report | G.4 | Skip control during the animation | NOT TRACED | NO TASK |
 | G Hand-off to the report | G.5 | Report page for the lot on a hit | NOT-BUILT | MB-44 1.3 |
 | G Hand-off to the report | G.6 | Report meter: a hit counts one report; report limit page when exhausted | AVAILABLE | LS.12 |
+
+## Dated notes
+
+- Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449; operator, verbatim: "It should open on an exact match and we have a different process for address mistakes" (RR-0442, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2276) and "What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close" (RR-0443 c, :2284)): **G.1** "Unique match goes straight to the report" stays true for an exact match only. `unique` is now the exact read, or a one-row typeahead that is the typed address in full; a partial address, a street with no number, a one-row leftover that is not the typed address in full, a street type or direction that differs, and the dash and letter forms are `text_candidates` (the list). See Spec 100 §3.2 dated note 2026-11-24.
+- Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449; operator, verbatim: "It should open on an exact match and we have a different process for address mistakes" (RR-0442, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2276) and "What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close" (RR-0443 c, :2284)): **A.3** "Typeahead resolution of the typed text (street-prefix, up to 10)": a typeahead never opens a lot on a prefix; one leftover row opens only when it is the typed address in full, otherwise the person picks from the list. A typed `%` or `_` is escaped, and a window of 10 is not narrowed by direction. See Spec 100 §3.2 dated note 2026-11-24.
