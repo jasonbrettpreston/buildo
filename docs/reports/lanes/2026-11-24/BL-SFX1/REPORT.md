@@ -35,4 +35,4 @@ Review round 1: 91 ids, 17 CONFIRMED (1 MED, 15 LOW, 1 NIT), 74 REJECTED; ground
 Task RUNNING, grounder owed. Not closed. Not pushed.
 STATUS: blocked (round 2 grounder owed)
 
-Grounder Cairn-Ground-O449, round 2: 92 ids, 9 CONFIRMED (7 LOW, 2 NIT), 83 REJECTED, no CRITICAL, HIGH or MED.
+Grounder Cairn-Ground-O449, round 2 (re-ruled after the step-132-p3 re-run 4e64e3bc4): 97 ids over 30 files, 10 CONFIRMED (8 LOW, 2 NIT), all piled, 87 REJECTED, no CRITICAL, HIGH or MED.
