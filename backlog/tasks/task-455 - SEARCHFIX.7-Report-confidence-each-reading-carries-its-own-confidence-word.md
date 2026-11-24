@@ -4,9 +4,10 @@ title: 'SEARCHFIX.7 Report confidence: each reading carries its own confidence w
 status: LATER
 assignee: []
 created_date: '2026-11-24T14:47:00Z'
+updated_date: '2026-11-24T20:09:00Z'
 labels:
   - SEARCHFIX-LATER
-milestone: m-1
+milestone: m-3
 dependencies:
   - TASK-452
 type: fix
@@ -47,3 +48,9 @@ Files: src/lib/report-projection/project.ts, src/lib/report-projection/format.ts
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-24: moved to Increment 1·D (milestone m-3) beside task-76 (RR-0465, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2407; operator, verbatim: "B"). Not built in 1·B. Planner Cairn-Plan-455 and grounder Cairn-Ground-Q455: the page table has one confidence word per tile (scripts/surfaces/_schema/report-page.json), so the per-reading display is report page work; the dependency on task-452 shares no file.
+<!-- SECTION:NOTES:END -->
