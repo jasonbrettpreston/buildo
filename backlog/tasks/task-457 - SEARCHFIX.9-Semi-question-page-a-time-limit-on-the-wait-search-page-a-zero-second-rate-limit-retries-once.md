@@ -3,10 +3,11 @@ id: TASK-457
 title: >-
   SEARCHFIX.9 Semi question page: a time limit on the wait; search page: a
   zero-second rate limit retries once
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-SFX7'
 created_date: '2026-11-24T17:29:00Z'
-updated_date: '2026-11-24T19:38:00Z'
+updated_date: '2026-11-24T19:41:00Z'
 labels:
   - SEARCHFIX-LATER
 milestone: m-1
@@ -17,6 +18,15 @@ references:
   - docs/reports/reviews/task-457/seat-integration-1.md
   - docs/reports/reviews/task-457/seat-reality-check-1.md
   - docs/reports/reviews/task-457/seat-regression-1.md
+  - compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md
+  - compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md
+  - compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md
+  - compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md
+  - compliance:eng-front docs/specs/00_engineering_standards.md
+  - compliance:eng-shared docs/specs/00_engineering_standards.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: fix
 ordinal: 151210
 ---
@@ -230,3 +240,9 @@ Plan review round 1: 7 folded, 0 task, 0 ruling, 0 wontfix, 10 pile; grounder do
 rc#1 MED folded This is a rare case,
 rg#1 MED folded useParcelSearch serv
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-24 taken on the board at lane launch (lane BL-SFX7, worktree /Users/brettpreston_macmini/Buildo-wt-sfx7, branch wf2/inc1b-sfx7), RR-0240
+<!-- SECTION:NOTES:END -->
