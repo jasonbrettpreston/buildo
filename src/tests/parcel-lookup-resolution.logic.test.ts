@@ -68,6 +68,16 @@ describe('T1 resolveAddress: the outcome name (one rule, both paths)', () => {
     expect(out.match?.matchType).toBe('typeahead');
   });
 
+  // SEARCHFIX.1 (task-449; RR-0442 "It should open on an exact match", RR-0443 c "they need to select from the available addresses that are
+  // close"): the one row above opens because it is the typed address in full; a row the typed text is only a prefix of is the list.
+  it('typeahead, 1 row that is NOT the typed address in full -> text_candidates, never unique', async () => {
+    rows([], [r('P9', '7 Oakwood Ave')]);
+    const out = await resolveAddress('7 Oak');
+    expect(out.resolution).toBe('text_candidates');
+    expect(out.match).toBeNull();
+    expect(out.candidates).toEqual([{ parcelId: 'P9', address: '7 Oakwood Ave' }]);
+  });
+
   it('typeahead, 2+ rows printing one address with a house number -> multi_parcel', async () => {
     rows([], [r('P1', '7 Oak Ave'), r('P2', '7 Oak Ave'), r('P3', '7 Oak Ave')]);
     const out = await resolveAddress('7 Oak');

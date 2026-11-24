@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T16:28:22.075Z file_sha256=6e93104e4295b7e81d29864554cfed8adc681f48c917952721fbac2c24bd53ee prompt_sha256=db18d48dc3e4d1df59cf631e5c980f542c486367e1dacb2c77ac332c3751a27f
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/lib/admin/parcel-lookup.ts "export function parseFreeTextAddress(q: string, keepPeriods = false): { num: string; streetName: string } {" — the exported default now strips periods for every caller, and only `resolveAddress` compensates with its raw-first run, so any other caller (admin route, future import) silently loses the stored-key-with-period read it had before; `typedDirection` never honours the raw parse either — make `keepPeriods` explicit at the remaining call sites (or audit them) before merging, since I cannot see consumers outside this diff.
+DEFER severity=LOW — src/lib/admin/parcel-lookup.ts "+/** The exact read on the parcels normalized keys (idx_parcels_address); one statement, also read by the SEARCHFIX.1 letter and dash fallback. */" — this new one-line block is inserted directly under the old `resolveAddress` JSDoc that ends with "read the permit pipeline's address matcher (below). */", so that whole `opts.classifyUnlinked` / `opts.matchMistyped` contract now reads as the doc for `readExact`, which it does not describe — move the new `readExact` doc below the orphaned block and re-anchor the old block to `resolveAddress`.
+DEFER severity=LOW — src/tests/search-parser-guard.logic.test.ts "import { findUndocumentedBangs } from './non-null-assertion-comment.logic.test';" — importing a `.test.ts` module executes its top-level `describe`/`it` calls, so that file's suites are registered and run a second time under this file (duplicate results, doubled runtime, failures reported in two places) — export the helper from a non-test module (or move it beside the checker) and import that.
+NIT — src/lib/admin/parcel-lookup.ts "export function typedStreetType(q: string): string {" — every other new helper in this hunk (`typedText`, `typedBase`, `guardByType`, `isTypedAddressInFull`, `likePrefix`) is module-private and this export has no consumer in the diff, so it widens the module surface for nothing — drop `export` until a test or caller needs it.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none, the four findings above are deferred (MED/LOW/NIT)
+
+
+---
+⏱  230965ms (231.0s)
+📊 Tokens — total: 80344, input: 31098, output: 49246, reasoning: 48720

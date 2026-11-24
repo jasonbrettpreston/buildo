@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:28:22.264Z file_sha256=f20348e5b88cda0e54f73228f2d27cd263c8d75a8c16a9d8c55260b5af94d7c4 prompt_sha256=fb522aefb13129d193590826f9762de4cc3edb91c81b466edf3d573d32b022a8
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-step-132-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0392 "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)." — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "answer": "ledger" (was "none") and "writes 1 table(s) synchronously" (removing user_profiles from outputs.tables) — the emits reclassification and the dropped user_profiles write are not counts restating an array (G3 R1) and are not among the folded findings ST1, 2a, G2 D1, G2 D6, G3 R1; the T7 rationale cites rule-9, not pasted — cite the plan or ruling line that names these descriptor corrections, or keep the emits/outputs edits to the count-only fix.
+
+DEFER severity=LOW — AC #6 "The 29 typed-address cases of the seat record pass as tests" — src/tests/search-parser-guard.logic.test.ts "Cases 24 (outside Toronto), 29 (two characters) and the phone half of 23 are existing phone tests (mobile/__tests__ parcelSearchMatch), cited, not re-written." — cases 24 and 29 of the 29 are not in the material under review, so their "pass as tests" cannot be confirmed from this diff — give the file:line of the phone tests that carry cases 24 and 29, or add them here.
+
+REJECT — RR-0442 "if its a semi potentially - you need to state that?" — the change is accused of not stating the semi case — not this change: the descriptor puts the held/semi state on task-360 and task-319, and the card's "Must not: add a new resolution value" bars a new state here.
+
+REJECT — card "Must not: add a new resolution value, or touch the report meter in the lookup route." — the change is accused of touching the meter — src/app/api/parcels/lookup/route.ts does not appear in the diff; only descriptor and census prose about the meter changed.
+
+MET — AC #1 "unless that row is the typed address in full (its printed number and street name equal the typed ones and no street type or direction conflicts), which opens as an exact match" — src/lib/admin/parcel-lookup.ts "if (!typeahead.every((r) => isTypedAddressInFull(r.address, num, streetName, typedType))) return conflictList(typeahead);" — a one-row typeahead opens only when the typed address is in full.
+
+MET — AC #2 "\"Gerrard St W\" with a full 10-row window returns a list, not the one W row" — src/lib/admin/parcel-lookup.ts "const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);" — a full window is not narrowed by direction.
+
+MET — AC #3 "A full correct address with its street type opens the lot when the number is shared by another street type" — src/lib/admin/parcel-lookup.ts "const typeG = guardByType(exact, exactTruncated ? '' : typedType);" — exact rows narrowed by the typed street type.
+
+MET — AC #4 "Unit-first, dash-unit, letter-suffix and period forms reach the lot or the close-address list, never a dead end" — src/lib/admin/parcel-lookup.ts "const bare = keepPeriods ? null : (/^(\d+)[A-Z]$/.exec(num) ?? /^(\d+)-(\d+)[A-Z]?$/.exec(num));" — letter and dash forms return a candidate list.
+
+MET — AC #5 "A typed % or _ is escaped and returns no unrelated lots" — src/lib/admin/parcel-lookup.ts "return s.replace(/[\\%_]/g, '\\$&') + '%';" — the LIKE prefix escapes % and _.
+
+MET — card "Must not: add a new resolution value" — src/lib/admin/parcel-lookup.ts "resolution: 'text_candidates', lotMap: null }" in conflictList — every new listing path uses the existing label.
+
+MET — card "Dated notes owed: Spec 100 (:103, :144); ...; Spec 89 (after :34)" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md and docs/specs/02-web-admin/89_parcel_cost_model_tool.md "Dated note 2026-11-24 (M-246, prior text kept; SEARCHFIX.1 · task-449" — both notes present at the cited sites.
+
+VERDICT: PASS
+Clauses checked: 16   Unmet: 0
+Rules met: none
+
+---
+⏱  134487ms (134.5s)
+📊 Tokens — total: 64055, input: 35179, output: 28876, reasoning: 27809

@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T16:28:22.283Z file_sha256=b8d1757cdb96b9deadcab53524b466c973a6c7b004af73c77de8e5eed8268bb7 prompt_sha256=7e96271cc0469edf7e37a6c12a4eedbb467f95f449dfcee0aeebb30a43d9d236
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-engineering-eng-all-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 12.12 Property-Based Tests: "key normalizers" and "MUST have at least one `fast-check` property test asserting the invariant" — src/lib/admin/parcel-lookup.ts (diff) "+export function parseFreeTextAddress(q: string, keepPeriods = false): { num: string; streetName: string } {" — the changed key normalizer and its new escaper carry example-based checks only ("+function likePrefix(s: string): string { return s.replace(/[\\%_]/g, '\\$&') + '%'; }"), and the guard with a documented set invariant ("Never empties a non-empty set") has no `forAll` test — add src/tests/property/parcel-lookup-normalize.property.test.ts with forAll over likePrefix (one unescaped % and it is last), typedBase idempotence, and guardByType never returning an empty row set from a non-empty one.
+
+DEFER severity=LOW — 12.11 Footgun Lint Gate: "comment-rot, grep heuristic: any file with `// never throws` / `// always returns` AND a `throw` statement is flagged" — src/lib/admin/parcel-lookup.ts (diff) "+  const base = stripTrailingUnit(text.split(',')[0]!.trim()).toUpperCase(); // split always returns at least one element, so [0] exists" — the added comment matches the `// always returns` grep token in a file this section scopes rule-by-rule into src/lib/, so the pre-commit hook can flag it as rot (whether a `throw` exists in the file cannot see) — reword to "split yields at least one element, so [0] exists".
+
+REJECT — 12.10 Real-DB Integration Tests — accused of owing a `*.db.test.ts` for the new LIKE escaping ("+function likePrefix(s: string): string") — the section's mandate is scoped to "Every NEW migration that adds a CHECK constraint, FK with cascade, or PostGIS expression", this diff adds no migration and "the SQL text is unchanged", the escape rides a bind parameter.
+
+REJECT — 12.13 Mutation Testing (Stryker) — accused of leaving a mutation surface uncovered — the surface is the four named modules ("cost-model.ts, distance.ts, record-lead-view.ts, builder-query.ts"); src/lib/admin/parcel-lookup.ts is not on it.
+
+MET — 12.11 Footgun Lint Gate (rule 5, pool-boundary: "bans `new Pool(` instantiation outside `src/lib/db/`, `src/tests/`, `scripts/`") — src/lib/admin/parcel-lookup.ts (diff) "+function readExact(num: string, streetName: string): Promise<{ parcel_id: string; address: string }[]>" — the reused read goes through the shared `query` helper, no `new Pool(` and the new suite lives in src/tests/.
+
+MET — 12.12 Property-Based Tests ("Example-based tests are still required for happy paths and explicit edge cases") — src/tests/search-parser-guard.logic.test.ts (diff) "+  it.each(cases)('T5 (AC #6) case %s'" — the 29 typed-address cases plus the two unit-head cases are explicit example tests.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 14   Unmet: 1
+
+---
+⏱  58950ms (59.0s)
+📊 Tokens — total: 47140, input: 34804, output: 12336, reasoning: 11592

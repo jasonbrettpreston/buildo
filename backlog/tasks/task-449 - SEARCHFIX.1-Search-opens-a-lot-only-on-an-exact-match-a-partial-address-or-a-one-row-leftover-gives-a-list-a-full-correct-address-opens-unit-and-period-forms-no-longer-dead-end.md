@@ -4,11 +4,11 @@ title: >-
   SEARCHFIX.1 Search opens a lot only on an exact match: a partial address or a
   one-row leftover gives a list; a full correct address opens; unit and period
   forms no longer dead-end
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-SFX1'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T15:42:00Z'
+updated_date: '2026-11-24T17:11:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -29,6 +29,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-24/BL-SFX1/REPORT.md
+  - docs/reports/lanes/2026-11-24/BL-SFX1/GROUNDER.md
+  - docs/reports/lanes/2026-11-24/BL-SFX1/TRIAGE.md
 type: fix
 ordinal: 150010
 ---
@@ -46,31 +49,31 @@ Must not: add a new resolution value, or touch the report meter in the lookup ro
 
 Dated notes owed: Spec 100 (:103, :144); objectives G.1 and A.3 of doc-2 through the backlog CLI; task-69; Spec 89 (after :34).
 
-Files: src/lib/admin/parcel-lookup.ts, src/tests/search-parser-guard.logic.test.ts, src/tests/consumer-parcel-lookup.infra.test.ts, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json, scripts/surfaces/_schema/census/contracts.json, docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, src/tests/parcel-lookup-resolution.logic.test.ts, docs/specs/02-web-admin/89_parcel_cost_model_tool.md
+Files: src/lib/admin/parcel-lookup.ts, src/tests/search-parser-guard.logic.test.ts, src/tests/consumer-parcel-lookup.infra.test.ts, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json, scripts/surfaces/_schema/census/contracts.json, docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, src/tests/parcel-lookup-resolution.logic.test.ts, docs/specs/02-web-admin/89_parcel_cost_model_tool.md, docs/specs/00-architecture/00_system_map.md
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A typeahead that leaves exactly one row returns a list (text_candidates), never unique, unless that row is the typed address in full (its printed number and street name equal the typed ones and no street type or direction conflicts), which opens as an exact match; a prefix, a street with no number and a narrowed leftover list
-- [ ] #2 "Gerrard St W" with a full 10-row window returns a list, not the one W row
-- [ ] #3 A full correct address with its street type opens the lot when the number is shared by another street type
-- [ ] #4 Unit-first, dash-unit, letter-suffix and period forms reach the lot or the close-address list, never a dead end
-- [ ] #5 A typed % or _ is escaped and returns no unrelated lots
-- [ ] #6 The 29 typed-address cases of the seat record pass as tests
+- [x] #1 A typeahead that leaves exactly one row returns a list (text_candidates), never unique, unless that row is the typed address in full (its printed number and street name equal the typed ones and no street type or direction conflicts), which opens as an exact match; a prefix, a street with no number and a narrowed leftover list
+- [x] #2 "Gerrard St W" with a full 10-row window returns a list, not the one W row
+- [x] #3 A full correct address with its street type opens the lot when the number is shared by another street type
+- [x] #4 Unit-first, dash-unit, letter-suffix and period forms reach the lot or the close-address list, never a dead end
+- [x] #5 A typed % or _ is escaped and returns no unrelated lots
+- [x] #6 The 29 typed-address cases of the seat record pass as tests
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
-- [ ] #2 The tests were written first and proven red, then green — "Every lock is proven in BOTH directions" (docs/specs/00-architecture/08_agents.md:462)
-- [ ] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
-- [ ] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
-- [ ] #5 Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — "A ruling enters a row as a verbatim dated note." (docs/specs/00-architecture/137_mcqueue.md:109)
-- [ ] #6 The task file and its queue row are updated in the same commit as the work — "The status line changes in the same commit as the work." (docs/specs/00-architecture/137_mcqueue.md:84)
-- [ ] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
-- [ ] #8 Nothing was added that the card or ruling did not name — "no change adds a tool, field or rule its card or ruling did not name" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)
-- [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
-- [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
+- [x] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
+- [x] #2 The tests were written first and proven red, then green — "Every lock is proven in BOTH directions" (docs/specs/00-architecture/08_agents.md:462)
+- [x] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
+- [x] #5 Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — "A ruling enters a row as a verbatim dated note." (docs/specs/00-architecture/137_mcqueue.md:109)
+- [x] #6 The task file and its queue row are updated in the same commit as the work — "The status line changes in the same commit as the work." (docs/specs/00-architecture/137_mcqueue.md:84)
+- [x] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
+- [x] #8 Nothing was added that the card or ruling did not name — "no change adds a tool, field or rule its card or ruling did not name" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)
+- [x] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
+- [x] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -298,4 +301,30 @@ rg#2 MED folded names what it amends
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-24 taken on the board at lane launch (lane BL-SFX1, worktree /Users/brettpreston_macmini/Buildo-wt-sfx1, branch wf2/inc1b-sfx1), RR-0240
+
+2026-11-24 lane BL-SFX1: tests written first (search-parser-guard SEARCHFIX.1 T1-T5, parcel-lookup-resolution one-row partial, consumer-parcel-lookup.infra T6-T8); red proven by the refused commit attempt (red.out in the lane dir).
+
+2026-11-24 build (lane BL-SFX1): plan PLAN-449-v1 built as written. Deviations, recorded not re-planned: (1) the letter and dash fallback dedupes rows by parcel_id and caps the list at 10 (the ≤10 candidates shape of Spec 89:38); (2) the exact statement is read through one helper readExact (same SQL text) so the fallback reuses it; (3) the :226 `!` moved into typedBase as `?? ''` (no `!`), so parcel-lookup.ts holds 10 `!`, each with a why-comment; (4) the fallback and the matcher do not run on the raw-first (keepPeriods) run, per plan 3.B.1 (exact, typeahead and unlinked reads only); (5) T6 is green today too (two `unique` returns already), it is a lock with a red plant; (6) case 15's ten rows and case 21's point are real rows (local test stack, read-only, 2026-11-24). Generated files moved: docs/reports/generated/127-surface-registry.md and 127-surface-review-queue.md (exempt); src/lib/surfaces/generated/ did not move. Notes owed landed: Spec 100 after :107 and :144, Spec 89 after :34, doc-2 G.1 and A.3 (backlog doc update), task-69 (append-notes).
+
+2026-11-24 output review round 1 run (context-r3.md; 24 lens outputs and FINDINGS.md under docs/reports/lanes/2026-11-24/BL-SFX1/; 91 finding ids: 7 HIGH, 8 BUG MED, 28 DEFER MED, 44 LOW, 2 NIT). Grounder owed: the lane does not rule its own findings. Work commits 079f76c30 (code, hooks green: 332 passed) and a997f8fb7 (generated files, doc-2 and task-69 notes).
+
+2026-11-24 round 1 grounder (Cairn-Ground-O449): MED out-compliance-ms-S#1 confirmed; red-r2 then fix (direction re-checked after the type narrowing). Case 15 rows 5-10 and case 21's point now real (local test stack, read-only, 2026-11-24).
+
+2026-11-24 output review round 2 run on ddc9e8a24 (context-r4.md; 30 outputs; 92 ids: 1 HIGH, 1 BUG MED, 30 DEFER MED, 57 LOW, 2 NIT). Round 2 grounder owed.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed (lane BL-SFX1, branch wf2/inc1b-sfx1, not pushed): the work 079f76c30 (resolver, tests, census row, emitted descriptor, Spec 100 and Spec 89 dated notes); the docs-only a997f8fb7 (generated registry, review queue, rule-lists page, system map; doc-2 G.1/A.3 and task-69 notes); the round 1 fix ddc9e8a24 (direction re-checked after the street-type narrowing, out-compliance-ms-S#1) with the real fixture rows for cases 15 and 21 (decision-236, RR-0453); the round 2 re-run of the empty step-132-p3 lens 4e64e3bc4; the board merge 3b45d5580 (Files-line diff from ff3838a04 unchanged, sha256 6547697da3e9); the mobile-99 lens re-made 5c974f80f.
+
+Hook evidence (lane dir ~/Buildo-scratch/lanes-20261124/BL-SFX1/): red.out 25 failed / 144 passed before the code; green.out 332 passed, 14 skipped at 079f76c30; red-r2.out 1 of 95 failed (32 Fulham Dr E) before the fix; green-r2.out 334 passed, 14 skipped at ddc9e8a24. typecheck clean; generate-surface-registry --check clean.
+
+AC evidence: #1 T2, T5 cases 12, 13, extra 7 Oak and 383 Elm St, parcel-lookup-resolution one-row partial; #2 T1 and its 9-row boundary; #3 T5 cases 10 and 11, extra 32 Fulham Dr E/W; #4 T5 27a, 27b, 27c, 2e, St. Clair, St. Gaspar; #5 T3; #6 T5 (cases 24, 29 and the phone half of 23 are the existing phone tests, cited). T6-T8 in consumer-parcel-lookup.infra.test.ts.
+
+Rule quoted: RR-0442 (MORNING-DECISIONS.md:2276) and RR-0443 c (:2284), with RR-0166 for the unit and direction rules. Principles served: accuracy (a lot opens only on an exact match), understandability (a partial address gives the list), standardization (the street-type guard reuses the direction guard shape). No resolution value, option or tool added; route.ts, address.ts and mobile/ unchanged.
+
+History: round 1 had 91 ids, 17 CONFIRMED (1 MED fixed in ddc9e8a24, 15 LOW and 1 NIT piled), 74 REJECTED; grounder ~/Buildo-scratch/lanes-20261124/BL-SFX1/round1/GROUNDER.md; triage ~/Buildo-scratch/lanes-20261124/BL-SFX1/round1/TRIAGE.md.
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 11 pile; grounder docs/reports/lanes/2026-11-24/BL-SFX1/GROUNDER.md; triage docs/reports/lanes/2026-11-24/BL-SFX1/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->

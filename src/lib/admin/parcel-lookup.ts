@@ -173,16 +173,32 @@ function stripTrailingUnit(s: string): string {
   const stripped = s.replace(UNIT_TAIL, '').trim();
   if (stripped === s) return s;
   const tokens = stripped.split(/\s+/);
-  return tokens.length >= 2 && /\d/.test(tokens[0]!) ? stripped : s;
+  return tokens.length >= 2 && /\d/.test(tokens[0]!) ? stripped : s; // tokens.length >= 2 is tested first, so tokens[0] exists
+}
+
+/**
+ * SEARCHFIX.1 (task-449; fold plan A1; RR-0166 "ONE-12 a" for the unit rule): the typed text before the city cut. A period becomes a space ("St." reads
+ * as "St"), unless keepPeriods (the raw-first run of resolveAddress, for a stored key that holds a period). One LEADING closed-form unit ("Unit 4, 123
+ * Yonge St", "Apt 4B, 12 Elm St", "#4 2760 Yonge St") is dropped. The separator after the unit is required, so "Suite 12 Elm St" and "#12 Elm St" are
+ * untouched (a separator-free tail would backtrack inside the digits and read house number 2). Anchored, no nested quantifiers.
+ */
+const UNIT_HEAD = /^\s*(?:UNIT\s*#?|APT|APARTMENT|SUITE|STE|#)\s*\d{1,5}[A-Z]?(?:\s*,\s*|\s+)(?=\d)/i;
+function typedText(q: string, keepPeriods: boolean): string {
+  return (keepPeriods ? q : q.replace(/\./g, ' ')).replace(UNIT_HEAD, '');
+}
+
+/** The cleaned typed address: typedText, the WF3 city cut (below) and the trailing-unit strip, in that order. */
+function typedBase(q: string, keepPeriods: boolean): string {
+  return stripTrailingUnit((typedText(q, keepPeriods).split(',')[0] ?? '').trim());
 }
 
 export type Compass = 'N' | 'S' | 'E' | 'W';
 
 /** The trailing street direction of an address text as N/S/E/W (one mapper for the typed query and the returned rows), or null. */
 function trailingCompass(text: string): Compass | null {
-  const base = stripTrailingUnit(text.split(',')[0]!.trim()).toUpperCase();
+  const base = stripTrailingUnit(text.split(',')[0]!.trim()).toUpperCase(); // split always returns at least one element, so [0] exists
   const m = base.match(/^(.*\S)\s+(NORTH|SOUTH|EAST|WEST|[NSEW])$/);
-  return m ? (m[2]![0] as Compass) : null;
+  return m ? (m[2]![0] as Compass) : null; // group 2 is not optional, so a match always holds it
 }
 
 /**
@@ -191,8 +207,52 @@ function trailingCompass(text: string): Compass | null {
  * Null when no street name remains once the direction is removed ("100 W").
  */
 export function typedDirection(q: string): Compass | null {
-  const d = trailingCompass(q);
+  const d = trailingCompass(typedText(q, false));
   return d && parseFreeTextAddress(q).streetName ? d : null;
+}
+
+/**
+ * SEARCHFIX.1 (task-449, A1): the street type the user typed (ST, AVE, DR ...), or '' when none is typed. Read by parseLinearName from the street
+ * part of the same cleaned base as parseFreeTextAddress, so a period, a unit or a city suffix never changes it. A guard AFTER the match, never part
+ * of the join key (address.ts is not edited).
+ */
+export function typedStreetType(q: string): string {
+  const base = typedBase(q, false);
+  const m = base.match(/^(\S+)\s+(.+)$/);
+  return parseLinearName(m && /\d/.test(m[1] ?? '') ? (m[2] ?? '') : base).street_type;
+}
+
+/**
+ * SEARCHFIX.1 (task-449, A1, AC #3): the street-type guard on rows the exact read already returned (no new query), the same shape as
+ * guardByDirection. The row type is read by parseLinearName from the whole printed address (a house number never matches the type list). Acts only
+ * when a type was typed AND every row prints one (a row that prints none proves nothing: unchanged, so a second parcel on the number is never
+ * hidden). Rows of the typed type only when any match; a ONE-row hit of another type is a proven conflict (the list, the lot still shown;
+ * RR-0442, RR-0443 c); otherwise unchanged. Never empties a non-empty set.
+ */
+function guardByType<T extends { address: string }>(rows: T[], typed: string): { rows: T[]; conflict: boolean } {
+  if (!typed || rows.length === 0) return { rows, conflict: false };
+  const types = rows.map((r) => parseLinearName(r.address).street_type);
+  if (types.some((t) => t === '')) return { rows, conflict: false };
+  const same = rows.filter((_, i) => types[i] === typed);
+  if (same.length > 0) return { rows: same, conflict: false };
+  return { rows, conflict: rows.length === 1 };
+}
+
+/**
+ * SEARCHFIX.1 (task-449; RR-0442 "It should open on an exact match"; RR-0443 c "they need to select from the available addresses that are close"):
+ * a printed address is the typed address in full when its first word, normalized, is the typed number, the street name parseLinearName reads from
+ * the rest equals the typed one, and its street type does not conflict. "2760 Yon" (YONGE), "14 Norwood" (NORWOOD TER) and a street with no number
+ * are not; "21 Langden Ave" printed "21 Langden Ave" is.
+ */
+function isTypedAddressInFull(printed: string, num: string, streetName: string, typedType: string): boolean {
+  const m = printed.trim().match(/^(\S+)\s+(.+)$/);
+  if (!num || !m) return false;
+  return normalizeAddressNumber(m[1]) === num && parseLinearName(m[2] ?? '').street_name === streetName && !guardByType([{ address: printed }], typedType).conflict;
+}
+
+/** SEARCHFIX.1 (task-449, G2 D1): a LIKE prefix with the typed wildcards escaped (Postgres's default LIKE escape is backslash; the SQL text is unchanged). */
+function likePrefix(s: string): string {
+  return s.replace(/[\\%_]/g, '\\$&') + '%';
 }
 
 /**
@@ -222,16 +282,21 @@ function guardByDirection<T extends { address: string }>(rows: T[], typed: Compa
  * legitimately contain a comma (Toronto's LINEAR_NAME_FULL / addr-point
  * feeds are comma-free), so truncating at the first comma is safe.
  */
-export function parseFreeTextAddress(q: string): { num: string; streetName: string } {
-  const withoutCitySuffix = stripTrailingUnit(q.split(',')[0]!.trim());
+export function parseFreeTextAddress(q: string, keepPeriods = false): { num: string; streetName: string } {
+  // SEARCHFIX.1 (task-449): typedText runs first (period, leading unit); the city cut and the trailing-unit strip then run on its result, as before.
+  const withoutCitySuffix = typedBase(q, keepPeriods);
   const m = withoutCitySuffix.match(/^(\S+)\s+(.+)$/);
+  // groups 1 and 2 are not optional, so a match that succeeded holds both (the `!` on the next two lines)
   if (m && /\d/.test(m[1]!)) {
-    return { num: normalizeAddressNumber(m[1]), streetName: parseLinearName(m[2]!).street_name };
+    return { num: normalizeAddressNumber(m[1]), streetName: parseLinearName(m[2]!).street_name }; // see the comment above: group 2 exists
   }
   return { num: '', streetName: parseLinearName(withoutCitySuffix).street_name };
 }
 
-/** Label 1 (ONE-12 a): a one-lot hit whose printed direction differs from the typed one is answered as the address list (the lot still shown). */
+/**
+ * Label 1 (ONE-12 a): a one-lot hit whose printed direction differs from the typed one is answered as the address list (the lot still shown).
+ * SEARCHFIX.1 (task-449) reuses it for a street-type conflict, a one-row typeahead that is not the typed address in full, and the letter and dash list.
+ */
 function conflictList(rows: { parcel_id: string; address: string }[]): Resolution {
   return { match: null, candidates: rows.map((r) => ({ parcelId: r.parcel_id, address: r.address })), resolution: 'text_candidates', lotMap: null };
 }
@@ -243,26 +308,51 @@ const displayAddress = `TRIM(COALESCE(address_number, '') || ' ' || COALESCE(lin
  * with NO lot link (`unlinked`), else `no_match`. The admin call leaves it off and keeps today's two reads (PLAN panel regression MEDIUM-3).
  * `opts.matchMistyped` (task-333 SRCH.FUZZY, the consumer route only): on that final miss, read the permit pipeline's address matcher (below).
  */
-export async function resolveAddress(q: string, opts: { classifyUnlinked?: boolean; matchMistyped?: boolean } = {}): Promise<Resolution> {
-  const { num, streetName } = parseFreeTextAddress(q);
+/** The exact read on the parcels normalized keys (idx_parcels_address); one statement, also read by the SEARCHFIX.1 letter and dash fallback. */
+function readExact(num: string, streetName: string): Promise<{ parcel_id: string; address: string }[]> {
+  return query<{ parcel_id: string; address: string }>(
+    `SELECT parcel_id, ${displayAddress} AS address
+       FROM parcels
+       WHERE addr_num_normalized = $1 AND street_name_normalized = $2
+       ORDER BY parcel_id LIMIT 11`,
+    [num, streetName],
+  );
+}
+
+/**
+ * SEARCHFIX.1 (task-449): `keepPeriods` (an argument, not an option) runs the reads on the street key with its periods kept. A query holding a period
+ * whose raw key differs from the stripped one is first run that way (exact, typeahead and unlinked reads only: no matcher, no fallback), and that
+ * result is returned unless it is no_match; only then does the stripped key run every step. Raw first, so a stored key with a period (". GASPAR CRT")
+ * opens as before, and the strip only adds hits ("St. Clair Ave W", stored without a period).
+ */
+export async function resolveAddress(
+  q: string,
+  opts: { classifyUnlinked?: boolean; matchMistyped?: boolean } = {},
+  keepPeriods = false,
+): Promise<Resolution> {
+  if (!keepPeriods && q.includes('.') && parseFreeTextAddress(q, true).streetName !== parseFreeTextAddress(q).streetName) {
+    const raw = await resolveAddress(q, { ...opts, matchMistyped: false }, true);
+    if (raw.resolution !== 'no_match') return raw;
+  }
+  const { num, streetName } = parseFreeTextAddress(q, keepPeriods);
   const typed = typedDirection(q);
+  const typedType = typedStreetType(q);
   if (!streetName) return { match: null, candidates: [], resolution: 'no_match', lotMap: null };
 
   // 1) Exact match on the parcels normalized keys (idx_parcels_address).
   if (num) {
-    let exact = await query<{ parcel_id: string; address: string }>(
-      `SELECT parcel_id, ${displayAddress} AS address
-       FROM parcels
-       WHERE addr_num_normalized = $1 AND street_name_normalized = $2
-       ORDER BY parcel_id LIMIT 11`,
-      [num, streetName],
-    );
+    let exact = await readExact(num, streetName);
     const exactTruncated = exact.length > 10; // LIMIT 11 → an 11th row means more exist (Gemini fold); read before the guard narrows
     const exactG = guardByDirection(exact, exactTruncated ? null : typed); // a truncated window cannot prove a narrowed row is the only one: unchanged (output review r2 #2)
     if (exactG.conflict) return conflictList(exactG.rows);
     exact = exactG.rows;
+    // SEARCHFIX.1 (A1, AC #3): "32 Fulham Dr" opens Fulham Dr, not the list with Fulham St; same truncation rule as the direction guard, which is checked again on the narrowed row (RR-0166: "32 Fulham Dr E" over Fulham St W and Fulham Dr W is the list).
+    const typeG = guardByType(exact, exactTruncated ? '' : typedType);
+    exact = typeG.rows;
+    if (typeG.conflict || guardByDirection(exact, exactTruncated ? null : typed).conflict) return conflictList(exact);
     if (exact.length === 1) {
       return {
+        // exact.length === 1 was tested on the line above, so exact[0] exists (both `!` on the next line)
         match: { parcelId: exact[0]!.parcel_id, matchType: 'exact', address: exact[0]!.address },
         candidates: [],
         resolution: 'unique',
@@ -296,13 +386,20 @@ export async function resolveAddress(q: string, opts: { classifyUnlinked?: boole
        AND UPPER(ap.maint_stage) = 'REGULAR'
        AND ap.retired_at IS NULL
      ORDER BY address LIMIT 10`,
-    [streetName + '%', num || null],
+    [likePrefix(streetName), num || null],
   );
-  const typeaheadG = guardByDirection(typeahead, typed);
+  // SEARCHFIX.1 (ST1, AC #2): a window of 10 may be cut short (no overflow probe), so it cannot prove a narrowed row is the only one on the typed
+  // side: unchanged, the list ("Gerrard St W"). The exact path's own truncation rule (above), on the typeahead's LIMIT 10.
+  const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);
   if (typeaheadG.conflict) return conflictList(typeaheadG.rows);
   typeahead = typeaheadG.rows;
   if (typeahead.length === 1) {
+    // SEARCHFIX.1 (2a, AC #1; RR-0442 "It should open on an exact match"; RR-0443 c "they need to select from the available addresses that are
+    // close"): one leftover row opens only when it is the typed address in full (about 45,000 plain-number addresses are reached only this way);
+    // a prefix ("2760 Yon"), a street with no number and a narrowed leftover are the list. matchType stays 'typeahead' (additive_only enum).
+    if (!typeahead.every((r) => isTypedAddressInFull(r.address, num, streetName, typedType))) return conflictList(typeahead);
     return {
+      // typeahead.length === 1 was tested above, so typeahead[0] exists (both `!` on the next line)
       match: { parcelId: typeahead[0]!.parcel_id, matchType: 'typeahead', address: typeahead[0]!.address },
       candidates: [],
       resolution: 'unique',
@@ -314,7 +411,7 @@ export async function resolveAddress(q: string, opts: { classifyUnlinked?: boole
   if (typeahead.length > 1) return { match: null, candidates, ...classifyRows(typeahead, num, false) };
 
   // 3) MF-53 unlinked (consumer only): live points with this number and NO lot link. Skipped for a street carrying a LIKE wildcard, so the
-  //    new read never widens on % or _ (security L-1; the typeahead's own escape is a follow-up card).
+  //    new read never widens on % or _ (security L-1); the typeahead and this read also escape them (likePrefix, SEARCHFIX.1 D1, done).
   if (opts.classifyUnlinked && num && !/[%_]/.test(streetName)) {
     const unlinked = await query<{ address_point_id: number; address: string; latitude: unknown; longitude: unknown }>(
       `SELECT ap.address_point_id, COALESCE(ap.address_full, TRIM(COALESCE(ap.address_number, '') || ' ' || COALESCE(ap.linear_name_full, ''))) AS address,
@@ -327,10 +424,10 @@ export async function resolveAddress(q: string, opts: { classifyUnlinked?: boole
          AND ap.retired_at IS NULL
          AND NOT EXISTS (SELECT 1 FROM parcel_address_points pap WHERE pap.address_point_id = ap.address_point_id)
        ORDER BY address, ap.address_point_id LIMIT 11`,
-      [streetName + '%', num],
+      [likePrefix(streetName), num],
     );
     if (unlinked.length > 0) {
-      const first = unlinked[0]!;
+      const first = unlinked[0]!; // unlinked.length > 0 was tested on the line above, so unlinked[0] exists
       const one = new Set(unlinked.map((u) => u.address)).size === 1;
       const lat = first.latitude == null ? NaN : Number(first.latitude);
       const lng = first.longitude == null ? NaN : Number(first.longitude);
@@ -362,6 +459,17 @@ export async function resolveAddress(q: string, opts: { classifyUnlinked?: boole
     if (near.length > 0) {
       return { match: null, candidates: near.map((r) => ({ parcelId: r.parcel_id, address: r.address })), resolution: 'text_candidates', lotMap: null };
     }
+  }
+  // 5) SEARCHFIX.1 (A1, AC #4; RR-0443 c "select from the available addresses that are close"): a letter suffix with no lot ("2760A") or a dash
+  //    form ("2760-4", "4-2760": no unit word, so which side is the unit is unknown) reads the exact statement for each bare number (at most 2
+  //    reads) and lists what it finds; it never opens. On the full miss only, so every hit above is unchanged; not on the raw-first run.
+  const bare = keepPeriods ? null : (/^(\d+)[A-Z]$/.exec(num) ?? /^(\d+)-(\d+)[A-Z]?$/.exec(num));
+  if (bare) {
+    const nums = [...new Set(bare.slice(1).filter((n): n is string => Boolean(n)).map((n) => normalizeAddressNumber(n)))];
+    const seen = new Set<string>();
+    const rows: { parcel_id: string; address: string }[] = [];
+    for (const n of nums) for (const r of await readExact(n, streetName)) if (!seen.has(r.parcel_id)) { seen.add(r.parcel_id); rows.push(r); }
+    if (rows.length > 0) return conflictList(rows.slice(0, 10));
   }
   return { match: null, candidates, resolution: 'no_match', lotMap: null };
 }

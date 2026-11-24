@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:28:22.258Z file_sha256=d5da3d77f77927ba5665d76afe607675b8d551f395a30d6bb81df3c8f51a4c26 prompt_sha256=7bc1ae2f552ab850c722710c5b93a9250161cf07f8648ac5ff85cecf934e98cc
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX1/in-out-compliance-surface-136-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — AC #6 "The 29 typed-address cases of the seat record pass as tests" — src/tests/search-parser-guard.logic.test.ts "// Cases 24 (outside Toronto), 29 (two characters) and the phone half of 23 are existing phone tests (mobile/__tests__ parcelSearchMatch), cited, not re-written." — three of the seat cases are satisfied only by a citation to tests that are not in this chunk (cannot see), so AC #6 cannot be confirmed from the material under review — run mobile/__tests__/parcelSearchMatch and record the pass in the task notes.
+DEFER severity=LOW — task card "Dated notes owed: Spec 100 (:103, :144); objectives G.1 and A.3 of doc-2 through the backlog CLI; task-69; Spec 89 (after :34)." — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md "The doc-2 G.1 and A.3 notes keep \"unique goes straight to the report\" true for an exact match only." — the doc-2 G.1/A.3 and task-69 notes live outside this chunk (cannot see), so the note's claim rests on work the diff does not show — confirm the backlog doc and task-69 carry the 2026-11-24 dated note.
+REJECT — AC #1 "which opens as an exact match" — the in-full one-row typeahead opens with matchType 'typeahead', not 'exact' — the same task's dated note pins "`typeahead` stays in the `matchType` enum (additive_only) and is still emitted for that case", so the AC is met by the open (unique), not by the enum value.
+MET — fe.57 — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md "so the search page shows the address list" — the only mobile outcome changed is routing to the existing converted list screen, no button, link, toggle or icon is added, so the 44x44 floor and the a11y category have no new element to check.
+MET — fe.58 — src/lib/admin/parcel-lookup.ts "if (!typeahead.every((r) => isTypedAddressInFull(r.address, num, streetName, typedType))) return conflictList(typeahead);" — the change is server-side resolution and routing only, no Server Component or Spec 125 SSR mechanism is introduced for mobile.
+MET — AC #2 — src/lib/admin/parcel-lookup.ts "const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);" — a full 10-row window is left unnarrowed, so "Gerrard St W" is the list (T1, case 16).
+MET — AC #3 — src/lib/admin/parcel-lookup.ts "const typeG = guardByType(exact, exactTruncated ? '' : typedType);" — the exact rows are narrowed by the typed street type, "32 Fulham Dr" opens its Dr lot (case 10) and a no-type row stops the narrowing (extra 5 Elm St).
+MET — AC #5 — src/lib/admin/parcel-lookup.ts "return s.replace(/[\\%_]/g, '\\$&') + '%';" — a typed % and _ are escaped in the prefix reads (T3 asserts "\\%%" and "MA\\_N%").
+MET — Must not — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md "No `resolution` value is added and the report meter is untouched." — the resolver reuses the five existing resolution values and src/app/api/parcels/lookup/route.ts is not in the diff.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 0
+Rules met: fe.57, fe.58
+
+---
+⏱  214563ms (214.6s)
+📊 Tokens — total: 78724, input: 31592, output: 47132, reasoning: 46266
