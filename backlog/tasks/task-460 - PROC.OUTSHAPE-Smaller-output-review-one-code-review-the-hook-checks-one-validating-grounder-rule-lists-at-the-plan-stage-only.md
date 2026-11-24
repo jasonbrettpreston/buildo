@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-PROC460'
 created_date: '2026-11-24T18:04:00Z'
-updated_date: '2026-11-24T18:37:00Z'
+updated_date: '2026-11-24T18:41:00Z'
 labels:
   - ProcessImprovement
 milestone: m-1
@@ -242,4 +242,6 @@ rg#3 MED folded are lists of docs/sp
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-24 taken on the board at lane launch (lane BL-PROC460, worktree /Users/brettpreston_macmini/Buildo-wt-proc460, branch wf2/inc1b-proc460), RR-0240
+
+2026-11-24 build started (lane BL-PROC460). Plan Q7 (security at output) is UNANSWERED: MORNING-DECISIONS.md read to its last entry (RR-0461, :2385); no Q7 ruling. Deviation from plan step 1 order, recorded here: the lensSet out line is edited now ONLY to drop ux and error-paths (common to Q7 options A, B and C; RR-0459 MD:2377 and RR-0457/0458); the security term of that line is left exactly as it is today, the security test pins are not edited, and the Spec 08 note names security as pending Q7. Removing or keeping security waits for the operator's Q7 answer. Red tests first: T1, T2, T3, T4, T6, T7, T8, T9, T10 written before any code edit.
 <!-- SECTION:NOTES:END -->

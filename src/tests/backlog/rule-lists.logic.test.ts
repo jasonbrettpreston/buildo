@@ -729,7 +729,7 @@ describe('task-445: the security lens runs on an API route or library path (lens
     for (const type of ['build', 'fix']) for (const f of ['src/lib/massing/geometry.ts', './src/lib/x.ts', 'src/lib/**', 'src/a.ts, src/lib/b.ts']) {
       const r = await lens(type, f);
       expect(r.plan, `${type} ${f}`).toEqual(['plan-review-deepseek', 'error-paths', 'security']);
-      expect(r.out, `${type} ${f}`).toEqual(['code-review', 'error-paths', 'security']);
+      expect(r.out, `${type} ${f}`).toEqual(['code-review', 'security']); // task-460 (RR-0459): no error-paths at output; security unchanged until plan Q7 is answered
     }
   });
   it('S1(b): an API route adds security on both phases, for build and fix (toContain: the route also gets ux today, not pinned here)', async () => {
@@ -1111,10 +1111,10 @@ describe('task-438 T2: seatOf routes a rule list to the engineering or the compl
 describe('task-453: output_off and validate robustness', () => {
   type V = { validateTable: (t: unknown, root: string) => string[]; outputLists: (t: unknown, l: { id: string }[]) => { id: string }[] };
   const vmod = () => import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs')) as Promise<V>;
-  it('the real table switches plan-protocol off for output reviews (output_off) and keeps it in every_task', () => {
+  it('task-460 T2: the real table switches EVERY list off for output reviews (output_off = every key of lists, in table order) and every_task stays the plan protocol', () => {
     const t = real() as Table & { output_off?: string[] };
-    expect(t.output_off).toEqual(['plan-protocol']);
-    expect(t.every_task).toContain('plan-protocol');
+    expect(t.output_off).toEqual(Object.keys(t.lists));
+    expect(t.every_task).toEqual(['plan-protocol']);
   });
   it('outputLists drops the output_off lists and keeps the rest; an empty or missing output_off keeps every list (AC #2)', async () => {
     const { outputLists } = await vmod();
@@ -1123,9 +1123,12 @@ describe('task-453: output_off and validate robustness', () => {
     expect(outputLists({ output_off: [] }, ls).map((l) => l.id)).toEqual(['plan-protocol', 'eng-all', 'inc-S']);
     expect(outputLists({}, ls).map((l) => l.id)).toEqual(['plan-protocol', 'eng-all', 'inc-S']);
   });
-  it('validate refuses an output_off id that is not in every_task, and an output_off that is not a list (fails closed on a typo)', async () => {
+  it('validate refuses an output_off id that is not a defined list, and an output_off that is not a list (fails closed on a typo)', async () => {
     const { validateTable } = await vmod();
-    expect(validateTable({ ...real(), output_off: ['nope'] }, ROOT).join('|')).toMatch(/output_off: list nope is not in every_task/);
+    expect(validateTable({ ...real(), output_off: ['nope'] }, ROOT).join('|')).toMatch(/output_off: list nope is not defined/);
+    // task-460 T1 (AC #1): output_off may name any defined list, not only every_task ids; an inherited key is not a defined list (own keys only)
+    expect(validateTable({ ...real(), output_off: ['step-132'] }, ROOT)).toEqual([]);
+    expect(validateTable({ ...real(), output_off: ['constructor'] }, ROOT).join('|')).toMatch(/output_off: list constructor is not defined/);
     expect(validateTable({ ...real(), output_off: 'plan-protocol' }, ROOT).join('|')).toMatch(/output_off: must be a list/);
     expect(validateTable(real(), ROOT)).toEqual([]);
   });
@@ -1135,5 +1138,44 @@ describe('task-453: output_off and validate robustness', () => {
     const bad = validateTable({ ...t, lists: { ...t.lists, broken: null }, rows: [...(t as unknown as { rows: unknown[] }).rows, null] }, ROOT).join('|');
     expect(bad).toMatch(/list broken: not an object/);
     expect(bad).toMatch(/rows\[\d+\]: not an object/);
+  });
+});
+
+// task-460 (PROC.OUTSHAPE; RR-0457 MORNING-DECISIONS.md:2367, RR-0458 :2372, RR-0459 :2377): the output review of a build or fix task is the code review on the diff (no ux, no error-paths)
+// and no rule list (output_off names every list); the plan lens set is unchanged. Security at output is the open plan Q7: its term is unchanged here (green before and after).
+describe('task-460: the output lens set is the code review (AC #2) and the plan set is unchanged', () => {
+  const lens = async (type: string, files: string) => {
+    const m = await import('../../../scripts/analysis/rule-lists.mjs');
+    return m.lensSet({ type, files }) as { plan: string[]; out: string[] };
+  };
+  const SEC = new Set(['src/components/report/, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json', 'src/lib/parcels/report-compute.ts', 'src/lib/stripe/x.ts', 'src/app/api/parcels/search/route.ts', 'src/app/admin/page.tsx']);
+  const FILES = [...(real() as unknown as { kinds: { files: string }[] }).kinds.map((k) => k.files), 'src/components/x.tsx', 'src/lib/stripe/x.ts', 'src/app/api/parcels/search/route.ts', 'src/app/admin/page.tsx', 'mobile/app/(app)/x.tsx', 'scripts/analysis/x.mjs'];
+  it('T3: for build and fix, out is code-review alone on every Files line (plus security only where the Files line fires it, unchanged until Q7)', async () => {
+    expect(FILES).toHaveLength(12);
+    for (const type of ['build', 'fix']) for (const f of FILES) {
+      const r = await lens(type, f);
+      expect(r.out, `${type} ${f}`).toEqual(['code-review', ...(SEC.has(f) ? ['security'] : [])]);
+      expect(r.out, `${type} ${f}`).not.toContain('ux');
+      expect(r.out, `${type} ${f}`).not.toContain('error-paths');
+    }
+  });
+  it('T3 lock: the plan set is unchanged (pinned old sets)', async () => {
+    expect((await lens('build', 'src/lib/stripe/x.ts')).plan).toEqual(['plan-review-deepseek', 'error-paths', 'security']);
+    expect((await lens('fix', 'mobile/app/(app)/x.tsx')).plan).toEqual(['plan-review-deepseek', 'ux', 'error-paths']);
+    expect((await lens('build', 'scripts/analysis/x.mjs')).plan).toEqual(['plan-review-deepseek', 'error-paths']);
+    for (const type of ['check', 'doc', 'record', '']) expect(await lens(type, 'src/app/api/parcels/search/route.ts'), type).toEqual({ code: false, plan: ['plan-review-deepseek'], out: [] });
+  });
+  it('T4 (AC #6): the Spec 08 dated note sits in section 7 before rule 5, and the README names task-460 with an item 5 that asks no out-error-paths or out-ux', () => {
+    const s8 = fs.readFileSync(path.join(ROOT, 'docs/specs/00-architecture/08_agents.md'), 'utf8');
+    const at = s8.indexOf('task-460 PROC.OUTSHAPE');
+    expect(at).toBeGreaterThan(0);
+    expect(at).toBeLessThan(s8.indexOf('5. **Panel sizing'));
+    expect(at).toBeGreaterThan(s8.indexOf('task-453 SEARCHFIX.5'));
+    const rd = fs.readFileSync(path.join(ROOT, '.claude/review-templates/README.md'), 'utf8');
+    expect(rd).toContain('Task-460');
+    const item5 = /^5\. \*\*At close\*\*.*$/m.exec(rd)?.[0] ?? '';
+    expect(item5).toContain('that output_off leaves on');
+    expect(item5).not.toContain('out-error-paths.txt');
+    expect(item5).not.toContain('out-ux.txt');
   });
 });

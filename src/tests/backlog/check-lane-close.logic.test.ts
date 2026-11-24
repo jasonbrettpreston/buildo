@@ -207,13 +207,15 @@ describe('close check: the lens set (AC #3)', () => {
   it('refuses a lens output with no VERDICT line (a failed run is not an output)', () => {
     refused(scenario({ mutate: (l) => ({ ...l, 'out-compliance-first.txt': `${hdr('lens-compliance.md', l['in-out-compliance-first.txt'] as string)}Failed: terminated\n` }) }), /VERDICT/);
   });
-  it('refuses a build task missing a lens of its set (code-review, error-paths), and one with no plan-stage output', () => {
+  it('refuses a build task missing a lens of its set (code-review), and one with no plan-stage output; task-460 T7: no out-error-paths closes (RR-0459)', () => {
     refused(scenario({ mutate: (l) => ({ ...l, 'out-code-review.txt': null }) }), /out-code-review\.txt/);
-    refused(scenario({ mutate: (l) => ({ ...l, 'out-error-paths.txt': null }) }), /out-error-paths\.txt/);
+    const noEp = scenario({ mutate: (l) => ({ ...l, 'out-error-paths.txt': null }) });
+    expect(noEp.status, noEp.stderr).toBe(0);
     refused(scenario({ mutate: (l) => ({ ...l, 'plan-code-review.txt': null }) }), /plan-/);
   });
-  it('ux and security join the required set by the Files line, as the launch brief names them', () => {
-    refused(scenario({ files: 'src/components/x.tsx' }), /out-ux\.txt/);
+  it('security joins the required set by the Files line, as the launch brief names it; task-460 T7: a surface path closes with no out-ux (and no out-error-paths)', () => {
+    const noUx = scenario({ files: 'src/a.ts, src/components/x.tsx', mutate: (l) => ({ ...l, 'out-error-paths.txt': null }) });
+    expect(noUx.status, noUx.stderr).toBe(0);
     refused(scenario({ files: 'src/lib/stripe/x.ts' }), /out-security\.txt/);
   });
   // task-445 (FINAL.8, RR-0391): an API route or library path on the Files line also requires out-security.txt
@@ -546,7 +548,7 @@ describe('close check: the fix round for the grounder attacks (V2.WHOLE)', () =>
   });
   it('F3 (h) PLANTED DEFECT: an unsplit out-<lens>.txt with a zeroed file_sha256 is refused; one made on the whole-range diff closes (control above)', () => {
     refused(scenario({ mutate: (l) => ({ ...l, 'out-code-review.txt': hdr('lens-code-review.md', null) + body(false) }) }), /out-code-review\.txt[\s\S]*file_sha256/, 27);
-    refused(scenario({ mutate: (l) => ({ ...l, 'out-error-paths.txt': hdr('lens-error-paths.md', 'only part of the diff\n') + body(false) }) }), /out-error-paths\.txt[\s\S]*file_sha256/, 27);
+    refused(scenario({ mutate: (l) => ({ ...l, 'out-code-review.txt': hdr('lens-code-review.md', 'only part of the diff\n') + body(false) }) }), /out-code-review\.txt[\s\S]*file_sha256/, 27); // task-460 T8: retargeted from out-error-paths (no longer in the output set)
   });
   it('F3 (h) PLANTED DEFECT: an unsplit out-<lens>.txt does not stand in for split parts: both present is refused', () => {
     refused(scenario({ ...SPLIT, split: { max: 4000, lens: true }, mutate: (l) => ({ ...l, 'out-code-review.txt': hdr('lens-code-review.md', null) + body(false) }) }), /both exist/, 28);
@@ -1333,5 +1335,24 @@ describe('task-453 item 5: the close check fails closed (AC #3, AC #4, AC #5)', 
   it('ST4 (AC #5): the real table protects scripts/analysis/backlog-lib.mjs', () => {
     const real = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as { protected_paths: string[] };
     expect(real.protected_paths).toContain('scripts/analysis/backlog-lib.mjs');
+  });
+});
+
+// task-460 (PROC.OUTSHAPE; RR-0457 MORNING-DECISIONS.md:2367, RR-0458 :2372, RR-0459 :2377): every list off at output (output_off), the output set is the code review (AC #3, AC #4)
+describe('task-460: a build or fix lane closes with the code review, its records and plan evidence and no list outputs', () => {
+  const ALL_OFF = (t: Record<string, unknown>) => { t.output_off = ['first', 'inc-F', 'ev', 'msf']; };
+  const dropLists = (l: Lane): Lane => Object.fromEntries(Object.entries(l).map(([n, t]) => [n, /^(in-)?out-compliance-/.test(n) ? null : t]));
+  it('T6: output_off naming every list, no out-compliance file and no out-error-paths: a build and a fix task close', () => {
+    for (const type of ['build', 'fix']) {
+      const r = scenario({ type, tableEdit: ALL_OFF, mutate: (l) => ({ ...dropLists(l), 'out-error-paths.txt': null }) });
+      expect(r.status, `${type}: ${r.stderr}`).toBe(0);
+    }
+  });
+  it('T6 control: an extra out-error-paths.txt with its Ruled line still closes', () => {
+    const r = scenario({ tableEdit: ALL_OFF, mutate: dropLists });
+    expect(r.status, r.stderr).toBe(0);
+  });
+  it('T9 (AC #4 lock): a check task with output_off naming every list is still asked every list', () => {
+    refused(scenario({ type: 'check', tableEdit: ALL_OFF, mutate: (l) => ({ ...l, 'out-compliance-first.txt': null, 'in-out-compliance-first.txt': null }) }), /out-compliance-first/);
   });
 });
