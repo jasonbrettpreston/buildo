@@ -3,11 +3,11 @@ id: TASK-453
 title: >-
   SEARCHFIX.5 Review tooling: the two planning lists turned off for output
   reviews, the close check's fail-open paths closed, review-tool fixes
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-SFX5'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T16:24:00Z'
+updated_date: '2026-11-24T17:13:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -31,6 +31,8 @@ references:
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-24/BL-SFX5/REPORT.md
+  - docs/reports/lanes/2026-11-24/BL-SFX5/GROUNDER.md
+  - docs/reports/lanes/2026-11-24/BL-SFX5/TRIAGE.md
 type: fix
 ordinal: 150030
 ---
@@ -57,12 +59,12 @@ Files: scripts/analysis/rule-lists.json, scripts/analysis/rule-lists.mjs, script
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A build or fix task closes without output reviews for the two planning lists
-- [ ] #2 Emptying the output_off line turns plan-protocol back on for output reviews
-- [ ] #3 A branch with no rule table still reads the board; during a merge only merge-only staging is skipped
-- [ ] #4 A seat finding needs a quote, a cited line and a reason
-- [ ] #5 A lane closing after an edit to backlog-lib.mjs is refused unless its card names the file
-- [ ] #6 The CHK.3 proof row reads notbuilt with its reason; the next round number is the highest plus one
+- [x] #1 A build or fix task closes without output reviews for the two planning lists
+- [x] #2 Emptying the output_off line turns plan-protocol back on for output reviews
+- [x] #3 A branch with no rule table still reads the board; during a merge only merge-only staging is skipped
+- [x] #4 A seat finding needs a quote, a cited line and a reason
+- [x] #5 A lane closing after an edit to backlog-lib.mjs is refused unless its card names the file
+- [x] #6 The CHK.3 proof row reads notbuilt with its reason; the next round number is the highest plus one
 <!-- AC:END -->
 
 ## Definition of Done
@@ -324,3 +326,11 @@ rg#5 MED folded is still held to the
 
 2026-11-24 output review round 1 run (context-r3.md; 29 lens outputs, 95 findings: 1 CRITICAL, 5 HIGH, 42 MED, 41 LOW, 7 NIT, listed in docs/reports/lanes/2026-11-24/BL-SFX5/FINDINGS.md). Grounder owed: the lane does not rule its own findings.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+What landed: lists off for output reviews (five-words out of every_task, plan-protocol off by output_off for build and fix output reviews, queue-137 and orchestrator-doc17 off the lane-tools row), close-check fail-open paths closed (S1-S6, S9, backlog-lib.mjs protected), review-tool fixes (T1, T4, T7, T8, ST5, README); commits 828ee970e, 4c5bfa249, 6d6187718; board fold 0f8eca7a9; related runs green through the real pre-commit hook (394 and 89 passed).
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 21 pile; grounder docs/reports/lanes/2026-11-24/BL-SFX5/GROUNDER.md; triage docs/reports/lanes/2026-11-24/BL-SFX5/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->

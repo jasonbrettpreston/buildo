@@ -1,29 +1,31 @@
-◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:16:03.846Z file_sha256=be7c184cdf35fe4ddf089c47301e87a49e92d6479f96dd848c88cce26bbcb2e2 prompt_sha256=00a2405aaa082b66e93c6b4f4ebb3fc993f7251d020a8bf9c1e8b39a09a7889c
-🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-compliance-inc-S-p1.txt (model: deepseek-reasoner)
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:59:19.130Z file_sha256=55d240861b00e13692ecb0581e262423ce99069e99e54b59d04cd5d3d4909025 prompt_sha256=85286100c29bced1f9566e9fcb7722061b93b0c48c74e9319c4f9e168884a983
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX5/in-out-compliance-inc-S-p1.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — card item (3) "README corrected" read with RR-0392 "we don't think we need any other infastrcuture beyond this" — .claude/review-templates/README.md:142 "as fixed since: each lens template carries `{{PLAN}}` once (V2.LIST round 2), so the material is sent once and the 120000 bound is on that prompt", while the deleted line said "the other four lens templates still carry the plan placeholder twice ... `lens-compliance.md` is fixed" — the card's Files line holds no lens template, so this change cannot make the four templates single-placeholder and the README now asserts a state nothing in the material produces — keep the known-limit sentence for the four templates, or name the task that fixed them, until a card that edits the templates lands.
+BUG severity=CRIT — none found — NONE — no clause in the pasted inc-S increment governs the tooling paths in this chunk — none.
 
-DEFER severity=LOW — card item (3) "an empty acceptance block warns" — scripts/analysis/backlog-brief.mjs:173 "`  (none found in ${t.file})`]), // T8 (task-453): an empty AC block is said, not left blank" — the code emits a neutral parenthetical into the Done-condition list and its own comment narrows the card's word "warns" to "is said", so the warning the card names is not delivered — prefix the line with a warning marker (for example "WARNING: no acceptance criteria in <file>") or write the warning to stderr as well.
+DEFER severity=NIT — card "a build task's plan review keeps plan-protocol and a fix task, which has no per-list plan review, gets none" — scripts/analysis/backlog-lane.mjs "plan-protocol is asked at the plan stage only" — the launch text tells every code task that plan-protocol is asked at the plan stage, which is wrong for a fix task that runs no per-list plan review — make the suffix build-only (append it only when the type is build).
 
-DEFER severity=LOW — card "Dated notes owed: Spec 08 section 7 rule 4 (short; RR-0429 cap); task-448; task-268 (the proof row); task-406 (migration 334 finding)." — NONE (cannot see: the board task files are not in this material; only the Spec 08 note is visible at docs/specs/00-architecture/08_agents.md:358) — three of the four owed dated notes cannot be checked against the material under review — confirm the task-448, task-268 and task-406 notes on the board before the close, and say so in the lane report.
+DEFER severity=LOW — AC #3 "A branch with no rule table still reads the board; during a merge only merge-only staging is skipped" and AC #4 "A seat finding needs a quote, a cited line and a reason" and AC #6 "the next round number is the highest plus one" — NONE — these live in scripts/hooks/check-lane-close.mjs, scripts/lib/review-template.js and the round logic, which are not in this chunk (cannot see); verify in chunk 2.
 
-MET — card AC #1 "A build or fix task closes without output reviews for the two planning lists" — scripts/analysis/rule-lists.json:237 "  \"every_task\": [\"plan-protocol\"]," and :238 "  \"output_off\": [\"plan-protocol\"]," — five-words is out of every_task and plan-protocol is off the output set via scripts/analysis/rule-lists.mjs:306 "export const outputLists = (table, lists) => lists.filter((l) => !(table?.output_off ?? []).includes(l.id));".
+MET — RR-0452 "five-words is off at both stages (out of every_task)" — scripts/analysis/rule-lists.json "every_task": ["plan-protocol"] — five-words removed from every_task, its list definition kept, no three questions added.
 
-MET — card AC #2 "Emptying the output_off line turns plan-protocol back on for output reviews" — scripts/analysis/rule-lists.mjs:161 "if (table.output_off !== undefined) { if (!Array.isArray(table.output_off)) bad.push('output_off: must be a list of every_task list ids');" with :306 "(table?.output_off ?? []).includes(l.id)" — an emptied or absent line leaves every list in the output set, and only a non-array or an id outside every_task is refused.
+MET — RR-0440 and AC #1 "A build or fix task closes without output reviews for the two planning lists" — scripts/analysis/rule-lists.json "output_off": ["plan-protocol"] and scripts/analysis/rule-lists.mjs "export const outputLists = (table, lists) => lists.filter((l) => !(table?.output_off ?? []).includes(l.id));" — plan-protocol is filtered out of a build or fix task's output lists, five-words is already absent.
 
-MET — card AC #5 "A lane closing after an edit to backlog-lib.mjs is refused unless its card names the file" — scripts/analysis/rule-lists.json:23 "  \"protected_paths\": [\"scripts/hooks/check-lane-close.mjs\", \"scripts/analysis/rule-lists.mjs\", \"scripts/analysis/rule-lists.json\", \"scripts/analysis/backlog-lib.mjs\", \"scripts/deepseek-review.js\", \".husky/*\"]," — the helper joins the protected list.
+MET — AC #2 "Emptying the output_off line turns plan-protocol back on for output reviews" — scripts/analysis/rule-lists.mjs "if (table.output_off !== undefined) { if (!Array.isArray(table.output_off))" — an empty array validates and outputLists filters nothing, so plan-protocol returns.
 
-MET — card AC #6 "The CHK.3 proof row reads notbuilt with its reason" — scripts/analysis/proof-slices.json:9 "{ \"id\": \"chk3-nothing-new\", \"proof\": \"CHK.3 nothing-new policy check over the tree\", \"notbuilt\": { \"blockedBy\": [], \"reason\": \"CHK.3 reads the staged diff; --all gives it no input\" } }" — the row no longer claims a passing policy-checks --all run.
+MET — RR-0450 "queue rules and orchestrator note off for code reviews" — scripts/analysis/rule-lists.json lane-tools "lists": ["agents-s5-1to3", "agents-s7-s11", "eng-all"] — queue-137 and orchestrator-doc17 are removed from the row.
 
-MET — RR-0450 "I just dont see how queue rules and orchestrator notes are valuable to anything from a code persepctive." — scripts/analysis/rule-lists.json:166 "      \"lists\": [\"agents-s5-1to3\", \"agents-s7-s11\", \"eng-all\"]," — queue-137 and orchestrator-doc17 are off the lane-tools row and the added why clause says "so no row attaches them".
+MET — AC #5 "A lane closing after an edit to backlog-lib.mjs is refused unless its card names the file" — scripts/analysis/rule-lists.json protected_paths "scripts/analysis/backlog-lib.mjs" — the helper is added to the protected list (the refusal logic is in chunk 2).
 
-MET — RR-0452 "Plan approved with one change - do not add the addiitonal 3 questions" — docs/specs/00-architecture/08_agents.md:358 "five-words is off at both stages (out of every_task)" and scripts/analysis/rule-lists.json:7 "the five words in the step handbook Glossary were one until task-453: off at both stages since then, RR-0452, the list definition kept so turning it back on is putting the id back" — five-words is off with nothing replacing it and docs/specs/00-architecture/plan-protocol.md is not touched in this material.
+MET — AC #6 "The CHK.3 proof row reads notbuilt with its reason" — scripts/analysis/proof-slices.json "chk3-nothing-new" ... "notbuilt": { "blockedBy": [], "reason": "CHK.3 reads the staged diff; --all gives it no input" } — the row now reads notbuilt with its reason.
+
+MET — card "the ticket text says two commits" — scripts/analysis/backlog-brief.mjs "['build', 'fix'].includes(String(t.fm.type ?? '').toLowerCase()) ? `Status line ... the work lands first; the closing commit carries only the lane report dir..." — a build or fix brief now states the two-commit close.
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 11   Unmet: 0
+Clauses checked: 12   Unmet: 0
 Rules met: none
 
 ---
-⏱  130189ms (130.2s)
-📊 Tokens — total: 60183, input: 33649, output: 26534, reasoning: 25332
+⏱  213439ms (213.4s)
+📊 Tokens — total: 59819, input: 33798, output: 26021, reasoning: 25204
