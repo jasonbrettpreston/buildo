@@ -17,6 +17,14 @@ const SCRIPT = path.join(__dirname, '../../../scripts/analysis/backlog-lane.mjs'
 function plantEvidence(board: string, task: string, laneName = 'BL-T1') {
   const r = run('node', [path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs'), board, task, laneName, ROOT, backlogBin()], { env: ID });
   if (r.status !== 0) throw new Error(`plantEvidence: ${r.stdout}${r.stderr}`);
+  // task-453 S1: the launch gate grounds seat findings (a 20+ character quote of its own, on the cited line of a file the board holds); the shared program cites docs/a.md, which this board
+  // does not hold, with one quote for every seat, so each seat verdict is re-pointed at line 2 of its own seat report and the evidence committed again
+  const gp = path.join(board, `docs/reports/reviews/${task}/GROUNDER-PLAN.md`);
+  const names: Record<string, string> = { int: 'integration', rea: 'reality-check', reg: 'regression' };
+  if (!fs.existsSync(gp)) return; // a task the program writes no evidence for (no resolvable lists)
+  const g = fs.readFileSync(gp, 'utf8').replace(/^(int|rea|reg)#1 REJECTED docs\/a\.md:1 "a small note that changes nothing" (.*)$/gm, (_m, ab: string, why: string) => `${ab}#1 REJECTED docs/reports/reviews/${task}/seat-${names[ab]}-1.md:2 "${ab}#1 LOW: a small note" ${why}`);
+  fs.writeFileSync(gp, g);
+  git(board, 'add', '-A'); git(board, 'commit', '-q', '-m', 'plan evidence: seat quotes');
 }
 
 type Fx = { board: string; base: string; wt: string; main: string; pt: string; task: string; args: string[] };
@@ -562,6 +570,8 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
     refused(r, /--rule-lists/);
     console.log(`ATTACK 11: REFUSED: ${r.stderr.trim().slice(0, 200)}`);
     const ok = run('node', [SCRIPT, ...f.args, '--dry-run', '--rule-lists', fake], { env: { ...ID, RULE_LISTS_ALLOW_OVERRIDE: '1' } });
+    expect(ok.status, ok.stdout + ok.stderr).toBe(3); // D4 (task-453): the run stops on the fake table's own content, not on the override
+    expect(ok.stderr).toMatch(/cannot read the rule-list table or one of its path maps/);
     expect(ok.stderr).not.toMatch(/--rule-lists/);
     const e = fixture({ files: 'docs/reports/lanes/x/', type: 'build' });
     refused(lane(e), /no rule list/);
@@ -681,9 +691,9 @@ describe('plan-prep review (task-418): refusals, one line, nothing written; each
 describe('plan-prep review: the calls and what they leave', () => {
   it('5: one failing call is named, exit 1, the files of that run are deleted and the re-run succeeds; all succeeding writes every in- and plan- file', () => {
     const f = prepFixture();
-    const bad = review(f, [], { STUB_FAIL: 'plan-compliance-queue-137' });
+    const bad = review(f, [], { STUB_FAIL: 'plan-compliance-agents-s7-s11' }); // task-453 (RR-0450): queue-137 is off the lane-tools row
     expect(bad.status, bad.stdout + bad.stderr).toBe(1);
-    expect(bad.stderr).toMatch(/in-plan-compliance-queue-137\.txt/);
+    expect(bad.stderr).toMatch(/in-plan-compliance-agents-s7-s11\.txt/);
     expect(names(f, /^(in-)?plan-/)).toEqual([]);
     const ok = review(f);
     expect(ok.status, ok.stdout + ok.stderr).toBe(0);
@@ -800,7 +810,7 @@ function confirmSeat(f: Fx, seat = 'integration', sev = 'HIGH') {
   const body = `# ${seat} seat\n### ${abbr}#1 ${sev}: a real finding\n`;
   fs.writeFileSync(path.join(d, `seat-${seat}-1.md`), body);
   let g = fs.readFileSync(path.join(d, 'GROUNDER-PLAN.md'), 'utf8');
-  g = g.replace(new RegExp(`^${abbr}#1 REJECTED (.*)$`, 'm'), `${abbr}#1 CONFIRMED $1 ${sev} real`).replace(new RegExp(`^(Seat: ${seat} \\S+ sha256:)[0-9a-f]{12}$`, 'm'), `$1${sha12(body)}`);
+  g = g.replace(new RegExp(`^${abbr}#1 REJECTED (.*)$`, 'm'), `${abbr}#1 CONFIRMED docs/reports/reviews/${f.task}/seat-${seat}-1.md:2 "${abbr}#1 ${sev}: a real finding" ${sev} real`).replace(new RegExp(`^(Seat: ${seat} \\S+ sha256:)[0-9a-f]{12}$`, 'm'), `$1${sha12(body)}`); // task-453 S1: the verdict quotes its seat line
   fs.writeFileSync(path.join(d, 'GROUNDER-PLAN.md'), g);
 }
 
@@ -958,5 +968,36 @@ describe('plan-prep commit and the end to end (task-418)', () => {
     expect(c3.stderr).toMatch(/FOLD-CHECK\.md: the Plan line/);
     expect(c3.stderr).toMatch(/expected: Plan: \S+ sha256:[0-9a-f]{12}/);
     expect(/expected: (Plan: \S+ sha256:[0-9a-f]{12})/.exec(c3.stderr)?.[1]).not.toBe(exp);
+  });
+});
+
+// task-453 (SEARCHFIX.5; RR-0440 MORNING-DECISIONS.md:2265, RR-0450 :2325, RR-0452 :2336; GROUNDER-D D16, T9): the brief's output lists and the failure after the take
+describe('task-453: output_off in the brief, and the recovery lines after a failure past the take', () => {
+  const extraOf = (o: Parameters<typeof fixture>[0]) => {
+    const f = fixture(o);
+    const r = lane(f, ['--dry-run']);
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    const spec = JSON.parse(/^TASK-JSON .*?: (\{.*\})$/m.exec(r.stdout)?.[1] ?? 'null') as { extra?: string[] } | null;
+    return (spec?.extra ?? []).join('\n');
+  };
+  it('a build and a fix task are not asked for out-compliance-plan-protocol (output_off); a check task still is (the close asks it at either stage)', () => {
+    for (const type of ['build', 'fix']) {
+      const x = extraOf({ type });
+      expect(x, type).not.toContain('out-compliance-plan-protocol');
+      expect(x, type).toContain('plan-protocol is asked at the plan stage only');
+      expect(x, type).not.toContain('out-compliance-five-words');
+    }
+    expect(extraOf({ type: 'check' })).toContain('out-compliance-plan-protocol');
+  });
+  it('D16 / T9: a brief.mjs that exits 1 after the take: exit 1, FAILED at, the undo command and the worktree and branch removal lines; the task stays RUNNING', () => {
+    const f = fixture();
+    fs.writeFileSync(path.join(f.pt, 'brief.mjs'), 'process.exit(1);\n');
+    const r = lane(f, ['--no-launchd']);
+    expect(r.status, r.stdout + r.stderr).toBe(1);
+    expect(r.stderr).toMatch(/FAILED at brief\.mjs/);
+    expect(r.stderr).toMatch(/undo with: .*task edit task-\d+ -s LATER -a ''/);
+    expect(r.stderr).toContain(`git -C ${f.board} worktree remove ${f.wt}`);
+    expect(r.stderr).toContain(`git -C ${f.board} branch -D wf2/t1`);
+    expect(statusOf(f)).toBe('RUNNING');
   });
 });

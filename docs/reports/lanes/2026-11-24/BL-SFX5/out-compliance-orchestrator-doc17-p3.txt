@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:12:10.061Z file_sha256=e26105d709e796df506b90389aaabae0407c841f1fc13cf8e69a1470a5e268c4 prompt_sha256=13b776e7d3ca4afa85d31c36a31fc04172066801d98690254cd0228b633ce1a0
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-compliance-orchestrator-doc17-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — card, Dated notes owed "Dated notes owed: Spec 08 section 7 rule 4 (short; RR-0429 cap); task-448; task-268 (the proof row); task-406 (migration 334 finding)." — NONE — no dated note for task-448, task-268 or task-406 is visible in chunk 3, and the build notes record only "Spec 08 section 7 rule 4 dated note, regenerated rule-lists-by-kind.md" — the card's Files line names none of those three task files and the lane already had one file refused for being off the Files line (plant-evidence.mjs), so confirm the notes ride the $comment lines of rule-lists.json or proof-slices.json in the other chunks; if they do not, the clause is unmet and the notes need a Files-line amendment.
+DEFER severity=NIT — RR-0452 "the five-principles list is turned off and nothing replaces it" — src/tests/backlog/rule-lists.logic.test.ts:341 hunk header "describe('V2.LIST: every task gets the five words, the plan protocol and its milestone objectives (data, not a hand-pick)'" — the block title still asserts every task gets the five words while the changed assertion inside it is "expect(t.every_task).toEqual(['plan-protocol']);" — retitle the block to the plan protocol and milestone objectives so the suite does not state the withdrawn rule.
+
+MET — AC #1 "A build or fix task closes without output reviews for the two planning lists" — src/tests/backlog/rule-lists.logic.test.ts "expect(outputLists({ output_off: ['plan-protocol'] }, ls).map((l) => l.id)).toEqual(['eng-all', 'inc-S']);" — plan-protocol drops for output reviews and five-words is off every_task at both stages.
+MET — AC #2 "Emptying the output_off line turns plan-protocol back on for output reviews" — src/tests/backlog/rule-lists.logic.test.ts "expect(outputLists({ output_off: [] }, ls).map((l) => l.id)).toEqual(['plan-protocol', 'eng-all', 'inc-S']);" — an empty output_off keeps every list.
+MET — AC #6 "The CHK.3 proof row reads notbuilt with its reason" — src/tests/proof-slice.logic.test.ts "expect(chk3?.notbuilt?.reason).toBe('CHK.3 reads the staged diff; --all gives it no input');" — row asserted notbuilt with its reason and argv undefined, removed from the must-name-its-line list.
+MET — RR-0450 "I just dont see how queue rules and orchestrator notes are valuable to anything from a code persepctive." — src/tests/backlog/rule-lists-table.logic.test.ts "for (const l of ['queue-137', 'orchestrator-doc17']) expect(r.lists, `${r.id}: ${l}`).not.toContain(l);" — no row attaches the queue or doc-17 lists, lane-tools is trimmed to the two Spec 08 lists plus eng-all.
+MET — card "plan-protocol goes off for output reviews only" — src/tests/backlog/rule-lists.logic.test.ts "expect(t.output_off).toEqual(['plan-protocol']);" and "expect(t.every_task).toContain('plan-protocol');" — off for output only, the plan-review lock kept.
+MET — card "five-words goes off at both stages" — src/tests/backlog/rule-lists.logic.test.ts "expect(t.every_task).toEqual(['plan-protocol']);" and "expect(t.lists['five-words']).toMatchObject(...)" — five-words defined but off, nothing added in its place per RR-0452.
+MET — card, findings folded "T10" — src/tests/backlog/rule-lists.logic.test.ts "expect(bad).toMatch(/list broken: not an object/);" — the named T10 null-list and null-row cases are present.
+MET — card Files line "src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts, ... src/tests/proof-slice.logic.test.ts" — this chunk edits only those three test files, so no unnamed file is touched here.
+
+REJECT — doc-17 header "They are NOT the operator's words as a ruling and never feed a review as a ruling" — the change is accused of ignoring readings RR-0001 to RR-0218 (for example RR-0110 infra freeze, RR-0189 register citations, RR-0155 panel decides) — doc-17 is a readings register with its own disclaimer, so its entries bind nothing here; only the pasted card and the RR-0440, RR-0450, RR-0452 rulings bind and those are checked above.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: none
+
+---
+⏱  107760ms (107.8s)
+📊 Tokens — total: 44151, input: 22278, output: 21873, reasoning: 20754

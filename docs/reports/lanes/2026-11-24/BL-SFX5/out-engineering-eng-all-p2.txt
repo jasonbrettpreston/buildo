@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T16:16:03.851Z file_sha256=4fbcfc2e2365ccb6299ffcf6d17bf31cc5fb242f71e35889ce9bfc13de37deaf prompt_sha256=f542da61f17518897a65863a3f6a33619c7c73e09f58b737bc8bf790e84a491a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-engineering-eng-all-p2.txt (model: deepseek-reasoner)
+
+BUG/DEFER/MET/REJECT lines only, no prose.
+
+DEFER severity=MED — 12.12 Property-Based Tests "Pure functions with arithmetic invariants, scoring formulas, key normalizers, distance/unit conversions, cursor comparators, MUST have at least one `fast-check` property test asserting the invariant." — scripts/lib/review-template.js "return Math.max(0, ...ns) + 1;" — the round-number derivation rewritten here has an arithmetic invariant (the result is greater than every existing r<N>, the exact bug the comment cites) and no fast-check property test is added or named on the Files line — add src/tests/property/context-round.property.test.ts asserting forAll(existing Ns) contextRound > max(Ns) and name it on the Files line.
+
+MET — 2.3 Assumption Documentation "Before accessing nested object properties, explicitly check for `null` or `undefined`." — scripts/analysis/rule-lists.mjs "if (!l || typeof l !== 'object') { bad.push(`list ${id}: not an object`); continue; }" — the new guards precede property access and no non-null assertion is added.
+
+MET — 5.2 Test File Pattern "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — src/tests/backlog/backlog-brief.logic.test.ts "it('T8: a task with no acceptance criteria prints ..." — new cases for the brief's text derivation land in a `.logic.test.ts` as the table mandates.
+
+MET — 5.3 Red-Green Test Cycle "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code." — Implementation Notes "step 1 (lists) and step 2 (close check) tests written first ... red run through the pre-commit related run before any code" — the chunk states the failing run (36 cases, red.out) preceded the code for these hunks.
+
+MET — 8.2 TypeScript Target Gotchas "Regex `s` flag (dotAll) requires ES2018+, use `[\s\S]` instead." — scripts/hooks/check-lane-close.mjs "const SEAT_LINE = /^\s*(?:#+\s+)?([a-z0-9-]+)#(\d+)\s+(CRITICAL|HIGH|MED|LOW|NIT)\b/;" — the new regexes carry no dotAll flag and no process.env literal typing.
+
+REJECT — 5.1 Typed Factories Only — the added tests build state via fixture()/makeProject()/mk() and an inline markdown seat body ("const body = `# ${seat} seat ...`") rather than src/tests/factories.ts — factories.ts covers DB/domain entities, while these are temp-git CLI fixtures and review-record markdown for scripts.
+
+REJECT — 6.1 logError Mandate — the new "catch (e) { p = 0; err = String(e?.message ?? e)..." in scripts/analysis/rule-lists.mjs does not call logError — the mandate is scoped to API routes and lib modules, and this CLI prints the captured failure into the generated table instead of logging bare console.error.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 9   Unmet: 1
+
+---
+⏱  93912ms (93.9s)
+📊 Tokens — total: 50252, input: 32686, output: 17566, reasoning: 16843

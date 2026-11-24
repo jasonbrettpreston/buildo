@@ -69,7 +69,7 @@ describe('the real table (AC #1: data, every listed rule file exists)', () => {
     for (const l of ['eng-all', 'surface-136']) expect(web).toContain(l);
     for (const l of ['agents-s7-s11', 'queue-137', 'surface-128', 'surface-135']) expect(web).not.toContain(l);
     const pipe = lists('docs/specs/01-pipeline/132_step_standard_handbook.md');
-    expect(pipe).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-1', 'ms-1']);
+    expect(pipe).toEqual(['eng-all', 'plan-protocol', 'inc-1', 'ms-1']);
     expect(pipe).not.toContain('mobile-100');
     expect(lists('backlog/docs/doc-16 - McStorage-policy-v2.md')).not.toContain('queue-137');
   });
@@ -341,9 +341,9 @@ const real = () => JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/
 const mod = () => import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs')) as Promise<{ verifyResolved: (t: Table, r: { lists: { id: string }[] }, letter?: string, type?: string) => string[] }>;
 
 describe('V2.LIST: every task gets the five words, the plan protocol and its milestone objectives (data, not a hand-pick)', () => {
-  it('the table names every_task = five-words (Spec 132 Glossary) and plan-protocol (the repo copy), and no removed engineering list id is left anywhere', () => {
+  it('the table names every_task = plan-protocol (the repo copy; five-words, the Spec 132 Glossary, is defined but off since task-453, RR-0452), and no removed engineering list id is left anywhere', () => {
     const t = real();
-    expect(t.every_task).toEqual(['five-words', 'plan-protocol']);
+    expect(t.every_task).toEqual(['plan-protocol']);
     expect(t.lists['five-words']).toMatchObject({ file: 'docs/specs/01-pipeline/132_step_standard_handbook.md', sections: ['Glossary'] });
     expect(t.lists['plan-protocol']).toMatchObject({ file: 'docs/specs/00-architecture/plan-protocol.md', whole: true });
     const text = JSON.stringify(t);
@@ -374,7 +374,8 @@ describe('V2.LIST: every task gets the five words, the plan protocol and its mil
     for (const [k, files] of Object.entries(kinds)) {
       const r = script(CLI, ['resolve', '--files', files, '--type', 'build', '--letter', 'S']);
       expect(r.status, `${k}: ${r.stderr}`).toBe(0);
-      expect(ids(JSON.parse(r.stdout) as Res), k).toEqual(expect.arrayContaining(['five-words', 'plan-protocol', 'ms-S', 'inc-S']));
+      expect(ids(JSON.parse(r.stdout) as Res), k).toEqual(expect.arrayContaining(['plan-protocol', 'ms-S', 'inc-S']));
+      expect(ids(JSON.parse(r.stdout) as Res), k).not.toContain('five-words');
     }
   });
   it('the paths that matched no row on 2026-11-20 now resolve (tasks 376, 378, 384, 372, 401, 408 and the paths of the coverage review)', () => {
@@ -388,8 +389,8 @@ describe('V2.LIST: every task gets the five words, the plan protocol and its mil
     const t = real();
     const good = JSON.parse(script(CLI, ['resolve', '--files', 'scripts/analysis/rule-lists.mjs', '--type', 'build', '--letter', 'S']).stdout) as Res;
     expect(verifyResolved(t, good, 'S')).toEqual([]);
-    const planted = { lists: good.lists.filter((l) => l.id !== 'five-words' && l.id !== 'ms-S') };
-    expect(verifyResolved(t, planted, 'S').join('|')).toMatch(/five-words/);
+    const planted = { lists: good.lists.filter((l) => l.id !== 'plan-protocol' && l.id !== 'ms-S') };
+    expect(verifyResolved(t, planted, 'S').join('|')).toMatch(/plan-protocol/);
     expect(verifyResolved(t, planted, 'S').join('|')).toMatch(/ms-S/);
     expect(verifyResolved({ ...t, every_task: [] }, good, 'S').join('|')).toMatch(/every_task/);
   });
@@ -462,8 +463,7 @@ describe('V2.LIST: the generated page of what each kind of work receives', () =>
     expect(c.status, c.stdout + c.stderr).toBe(0);
     const page = fs.readFileSync(path.join(ROOT, 'docs/reports/generated/rule-lists-by-kind.md'), 'utf8');
     for (const k of ['pipeline step', 'McFrontend web', 'phone', 'storage', 'tooling', 'spec-only']) expect(page, k).toContain(k);
-    expect(page).toMatch(/five-words[^\n]*\|\s*[\d,]+\s*\|\s*\d+\s*\|/);
-    expect(page).toContain('plan-protocol');
+    expect(page).toMatch(/plan-protocol[^\n]*\|\s*[\d,]+\s*\|\s*\d+\s*\|/);
     const g = run('node', ['scripts/analysis/gates/generated-docs.mjs'], { cwd: ROOT });
     expect(g.status, g.stdout + g.stderr).toBe(0);
     expect(fs.readFileSync(path.join(ROOT, 'scripts/analysis/gates/generated-docs.mjs'), 'utf8')).toContain("file: 'rule-lists-by-kind.md'");
@@ -928,11 +928,11 @@ const joinedCount = (listIds: string[], material: number, max?: number) => {
   return { r, files: r.stdout.split('\n').filter(Boolean) };
 };
 
-describe('task-423 (a): joined input: the nine lists of the tooling kind, whole, in table order, packed by size', () => {
-  it('writes at most 3 files for the tooling kind at a plan material of 12,400 characters; the stitched list parts equal the whole text of the nine lists in table order', async () => {
+describe('task-423 (a): joined input: the six lists of the tooling kind (nine until task-453: five-words, queue-137 and orchestrator-doc17 are off), whole, in table order, packed by size', () => {
+  it('writes at most 3 files for the tooling kind at a plan material of 12,400 characters; the stitched list parts equal the whole text of the six lists in table order', async () => {
     const m = await jmod();
     const lists = resolvedIds(FILES_423);
-    expect(lists).toHaveLength(9);
+    expect(lists).toHaveLength(6);
     const { r, files } = joinedCount(lists, 12400);
     expect(r.status, r.stderr).toBe(0);
     expect(files.length).toBeGreaterThan(0);
@@ -942,7 +942,7 @@ describe('task-423 (a): joined input: the nine lists of the tooling kind, whole,
     const want = order.map((id) => m.wholeListText(t.lists[id], ROOT, id)).join('').replace(/\s+/g, '');
     const got = files.map((f) => (m.parseLensInput(fs.readFileSync(f, 'utf8')) as { listPart: string }).listPart).join('').replace(/\s+/g, '');
     expect(got).toBe(want);
-    expect(fs.readFileSync(files[0] as string, 'utf8')).toMatch(/^LIST rules sha256:[0-9a-f]{64} material sha256:[0-9a-f]{64} part 1 of \d+\nRULE LIST rules \(9 lists: /);
+    expect(fs.readFileSync(files[0] as string, 'utf8')).toMatch(/^LIST rules sha256:[0-9a-f]{64} material sha256:[0-9a-f]{64} part 1 of \d+\nRULE LIST rules \(6 lists: /);
   });
   it('with --max small the parts are more and every file is under the bound; control: an input with a part shortened no longer matches its stamp', async () => {
     const m = await jmod();
@@ -1104,5 +1104,36 @@ describe('task-438 T2: seatOf routes a rule list to the engineering or the compl
     expect(m.seatOf!({ id: 'bylaw-133', ...t.lists['bylaw-133'] })).toBe('compliance');
     const j = m.joinLists(t, ['eng-all', 'five-words']);
     expect(m.seatOf!({ id: 'rules', ...j.lists.rules })).toBe('compliance');
+  });
+});
+
+// task-453 (SEARCHFIX.5 item 1; RR-0440 MORNING-DECISIONS.md:2265, RR-0450 :2325, RR-0452 :2336): output_off is one data line that turns a list off for output reviews only; validate fails closed on a typo
+describe('task-453: output_off and validate robustness', () => {
+  type V = { validateTable: (t: unknown, root: string) => string[]; outputLists: (t: unknown, l: { id: string }[]) => { id: string }[] };
+  const vmod = () => import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs')) as Promise<V>;
+  it('the real table switches plan-protocol off for output reviews (output_off) and keeps it in every_task', () => {
+    const t = real() as Table & { output_off?: string[] };
+    expect(t.output_off).toEqual(['plan-protocol']);
+    expect(t.every_task).toContain('plan-protocol');
+  });
+  it('outputLists drops the output_off lists and keeps the rest; an empty or missing output_off keeps every list (AC #2)', async () => {
+    const { outputLists } = await vmod();
+    const ls = [{ id: 'plan-protocol' }, { id: 'eng-all' }, { id: 'inc-S' }];
+    expect(outputLists({ output_off: ['plan-protocol'] }, ls).map((l) => l.id)).toEqual(['eng-all', 'inc-S']);
+    expect(outputLists({ output_off: [] }, ls).map((l) => l.id)).toEqual(['plan-protocol', 'eng-all', 'inc-S']);
+    expect(outputLists({}, ls).map((l) => l.id)).toEqual(['plan-protocol', 'eng-all', 'inc-S']);
+  });
+  it('validate refuses an output_off id that is not in every_task, and an output_off that is not a list (fails closed on a typo)', async () => {
+    const { validateTable } = await vmod();
+    expect(validateTable({ ...real(), output_off: ['nope'] }, ROOT).join('|')).toMatch(/output_off: list nope is not in every_task/);
+    expect(validateTable({ ...real(), output_off: 'plan-protocol' }, ROOT).join('|')).toMatch(/output_off: must be a list/);
+    expect(validateTable(real(), ROOT)).toEqual([]);
+  });
+  it('T10: a null list or a null row is a problem line, not a TypeError', async () => {
+    const { validateTable } = await vmod();
+    const t = real();
+    const bad = validateTable({ ...t, lists: { ...t.lists, broken: null }, rows: [...(t as unknown as { rows: unknown[] }).rows, null] }, ROOT).join('|');
+    expect(bad).toMatch(/list broken: not an object/);
+    expect(bad).toMatch(/rows\[\d+\]: not an object/);
   });
 });

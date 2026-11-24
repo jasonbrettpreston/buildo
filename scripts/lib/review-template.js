@@ -133,9 +133,10 @@ function extractSections(markdown, wanted) {
   return out.join('\n\n');
 }
 
-/** The number of the next review round of a task: the context-r<N>.md files already in `dir` (docs/reports/reviews/<task>/) plus one. ONE count, shared by the brief that writes the file and the launch that names it. */
+/** The number of the next review round of a task: the highest N of the context-r<N>.md files in `dir` (docs/reports/reviews/<task>/) plus one (0 when there is none), so a gap never names an existing file again (T7, task-453). ONE count, shared by the brief that writes the file and the launch that names it. */
 function contextRound(dir) {
-  return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;
+  const ns = fs.existsSync(dir) ? fs.readdirSync(dir).map((f) => /^context-r(\d+)\.md$/.exec(f)).filter(Boolean).map((m) => Number(m[1])) : [];
+  return Math.max(0, ...ns) + 1;
 }
 
 module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX, CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections, contextRound };

@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:12:10.068Z file_sha256=3d799d5023517800d51a7801e5c4718147750e6b4238cb7336a4ae02f434cb8f prompt_sha256=bf4b59a762526c985e5d75a96ec2feaef301a6a26aa218513484e06a31cef2e4
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-compliance-orchestrator-doc17-p1.txt (model: deepseek-reasoner)
+
+BUG findings: none. Two clauses are unmet or unevidenced, and one documentation claim is unsupported by this change.
+
+DEFER severity=MED — RR-0450 "queue rules and orchestrator note off for code reviews; step handbook for compute only" — docs/reports/generated/rule-lists-by-kind.md:30 "| step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |" — the card records the compute-only half as "already so, the plan confirms", yet the page this change regenerates still hands the McFrontend web row (and phone) 47,779 characters of the step handbook, so the ruling's second half has no implementing line and no evidence — remove step-132 from the non-compute rows in scripts/analysis/rule-lists.json and regenerate the page, or record on the card which matched path makes those rows compute.
+DEFER severity=MED — rule-lists README rule 1 "node scripts/analysis/rule-lists.mjs validate checks that every file exists, every section selector names exactly one heading and every glob matches a tracked path" — scripts/analysis/rule-lists.json:88 "'not': ['scripts/deepseek-review.js', 'scripts/gemini-review.js', 'scripts/lib/review-template.js', 'scripts/lib/review-template.js/**']" — the added glob names a directory under a .js file, so it matches no tracked path and the pre-existing entry already excepts the file, making it either a validate failure or an inert line that does not deliver what the row's why claims (T2) — delete 'scripts/lib/review-template.js/**'.
+DEFER severity=LOW — card item (3) "README corrected" and RR-0392 "no other infrastructure beyond this" — .claude/review-templates/README.md:142 "each lens template carries `{{PLAN}}` once (V2.LIST round 2), so the material is sent once and the 120000 bound is on that prompt" — the four other lens templates are in no diff of this change and not on the card's Files line, so removing the known-limits line "the other four lens templates still carry the plan placeholder twice" rests on no pasted item of this card — keep the limitation line or cite the task that changed those templates.
+
+MET — AC #1 "A build or fix task closes without output reviews for the two planning lists" — scripts/analysis/rule-lists.json — "every_task": ["plan-protocol"] with "output_off": ["plan-protocol"] and five-words dropped from every_task; the reader (outputLists) is in chunk 2, cannot see.
+MET — AC #5 "A lane closing after an edit to backlog-lib.mjs is refused unless its card names the file" — scripts/analysis/rule-lists.json — "scripts/analysis/backlog-lib.mjs" added to "protected_paths"; the refusal logic is in chunk 2, cannot see.
+MET — AC #6 "The CHK.3 proof row reads notbuilt with its reason" — scripts/analysis/proof-slices.json — the chk3-nothing-new row is now "notbuilt": { "blockedBy": [], "reason": "CHK.3 reads the staged diff; --all gives it no input" }; the round-number half is in chunk 2, cannot see.
+MET — RR-0450 "I just dont see how queue rules and orchestrator notes are valuable to anything from a code persepctive." — scripts/analysis/rule-lists.json — lane-tools "lists": ["agents-s5-1to3", "agents-s7-s11", "eng-all"], and the regenerated page shows queue-137 and orchestrator-doc17 on no row (tooling total 139,835, 6 lists).
+MET — RR-0452 "Plan approved with one change - do not add the addiitonal 3 questions" — whole chunk — no three-question text is added anywhere and the five-principles list is off at both stages.
+MET — RR-0429 "Keep notes short." (card: "Dated notes owed: Spec 08 section 7 rule 4 (short; RR-0429 cap)") — docs/specs/00-architecture/08_agents.md:356 — one dated note of 2026-11-24 added, one paragraph, superseding named phrases only.
+MET — card item (3) "the ticket text says two commits" — scripts/analysis/backlog-brief.mjs — the build or fix Status line now says the work lands first and the closing commit carries only the lane records.
+
+REJECT — doc-17 reading RR-0110 "Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit" — the change is accused of adding infrastructure (a new table key output_off, a new protected path) — doc-17 says of its own entries "They are NOT the operator's words as a ruling and never feed a review as a ruling", so no reading in this list can bind the change.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 2
+Rules met: none
+
+---
+⏱  123151ms (123.2s)
+📊 Tokens — total: 59669, input: 34808, output: 24861, reasoning: 23703

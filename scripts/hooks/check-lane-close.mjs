@@ -42,7 +42,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { asList, parseFM } from '../analysis/backlog-lib.mjs';
-import { coveredBy, DIFF_ARGS, diffPaths, JOINED_ID, joinLists, lensPromptHash, renderLensInput, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine, seatOf } from '../analysis/rule-lists.mjs';
+import { coveredBy, DIFF_ARGS, diffPaths, JOINED_ID, joinLists, lensPromptHash, renderLensInput, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, outputLists, parseLensInput, readTable, resolveTask, ruledLine, seatOf } from '../analysis/rule-lists.mjs';
 import { matchesAny } from '../analysis/mcbylaws/paths.mjs';
 
 const { CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections } = createRequire(import.meta.url)('../lib/review-template.js');
@@ -136,18 +136,21 @@ export function parseVerdicts(g) {
   return verdicts;
 }
 
-// task-399 (FOLD.ADOPT, Spec 08 section 7 rule 3 08_agents.md:346 "fold survivors, file rejections with reasons", rule 6 :350 BUG goes to WF3 before Green Light, DEFER to review_followups.md with reasons):
+// task-399 (FOLD.ADOPT, Spec 08 section 7 rule 3 08_agents.md:350 "fold survivors, file rejections with reasons", rule 6 :360 BUG goes to WF3 before Green Light, DEFER to review_followups.md with reasons):
 // every CONFIRMED or CONFLICT id of the grounder file carries ONE outcome line in TRIAGE.md (the last line of an id is judged). Presence, form and git facts; never judgement: it cannot prove that a fix fixes.
 const SEVS = ['CRITICAL', 'HIGH', 'MED', 'LOW', 'NIT'];
 const normSev = (s) => { const u = String(s ?? '').toUpperCase(); const k = u === 'CRIT' ? 'CRITICAL' : u === 'MEDIUM' ? 'MED' : u; return SEVS.includes(k) ? k : null; };
-/** The severity a grounder writes in the first 40 characters of its reason (earliest whole upper-case word), else null. */
-const reasonSev = (reason) => { const m = /\b(CRITICAL|CRIT|HIGH|MEDIUM|MED|LOW|NIT)\b/.exec(String(reason ?? '').slice(0, 40)); return m ? normSev(m[1]) : null; };
+/** The severity a grounder writes at the START of its reason (the first word, after punctuation), else null. S5 (task-453): a severity word later in the reason ("not a NIT") sets nothing. */
+const reasonSev = (reason) => { const m = /^\W*(CRITICAL|CRIT|HIGH|MEDIUM|MED|LOW|NIT)\b/.exec(String(reason ?? '')); return m ? normSev(m[1]) : null; };
 /** {kind: BUG|DEFER, sev} of a lens finding line ("BUG severity=HIGH - ..."); the lens writes CRIT, read as CRITICAL. */
 export const lensKindOf = (line) => { const m = /^\s*[-*]?\s*(BUG|DEFER)\s+severity=([A-Za-z]+)/.exec(line); return { kind: m ? m[1] : 'BUG', sev: m ? normSev(m[2]) : null, line }; };
-const SEAT_LINE = /^\s*(?:#+\s+)?([a-z0-9]+)#(\d+)\s+(CRITICAL|HIGH|MED|LOW|NIT)\b/;
+const SEAT_LINE = /^\s*(?:#+\s+)?([a-z0-9-]+)#(\d+)\s+(CRITICAL|HIGH|MED|LOW|NIT)\b/; // S4 (task-453): a seat id may hold a hyphen (reality-check#2)
 const SEAT_HEAD = /^\s*Seat:\s*(\S+)\s+(\S+)\s+sha256:([0-9a-f]{12})\s*$/gm;
 /** The `Seat: <name> <repo path> sha256:<12 hex>` lines of a GROUNDER.md, each with its file text from `read` (null when missing). */
 export const seatLines = (g, read) => [...g.matchAll(SEAT_HEAD)].map((m) => ({ name: m[1], path: m[2], sha: m[3], text: read(m[2]) }));
+/** S1 (task-453): the finding lines of the seat reports [{id, line}], so the quote, cited-line and reason checks of grounderErrors run on them too. A seat that outcomeErrors refuses (no text, another sha, outside the seat root) gives none here. */
+export const seatFindings = (seats, seatRoot = null) => seats.filter((s) => typeof s.text === 'string' && (!seatRoot || String(s.path).startsWith(seatRoot)) && sha(s.text).slice(0, 12) === s.sha)
+  .flatMap((s) => s.text.split('\n').map((ln) => SEAT_LINE.exec(ln)).filter(Boolean).map((m) => ({ id: `${m[1]}#${m[2]}`, line: m[0].trim() })));
 const FORM_WORDS = { close: ['fixed', 'task', 'ruling', 'wontfix', 'pile'], plan: ['folded', 'task', 'ruling', 'wontfix', 'pile'] };
 const unq = (s) => { const t = String(s).trim(); const m = /^"(.*)"$/s.exec(t) ?? /^'(.*)'$/s.exec(t) ?? /^`(.*)`$/s.exec(t); return squash(m ? m[1] : t); };
 const FAIL = Symbol('fact failed');
@@ -196,7 +199,7 @@ export function outcomeErrors({ verdicts, triageText, lensKinds, facts, mode = '
     const fixWord = mode === 'plan' ? 'folded' : 'fixed';
     const allowed = conflict ? ['ruling', fixWord] : low ? FORM_WORDS[mode] : k.kind === 'DEFER' ? [fixWord, 'task', 'ruling'] : [fixWord, 'ruling'];
     const pass = allowed.map((w) => ({ fixed: `fixed:<sha> <path the commit touches>`, folded: `folded:"<20+ characters present in the task text>"`, task: 'task:task-N (its text names this id)', ruling: 'ruling:RR-NNNN or ruling:decision-N', wontfix: 'wontfix:"<reason, 30+ characters>"', pile: 'pile:"<reason, 30+ characters>"' })[w]).join(' | ');
-    const rule = conflict ? 'Spec 08 section 5.3 (08_agents.md:225): a conflict waits for the operator ruling' : k.kind === 'DEFER' && !low ? 'Spec 08 section 7 rule 6 (08_agents.md:350): DEFER goes to review_followups.md with reasons' : low ? 'Spec 08 section 7 rule 3 (08_agents.md:346) and the operator ruling :1580 (low priorities filed for later)' : 'Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors';
+    const rule = conflict ? 'Spec 08 section 5.3 (08_agents.md:225): a conflict waits for the operator ruling' : k.kind === 'DEFER' && !low ? 'Spec 08 section 7 rule 6 (08_agents.md:360): DEFER goes to review_followups.md with reasons' : low ? 'Spec 08 section 7 rule 3 (08_agents.md:346) and the operator ruling :1580 (low priorities filed for later)' : 'Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors';
     const refuse = (why) => errors.push(`${id} ${sev}: ${why} [${rule}; verdict ${v.file}:${v.line}; form that passes: ${id} ${pass}]`);
     const text = last.get(id);
     if (text === undefined) { refuse(`no outcome line in TRIAGE.md`); continue; }
@@ -361,7 +364,7 @@ function grounderErrors({ g, label = 'GROUNDER.md', lensFiles, findings, laneNam
     const form = 'form: <id> CONFIRMED|REJECTED|CONFLICT <path>:<line> "<quote>" [reason]';
     if (!v) { errors.push(`${label}: finding ${f.id} has no complete verdict line (${form}): ${f.line.slice(0, 90)}`); continue; }
     const q = squash(v.quote);
-    if (q.length < 20) { errors.push(`${label}: finding ${f.id}: the quote must be 20+ characters taken from ${v.file}:${v.line}`); continue; }
+    if (q.length < 20) { errors.push(`${label}: finding ${f.id}: the quote must be 20+ characters taken from ${v.file}:${v.line} (a double quote inside the quote ends it; quote a part without one)`); continue; }
     if (seenQuote.has(q)) errors.push(`${label}: finding ${f.id} has the same quote as ${seenQuote.get(q)}; each finding needs its own quote from the line it concerns`);
     else seenQuote.set(q, f.id);
     if (v.word !== 'CONFIRMED' && v.reason.length < 30) errors.push(`${label}: finding ${f.id} is ${v.word} with a reason under 30 characters (Spec 08 5.3: rejections carry reasons; a conflict says what the operator must rule)`);
@@ -483,10 +486,10 @@ export function closeErrors(i) {
   const expected = i.expectedPaths ?? []; // V2.WHOLE: the changed paths of the task range minus the exempt ones (check() computes them)
   // F1: the proof is never skipped silently: a build or fix task whose range holds no file outside the exempt paths (the lane was folded into the base already, or the base is wrong) is refused
   if (build && i.rangeEmpty) errors.push(`${id}: no file the task's Files line covers changed between the task's launch commit and HEAD, so the review cannot be proved to cover any change (the launch commit is the board commit that took the task for its lane assignee)`);
-  // V2.LIST (task-406): the every_task lists (the five words, the plan protocol) and the milestone lists are required of every task like any list; verifyResolved is the one reading shared with validate, check-tasks and the launch.
+  // V2.LIST (task-406): the every_task lists (the plan protocol) and the milestone lists are required of every task like any list; verifyResolved is the one reading shared with validate, check-tasks and the launch.
   // A table with no every_task is refused (fails closed: nobody switches the lists off by leaving the key out); a missing milestone_docs key or entry counts as missing lists; a build task with no milestone is refused by resolveTask above.
   const missing = verifyResolved(i.table, r, i.letter, type);
-  if (!Array.isArray(i.table.every_task) || i.table.every_task.length === 0) return [`${id}: the rule-list table has no every_task lists: the five words and the plan protocol must be attached to every task (scripts/analysis/rule-lists.json)`];
+  if (!Array.isArray(i.table.every_task) || i.table.every_task.length === 0) return [`${id}: the rule-list table has no every_task lists: the plan protocol must be attached to every task (scripts/analysis/rule-lists.json)`];
   for (const m of missing) errors.push(`${id}: ${m} (a task always gets them; the table or the resolver was altered)`);
 
   // Files against the diff
@@ -518,7 +521,8 @@ export function closeErrors(i) {
   const phases = build ? ['out'] : ['plan', 'out'];
   const split = readBase('.claude/review-templates/lens-engineering.md') !== null;
   for (const seat of ['compliance', 'engineering']) {
-    const ls = r.lists.filter((l) => (split ? seatOf(l) : 'compliance') === seat);
+    // task-453 (RR-0440, RR-0450, RR-0452): a build or fix task's output review leaves out the table's output_off lists (outputLists); any other task is asked for every list at either stage
+    const ls = (build ? outputLists(i.table, r.lists) : r.lists).filter((l) => (split ? seatOf(l) : 'compliance') === seat);
     if (ls.length) errors.push(...complianceSetErrors({ id, seat, lists: ls, phases, files, table: i.table, dirNote, proof: (l, phs, tbl) => listProof({ id, l, seat, phases: phs, files, textOf, table: tbl, root: i.root, readBase, ctxValues: lc.values, expected, diffOf: i.diffOf, optionalPaths: i.optionalPaths, dirNote, layout }) }));
   }
   // (a') the rest of the lens set a build or fix task calls for, and a plan-stage output
@@ -574,13 +578,14 @@ export function closeErrors(i) {
   if (!(build || findings.length > 0)) return errors;
   const g = textOf('GROUNDER.md');
   if (g === undefined) return [...errors, `${id}: GROUNDER.md is missing in ${dirNote}${build ? ' (a build or fix task always needs a separate grounder verdict)' : ` (a lens returned ${findings.length} finding(s))`}`];
-  const ge = grounderErrors({ g, label: 'GROUNDER.md', lensFiles, findings, laneName, assignees: i.assignees, id, readRepo });
+  const closeSeats = seatLines(g, readRepo);
+  const ge = grounderErrors({ g, label: 'GROUNDER.md', lensFiles, findings: [...findings, ...seatFindings(closeSeats, `${mine[0][0]}/`)], laneName, assignees: i.assignees, id, readRepo });
   errors.push(...ge.errors);
   const verdicts = ge.verdicts;
   // task-399: every CONFIRMED or CONFLICT id carries one outcome (TRIAGE.md, last line wins), and the outcomes are shown on the task
   if (build) {
     const dirPath = mine[0][0];
-    errors.push(...outcomeErrors({ verdicts, triageText: textOf('TRIAGE.md') ?? '', lensKinds: new Map(findings.map((f) => [f.id, lensKindOf(f.line)])), facts: i.facts, mode: 'close', seats: seatLines(g, readRepo), seatRoot: `${dirPath}/`, selfTask: id, summary: { text: i.taskText, headText: i.headTaskText ?? '', grounderPath: `${dirPath}/GROUNDER.md`, triagePath: `${dirPath}/TRIAGE.md` } }).errors);
+    errors.push(...outcomeErrors({ verdicts, triageText: textOf('TRIAGE.md') ?? '', lensKinds: new Map(findings.map((f) => [f.id, lensKindOf(f.line)])), facts: i.facts, mode: 'close', seats: closeSeats, seatRoot: `${dirPath}/`, selfTask: id, summary: { text: i.taskText, headText: i.headTaskText ?? '', grounderPath: `${dirPath}/GROUNDER.md`, triagePath: `${dirPath}/TRIAGE.md` } }).errors);
   }
   return errors;
 }
@@ -662,12 +667,12 @@ function planGateInner(i) {
   else {
     const lensFiles = files.filter((f) => /^plan-.+\.txt$/.test(f.name)).sort((a, b) => a.name.localeCompare(b.name));
     const found = findingsIn(lensFiles);
-    const ge = grounderErrors({ g, label: 'GROUNDER-PLAN.md', lensFiles, findings: found, laneName: i.laneName, assignees: i.assignees, id, readRepo: i.readRepo });
+    const seats = seatLines(g, i.readRepo);
+    const ge = grounderErrors({ g, label: 'GROUNDER-PLAN.md', lensFiles, findings: [...found, ...seatFindings(seats, dirNote)], laneName: i.laneName, assignees: i.assignees, id, readRepo: i.readRepo });
     errors.push(...ge.errors);
     const lh = /^\s*Lane:\s*(.+?)\s*$/m.exec(g.split('\n').slice(0, 25).join('\n'))?.[1];
     if (lh && nameKey(lh) !== nameKey(i.laneName)) errors.push(`GROUNDER-PLAN.md: Lane "${lh}" is not the lane being launched (${i.laneName})`);
-    // the seats
-    const seats = seatLines(g, i.readRepo);
+    // the seats (read above, S1)
     const need = [...PLAN_SEATS.always, ...(entriesOf(i.taskText).some((e) => i.tracked(e)) ? PLAN_SEATS.conditional : [])];
     for (const n of need) if (!seats.some((x) => x.name.toLowerCase() === n)) errors.push(`GROUNDER-PLAN.md: no "Seat: ${n} <repo path inside ${dirNote}> sha256:<12 hex>" line (a ${n} seat report is required at every build or fix launch${n === 'regression' ? ': the Files line names a path that exists at the board head' : ''})`);
     // outcomes of every CONFIRMED or CONFLICT id (mode plan) and the round block on the task
@@ -717,22 +722,26 @@ const entriesOf = (taskText) => filesEntries(taskText) ?? [];
 function check(msgFile) {
   if (!msgFile) return fail(['usage: check-lane-close.mjs <commit-msg-file>']);
   const top = git(['rev-parse', '--show-toplevel']).stdout.trim() || process.cwd();
+  // S3 (task-453, GQ G4 S3 "narrow the skip and fail closed"): a merge is no longer skipped whole; only a move whose staged blob is the merged branch's own is skipped (below)
   const mergeHead = git(['rev-parse', '--git-path', 'MERGE_HEAD']).stdout.trim();
-  if (mergeHead && fs.existsSync(path.resolve(mergeHead))) return 0;
+  const inMerge = Boolean(mergeHead && fs.existsSync(path.resolve(mergeHead)));
   if (!fs.existsSync(path.join(top, 'backlog/tasks'))) return 0;
-  const tableFile = path.join(top, 'scripts/analysis/rule-lists.json');
-  const tableInHead = git(['cat-file', '-e', 'HEAD:scripts/analysis/rule-lists.json']).status === 0;
-  if (!fs.existsSync(tableFile) && !tableInHead) return 0; // a repo that never had the table is not held to it
-  let table;
-  try { table = readTable(tableFile); } catch (e) { return fail([`cannot read scripts/analysis/rule-lists.json${tableInHead ? ' (it is in HEAD: the close check fails closed; restore it)' : ''}: ${String(e.message).split('\n')[0]}`]); }
   // H1 (V2.WHOLE round 4): the keys that decide what is checked (base_ref, finished_statuses, protected_paths, exempt) come from the BOARD ref, never from the lane's own table or from a ref the lane's table names
   const boardRef = BOARD_REFS.find((r) => git(['rev-parse', '--verify', '--quiet', `${r}^{commit}`]).status === 0) ?? null;
   let boardTable = null;
   if (boardRef) { const bx = git(['show', `${boardRef}:scripts/analysis/rule-lists.json`]); try { boardTable = bx.status === 0 ? JSON.parse(bx.stdout) : null; } catch { boardTable = null; } }
+  const tableFile = path.join(top, 'scripts/analysis/rule-lists.json');
+  const tableInHead = git(['cat-file', '-e', 'HEAD:scripts/analysis/rule-lists.json']).status === 0;
+  const tableInTree = fs.existsSync(tableFile);
+  // S2 (task-453): a repo that never had the table is not held to it only when the board has no table either; a branch that lost the table is judged by the board copy
+  if (!tableInTree && !tableInHead && boardRef && git(['cat-file', '-e', `${boardRef}:scripts/analysis/rule-lists.json`]).status !== 0) return 0;
+  let table = boardTable; // the table is in neither the tree nor HEAD: the board copy (null with no readable board: a move is refused below, no move passes)
+  if (tableInTree || tableInHead) { try { table = readTable(tableFile); } catch (e) { return fail([`cannot read scripts/analysis/rule-lists.json${tableInHead ? ' (it is in HEAD: the close check fails closed; restore it)' : ''}: ${String(e.message).split('\n')[0]}`]); } }
   // a commit that moves no task never needs the board (round 5): the finished statuses default until a move is found, then the board is required
   const finished = new Set((boardTable?.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']).map((s) => String(s).toUpperCase()));
   const staged = git(['diff', '--cached', '--name-only', '--no-renames']).stdout.split('\n').filter(Boolean);
-  const taskFiles = staged.filter((f) => /^backlog\/tasks\/task-\d+( -.*)?\.md$/i.test(f));
+  // S9 (task-453): a task file under backlog/archive/tasks and a numbered subtask file are task files too; docs/backlog/tasks is not (the pattern is anchored)
+  const taskFiles = staged.filter((f) => /^backlog\/(archive\/)?tasks\/task-\d+(\.\d+)*( -.*)?\.md$/i.test(f));
   const moves = [];
   for (const f of taskFiles) {
     const now = git(['show', `:${f}`]);
@@ -740,7 +749,11 @@ function check(msgFile) {
     const { fm } = parseFM(now.stdout);
     const status = String(fm.status ?? '').toUpperCase();
     if (!finished.has(status)) continue;
-    const was = git(['show', `HEAD:${f}`]);
+    // S3: during a merge, the merged branch's own blob of the task file is a close made and checked on that branch; any other blob is checked (a failed read is not equal)
+    if (inMerge) { const mh = git(['rev-parse', `MERGE_HEAD:${f}`]); const ix = git(['rev-parse', `:${f}`]); if (mh.status === 0 && ix.status === 0 && mh.stdout.trim() === ix.stdout.trim()) continue; }
+    // S9: an archived task is compared with the same file name under backlog/tasks at HEAD (archiving a finished task is no move)
+    let was = git(['show', `HEAD:${f}`]);
+    if (was.status !== 0 && f.startsWith('backlog/archive/tasks/')) was = git(['show', `HEAD:backlog/tasks/${path.basename(f)}`]);
     const headFm = was.status === 0 ? parseFM(was.stdout).fm : {};
     if (was.status === 0 && String(headFm.status ?? '').toUpperCase() === status) continue;
     moves.push({ f, now: now.stdout, fm, headFm, status, headText: was.status === 0 ? was.stdout : '' });
@@ -836,10 +849,10 @@ function check(msgFile) {
         if (late.length) errors.push(`the closing commit of ${id} stages ${late.length} path(s) outside the reviewed task range: ${late.slice(0, 6).join(', ')}${late.length > 6 ? ', ...' : ''} (the closing commit of a lane build or fix task holds records only: its lane report directory, the task file, the decision record; commit the work first so the review covers it)`);
       }
     }
-    // F10: the table the task is judged by is the range base's; a task whose own Files line names the table is the one exception: it is judged by its branch table (so its own edit applies) with every field that decides what is reviewed (exempt, base_ref, finished_statuses, protected_paths, every_task) still the range base's
+    // F10: the table the task is judged by is the range base's; a task whose own Files line names the table is the one exception: it is judged by its branch table (so its own edit applies) with every field that decides what is reviewed (exempt, base_ref, finished_statuses, protected_paths, every_task, output_off) still the range base's
     const ownsTable = coveredBy(filesEntries(baseTask ?? mv.now), 'scripts/analysis/rule-lists.json');
     const pin = { exempt: boardTable.exempt, base_ref: boardTable.base_ref, finished_statuses: boardTable.finished_statuses, protected_paths: boardTable.protected_paths };
-    const judge = !baseTable ? { ...table, ...pin } : ownsTable ? { ...table, ...pin, every_task: baseTable.every_task } : { ...baseTable, ...pin };
+    const judge = !baseTable ? { ...table, ...pin } : ownsTable ? { ...table, ...pin, every_task: baseTable.every_task, output_off: baseTable.output_off } : { ...baseTable, ...pin };
     // fields read from the lane's own copy, each pinned (round 6): the Files line the rule lists resolve from is the UNION of the launch copy and the staged one (narrowing it cannot drop a list), and the assignees the grounder must differ from are the staged, HEAD and board ones together
     const unionFiles = [...new Set([...(filesEntries(baseTask ?? '') ?? []), ...(filesEntries(mv.now) ?? [])])];
     const resolveText = unionFiles.length ? mv.now.replace(/Files:[ \t]*.*$/m, `Files: ${unionFiles.join(', ')}`) : mv.now;

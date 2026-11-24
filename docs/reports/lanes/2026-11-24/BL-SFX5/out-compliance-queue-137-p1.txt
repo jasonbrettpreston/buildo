@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:12:10.063Z file_sha256=9f82a3efaff892f5f49b426a0399a068f846f837289a6afcaee5de909a5da955 prompt_sha256=4d62347b82b1be62f01ce7f7e7f485643e0dc5e7fa87b9828054b94a4521c9ac
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-compliance-queue-137-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — RR-0450 decision label "queue rules and orchestrator note off for code reviews; step handbook for compute only" — docs/specs/00-architecture/08_agents.md:358 "queue-137 and orchestrator-doc17 are off the lane-tools row" — the note and the regenerated report remove queue-137/doc-17 but the report still carries step-132 on the McFrontend web and phone kinds, so the "compute only" half of RR-0450 is asserted by the card ("already so, the plan confirms") and not shown by the pasted artifact — state in the note or the report header which rows count as compute, or drop step-132 from the web/phone kinds if they are not.
+
+MET — Spec 137 §4 rule 3 note "Rule 3 is amended for lane build and fix tasks. The work lands first; the status moves in a separate closing commit that carries only the lane's records (its lane report directory, the review context directory, the task file, the decision record)" — scripts/analysis/backlog-brief.mjs:175 — the build/fix branch emits that two-commit wording.
+MET — Spec 137 §4 rule 3 "Every other task keeps Rule 3 as written." — scripts/analysis/backlog-brief.mjs:177 — the else branch keeps the original "The status line changes in the same commit as the work." line.
+MET — task-453 AC #6 "The CHK.3 proof row reads notbuilt with its reason" — scripts/analysis/proof-slices.json:9 — the row now reads notbuilt with reason "CHK.3 reads the staged diff; --all gives it no input".
+MET — RR-0452 "Plan approved with one change - do not add the addiitonal 3 questions" — docs/specs/00-architecture/08_agents.md:358 — the note turns five-words off and adds no three questions.
+MET — RR-0452 ":2338 \"five principles off\"" — docs/reports/generated/rule-lists-by-kind.md:5 — five-words is dropped from every kind's list and the header now says "the plan protocol".
+MET — RR-0450 "I just dont see how queue rules and orchestrator notes are valuable to anything from a code persepctive." — docs/reports/generated/rule-lists-by-kind.md:70 — the tooling kind drops queue-137 and orchestrator-doc17, leaving the two Spec 08 lists and eng-all.
+REJECT — Spec 137 §4 rule 10 "A ruling enters a row as a verbatim dated note." — the new 08_agents note cites RR-0450 without reproducing its words — not a real issue, the RR-0450 verbatim and its :2325 cite are recorded on the task-453 row's Decisions block, which is the row the rule speaks of.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  233654ms (233.7s)
+📊 Tokens — total: 81268, input: 31713, output: 49555, reasoning: 48900

@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:16:03.844Z file_sha256=742ffae16f2c738a97191872e361952c64dfdbb79a318903dd43404ebb096c6a prompt_sha256=1f59ec9e3f5783fa771d3f1444853b33dfcf195d228a4b53e4f0154466723688
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-compliance-five-words-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — rule-lists.json no_files_default "such a task gets the every-task, increment and milestone lists only" — .claude/review-templates/README.md "a record-only task gets the every-task and milestone lists only, task-448" — the README line changed here drops the increment list that the table's own rule gives a record-only task whose milestone letter resolves, and resolveTask adds increment_docs whenever that letter exists — reword it to "the every-task, increment and milestone lists only".
+
+DEFER severity=LOW — rule-lists.json table doc "every glob matches a tracked path" — scripts/analysis/rule-lists.json step-pipeline row "not": ["scripts/deepseek-review.js", "scripts/gemini-review.js", "scripts/lib/review-template.js", "scripts/lib/review-template.js/**"] — scripts/lib/review-template.js is a file, so a /** entry beneath it matches no tracked path, and the why's claim "so the file resolves here only" is already carried by the plain entry before it — delete the "scripts/lib/review-template.js/**" entry, or name the nested path it is meant to catch.
+
+DEFER severity=LOW — RR-0450 "I just dont see how queue rules and orchestrator notes are valuable to anything from a code persepctive." — scripts/analysis/rule-lists.json lane-tools "why": "are governed by Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137, engineering standards sections 5, 9 and 14, and doc-17 (orchestrator readings are not rulings)" beside the new "lists": ["agents-s5-1to3", "agents-s7-s11", "eng-all"] — the row's why still states that Spec 137 and doc-17 govern the lane-tools paths, the opposite of the lists beside it and of the ruling — rewrite that first sentence of why so it names only the three lists the row attaches.
+
+DEFER severity=MED — AC #5 "A lane closing after an edit to backlog-lib.mjs is refused unless its card names the file" — scripts/analysis/rule-lists.json "protected_paths": [..., "scripts/analysis/backlog-lib.mjs", ...] against the pasted clause "a commit that changes a `protected_paths` file (the check, the table, the helper, the review tool, `.husky/*`) may not also close a task." — the protected mechanism as pasted has no "unless the card names the file", so AC #5's exception has no home in the only mechanism this chunk shows, and check-lane-close.mjs is not in this chunk (cannot see) — state in the card or the close check which rule yields that exception, or leave backlog-lib.mjs off protected_paths and let the Files-line coverage refusal carry AC #5.
+
+DEFER severity=LOW — card item (3) "an empty acceptance block warns" — scripts/analysis/backlog-brief.mjs "// T8 (task-453): an empty AC block is said, not left blank" with `  (none found in ${t.file})` — this chunk substitutes a plain text line in the brief and emits no warning on an empty acceptance block, so the "warns" half of the item is unmet here — print a WARN line (stderr or a WARN prefix) or record that the plan's red test wanted only the text.
+
+MET — RR-0450 "I just dont see how queue rules and orchestrator notes are valuable to anything from a code persepctive." — scripts/analysis/rule-lists.json lane-tools "lists": ["agents-s5-1to3", "agents-s7-s11", "eng-all"] — queue-137 and orchestrator-doc17 are off the row, their definitions kept.
+
+MET — Description "five-words (the five principles) at both stages by one data line, nothing replacing it" — scripts/analysis/rule-lists.json "every_task": ["plan-protocol"] with the five-words list definition retained — the id is out of every_task at both stages and nothing is added in its place.
+
+MET — AC #2 "Emptying the output_off line turns plan-protocol back on for output reviews" — scripts/analysis/rule-lists.mjs "export const outputLists = (table, lists) => lists.filter((l) => !(table?.output_off ?? []).includes(l.id));" and the validate branch "if (table.output_off !== undefined) { if (!Array.isArray(table.output_off)) ..." — an empty array validates and filters nothing, so every list comes back on.
+
+MET — AC #6 "The CHK.3 proof row reads notbuilt with its reason" — scripts/analysis/proof-slices.json "chk3-nothing-new": "notbuilt": { "blockedBy": [], "reason": "CHK.3 reads the staged diff; --all gives it no input" } — the row reads notbuilt and carries a reason.
+
+MET — Glossary "RE-FREEZE #N" "A field is added or deleted only by one." — no hunk in this material touches scripts/steps/_schema/step.schema.json or template-freeze.json — no frozen-vocabulary field is added or deleted here.
+
+MET — Glossary "five words" "R-BA gate V (in `scripts/analysis/step-validate.mjs`): STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE" — scripts/analysis/rule-lists.json "five-words": { "file": "docs/specs/01-pipeline/132_step_standard_handbook.md", "sections": ["Glossary"], "generated_by": "scripts/generate-step-handbook.mjs" } — the list keeps its definition and the Glossary section selector, so turning it on is putting the id back rather than redefining the five words.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 21   Unmet: 0
+Rules met: none
+
+---
+⏱  140747ms (140.7s)
+📊 Tokens — total: 57962, input: 28985, output: 28977, reasoning: 27665
