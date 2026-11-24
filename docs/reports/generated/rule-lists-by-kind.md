@@ -39,7 +39,7 @@ Example Files line: `mobile/src/app/`; type build; milestone group [S].
 | list | document | selection | characters | parts |
 | --- | --- | --- | ---: | ---: |
 | mobile-90 | docs/specs/03-mobile/90_mobile_engineering_protocol.md | whole file | 14,097 | 1 |
-| mobile-98 | docs/specs/03-mobile/98_mobile_testing_protocol.md | whole file | 11,496 | 1 |
+| mobile-98 | docs/specs/03-mobile/98_mobile_testing_protocol.md | whole file | 11,801 | 1 |
 | mobile-99 | docs/specs/03-mobile/99_mobile_state_architecture.md | whole file | 84,452 | 1 |
 | surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 | 1 |
 | eng-front | docs/specs/00_engineering_standards.md | 1. Architecture & UI Standards | 3,214 | 1 |
@@ -47,7 +47,7 @@ Example Files line: `mobile/src/app/`; type build; milestone group [S].
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
 | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 24,153 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 9 lists | | 215,384 | 9 |
+| total | 9 lists | | 215,689 | 9 |
 
 ## storage
 

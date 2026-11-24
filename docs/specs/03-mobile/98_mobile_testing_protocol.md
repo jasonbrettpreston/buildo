@@ -122,6 +122,8 @@ The boundaries below are illustrative examples within those mandates.
 
 **E2E Automation (Phase 2):** Maestro tests will be integrated into GitHub Actions via Maestro Cloud to run automatically against staging builds.
 
+> Dated note 2026-11-24 (task-462, RR-0462, step 4 of the approved quick plan): the phone typecheck and phone tests also run before every push, as steps `mobile-typecheck` and `mobile-tests` of `.husky/pre-push-checks.sh` (before the web suite, no coverage written); Mobile CI still runs after the push.
+
 ## 6. Historical Context & Past Issues
 To prevent future developers from falling into the same local development traps, we document the major environment issues that forced the transition to this protocol.
 
