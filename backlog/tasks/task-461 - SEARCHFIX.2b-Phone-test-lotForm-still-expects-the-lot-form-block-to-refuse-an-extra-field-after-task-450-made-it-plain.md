@@ -6,11 +6,17 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-24T18:11:00Z'
-updated_date: '2026-11-24T18:22:00Z'
+updated_date: '2026-11-24T18:29:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/reviews/task-461/GROUNDER-PLAN.md
+  - docs/reports/reviews/task-461/TRIAGE-PLAN.md
+  - docs/reports/reviews/task-461/seat-integration-1.md
+  - docs/reports/reviews/task-461/seat-reality-check-1.md
+  - docs/reports/reviews/task-461/seat-regression-1.md
 type: fix
 ordinal: 155210
 ---
@@ -95,10 +101,10 @@ mobile/__tests__/lotForm.test.ts. Nothing outside the Files line.
   - Command, from mobile/: `npx jest __tests__/lotForm.test.ts __tests__/schemas.test.ts --ci --coverage=false`. The package script test:ci (mobile/package.json:11) adds --coverage, which writes mobile/coverage, and that folder is not ignored (.gitignore:12 is the root /coverage only); the lane stages no coverage folder. Expected: two suites pass.
   - schemas.test.ts runs in the same command to show task-450's lock is still green. It is not edited.
   - mobile/node_modules is a symlink to the main checkout (~/Buildo/mobile/node_modules), which is why the run resolves from ../../Buildo. Nothing is installed.
-  - Record both outputs in the lane folder ~/Buildo-scratch/lanes-20261124/ as red and green evidence. The expected full-run delta is 723 tests with 0 failed; the 13 failed suites drop to 12. That green is the runnable part only: 45 of 58 suites ran at 5af0f7be2, and the 12 that cannot start are unproven here (the section 5 search is by reading, so it covers them). Proof for this phone test is RR-0460 (MORNING-DECISIONS.md:2382): a full local run before the push, then the Mobile CI run after it.
+  - Record both outputs in the lane folder ~/Buildo-scratch/lanes-20261124/ as red and green evidence. The full run on a checkout with the packages (phone-full-0ab1aed72.out) is 1 failed suite (lotForm.test.ts:71), 57 passed, 866 tests; after the edit it should be 0 failed, 866 tests. That green is the runnable part only on this worktree: its symlinked node_modules still cannot start the 12 suites, so the two-file command is its proof (the section 5 search is by reading, so it covers them). Proof for this phone test is RR-0460 (MORNING-DECISIONS.md:2382): a full local run before the push, then the Mobile CI run after it.
 
 ## 5. Search for any other strict assertion (question 2)
-- mobile/__tests__: `git grep` for lotForm|lot_form|LotFormSchema finds only lotForm.test.ts:71, which is this card, and schemas.test.ts:327-339, which already asserts the plain form. No other phone test asserts strict. A second `git grep -n ConsumerParcelLookupResultSchema -- mobile/__tests__/` (the schema parsed at :71) finds lotForm.test.ts, schemas.test.ts and useParcelLookup.test.ts:163 and :200; the last two parse valid payloads and expect true. `git grep -n 'strict()' -- mobile/__tests__` finds no lot-form line (only trackedLots.test.ts:192, another schema). The grep reads all 58 files, the 12 that cannot start included.
+- mobile/__tests__: `git grep` for lotForm|lot_form|LotFormSchema finds only lotForm.test.ts:71, which is this card, and schemas.test.ts:327-339, which already asserts the plain form. No other phone test asserts strict. A second `git grep -n ConsumerParcelLookupResultSchema -- mobile/__tests__/` (the schema parsed at :71) finds lotForm.test.ts, schemas.test.ts and useParcelLookup.test.ts:163 and :200; the last two parse valid payloads and expect true. `git grep -n 'strict()' -- mobile/__tests__` finds no lot-form line (only trackedLots.test.ts:192, another schema). The grep reads all 58 files, the 12 that cannot start included. phone-full-0ab1aed72.out shows no other red.
 - src/tests: src/tests/parcel-lot-form.logic.test.ts:145-148 is the case "the block is strict and closed". It asserts the SERVER schema ConsumerLotFormSchema (src/app/api/parcels/lookup/types.ts:135-141, `.strict()` at :141), which shapes what the server sends. It is not the phone mirror. D1 names it as a latent trap and gives no fix. No web code parses the phone mirror: `git grep ParcelLotFormSchema` hits mobile/src/lib/schemas.ts only.
 - Descriptors and contract notes:
   - contract_parcels_lookup.descriptor.json:171 lists lotForm, detected, basis and unsure as whitelist names; :70 says additive_only. No strict claim for the lot form.
@@ -144,4 +150,10 @@ mobile/__tests__/lotForm.test.ts. Nothing outside the Files line.
 - I did not run the test file (read-only brief). That the moved line is green rests on reading schemas.ts:425-429 (a plain z.object, so extra keys are stripped) and on the head run receiving true at :71.
 - I did not check whether the pre-commit hook's related-test run reaches mobile/__tests__ for a test-only change. task-450 :314 says it did not for that lane.
 - I did not read the exact queue-row file for DoD #6 for this card.
+
+Plan review round 1: 9 folded, 0 task, 0 ruling, 0 wontfix, 1 pile; grounder docs/reports/reviews/task-461/GROUNDER-PLAN.md; triage docs/reports/reviews/task-461/TRIAGE-PLAN.md
+plan-error-paths#1 MED folded Option A is struck (
+plan-plan-review-deepseek#1 MED folded --ci --coverage=fals
+plan-plan-review-deepseek#2 MED folded finds lotForm.test.t
+plan-plan-review-deepseek#3 MED folded That green is the ru
 <!-- SECTION:PLAN:END -->
