@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T18:35:17.328Z file_sha256=c1af96d64ab3109a2b1129fbbf05476b8d84471c8922f9420c3ae768ff063776 prompt_sha256=73bc0ffaf30cf000ed18647c6a51438952f9b62c531f5a51c029f0491f17f747
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX6/in-out-engineering-eng-shared.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 5. Testing Standards §5.2 "Parity battery (`*.infra.test.ts` / `*.logic.test.ts`) | Two parallel implementations stay in sync (§7 dual-path; seed-JSON ↔ TS defaults; generated doc ↔ generator) | Any dual-surface or generated artifact (drift guard)" — task-461 Implementation Notes "Server strict block (src/tests/parcel-lot-form.logic.test.ts:145) left as D1's latent trap, no card (ruled 8.3)." — the mobile schema and its server mirror now disagree (plain vs strict) and this diff adds no parity/drift guard for that dual surface — add a parity test asserting the mobile and server lookup-block schemas accept/reject the same payload (or record the divergence as an explicit parity exemption in the test file).
+DEFER severity=LOW — 5. Testing Standards §5.2 "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — mobile/__tests__/lotForm.test.ts:63 "describe('lotForm (pure)'" — the added assertion extends a pure-schema derivation test inside a file whose name matches no §5.2 layer pattern — rename the file to `lotForm.logic.test.ts` or state the mobile test-layer mapping explicitly in the plan.
+DEFER severity=LOW — 11. Plan Compliance Checklist "Before declaring Green Light, generate a 5-10 item self-skeptical checklist ... Output PASS/FAIL per item in the response BEFORE running tests." — NONE — the pasted Implementation Notes contain only the red/green jest runs and the AC2 grep, no PASS/FAIL self-checklist — paste the self-skeptical checklist with per-item PASS/FAIL into the lane report before the green run.
+MET — 5. Testing Standards §5.3 — task-461 Implementation Notes "Red before the edit: npx jest __tests__/lotForm.test.ts __tests__/schemas.test.ts --ci --coverage=false (from mobile/) -> 1 failed suite, 1 failed test of 40, lotForm.test.ts:71:115 expected false received true" — a demonstrably failing run is recorded before the edit.
+MET — 5. Testing Standards §5.2 — "expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { detected: 'maybe', basis: 'o4_not_met', unsure: false } }).success).toBe(false);" — the negative closed-enum refusals are retained, only the extra-field assertion is moved, so coverage is not retired.
+MET — 10. Frontend/Backend Boundary §10.2 — "diff --git a/mobile/__tests__/lotForm.test.ts b/mobile/__tests__/lotForm.test.ts" — no file under `scripts/`, `migrations/` or `scripts/lib/` is touched.
+REJECT — 2. Error Handling & Stability §2.1 — not forcing an error path — the mandate is scoped to "integration tests (`.infra.test.ts`)", and this is a mobile schema-parse unit test.
+REJECT — 5. Testing Standards §5.1 — using the inline literal "{ ...form(true), extra: 1 }" instead of a typed factory — the field is deliberately outside the contract type, which no typed factory can express.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 7   Unmet: 3
+
+---
+⏱  30755ms (30.8s)
+📊 Tokens — total: 19083, input: 12570, output: 6513, reasoning: 5762

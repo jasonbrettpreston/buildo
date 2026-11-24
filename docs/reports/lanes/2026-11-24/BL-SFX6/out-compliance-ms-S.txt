@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T18:35:17.360Z file_sha256=c90e983804254f913bb34cb026df6493c42fea1b58e564c95a168a0f4e3d230b prompt_sha256=f21a5ff6272a2542ba10f7708481ed65b6f303f34454185b6ad8ae60072862d1
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX6/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+```
+DEFER severity=MED — RR-0461 "Card 461 clean seat report: run a fresh integration seat (names task-461)" — NONE — no fresh integration seat report appears anywhere in the pasted material, only the lane-local jest run — run the seat and attach its clean report before the push station.
+DEFER severity=LOW — RR-0460 "Phone tests local first; inline report it link accepted; proof for new phone tests" — NONE — the recorded proof is the two-file run only, and the material itself says "full phone run owed at the push station (RR-0460)" — attach the full phone run output with the push.
+DEFER severity=LOW — pasted deviation "Deviation from plan section 7: the task-450 note could not ride this commit" — mobile/__tests__/lotForm.test.ts:67 "// task-450 L1 (GROUNDER-B D1)" — the owed task-450 note is stated as unwritten, plan section 7 is not pasted so it cannot be judged here — deliver the note to the orchestrator as the deviation line promises.
+MET — AC #1 "states that an extra field in the lot-form block still parses" — mobile/__tests__/lotForm.test.ts:67 — the moved line now asserts toBe(true) for lotForm with "extra: 1"
+MET — Task fix instruction "the test line states the plain form; the schema is not changed back" — mobile/__tests__/lotForm.test.ts:67 — the test asserts the plain form and no schema file appears in the diff
+MET — AC #2 "No other phone test asserts the old strict form of the lot-form block" — mobile/__tests__/lotForm.test.ts:69 — the refuses case keeps only the two closed-enum refusals; the notes' git grep records the other suites as plain or valid-payload
+MET — Files "Files: mobile/__tests__/lotForm.test.ts" — diff header "diff --git a/mobile/__tests__/lotForm.test.ts b/mobile/__tests__/lotForm.test.ts" — only that one file is touched
+MET — project objective "keep it simple; no scope creep" — mobile/__tests__/lotForm.test.ts:67 — one assertion moved and one test title extended, nothing else changes
+MET — RR-0392 "no other infrastructure beyond this" — diff — no infrastructure, config or new file added
+MET — increment objective "the semi calculation stays in Increment 7 (7.25)" — diff — no semi or lot-map calculation is introduced by the change
+MET — increment objective "the search identifies two-or-more parcels at one address ... and wires each to the report" — mobile/__tests__/lotForm.test.ts:63 — the lot-form block under test is the lot-confusion element of the search lookup, and its contract is aligned rather than narrowed
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+Rules met: none
+```
+
+---
+⏱  24032ms (24.0s)
+📊 Tokens — total: 8664, input: 3570, output: 5094, reasoning: 4436

@@ -1,0 +1,165 @@
+LIST mobile-98 sha256:0e487889e7048c130b95af155cb1835627709a1b162ded29c1bc1cdee0d1feda material sha256:39f212a9ad69b7b2c3ebbd3c35abf6cfd63d7d87ff7938e8a1050a334d6dc514 part 1 of 1 chunk 1 of 1
+RULE LIST mobile-98 (docs/specs/03-mobile/98_mobile_testing_protocol.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["mobile/__tests__/lotForm.test.ts"]
+
+# Spec 98 — Mobile Testing Protocol & Local Environment
+
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 2** of `.cursor/active_task.md`.
+
+**Status:** ACTIVE
+**Cross-references:** Spec 90 (Engineering Protocol), Spec 93 (Auth), Spec 94 (Onboarding), Spec 96 (Subscription)
+
+## 1. Goal & Scope
+**Goal:** Establish a bulletproof, reproducible testing environment for the Buildo mobile app, focusing on End-to-End (E2E) testing via Maestro, unit testing via Jest, and safe data-seeding practices.
+**Scope:** This spec defines the Windows/Android local development startup routine, the organization of Maestro E2E test flows, database cloning for realistic test data, and the unit testing boundaries for Zustand stores and routing guards.
+
+## 2. Local Environment Setup (Windows / Android)
+This is the canonical startup routine for developing and testing the Buildo native app locally on a Windows machine.
+
+### 2.1 Prerequisites
+- **Android Studio:** Installed with a configured Virtual Device (Emulator). Target: Pixel 8 (API 34+).
+- **Maestro CLI:** Installed via WSL or Windows command line.
+- **Postgres CLI Tools:** `pg_dump` and `pg_restore` installed and added to the Windows System PATH.
+- **Expo CLI:** `npm install -g eas-cli`
+
+### 2.2 Boot Sequence
+**Step 1: Boot the Physical Environment (Emulator)**
+Always start the emulator via Android Studio before running any Expo commands to ensure background ADB daemons initialize correctly.
+1. Open Android Studio.
+2. Open Device Manager.
+3. Click Play on the Pixel 8 emulator. Wait for the home screen.
+
+**Step 2: Boot the App (Metro Bundler)**
+Open a PowerShell terminal at the project root:
+```powershell
+cd mobile
+npx expo run:android
+```
+*Note: `run:android` compiles the native C++/Java shell (Firebase, Reanimated) and boots the Metro bundler. Leave this terminal open. To recover from a red-screen crash, press `r` in this terminal to reload the JS bundle.*
+
+**Step 3: Seed Local Database (Production Clone)**
+To test real-world scrolling, ranking, and UI rendering, tests must run against production-volume data. Do NOT point the local app at the live production database. Open a second PowerShell terminal:
+```powershell
+# 1. Download a snapshot of production
+pg_dump "postgresql://<PROD_USER>:<PASSWORD>@<HOST>:5432/<DB_NAME>" -F c -f buildo_prod.dump
+
+# 2. Restore to local Postgres instance
+pg_restore --clean --if-exists --no-owner --host=localhost --port=5432 --username=postgres --dbname=buildo buildo_prod.dump
+```
+
+## 3. End-to-End (E2E) Testing Strategy
+**Tool:** Maestro
+**Location:** `mobile/maestro/`
+
+Maestro is used to validate critical user journeys from the perspective of a black-box user. Tests interact with the rendered UI accessibility layer, not internal state.
+
+### 3.1 State Management in Tests
+Every Maestro YAML file must explicitly define its state expectations using `clearState`:
+- **`clearState: true` (Clean Slate):** Used for Auth and Onboarding flows. Wipes MMKV cache and Firebase Auth session before the test runs, simulating a fresh App Store install.
+- **`clearState: false` (Persistent State):** Used for Feed, Settings, and Flight Board flows. Assumes the user has already completed onboarding. Requires manual setup (or a setup script) to populate the local MMKV state before running.
+
+### 3.2 Required Test Suites (Launch Blockers)
+The following YAML flows must pass cleanly before any production release:
+- **`auth.yaml`**: `clearState: true`. Validates sign-in (email/password), sign-out reset behavior, and account linking UI.
+- **`onboarding-leads.yaml`**: `clearState: true`. Validates trade selection lock, address geocoding bounds validation, and routing to the Lead Feed.
+- **`onboarding-tracking.yaml`**: `clearState: true`. Validates bypassing address input, supplier selection, and routing to the Flight Board.
+- **`scroll-feed.yaml`**: `clearState: false`. Validates infinite scrolling, empty states (NO LEADS IN RANGE), and tap-to-save interactions.
+- **`subscription-paywall.yaml`**: Validates the 14-day expiry lock, the lead-count display on the paywall, and the "Maybe later" inline-blur feed state.
+
+### 3.3 Maestro Execution Commands
+Run from the mobile directory in PowerShell:
+```powershell
+# Run a specific flow
+maestro test maestro/auth.yaml
+
+# Open Maestro Studio to inspect UI elements and auto-generate YAML commands
+maestro studio
+```
+
+## 4. Unit & Integration Testing Strategy
+**Tool:** Jest + jest-expo
+**Location:** `mobile/__tests__/`
+
+Unit tests focus strictly on business logic, state machines, and Expo Router guards. UI component snapshot testing is deliberately excluded (Maestro handles UI validation).
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-35 · McFrontend queue · lane MF-35 build; H9, P35-D6 as recommended; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: Wave 1 decision batch"; plan `~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md`): a render smoke (throws / renders non-empty / finds its test ids, labels and host props) and a screen-behaviour test are not snapshots. React Native Testing Library is the tool Spec 90 names for logic hooks (90:88); MF-35 extends its use to the mobile binding and the parcel search screen, and adds it as a dev dependency (`@testing-library/react-native` 13.3.3 with `react-test-renderer` 19.1.0). No Maestro flow covers parcel-tool today.
+
+### 4.1 Required Test Boundaries
+
+This section is **non-exhaustive**. The normative test mandate set lives in **Spec 99 §8 (Test Mandates)** — every implementation MUST satisfy:
+- **§8.1** — idempotency tests for every bridge (B1 server→TanStack, B2 TanStack→Zustand, B3 mutation rollback, B4 auth invalidation, B5 sign-out reset, B6 mid-session 401 refresh).
+- **§8.2** — router branch coverage (AuthGate's 9 routing arms per §5.3).
+- **§8.3** — gate-stability tests (no `isFetching` in render gates per §6.5).
+- **§8.5** — store-enumeration grep test (`mobile/__tests__/storeReset.coverage.test.ts`) — every `create<*Store>(` in `mobile/src/store/*.ts` has a `.getState().reset()` call in `clearLocalSessionState`.
+
+The boundaries below are illustrative examples within those mandates.
+
+**AuthGate & Routing (`subscriptionGate.test.ts`)** — Spec 99 §8.2 + §8.3
+- Validates that unauthenticated users are forced to `/(auth)`.
+- Validates that incomplete profiles are forced to `/(onboarding)`.
+- Validates that `subscription_status = 'expired'` forces `<PaywallScreen>`.
+- Validates that `account_deleted_at = NOT NULL` forces sign-out.
+
+**Zustand Stores (`store.test.ts`)** — Spec 99 §8.1 (idempotency) + §8.5 (store-enumeration)
+- `authStore`: `signOut()` must trigger the §B5 fan-out (`filterStore.reset()`, `userProfileStore.reset()`, `paywallStore.reset()`, `notificationStore.reset()`, `onboardingStore.reset()`, `flightBoardSeenStore.reset()` + `queryClient.clear()` + `mmkvPersister.removeClient()`).
+- `paywallStore`: Must default to `visible: false, dismissed: false` on cold boot. Method renamed `clear()` → `reset()` on 2026-05-03 per Spec 99 §3.4 + §9.19.
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-35 · McFrontend queue · lane MF-35 build; operator, verbatim: "D15 b, D16 a, D17 a D18 a, D-2 a , D-9 a, D-1 a"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-10: MF-35 v3 and MF-51 decisions"; plan `~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md`): the §B5 fan-out above also calls `recentSearchesStore.reset()` (MF-35; Spec 99 §3.4c). `mobile/__tests__/recentSearchesStore.test.ts` pins the store's own reset, and `storeReset.coverage.test.ts` finds it with no count change.
+
+**Data Transformations (`utils.test.ts`)**
+- `snapCoord.ts`: Verify 500m snapping logic and Toronto bounding box re-validation.
+- `formatCurrency.ts`: Verify CAD formatting for permit valuations.
+
+**Parcel Cost Tool (Spec 100)** — Spec 90 §13 (Zod boundary) + Spec 100 §6
+- `useParcelLookup.test.ts`: `fetchParcelLookup` Zod-parses the whitelist envelope (`raw.data`); miss (`match:null, parcel:null`) is a valid parse; drift → `ParcelLookupSchemaError`; the CROSS-CONTRACT LOCK (a server-emitted `parcelId` from the SEARCH response pipes into the LOOKUP path, same schema); `shouldRetryParcelLookup` skips 400/403/429/drift.
+- `parcelCostFormat.test.ts`: envelope-fallback label ("maximum envelope" when `opt_aor` null), absent ≠ `fits:false`, `getCostLine`/`costLineState`, currency/FSI/area formatters, and `SponsorSlot` renders `null` while flag-off.
+
+## 5. Continuous Integration (CI)
+**Tool:** GitHub Actions + EAS (Expo Application Services)
+
+**Pull Request Checks:** On every PR targeting `main`, GitHub Actions runs:
+- `npm run typecheck` (TypeScript compiler)
+- `npm run lint` (ESLint)
+- `npm run test` (Jest unit tests)
+
+**Pre-Build Checks:** EAS Build runs the above sequence natively before attempting an iOS/Android build. If tests fail, the build is aborted to save queue time and credits.
+
+**E2E Automation (Phase 2):** Maestro tests will be integrated into GitHub Actions via Maestro Cloud to run automatically against staging builds.
+
+## 6. Historical Context & Past Issues
+To prevent future developers from falling into the same local development traps, we document the major environment issues that forced the transition to this protocol.
+
+### 6.1 The "Pointing" Issues (Path Configuration)
+There were persistent issues related to Windows environment variables failing to point correctly to the ADB (Android Debug Bridge) and Android SDK paths. The system would lose track of where the necessary Android build tools were located. This caused frustrating moments where the emulator was running perfectly in Android Studio, but Expo or Maestro couldn't connect to it because they couldn't find the `adb` executable. *Fix: Ensure ANDROID_HOME and platform-tools are permanently added to the Windows System PATH.*
+
+### 6.2 The Great Migration: Expo Go vs. Development Builds
+**The Errors:** The project hit massive dependency mismatches between React Native, Expo Go, and the Reanimated library, resulting in fatal TurboModule and worklet compatibility errors.
+**The Solution:** Expo Go is a sandboxed testing app and cannot run custom native code. Because the Buildo app requires heavy native modules (like Firebase Auth, Apple Sign-In, and Sentry), the transition to a standalone "Development Build" was mandatory. That is why the boot sequence now explicitly uses `npx expo run:android` to physically compile a custom version of the app directly onto the emulator, rather than relying on Expo Go.
+
+### 6.3 Navigation and Missing Plugins
+After moving to the native development build, two significant configuration bugs emerged:
+- **Expo Router Timing Crash:** There were navigation-related crashes where the Expo Router tried to aggressively redirect users (e.g., sending an unauthenticated user to the onboarding flow) before the root app layout had finished mounting.
+- **Plugin Resolution Failures:** There were native build failures related to missing or improperly configured Expo plugins in `app.json`, specifically `@sentry/react-native/app-plugin`, which aborted the native compile step.
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/mobile/__tests__/lotForm.test.ts b/mobile/__tests__/lotForm.test.ts
+index f20a0c66cbc1babda2a8ad266c01cc797fce520e..461d4dd3765731636b43bac9059db622d317797a 100644
+--- a/mobile/__tests__/lotForm.test.ts
++++ b/mobile/__tests__/lotForm.test.ts
+@@ -60,14 +60,14 @@ describe('lotForm (pure)', () => {
+ });
+ 
+ describe('the mobile mirror of the lookup block', () => {
+-  it('parses a payload with the block, without it (older server) and with null', () => {
++  it('parses a payload with the block, without it (older server), with null and with a server-added field', () => {
+     expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: form(true) }).success).toBe(true);
+     expect(ConsumerParcelLookupResultSchema.safeParse({ ...base }).success).toBe(true);
+     expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: null }).success).toBe(true);
++    expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { ...form(true), extra: 1 } }).success).toBe(true); // task-450 L1 (GROUNDER-B D1): plain, a server-added field still parses
+   });
+   it('refuses a block outside the contract', () => {
+     expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { detected: 'maybe', basis: 'o4_not_met', unsure: false } }).success).toBe(false);
+     expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { detected: 'semi_half', basis: 'x', unsure: false } }).success).toBe(false);
+-    expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { ...form(true), extra: 1 } }).success).toBe(false);
+   });
+ });
+

@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T18:35:17.350Z file_sha256=b75e401539736ca89f1ba8ab9362ec2d1ea920626dd31e00584df8d549b052fb prompt_sha256=4f1b355d254277d19c1e72b2578459484d93f8213499e4a3e66c0f5dbe21c453
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX6/in-out-compliance-mobile-98.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0460 "Phone tests local first" — Implementation Notes "full phone run owed at the push station (RR-0460)" — the only green evidence pasted is a two-file jest run, the full phone suite is deferred, so "local first" is not yet evidenced here — run and paste the full phone suite green locally before push.
+
+DEFER severity=LOW — AC#2 "No other phone test asserts the old strict form of the lot-form block" — Implementation Notes "git grep 'strict()' -- mobile/__tests__ finds nothing" — the grep output and the other phone test files are not pasted (cannot see), so AC#2 rests only on the lane's claim — paste the grep output.
+
+DEFER severity=LOW — RR-0461 "Card 461 clean seat report: run a fresh integration seat" — NONE — the fresh integration seat report is not in the pasted material (cannot see) — attach the seat report.
+
+MET — AC#1 "states that an extra field in the lot-form block still parses" — mobile/__tests__/lotForm.test.ts "expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { ...form(true), extra: 1 } }).success).toBe(true);" — a real toBe(true) assertion states the plain form parses, not a comment or a test name.
+
+MET — RR-0392 "one push for all four; no other infrastructure beyond this" — mobile/__tests__/lotForm.test.ts diff "the extra-field line moved from the 'refuses ...' case into the 'parses ...' case" — one assertion moved, no new files or infrastructure added.
+
+MET — Spec 98 §4 "Location: mobile/__tests__/" — mobile/__tests__/lotForm.test.ts — the test remains in the Spec 98 unit-test location.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+Rules met: none
+
+---
+⏱  92701ms (92.7s)
+📊 Tokens — total: 18810, input: 5829, output: 12981, reasoning: 12546

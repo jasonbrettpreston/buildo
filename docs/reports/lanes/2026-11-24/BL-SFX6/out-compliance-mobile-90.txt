@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T18:35:17.329Z file_sha256=aad8687d2c57e1c8752031534793e33491c686930bbf9be88513229e9386021a prompt_sha256=72d563d3be656f3d3b54653546c3b93d12d91f1d4635eda6836d16765f1b0d13
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX6/in-out-compliance-mobile-90.txt (model: deepseek-reasoner)
+
+```
+DEFER severity=LOW — task-461 AC2 "No other phone test asserts the old strict form of the lot-form block" — NONE (this chunk holds only mobile/__tests__/lotForm.test.ts; other phone test files cannot see) — the cross-file half of AC2 is asserted only in the Implementation Notes grep line, no artifact is pasted — rationale: the one file known to carry the strict assertion is the file edited, and the grep result is stated, so the risk is bounded and rides the owed full phone run (RR-0460)
+DEFER severity=LOW — task-461 AC1 "The phone test file lotForm passes in a local phone test run" — NONE (lane red.out and green.out are named, not pasted) — the local pass proof is narrative only, cannot see — rationale: the assertion edit itself is the ruled fix and matches the red-then-green command stated, so a re-run proof is owed at the push station rather than here
+DEFER severity=LOW — Spec 90 §4 amendment 2 "the client is looser than the server it mirrors" — mobile/__tests__/lotForm.test.ts:67 "expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { ...form(true), extra: 1 } }).success).toBe(true); // task-450 L1 (GROUNDER-B D1): plain, a server-added field still parses" — the test now locks in the client-looser-than-server state that §4 names as a defect — rationale: task-450 and GROUNDER-B D1 rule the plain form today, but Spec 126 §5.2's generated mirror may refuse extra fields and re-break this exact line, so it needs a pointer when that lands
+MET — task-461 description "the test line states the plain form; the schema is not changed back" — paths ["mobile/__tests__/lotForm.test.ts"] — the diff edits only the test file, no schema change
+MET — task-461 AC1 "states that an extra field in the lot-form block still parses" — mobile/__tests__/lotForm.test.ts:67 — the extra-field assertion moved into the parses case as toBe(true)
+MET — task-461 AC2 — mobile/__tests__/lotForm.test.ts:70-71 "expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { detected: 'maybe', basis: 'o4_not_met', unsure: false } }).success).toBe(false);" — the refuses case keeps only the two closed-enum refusals, the old strict extra-field line is gone
+MET — Spec 90 §13 "Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema" — mobile/__tests__/lotForm.test.ts:64-67 — every case still calls ConsumerParcelLookupResultSchema.safeParse, parsing is retained, only object strictness is relaxed
+MET — Spec 90 §10 "Unit Testing (Jest)" — mobile/__tests__/lotForm.test.ts:63-72 — the change stays inside the Jest suite, no assertion is dropped and no runner or threshold is touched
+VERDICT: PASS
+Clauses checked: 6   Unmet: 0
+Rules met: none
+```
+
+---
+⏱  30272ms (30.3s)
+📊 Tokens — total: 13164, input: 6498, output: 6666, reasoning: 5954

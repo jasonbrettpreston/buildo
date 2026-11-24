@@ -1,0 +1,14 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T18:35:17.331Z file_sha256=39f212a9ad69b7b2c3ebbd3c35abf6cfd63d7d87ff7938e8a1050a334d6dc514 prompt_sha256=a98f556fedcef53b21678f02a8877413dbb26a405959c08ca1b216e4b879035f
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX6/in-out-code-review.txt (model: deepseek-reasoner)
+
+REJECT — mobile/__tests__/lotForm.test.ts:65 "expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { ...form(true), extra: 1 } }).success).toBe(true); // task-450 L1 (GROUNDER-B D1): plain, a server-added field still parses" — the assertion flipped from `.toBe(false)` to `.toBe(true)` and looks like a weakened refusal test — correct per task-450 D1: ParcelLotFormSchema is plain on purpose, so an extra field must parse, and the `.toBe(true)` matches the "parses" case group it now sits in.
+REJECT — mobile/__tests__/lotForm.test.ts:68 "it('refuses a block outside the contract', () => {" — the "refuses" case now holds only the two closed-enum refusals after the extra-field line moved out, which could look like dropped coverage — that is correct, the extra-field case belongs to the positive "parses" case and the two closed-enum refusals still assert `.toBe(false)`.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none
+
+---
+⏱  7896ms (7.9s)
+📊 Tokens — total: 4066, input: 2503, output: 1563, reasoning: 1308
