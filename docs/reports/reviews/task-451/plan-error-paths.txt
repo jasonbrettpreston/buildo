@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T15:43:04.661Z file_sha256=76d87949f34a00bd33f807b139d734b73c611231778ac89d9029c5d20704fea9 prompt_sha256=daa06ccd306940293d22998048e95848f62615a0554032a3ce01a6b58d235164
+🔍 Lens review of docs/reports/reviews/task-451/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan-451 §5 risk 1 "consumer-lookup now loads project.ts, which reads report-page.json, the decl, presentation and the seed at import. A fault there now also breaks the lookup route." — a settings or seed fault that today only reaches the report route throws at import and takes out the whole search lookup, instead of degrading one card field to "Not available", and the only mitigation named is detection by the infra test — move LOT_SIZE_PLAUSIBLE_M2 and its default into a leaf module with no settings or seed reads, or read the window lazily inside the area branch, and add a test that a faulty report setting yields area null not a thrown route.
+
+BUG severity=MED — plan-451 §4 "L2" "assembleConsumerPayload of a row with lot_size_sqm '' and comp_count '' gives areas.lot_size_sqm null and compCount null (0 today)." — the num() edit at :81 also flips compCount from 0 to null on the consumer payload, and the plan only clears the headline ("The headline `areas` (:104-111) is not touched: no phone renderer reads it"), so whoever renders compCount today gets null where it got 0 — narrow the empty guard to lot_size_sqm, or name the compCount consumer and add its empty-state assertion.
+
+BUG severity=MED — plan-451 §5 risk 6 "After 450's L3 change, a 429 of 0 shows no Retry on the map. X1 asserts the notice only." — the rate_limited state can render with no retry affordance and no test pins whether Retry is present, so a 429 with retryAfter 0 or absent leaves a dead end that nothing catches — assert parcel-lotmap-ratelimit with and without a wait, and require either a Retry control or a "try later" line.
+
+BUG severity=MED — plan-451 §3 step 8 "parseArgs sets `o.error` when the value after --url or --parcels is missing" — the new guard rejects a missing value and a dash-prefixed value but not an empty string, so `--parcels ""` (an unset shell variable, quoted) passes and the data check runs over zero parcels and can exit 0 green — treat a blank value as o.error and fail when the parcel list is empty after the split.
+
+BUG severity=MED — plan-451 §7 "task-336: `backlog task edit 336 --append-notes` with ST3, V1, V3 and L7 closed." — --append-notes has no dedup key, so a retry or a second run of the step appends the same dated note to task-336 twice; the doc-2 `--content` body replace has the mirror hazard of dropping another writer's text — check for an existing note with that title before appending, and build the doc body from a fresh read at write time.
+
+DEFER severity=LOW — plan-451 §5 risk 2 "Whether RN fires a nested-Text onPress inside the vendored AlertDescription is UNVERIFIED; the behaviour press test detects it." — on device the only recovery link out of the no-lot state may be a dead tap while the jest press test stays green — confirm on device before close, and if it does not fire, lift the link out of the nested Text.
+
+REJECT — plan-451 §3 step 3 "onPress `{action:'open_help', topic:'wrong-lot', q: derived('query')}`" — looks like a double tap could open two help sheets — open_help is a read with no write and no counted event, so a repeat tap is a no-op.
+
+DEFER severity=LOW — plan-451 §4 AC3 "Pressing parcel-lotmap-report opens `https://maxbld.ca/help#topic=wrong-lot&q=12%20Laneway%20Rear`" — only the populated query is asserted, so a map opened with no query produces a help URL with an empty q and no test covers that empty path — assert the no-query URL, or drop q from the link.
+
+VERDICT: FAIL on error-path safety
+Paths walked: error (map error, rate_limited, unauthorized, schema_drift), empty (area null, compCount null, empty --parcels value, empty q), retry (map Retry, 429 of 0), timeout (none named in the plan), double-submit (report-it link, board notes), degrade (project.ts import, title-less hero), idempotency (append-notes)   Unguarded: 5
+
+---
+⏱  63280ms (63.3s)
+📊 Tokens — total: 33948, input: 21506, output: 12442, reasoning: 11449

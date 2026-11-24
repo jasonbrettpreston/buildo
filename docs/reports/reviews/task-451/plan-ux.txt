@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T15:43:04.661Z file_sha256=76d87949f34a00bd33f807b139d734b73c611231778ac89d9029c5d20704fea9 prompt_sha256=f57d3d4521e62eed0e53d2c223b67b14ab8faaf2f0b5f848031e3be701da6b69
+🔍 Lens review of docs/reports/reviews/task-451/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — Plan §3 step 2 "lot.lead.house becomes 'Lot {letter} · has the house · at the back'; lot.lead.no_building becomes 'Lot {letter} · no building · at the back'" vs design "Approved mock choose-lot.html:306 '{faces {street} | at the back}'" — a person whose lot does front a street is told "at the back" and loses the street name the mock puts on the card, which the plan's own AC4 contradicts ("Lot A · has the house · faces Dunmore Lane, 3,052 sq ft · 284 m²") — write both lead templates with the alternative in them, "Lot {letter} · has the house · {faces {street} | at the back}", so the street shows when there is one.
+
+DEFER severity=MED — Plan §8.1 "(a) An inline link with the body ending 'or' and no full stop" vs design "doc-2:48 'Try a nearby address or report it.'" and "Mock choose-lot-states.html:277 has an inline `<a href="/help?topic=wrong-lot">report it</a>`" — the no-lot state, the one place a wrong-lot person lands, ends its sentence with no full stop — take 8.1 (b), the separate "." key, so the line closes as the requirements line and the mock do.
+
+DEFER severity=MED — Plan §8.5 "Header on the error state of web_maxbld_error too, not only on the not-found (miss) state. H Q4 names not-found only. Recommend miss only." vs "H Q4 (:77): 'a link home, as every v8 page has'" — a person landing on the plain error page still has no link home, the one thing H Q4 asks of every v8 page — put the header on both states of web_maxbld_error.
+
+DEFER severity=LOW — Plan §8.3 "'Log in' (help.html:319, terms-privacy.html:262) or 'Sign in' (the landing's nav.sign_in). Recommend 'Log in'" — one door carries two names, "Log in" on help, terms, privacy and the error page, "Sign in" on the landing, so the person is asked to recognise the same action twice — have the operator pick one word; both are in approved mocks, so the choice is his.
+
+DEFER severity=LOW — Plan §4 AC5 "schema_drift gives parcel-lotmap-error with no retry" — on a schema drift the person gets an error with no retry and no other control named, so that screen has no visible way forward — confirm a back or new-search control exists there; design silent.
+
+DEFER severity=MED — Plan §8.4 "Keep them: minimal, but the help page then lists three overlapping topics" vs design "the mock lists 'General · Wrong address or lot · Billing'" — the person opening help sees address_match and lot_match beside the three approved topics, and the fold plan's own condition for keeping them ("stay until 3 moves the map links", FOLD-PLAN.md:48) is met by this card, which is 3 — ground the removal now so the help list matches the mock.
+
+DEFER severity=LOW — Plan §5 risk 2 "Whether RN fires a nested-Text onPress inside the vendored AlertDescription is UNVERIFIED; the behaviour press test detects it" — if it does not fire, "report it" reads as a link and does nothing, and it is the only route out of the no-lot state — let the press test and one device check settle it before merge.
+
+REJECT — Plan §3 step 1 "otherwise null" on the lot area — a person whose lot is genuinely larger than 5,000 m² now reads "Not available" instead of their area — matches RR-0444 2c "The lot card shows 'Not available' for an implausible area", the operator's ruling.
+
+VERDICT: FAIL on the person's experience
+States checked: lot card with a fronting street, lot card without one, lot card with an implausible area, lot card with no stored area, no-lot-linked notice, lot selected and Continue, the four map error states, help, terms, privacy, not-found and plain error pages; loading, offline, back and repeat visit are not drawn by this change   Dead ends found: 2
+
+---
+⏱  70504ms (70.5s)
+📊 Tokens — total: 36325, input: 21505, output: 14820, reasoning: 13865

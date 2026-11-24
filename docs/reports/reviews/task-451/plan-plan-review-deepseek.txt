@@ -1,0 +1,55 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-24T15:43:04.661Z file_sha256=76d87949f34a00bd33f807b139d734b73c611231778ac89d9029c5d20704fea9 prompt_sha256=69d064fb6bb79c3ae1884592d91bae1f9acf8028ca29921ff078521618e2b92c
+🔍 Lens review of docs/reports/reviews/task-451/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — §3 step 2 (content :5-6) vs §4 AC4 — `lot.lead.house`/`no_building` are rewritten to unconditionally end "· at the back", yet the AC4 test the plan itself writes expects Lot A to render "has the house · faces Dunmore Lane"; the faces-street branch (mock choose-lot.html:306) has no key or leadKey path in §3 — add a faces key or a `leadKey` conditional and reconcile with AC2 (only no-frontage lots may say "at the back").
+
+BUG severity=HIGH — §4 AC3 behaviour (`https://maxbld.ca/help#topic=wrong-lot&q=…`) vs §4 lot-map-help-link / §3 step 4 (wrong-lot is described as a "web_help mailto topic") — one link cannot resolve to both a `/help` page and `mailto:`; `helpUrl()` and the two tests must target the same thing — decide the target (mock choose-lot-states.html:277 is `/help?topic=wrong-lot`) before coding.
+
+BUG severity=HIGH — §3 step 1 / risk 1 — importing project.ts into consumer-lookup pulls report-page.json, the decl, presentation and the seed at module load, so a malformed/missing JSON throws at import and 500s the whole lookup route; the infra test only catches it in CI, not at runtime — lazy-import the constant or inline the 50/5000 literals to remove the load-time coupling.
+
+DEFER severity=MED — §4 AC5 / X1 vs §3 step 3 — X1 asserts `parcel-lotmap-ratelimit` and `parcel-lotmap-entitlement` testIDs that §3 never adds to LotMapBinding; if the error path doesn't already emit them the smoke test is red for the wrong reason — verify they exist today or add them to step 3.
+
+DEFER severity=MED — §3 step 1 `num()` — any live `lot_size_sqm`/`comp_count` stored as non-canonical text (`"284 m²"`, `"1,234"`, `"  "`) parses to NaN/0 and now yields a false "Not available" / false 0; confirm the column is numeric-typed or canonical text before relying on the window.
+
+DEFER severity=MED — §4/§3 step 6 string pin (427→435, "+8") — assumes none of the four static content files already carries `nav.home`/`nav.sign_in`; if any does the delta is <8 and the 435 pin fails — grep the four files first and set the exact count.
+
+DEFER severity=MED — §3 step 9 / cache — regenerating the mobile JSON does not invalidate any persisted TanStack/MMKV lot-map payload keyed by address; an existing user keeps the old implausible area until TTL — grep for a persisted lot-map cache and bump its key/version if present.
+
+DEFER severity=MED — §3 step 7 descriptor chain reindex (:112→[4], :151→[8], :165→[15]) — the new `sources[]` indices must exist and match parcels / link_parcel_addresses / link_massing roles in manifest.json; only [2] was read — confirm count ≥16 and roles align or the binding throws at runtime.
+
+DEFER severity=MED — §3 step 9 census — `generate-surface-registry.mjs --write` is UNVERIFIED; if the flag is absent the census file stays stale and `surface-validate --check` fails at merge — confirm the flag now and pre-commit a fallback (hand-run or alternate flag).
+
+DEFER severity=MED — sibling to AC1 (implausible size) — the plan only filters the per-lead `area` (:227); other absurd numeric facts on the card/report with no plausibility guard can ship raw — grep the card facts and report fields for untrusted numeric display and note the gap.
+
+DEFER severity=MED — sibling to L2 (`num('')`→0) — only `lot_size_sqm` and `comp_count` are guarded; other `num()` calls on nullable text (storeys, year, units) still turn `''` into 0 — enumerate `num()` call sites in consumer-lookup and guard consistently.
+
+DEFER severity=LOW — §3 step 3 heroNode — "parts are only wordmark and nav" branch doesn't state handling of reversed order, duplicates, or wordmark-only title-less heroes; the one RED plant covers only tagline — add red cases for `parts:[nav,wordmark]` and `parts:[wordmark]` so the throw behaviour holds.
+
+DEFER severity=LOW — §4 behaviour `q: derived('query')` — a no-lot card reached with no query (direct lot / refresh) yields `q=undefined` or `&q=`; assert the topic-only fallback URL instead of a broken query param.
+
+DEFER severity=LOW — §3 step 2 `lot.null` "—"→"Not available" is global through `fact()` (LotMapBinding.tsx:42) — if `lot.null` is also the null text for comp_count or other facts, those now read "Not available"; confirm it is area-only after step 3 or split the key.
+
+DEFER severity=LOW — §3 step 2 `select.label` deletion precedes the step 3 branch removal — if RR-0335's two-commit close splits build/fix across an intermediate state, a state that still references `select.label` throws "missing key" (StaticBinding.tsx:355) — delete the branch in the same edit as the key.
+
+DEFER severity=LOW — §3 step 5 landing condition ("a hero with a title part") — a surface with both a title part and wordmark+nav now silently keeps L.column; confirm no existing title-bearing hero gains the nav, or its layout shifts invisibly.
+
+DEFER severity=LOW — sibling to V3 (label reads facts) — a parallel WEB lot card or other surface may still concatenate frontage/zoning into `accessibilityLabel`; grep `accessibilityLabel` for "frontage"/"zoning" and fix or record why exempt.
+
+DEFER severity=LOW — sibling to H Q4 (header-less page) — other v8 static pages (load-failure, signup/not-found variants) may also lack the header; list the `web_*.static` surfaces and apply the header or record why exempt.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- §3 step 2 vs §4 AC4: the lead keys are hardcoded "at the back" while the plan's own AC4 test requires "faces Dunmore Lane" — the plan cannot pass its own acceptance as written.
+- "report it" link target is simultaneously specified as `https://maxbld.ca/help#…` and a mailto topic; helpUrl() and both tests must agree on one target before coding.
+- consumer-lookup importing project.ts creates a load-time dependency on report-page.json/decl/presentation/seed that can 500 the entire lookup route on a bad file, with only CI-time detection.
+
+Top 3 unverified data premises (if any, regardless of verdict):
+- `lot_size_sqm`/`comp_count` are numeric-typed or canonical numeric text (else false "Not available"/0): `SELECT count(*) FROM <lots> WHERE lot_size_sqm IS NOT NULL AND lot_size_sqm::text !~ '^[0-9]+(\.[0-9]+)?$';` (same for comp_count).
+- None of the four static content files already defines `nav.home`/`nav.sign_in` (else the +8/435 pin is wrong): `rg -n '"nav\.(home|sign_in)"' scripts/surfaces -g 'web_*.content.json'`.
+- Descriptor `sources[]` indices 4/8/15 exist and map to parcels / link_parcel_addresses / link_massing: `jq '.sources|length, .[4], .[8], .[15]' <manifest.json>` (plus read project.ts:267 to confirm the window is inclusive of the 5000 max).
+
+---
+⏱  79361ms (79.4s)
+📊 Tokens — total: 38440, input: 22392, output: 16048, reasoning: 14250
