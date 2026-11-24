@@ -130,6 +130,7 @@ export function validateTable(table, root) {
   const any = (g) => { const re = globToRegExp(g); return tracked.some((t) => re.test(t)); };
   if (!table.lists || typeof table.lists !== 'object') bad.push('lists: missing');
   for (const [id, l] of Object.entries(table.lists ?? {})) {
+    if (!l || typeof l !== 'object') { bad.push(`list ${id}: not an object`); continue; } // T10 (task-453): a null list is a problem line, not a TypeError
     if (id === JOINED_ID) { bad.push(`list ${id}: the id "${JOINED_ID}" is the joined list of lens-input --list ${JOINED_ID} (task-423); name the list otherwise`); continue; }
     if (typeof l.generated_by !== 'string' || !l.generated_by) bad.push(`list ${id}: generated_by missing (a generator path or "hand-written")`);
     if (Boolean(l.whole) === Array.isArray(l.sections)) bad.push(`list ${id}: needs exactly one of whole or sections`);
@@ -137,7 +138,8 @@ export function validateTable(table, root) {
   }
   if (!Array.isArray(table.rows)) bad.push('rows: missing');
   const seen = new Set();
-  for (const row of table.rows ?? []) {
+  for (const [ri, row] of (Array.isArray(table.rows) ? table.rows : []).entries()) {
+    if (!row || typeof row !== 'object') { bad.push(`rows[${ri}]: not an object`); continue; } // T10 (task-453)
     if (seen.has(row.id)) bad.push(`row ${row.id}: duplicate id`); seen.add(row.id);
     for (const l of row.lists ?? []) if (!table.lists?.[l]) bad.push(`row ${row.id}: list ${l} is not defined`);
     if (!row.why) bad.push(`row ${row.id}: why missing`);
@@ -153,8 +155,10 @@ export function validateTable(table, root) {
   if (d && !(table.rows ?? []).some((r) => r.id === d.row)) bad.push(`no_files_default: row ${d.row} is not defined`);
   for (const [k, id] of Object.entries(table.increment_docs ?? {})) if (!table.lists?.[id]) bad.push(`increment_docs ${k}: list ${id} is not defined`);
   // V2.LIST (task-406): the always-attached lists cannot be switched off by leaving the keys out
-  if (!Array.isArray(table.every_task) || table.every_task.length === 0) bad.push('every_task: missing or empty (the lists every task gets: the five words and the plan protocol)');
+  if (!Array.isArray(table.every_task) || table.every_task.length === 0) bad.push('every_task: missing or empty (the lists every task gets: the plan protocol)');
   else for (const id of table.every_task) if (!table.lists?.[id]) bad.push(`every_task: list ${id} is not defined`);
+  // task-453 (RR-0440, RR-0450, RR-0452): output_off, when present, is a list of every_task ids (a typo fails closed, it never switches a list off silently)
+  if (table.output_off !== undefined) { if (!Array.isArray(table.output_off)) bad.push('output_off: must be a list of every_task list ids'); else for (const id of table.output_off) if (!(table.every_task ?? []).includes(id)) bad.push(`output_off: list ${id} is not in every_task`); }
   for (const k of Object.keys(table.increment_docs ?? {})) {
     const m = table.milestone_docs?.[k];
     if (!Array.isArray(m) || m.length === 0) bad.push(`milestone_docs: increment letter ${k} has no milestone list`);
@@ -267,7 +271,7 @@ export function resolveTask({ table, root, body, type, letter, tracked }) {
   if (result.unmatched.length) return { error: `refused: Files path(s) matched by no row of scripts/analysis/rule-lists.json: ${result.unmatched.join(', ')} (add a row to the table, or fix the Files line); no silent "no rules apply"` };
   if (entries.length > 0 && rowHits === 0 && ['build', 'fix'].includes(String(type ?? '').toLowerCase())) return { error: `refused: the Files line of a ${type} task resolves to no rule list (only exempt paths: ${result.exempt.join(', ')}); a build or fix task must touch at least one governed path` };
   if (letter === undefined && ['build', 'fix'].includes(String(type ?? '').toLowerCase())) return { error: 'refused: the task has no milestone (a build or fix task needs one: its milestone objectives are attached to every review; set the milestone with the backlog CLI)' };
-  for (const id of table.every_task ?? []) add(id, 'every-task', 'every task also gets the lists of every_task in scripts/analysis/rule-lists.json (the five words and the plan protocol)');
+  for (const id of table.every_task ?? []) add(id, 'every-task', 'every task also gets the lists of every_task in scripts/analysis/rule-lists.json (the plan protocol; at the output review of a build or fix task the output_off lists are off)');
   if (letter !== undefined) {
     const id = table.increment_docs?.[letter];
     if (!id) return { error: `refused: no increment requirements document for milestone group [${letter}] in increment_docs of scripts/analysis/rule-lists.json` };
@@ -290,7 +294,7 @@ export function resolveTask({ table, root, body, type, letter, tracked }) {
 export function verifyResolved(table, result, letter, type) {
   const have = new Set((result?.lists ?? []).map((l) => l.id));
   const out = [];
-  if (!Array.isArray(table.every_task) || table.every_task.length === 0) out.push('the table has no every_task lists (the five words and the plan protocol must be attached to every task)');
+  if (!Array.isArray(table.every_task) || table.every_task.length === 0) out.push('the table has no every_task lists (the plan protocol must be attached to every task)');
   for (const id of table.every_task ?? []) if (!have.has(id)) out.push(`every_task list ${id} is not attached`);
   if (letter === undefined) { if (['build', 'fix'].includes(String(type ?? '').toLowerCase())) out.push('a build or fix task has no milestone: its milestone objectives cannot be attached'); }
   else if (!table.milestone_docs || typeof table.milestone_docs !== 'object') out.push('the table has no milestone_docs (the objectives of each milestone must be attached)');
@@ -298,6 +302,8 @@ export function verifyResolved(table, result, letter, type) {
   else for (const id of table.milestone_docs[letter]) if (!have.has(id)) out.push(`milestone list ${id} is not attached`);
   return out;
 }
+/** task-453 (RR-0440 MORNING-DECISIONS.md:2265, RR-0450 :2325, RR-0452 :2336): the lists an OUTPUT review of a build or fix task needs: the resolved lists minus the table's output_off (empty or missing: every list). Shared by the close check and the launch brief. */
+export const outputLists = (table, lists) => lists.filter((l) => !(table?.output_off ?? []).includes(l.id));
 
 // ---- finding ids (shared with scripts/hooks/check-lane-close.mjs) ----
 /** A deliberately loose reading of a finding line (decoration, numbering, quotes, bold, a colon, any case). It must give the same count as the strict FINDING_LINE, else lines were altered. */
@@ -540,7 +546,7 @@ export function renderPage({ table, root }) {
   const o = [];
   o.push('<!-- GENERATED by scripts/analysis/rule-lists.mjs page --write from scripts/analysis/rule-lists.json and the documents it names. Do not edit; regenerate. -->', '');
   o.push('# What each kind of work receives: the compliance review documents', '');
-  o.push('Every task gets the every_task lists (the five words in the step handbook Glossary, and the plan protocol) and the objectives sections of its milestone; the rows add the specs that govern the touched paths. Characters are the text of the list as the review receives it; parts are the lens-input files for one list at a material of ' + fmtN(NOMINAL) + ' characters (a list is split by its own headings, never trimmed, when list plus material pass the review tool bound). A missing or shrunken document shows here as a changed row.', '');
+  o.push('Every task gets the every_task lists (the plan protocol; off for the output review of a build or fix task by output_off) and the objectives sections of its milestone; the rows add the specs that govern the touched paths. Characters are the text of the list as the review receives it; parts are the lens-input files for one list at a material of ' + fmtN(NOMINAL) + ' characters (a list is split by its own headings, never trimmed, when list plus material pass the review tool bound). A missing or shrunken document shows here as a changed row.', '');
   for (const k of table.kinds ?? []) {
     const r = resolveTask({ table, root, body: `Files: ${k.files}`, type: k.type ?? 'build', letter: k.letter, tracked });
     o.push(`## ${k.label}`, '');
@@ -552,9 +558,10 @@ export function renderPage({ table, root }) {
       const def = table.lists[l.id];
       const c = listBlocks(def, root, l.id).reduce((n, b) => n + b.text.length, 0);
       let p;
-      try { p = buildLensInputs({ id: l.id, list: def, root, material: 'x'.repeat(NOMINAL), templateFile: tmpl }).length; } catch { p = 0; }
+      let err = '';
+      try { p = buildLensInputs({ id: l.id, list: def, root, material: 'x'.repeat(NOMINAL), templateFile: tmpl }).length; } catch (e) { p = 0; err = String(e?.message ?? e).split('\n')[0].replace(/\|/g, '/'); } // T10 (task-453): the error text is kept and printed
       chars += c; parts += p;
-      o.push(`| ${l.id} | ${l.file} | ${def.whole ? 'whole file' : def.sections.join('; ')} | ${fmtN(c)} | ${p || 'does not fit'} |`);
+      o.push(`| ${l.id} | ${l.file} | ${def.whole ? 'whole file' : def.sections.join('; ')} | ${fmtN(c)} | ${p || `does not fit${err ? `: ${err}` : ''}`} |`);
     }
     o.push(`| total | ${r.lists.length} lists | | ${fmtN(chars)} | ${parts} |`, '');
   }
@@ -579,7 +586,7 @@ class Stop extends Error { constructor(code, msg) { super(msg); this.code = code
 const shq = (s) => (/^[A-Za-z0-9_@%+=:,./-]+$/.test(s) ? s : `'${String(s).replace(/'/g, `'\\''`)}'`);
 const cmdLine = (cwd, argv, env) => `cd ${shq(cwd)} && ${env ? `${Object.entries(env).map(([k, v]) => `${k}=${shq(v)}`).join(' ')} ` : ''}${argv.map(shq).join(' ')}`;
 const first = (s, n = 8) => String(s).trim().split('\n').slice(0, n).join('\n');
-const CALL_MS = 900000 + 10000; // deepseek-review.js bounds a call at 900 s (TIMEOUT_MS)
+const CALL_MS = (Number(process.env.DEEPSEEK_REVIEW_TIMEOUT_MS) || 900000) + 10000; // deepseek-review.js bounds a call at DEEPSEEK_REVIEW_TIMEOUT_MS, 900 s by default (TIMEOUT_MS); T10 (task-453)
 const reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export async function planPrep(a) {
@@ -597,7 +604,7 @@ export async function planPrep(a) {
   const git = (...g) => spawnSync('git', ['-c', 'core.quotepath=false', ...g], { cwd: board, encoding: 'utf8', maxBuffer: 1 << 26, env });
   const bin = path.resolve(home(str('backlog-bin', process.env.BACKLOG_BIN || [path.join(board, 'node_modules/.bin/backlog'), path.join(REPO, 'node_modules/.bin/backlog')].find((c) => fs.existsSync(c)) || path.join(REPO, 'node_modules/.bin/backlog'))));
   const say = (cwd, argv, e) => console.log(`$ ${cmdLine(cwd, argv, e)}`);
-  const sh = (argv) => spawnSync(argv[0], argv.slice(1), { cwd: board, encoding: 'utf8', maxBuffer: 1 << 26, env });
+  const sh = (argv) => spawnSync(argv[0], argv.slice(1), { cwd: board, encoding: 'utf8', maxBuffer: 1 << 26, env, timeout: 120000 }); // T10 (task-453): a hung backlog call ends
   const rm = (re) => { if (fs.existsSync(evAbs)) for (const f of fs.readdirSync(evAbs)) if (re.test(f)) fs.rmSync(path.join(evAbs, f)); };
   try {
     if (!fs.existsSync(board) || git('rev-parse', '--git-dir').status !== 0) refuse(`board ${board} is not a git checkout`);
@@ -750,7 +757,7 @@ export async function planPrep(a) {
       say(board, argv);
       if (dry) return 0;
       const e = sh(argv);
-      if (e.status !== 0) throw new Stop(1, `backlog task edit failed: ${first(e.stderr || e.stdout, 3)}`);
+      if (e.status !== 0) throw new Stop(1, `backlog task edit failed: ${first(e.stderr || e.stdout || e.error?.message, 3)}`);
       console.log(`plan-prep post: ${rounds.length ? '' : 'block and '}${addRefs.length} reference(s) added to ${taskId}`);
       return 0;
     }
