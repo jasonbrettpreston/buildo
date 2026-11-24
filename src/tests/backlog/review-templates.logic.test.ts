@@ -2,6 +2,8 @@
 // (line 32) and so held the material twice (a 181,810 character prompt for an 85,642 character diff). Each lens template has exactly one plan placeholder.
 import { describe, expect, it } from 'vitest';
 import * as fs from 'node:fs';
+import { createRequire } from 'node:module';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { ROOT } from './helpers';
 
@@ -50,5 +52,17 @@ describe('task-438 T1: lens-engineering.md is a lens template of its own', () =>
   });
   it('control: lens-compliance.md still holds the Rules met line (it is not edited)', () => {
     expect(read('compliance')).toContain('Rules met: <rule ids, comma separated>');
+  });
+});
+
+// task-453 T7 (GROUNDER-D D2, AC #6): the next review round is the highest context-rN number plus one, so a gap never names an existing file again
+describe('task-453 T7: contextRound', () => {
+  const { contextRound } = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) as { contextRound: (d: string) => number };
+  const dirWith = (names: string[]) => { const d = fs.mkdtempSync(path.join(os.tmpdir(), 'ctxr-')); for (const n of names) fs.writeFileSync(path.join(d, n), 'x\n'); return d; };
+  it('context-r2 only gives round 3; no context file gives round 1; context-r1 and context-r3 give round 4; a missing folder gives round 1', () => {
+    expect(contextRound(dirWith(['context-r2.md']))).toBe(3);
+    expect(contextRound(dirWith(['GROUNDER.md']))).toBe(1);
+    expect(contextRound(dirWith(['context-r1.md', 'context-r3.md']))).toBe(4);
+    expect(contextRound(path.join(os.tmpdir(), 'no-such-dir-task-453'))).toBe(1);
   });
 });

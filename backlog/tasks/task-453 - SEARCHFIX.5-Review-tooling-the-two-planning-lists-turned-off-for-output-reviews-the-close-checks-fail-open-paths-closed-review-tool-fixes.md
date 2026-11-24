@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SFX5'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T16:05:00Z'
+updated_date: '2026-11-24T16:10:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -318,4 +318,6 @@ rg#5 MED folded is still held to the
 2026-11-24 deviation: S1 makes the launch gate ground seat findings, so the shared fixture docs/reports/reviews/task-375/plant-evidence.mjs (exempt review records path) now quotes 20+ characters of its seat file line instead of docs/a.md, which the fixture board does not hold; the first green attempt was refused by 18 backlog-lane cases on that line (lane run file green-a.out).
 
 2026-11-24 correction to the note above: plant-evidence.mjs is outside this card's Files line (check-task-files refused it), so it is left unchanged; the plantEvidence wrapper of backlog-lane.logic.test.ts re-points each seat verdict at line 2 of its own seat report and commits the evidence again.
+
+2026-11-24 build step 4 (review tools): phase A landed 828ee970e (hook tail: 394 related tests passed, lane run file green-a.out); T1 two-commit Status line, T8 empty AC block, T7 contextRound highest plus one, T4 proof-slice head, ST5 CHK.3 row notbuilt, README fixes (GROUNDER-A D1, GROUNDER-B 3, GROUNDER-C 1-3) and the T6 exemption note; red for these was the same refused attempt (red.out).
 <!-- SECTION:NOTES:END -->
