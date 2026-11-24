@@ -3,11 +3,11 @@ id: TASK-461
 title: >-
   SEARCHFIX.2b Phone test lotForm still expects the lot-form block to refuse an
   extra field after task-450 made it plain
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-SFX6'
 created_date: '2026-11-24T18:11:00Z'
-updated_date: '2026-11-24T18:32:00Z'
+updated_date: '2026-11-24T18:44:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -27,6 +27,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-24/BL-SFX6/REPORT.md
+  - docs/reports/lanes/2026-11-24/BL-SFX6/GROUNDER.md
+  - docs/reports/lanes/2026-11-24/BL-SFX6/TRIAGE.md
 type: fix
 ordinal: 155210
 ---
@@ -41,8 +44,8 @@ Files: mobile/__tests__/lotForm.test.ts
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The phone test file lotForm passes in a local phone test run and states that an extra field in the lot-form block still parses
-- [ ] #2 No other phone test asserts the old strict form of the lot-form block
+- [x] #1 The phone test file lotForm passes in a local phone test run and states that an extra field in the lot-form block still parses
+- [x] #2 No other phone test asserts the old strict form of the lot-form block
 <!-- AC:END -->
 
 ## Definition of Done
@@ -172,4 +175,16 @@ plan-plan-review-deepseek#3 MED folded That green is the ru
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-24 taken on the board at lane launch (lane BL-SFX6, worktree /Users/brettpreston_macmini/Buildo-wt-sfx6, branch wf2/inc1b-sfx6), RR-0240
+
+2026-11-24 build (lane BL-SFX6, plan PLAN-461-v1 as ruled; 8.1 A, 8.2 B). Red before the edit: npx jest __tests__/lotForm.test.ts __tests__/schemas.test.ts --ci --coverage=false (from mobile/) -> 1 failed suite, 1 failed test of 40, lotForm.test.ts:71:115 expected false received true (lane dir red.out). Edit: the extra-field line moved from the 'refuses ...' case into the 'parses ...' case as toBe(true) with comment task-450 L1 (GROUNDER-B D1); case retitled '... with null and with a server-added field'; the 'refuses ...' case keeps the two closed-enum refusals. Green after the edit, same command: 2 suites passed, 40 tests passed (lane dir green.out). AC2 search: git grep 'strict()' -- mobile/__tests__ finds nothing; git grep ConsumerParcelLookupResultSchema -- mobile/__tests__ finds lotForm.test.ts (all plain or closed-enum now), schemas.test.ts:326-335 (plain form) and useParcelLookup.test.ts:163,:200 (valid payloads, true); no phone test asserts the strict lot form. Server strict block (src/tests/parcel-lot-form.logic.test.ts:145) left as D1's latent trap, no card (ruled 8.3). The pre-commit related run is not the green proof for mobile tests (task-450 :314); full phone run owed at the push station (RR-0460).
+
+Deviation from plan section 7: the task-450 note could not ride this commit (check-task-files refuses a file outside the Files line of task-461); the task-450 note is owed to the orchestrator, not written.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed acc1affa0 (mobile/__tests__/lotForm.test.ts only): the extra-field line moved into the 'parses ...' case as true (plain lot-form block, task-450 L1, GROUNDER-B D1); the closed-enum refusals stay; schemas.ts untouched. Hooks: typecheck, lint, GATE OK, POLICY CHECKS OK (related run skipped, no src/scripts staged). Red: lotForm.test.ts:71 failing, 1 of 40 (red.out); green: 2 suites, 40 of 40 (green.out). AC2 holds by grep (no phone test asserts the strict lot form). Orchestrator's full local phone run from this worktree at 18c760bb5: 58 of 58 suites, 866 of 866 tests (~/Buildo-scratch/lanes-20261124/phone-linked-sfx6-18c760bb5.out); phone typecheck exits 0. Owed for DONE (orchestrator): the full local phone run after the fold (RR-0460), the Mobile CI run after the push, the task-450 dated note. Process note: the board was not merged before the lens run (merge-tree clean, no cited path moved).
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 2 pile; grounder docs/reports/lanes/2026-11-24/BL-SFX6/GROUNDER.md; triage docs/reports/lanes/2026-11-24/BL-SFX6/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->

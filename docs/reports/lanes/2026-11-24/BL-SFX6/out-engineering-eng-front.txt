@@ -1,0 +1,14 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T18:35:17.337Z file_sha256=cdb66ba40fcc76ba949265b45d077b74b3ae663f37546a409cfa110328031584 prompt_sha256=8184e8ea49ed4423533e0c8ffbd349335346f51c1258ce3d3d9ddf2d5804f05a
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX6/in-out-engineering-eng-front.txt (model: deepseek-reasoner)
+
+MET — 1.1 Mobile-First UI Mandate — mobile/__tests__/lotForm.test.ts:67 "expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { ...form(true), extra: 1 } }).success).toBe(true);" — the hunk is a pure Zod schema assertion with no Tailwind classes, no layout and no interactive element, so the mobile-first, 44px touch-target and responsive-layout rules have nothing to bind.
+MET — 1.2 Component Isolation — mobile/__tests__/lotForm.test.ts:63 "it('parses a payload with the block, without it (older server), with null and with a server-added field', () => {" — no file under src/components/ui/ is touched and no fetch or global context is introduced, so the purity rule is untouched.
+MET — 1.3 Mobile Front-End Patterns & UX — mobile/__tests__/lotForm.test.ts:67 "extra: 1" — the diff adds no Pressable, no Reanimated press state, no haptic, no onlineManager/MMKV/401 interceptor code and no font-mono or dark: tokens, so every rule in this clause is out of scope for the hunk.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 3   Unmet: 0
+
+---
+⏱  11915ms (11.9s)
+📊 Tokens — total: 5016, input: 3528, output: 1488, reasoning: 1197

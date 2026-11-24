@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T18:50:33.670Z file_sha256=ee6ad4a41821f40b6ecb21d06692dbdab7add76e9e0904bd4c7b4471b4545923 prompt_sha256=d6fec3ec624c2cea3df4a87d60c65a5e21600006ace94dde8791a15ed2c30734
+🔍 Lens review of docs/reports/reviews/task-462/context-r1.md (model: deepseek-reasoner)
+
+DEFER severity=MED — plan §6 "Lands only after task-461 is folded (task-461 is BUILT, not folded). Before that, lotForm.test.ts:71 is red, so mobile-tests fails every push and every station run." — a developer sees every push and every station run stop on a phone test he did not touch, the web suite never reached, with folding another card as the only way forward — the board already holds the card LATER and the plan states the order, so the guard exists but no state in the card itself prevents landing early; keep the card blocked until 461 reads folded.
+
+DEFER severity=MED — plan §4 "tsconfig `extends: expo/tsconfig.base` cannot resolve, tsc exits non-zero, and the push stops loudly at mobile-typecheck." — a developer in one of the 20 unlinked worktrees sees a missing-expo-module tsc error, no line telling him to link mobile/node_modules, and cannot push until he works that out — design silent, and the failure is loud and never a silent pass, but the message names the symptom, not the fix.
+
+DEFER severity=MED — plan §4.2 "step mobile-tests npm --prefix mobile run test:ci -- --coverage=false --silent &&" vs mobile/package.json "test:ci": "jest --coverage --ci" — a developer reproducing the failed step from its name runs `test:ci`, which writes mobile/coverage, the very folder AC #1 forbids, and plan §4.2 says "coverage/ inside mobile is NOT ignored: root .gitignore:12 is `/coverage`, anchored to the root" so it can be committed — bounded, one unflagged rerun; the CLAUDE.md line already says "no coverage" but not the flag.
+
+DEFER severity=MED — plan §3 "The pass file (:48) does NOT list steps, and the station writes NO timing lines." vs AC #1 "A push station run shows the two new steps and then PASS" — after a PASS the person's kept record does not show that the phone gate ran at all, he must open $run/steps.log found only through the run: line — bounded, the evidence exists in the run folder and the card asks for it there.
+
+DEFER severity=LOW — plan §7 "Dated 2026-11-24 (task-462, RR-0462): the pre-push list also runs `mobile-typecheck` and `mobile-tests` (phone typecheck and phone tests, no coverage) after `typecheck` and before the web suite; off = remove those two lines." — a person told to turn the phone gate off is never told which file, and open choice 1 keeps no comment beside the lines, so turning it off means searching the repo — bounded, the card names .husky/pre-push-checks.sh and the step names are unique.
+
+DEFER severity=LOW — RR-0429 (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2202) "Keep notes short." vs plan §7 "the phone typecheck and phone tests also run before every push, as steps `mobile-typecheck` and `mobile-tests` of `.husky/pre-push-checks.sh`" — the Spec 98 note runs past a short line and carries an approval quote whose subject is the whole quick plan, so a reader can take it as approval of this gate's wording — matches step 4b (one dated note in Spec 98 section 5), trimming is optional.
+
+DEFER severity=LOW — plan §3 "station.sh push (:66) calls `git push`, so the hook runs the list again, including the phone steps. That repeat already happens for the suite; it adds about 10-20 s per push." — the person waits through the phone tests twice per station push and a green station run can still fail at the hook on a second flaky run — bounded, existing behaviour for the suite, and RR-0392 rules out new infrastructure to remove it.
+
+REJECT — card #3 "A phone test made to fail stops the run before the web suite starts" — a failing phone test hides any web failure until the phone is green, which looks like the phone gate delaying the web signal — matches the approved order "after the typecheck step and before the web suite" and AC #3 requires exactly this stop.
+
+VERDICT: PASS on the person's experience
+States checked: push with phone typecheck pass, phone typecheck fail in an unlinked worktree, phone test fail from task-461 before the fold, own phone test fail stopping before the web suite, station PASS and reading its record, reproducing the step by hand, turning the gate off, second run through the hook — Dead ends found: 0
+
+---
+⏱  50265ms (50.3s)
+📊 Tokens — total: 29194, input: 18587, output: 10607, reasoning: 9573

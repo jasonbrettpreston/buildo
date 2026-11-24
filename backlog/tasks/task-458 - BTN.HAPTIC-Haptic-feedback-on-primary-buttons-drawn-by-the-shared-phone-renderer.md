@@ -6,9 +6,10 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-24T17:29:00Z'
+updated_date: '2026-11-24T19:14:00Z'
 labels:
   - SEARCHFIX-LATER
-milestone: m-1
+milestone: m-2
 dependencies: []
 type: fix
 ordinal: 152210
@@ -33,3 +34,9 @@ Card opened 2026-11-24 by the orchestrator from RR-0455 (~/Buildo-scratch/queues
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-24: moved to Increment 1C by the operator (RR-0463, /Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2397, verbatim: "Move 458").
+<!-- SECTION:NOTES:END -->

@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T18:50:33.687Z file_sha256=ee6ad4a41821f40b6ecb21d06692dbdab7add76e9e0904bd4c7b4471b4545923 prompt_sha256=b0bd1761a7ecd347542a00e81e9a5f017027f3c6873e1cc31982b77100e44343
+🔍 Lens review of docs/reports/reviews/task-462/context-r1.md (model: deepseek-reasoner)
+
+DEFER severity=MED — plan 4.2 "That is exactly why test:ci must carry `--coverage=false`." — the no-write guarantee rests on last-wins parsing that was read, not run (plan 9 "Neither new command was run (read-only)."), and if `--coverage` wins, `mobile/coverage` is written while `.gitignore:12` is root-anchored `/coverage`, so every station run then fails station.sh:46 dirty() and a plain-hook push leaves an untracked coverage folder — run R3's exact command verbatim from the worktree root and `git status --porcelain` before landing; do not land on the read alone.
+
+DEFER severity=MED — plan 8 open choice 2 "Recommend no: T4 plus the R2 non-zero run plus the orchestrator's AC1 PASS run cover it without a throwaway commit." — "stops before the web suite" is proven only on the hook, while station.sh:41 ("a logging step() that writes `== <name>` and `   rc=<n>`") is not exercised by T4, so the station may log rc=1 and still start the web suite, caught only by the nested push at :66 — run one planted-failure station run, or confirm station.sh:41 returns the command's rc before relying on AC3 at the station.
+
+DEFER severity=MED — plan 3 BOTH PATHS "so the hook runs the list again, including the phone steps." — each station push now runs the phone suite twice with no dedup (about 9 s each), so a flaky phone run, already flagged by the "worker process has failed to exit gracefully" line in the evidence, gets two chances to fail one push, and a failure inside the nested hook is never written to steps.log so steps read rc=0 — state in the card that a nested-hook failure shows only in the push output, not steps.log.
+
+DEFER severity=LOW — plan 6 "Jest uses its default worker count (cores - 1) for about 9 s." — the hook's step() runs `"$@"` with no overall timeout and no worker cap, so a hung jest worker stalls the push with no bound beyond jest's per-test testTimeout — accept but note the first station runs must watch wall time, since the only kill is the operator.
+
+DEFER severity=LOW — plan 6 "The 20 worktrees without the link cannot push through the hook until they are linked." — fail-closed is correct but the only documented recovery is "off = removing the two lines", so a push from an unlinked worktree stops at mobile-typecheck and the operator's written fix disables the gate rather than linking — name the mobile/node_modules link as the recovery alongside off in the CLAUDE.md line.
+
+REJECT — plan 4.2 "tsc --noEmit writes nothing." — looks like a typecheck write could dirty the worktree and trip station.sh:46 — handled: noEmit with no incremental, no tsbuildinfo, and *.tsbuildinfo is ignored anyway (root .gitignore:47), so no station dirty fail.
+
+REJECT — plan 6 "it never passes silently" — looks like a stale shared node_modules could let the step pass without running — handled: a missing module makes `npm --prefix mobile run test:ci` exit non-zero ("Cannot find module"), which short-circuits the `&&` chain and stops the push.
+
+VERDICT: PASS on error-path safety
+Paths walked: error (typecheck/test non-zero), empty/missing mobile/node_modules and stale deps, retry and time-out (double run via station push, no overall bound), double-run/dedup (suite run twice per station push), degrade-safety (coverage write, dirty worktree, unlinked worktree), idempotency (no-write claim via --coverage=false, --ci snapshot), station step precedence.   Unguarded: 0
+
+---
+⏱  58003ms (58.0s)
+📊 Tokens — total: 30167, input: 18588, output: 11579, reasoning: 10729

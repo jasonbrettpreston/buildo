@@ -7,11 +7,8 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2LIST'
 created_date: '2026-11-20T17:12:00Z'
-updated_date: '2026-11-24T16:12:00Z'
+updated_date: '2026-11-24T18:41:00Z'
 labels:
-  - McFix
-  - McFix V2
-  - McFixReborn
   - dead
 milestone: m-1
 dependencies: []

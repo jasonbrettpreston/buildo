@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-24T18:50:33.670Z file_sha256=ee6ad4a41821f40b6ecb21d06692dbdab7add76e9e0904bd4c7b4471b4545923 prompt_sha256=6f5736da638ba79bd7f0f8d5dcb209f70a184516a48d6f731a0b0687fe573af7
+🔍 Lens review of docs/reports/reviews/task-462/context-r1.md (model: deepseek-reasoner)
+
+```
+BUG severity=HIGH — §6 (rollback) — If the phone suite goes red or the shared ~/Buildo/mobile/node_modules (outside the repo) drifts stale, EVERY push repo-wide is blocked, and the only rollback (delete the two lines) still has to be committed and pushed — so an urgent web hotfix is impossible except by bundling the two-line removal with it or using a hook bypass the plan never names — Add to §6 the lockout policy: "phone red or shared install stale ⇒ either fix it or commit the two-line removal with/before the hotfix, then push; never leave the hook bypassed for the gate itself." — and confirm the operator's push worktree holds the link (see P1).
+BUG severity=HIGH — §3 note (3) / station.sh:48 vs :66 — station.sh writes the PASS file (:48) BEFORE `git push` (:66) triggers .husky/pre-push, which runs the SAME two phone steps a second time; a test that passes in the station suite but fails on re-run yields a written PASS file followed by a failed push (inconsistent state), and the plan only accounts for the 10–20s cost, not this double-execution failure surface — Document the second run and the "flake on re-run ⇒ rerun, do not trust the pass file" rule; note station.sh reordering is out of scope (outside repo).
+BUG severity=HIGH — §6 — mobile-tests runs under SUITE.lock (:37) with no timeout; the evidence file already prints "A worker process has failed to exit gracefully" (acknowledged), and a warning-turned-hang would hold SUITE.lock indefinitely and block all later station work — the plan only handles the non-zero-exit case — Wrap the step with a bound (e.g. `timeout 180 npm --prefix mobile run test:ci …`) or add a named kill procedure plus "watch the first three station runs" as a landing gate.
+BUG severity=MED — §4.2 / .husky/pre-push:42-45 — The plain pre-push hook has NO dirty() check (only station.sh:46 does), so if `--coverage=false` ever stops taking effect (a later edit to `test:ci`, or an npm/yargs-parser upgrade breaking last-wins), a raw `git push` leaves an unignored `mobile/coverage` folder silently (root .gitignore:12 is anchored `/coverage`); AC1 only covers the station — Add an assertion that `mobile/coverage` does not exist after mobile-tests (and consider adding `mobile/coverage` to mobile/.gitignore), and note the plain hook does not dirty-check.
+BUG severity=MED — §4.2 / station.sh:41 — With `--silent`, jest writes failure detail to stderr; if the logging step() redirects only stdout to `$run/<name>.log`, a real phone failure records `rc≠0` but an empty log — the plan verified no cache/coverage writes but not stderr capture — Verify the logging redirect uses `2>&1` (`&>`) and add it if missing, so a failed mobile-tests is diagnosable from the run folder.
+DEFER severity=LOW — §4.2 — `--ci` forbids writing new snapshots, so the first phone test that uses `toMatchSnapshot` will fail at push until the `.snap` is written locally and committed; no `.snap` exists today so it is latent — Note it in the Spec 98 dated note; revisit only when a snapshot test is introduced.
+DEFER severity=LOW — §9 — node 20 (CI) vs node 24 (lane evidence) parity is unchecked; jest 30 / jest-expo 54 behavior could differ under the station — Bounded because CI runs post-push; re-check on the first Mobile CI run after this lands.
+DEFER severity=LOW — §8 — task-463 edits the same Spec 98 §5 adjacent lines (:118 lint line); simultaneous landing could clobber either dated note — Plan already sequences + rebase; make the AC4 grep of BOTH notes the landing gate.
+
+VERDICT: FAIL on plan-readiness for implementation
+Top 3 operational blockers (if FAIL):
+- Repo-wide push lockout (phone red / stale shared install) with no documented hotfix bypass — §6.
+- PASS file written before the hook re-runs the phone steps, so a re-run flake gives PASS-then-failed-push — §3 note (3) / station.sh:48 vs :66.
+- No timeout around mobile-tests under SUITE.lock; the known "worker failed to exit" warning could become a lock-holding hang — §6.
+Top 3 unverified data premises (if any, regardless of verdict):
+- P1: The operator's active push worktree has the mobile/node_modules link (the 4-note survey found 20 of 156 without it, but never confirmed the push worktree is among the 136 linked), and which node it runs. Verify at the push worktree: `[ -e mobile/node_modules/.bin/jest ] && echo linked; node --version`.
+- P2: `tsc --noEmit` in mobile exits 0 on the post-461 base (§9 says never run). Verify: `npm --prefix mobile run typecheck; echo "exit=$?"`.
+- P3: The shared ~/Buildo/mobile/node_modules still holds the six packages and jest-expo resolves NOW (the 58/58 evidence is from a prior lane run, state may have drifted). Verify: `npm --prefix mobile run test:ci -- --coverage=false --silent 2>&1 | tail -5` (expect 58/58, rc=0) and `git status --porcelain` shows no mobile/coverage.
+```
+
+---
+⏱  45530ms (45.5s)
+📊 Tokens — total: 28118, input: 19474, output: 8644, reasoning: 7386

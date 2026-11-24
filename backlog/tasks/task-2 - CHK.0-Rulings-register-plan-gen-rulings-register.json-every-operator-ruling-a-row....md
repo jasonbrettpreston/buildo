@@ -7,13 +7,9 @@ status: MERGED
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-24T14:42:00Z'
+updated_date: '2026-11-24T18:40:00Z'
 due_date: '2026-11-26'
 labels:
-  - F
-  - plan:CHK.0
-  - evidence:ready
-  - unverified
   - dead
 milestone: m-0
 dependencies: []

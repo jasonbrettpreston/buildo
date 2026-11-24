@@ -5,20 +5,8 @@ status: DONE
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-24T14:42:00Z'
+updated_date: '2026-11-24T18:40:00Z'
 labels:
-  - 6c
-  - plan:6c.16
-  - plan:RULE-CONFLICTS:3
-  - comp:PAN
-  - comp:FIVE
-  - comp:SC
-  - comp:STAT
-  - comp:DN
-  - comp:REN
-  - comp:MCP
-  - comp:DDV
-  - comp:FIT
   - dead
 milestone: m-8
 dependencies: []

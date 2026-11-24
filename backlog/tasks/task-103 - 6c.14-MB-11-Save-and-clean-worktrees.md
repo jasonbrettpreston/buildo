@@ -5,19 +5,8 @@ status: MERGED
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-24T14:42:00Z'
+updated_date: '2026-11-24T18:40:00Z'
 labels:
-  - 6c
-  - plan:6c.14
-  - plan:MB-11
-  - queue-row
-  - comp:PAN
-  - comp:FIVE
-  - comp:SC
-  - comp:STAT
-  - comp:BLD
-  - comp:HS
-  - comp:BYL
   - dead
 milestone: m-8
 dependencies: []

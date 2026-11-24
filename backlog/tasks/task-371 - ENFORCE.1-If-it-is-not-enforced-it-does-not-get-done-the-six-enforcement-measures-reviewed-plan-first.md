@@ -7,11 +7,8 @@ status: DROPPED
 assignee:
   - '@lane-BL-ENFORCE'
 created_date: '2026-11-20T13:31:00Z'
-updated_date: '2026-11-24T14:42:00Z'
+updated_date: '2026-11-24T18:41:00Z'
 labels:
-  - McFix
-  - McFix E
-  - McFix Final
   - dead
 milestone: m-1
 dependencies: []
