@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T18:35:17.331Z file_sha256=dfccafdb73f7df4aabe78698ac6da58e7e72d37537b6b97d69dfe71a6a39f7f6 prompt_sha256=81552fa092a875a92c00c6f2f880cb69aa05111b9e412ae022e0235898f3a1bd
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX6/in-out-compliance-surface-136.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — RR-0460 "Phone tests local first; inline report it link accepted; proof for new phone tests" — Implementation Notes "full phone run owed at the push station (RR-0460)" — the ruling requires the local phone proof and the lane's own notes say the full phone run is still owed — attach the full local phone-suite green output before push.
+DEFER severity=NIT — task-461 AC2 "No other phone test asserts the old strict form of the lot-form block" — diff "paths: [\"mobile/__tests__/lotForm.test.ts\"]" — AC2 rests on a grep claim in the notes, the other phone test files are not in the diff so cannot see them — paste the grep output or include those files to demonstrate AC2.
+MET — task-461 AC1 "states that an extra field in the lot-form block still parses" — mobile/__tests__/lotForm.test.ts "+    expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { ...form(true), extra: 1 } }).success).toBe(true);" — the file now asserts the extra field parses and the related local run was green.
+REJECT — fe.07 "parity compares each target's real output" — mobile now accepts an extra field while the server strict test still refuses it — the lot-form block is a single-target payload parse, not a multi-target rendered declaration, and the server-side strict test is a latent trap ruled 8.3 for a different lens, not a parity breach here.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 61   Unmet: 0
+Rules met: none
+
+---
+⏱  44346ms (44.3s)
+📊 Tokens — total: 20315, input: 10914, output: 9401, reasoning: 9037

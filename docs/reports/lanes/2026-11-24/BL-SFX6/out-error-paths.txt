@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T18:35:17.330Z file_sha256=39f212a9ad69b7b2c3ebbd3c35abf6cfd63d7d87ff7938e8a1050a334d6dc514 prompt_sha256=fd9b121ca442ca1fbd403021eda7e4d58c8f309bc6f8ce2e677f70fc80938440
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX6/in-out-error-paths.txt (model: deepseek-reasoner)
+
+```
+DEFER severity=MED — mobile/__tests__/lotForm.test.ts:71 "expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { detected: 'semi_half', basis: 'x', unsure: false } }).success).toBe(false);" — the diff makes unknown keys tolerant but keeps unknown enum members fatal to the whole ConsumerParcelLookupResultSchema parse, so a server that ships a new basis or detected value makes the entire lookup payload unparseable on an older phone, not just the lot-form block — either add a lenient fallback case (drop the block, keep the parcel) or record this fail-closed asymmetry as a named, accepted degrade choice
+DEFER severity=LOW — mobile/__tests__/lotForm.test.ts:67 "expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { ...form(true), extra: 1 } }).success).toBe(true); // task-450 L1 (GROUNDER-B D1): plain, a server-added field still parses" — the assertion proves success only, so it stays green if the schema later becomes passthrough and a server-added field survives into the parsed object; if that block is ever re-sent in a write, the extra key rides along and any body or key derived from it can differ from the first submit — also assert the parsed lotForm has no "extra" (unknown keys stripped, not kept)
+DEFER severity=LOW — mobile/__tests__/lotForm.test.ts:66 "expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: null }).success).toBe(true);" — null and absent are covered, but an empty block "{}" is not; cannot see mobile/src/lib/schemas.ts:423-425 in the material, so if the fields are optional an empty block parses and downstream reads undefined detected or basis — add one case for "{}" so the empty path is pinned as refuse or as handled
+REJECT — mobile/__tests__/lotForm.test.ts removed line "expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { ...form(true), extra: 1 } }).success).toBe(false);" — looks like a guard against unexpected server payloads lost — handled: task-450 made the lot-form block plain on purpose (GROUNDER-B D1), the schema keeps its closed enums for refuse cases, and plain zod objects strip unknown keys so the parsed value stays bounded
+REJECT — material under review has no retry, time-out, double-submit or write path in the diff (the whole change is one test line moved between two cases) — no idempotency key or dedup surface is added or altered, so no second-attempt or repeat-write path exists to walk here
+REJECT — mobile/__tests__/lotForm.test.ts:63 "it('parses a payload with the block, without it (older server), with null and with a server-added field', () => {" — the older-server (block absent) and null cases both still parse, so the downgrade path keeps a defined empty shape rather than throwing on a missing block
+```
+
+VERDICT: PASS on error-path safety
+Paths walked: parse of block present, block absent (older server), block null, block with server-added field, block with unknown enum value, block empty ({}), AC2 grep claims for other test files (cannot see schemas.test.ts and useParcelLookup.test.ts)   Unguarded: 1
+
+---
+⏱  20145ms (20.1s)
+📊 Tokens — total: 6266, input: 2520, output: 3746, reasoning: 2988

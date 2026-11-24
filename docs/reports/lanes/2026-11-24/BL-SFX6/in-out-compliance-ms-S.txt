@@ -1,0 +1,41 @@
+LIST ms-S sha256:88ee2c10fa967d62bb0523de27dbf207ca7b5fe36f2bf3616016f3b47b5c29bd material sha256:39f212a9ad69b7b2c3ebbd3c35abf6cfd63d7d87ff7938e8a1050a334d6dc514 part 1 of 1 chunk 1 of 1
+RULE LIST ms-S (backlog/milestones/m-1 - increment-1·b-search-[s].md, sections Project objectives; Increment objectives; Objectives), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["mobile/__tests__/lotForm.test.ts"]
+
+## Project objectives
+- Objective: finish a completed project, a database that works and is ready (operator 2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "our objective is to finish a completed project ie a database that works and is ready"
+- The database exists to service the designed report, details and search page (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "the database is created to service the existing report and details as clairfied in the McFrontend. This includes the search page"
+- A task that serves neither a designed element nor a supporting function is most likely not relevant (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code"
+- Five principles, keep it simple, no scope creep (~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md:3) "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep"
+- One plan only (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "we need one plan - we can only execute one plan"
+
+## Increment objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion (docs/reports/plan-import/raw/2026-11-19/search-brief.json inc; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+- The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report; the semi calculation stays in Increment 7 (7.25) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796) "Maybe the search portion done now with the page."
+- What the customer sees: the 65 designed search elements A (search page), B (address confusion), C (lot confusion, lot map), D (semi question page), E (web search pages), F (landing entry), G (hand-off to the report) (backlog/docs/increments/doc-2 - Increment-S-requirements.md:27) "| id | element | where | status | deliverers | built |"
+
+## Objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion; most of it is already built (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "Operator, verbatim: "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/mobile/__tests__/lotForm.test.ts b/mobile/__tests__/lotForm.test.ts
+index f20a0c66cbc1babda2a8ad266c01cc797fce520e..461d4dd3765731636b43bac9059db622d317797a 100644
+--- a/mobile/__tests__/lotForm.test.ts
++++ b/mobile/__tests__/lotForm.test.ts
+@@ -60,14 +60,14 @@ describe('lotForm (pure)', () => {
+ });
+ 
+ describe('the mobile mirror of the lookup block', () => {
+-  it('parses a payload with the block, without it (older server) and with null', () => {
++  it('parses a payload with the block, without it (older server), with null and with a server-added field', () => {
+     expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: form(true) }).success).toBe(true);
+     expect(ConsumerParcelLookupResultSchema.safeParse({ ...base }).success).toBe(true);
+     expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: null }).success).toBe(true);
++    expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { ...form(true), extra: 1 } }).success).toBe(true); // task-450 L1 (GROUNDER-B D1): plain, a server-added field still parses
+   });
+   it('refuses a block outside the contract', () => {
+     expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { detected: 'maybe', basis: 'o4_not_met', unsure: false } }).success).toBe(false);
+     expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { detected: 'semi_half', basis: 'x', unsure: false } }).success).toBe(false);
+-    expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { ...form(true), extra: 1 } }).success).toBe(false);
+   });
+ });
+

@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T18:35:17.343Z file_sha256=39f212a9ad69b7b2c3ebbd3c35abf6cfd63d7d87ff7938e8a1050a334d6dc514 prompt_sha256=dac8bb51628b7d2b91f0af0e958357e18c81e3999bdfe61d6bc8acf8d31bd999
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX6/in-out-ux.txt (model: deepseek-reasoner)
+
+REJECT — mobile/__tests__/lotForm.test.ts:67 "expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { ...form(true), extra: 1 } }).success).toBe(true);" — the person holding the phone still gets the lot-form block when the server adds a field, instead of the whole lookup result failing to parse and the block vanishing — this matches the approved text "task-450 (ee3634771) made ParcelLotFormSchema plain on purpose" and "the schema is not changed back", so it serves the person.
+
+REJECT — mobile/__tests__/lotForm.test.ts:72 "lotForm: { detected: 'maybe', basis: 'o4_not_met', unsure: false }" — the remaining refusals are closed-enum values only, so the person is still protected from a genuinely wrong basis and does not see a mislabelled lot form — matches design "the 'refuses ...' case keeps the two closed-enum refusals", harmless.
+
+REJECT — mobile/__tests__/lotForm.test.ts:63 "it('parses a payload with the block, without it (older server), with null and with a server-added field'" — the retitle is test-runner output only, no string reaches the person on the phone — design silent on test names, harmless.
+
+DEFER severity=NIT — mobile/__tests__/lotForm.test.ts:67 "// task-450 L1 (GROUNDER-B D1): plain, a server-added field still parses" — a card/lens code in a comment is developer-facing text a future reader must decode, not person-facing copy — design text gives no wording for this comment; safe to defer, plain-English note would read better but is not a person-experience change.
+
+REJECT — the states the person can reach (first view, loading, answered, error, empty, offline, back, repeat visit) are not drawn anywhere in this diff; no screen, label, control or layout fact appears in it, so no copy or layout departure from the approved design text exists to report — the design text pasted here is about a test line and a schema's strictness, not about what the person sees.
+
+VERDICT: PASS on the person's experience
+States checked: first view, loading, answered, error, empty, offline, back, repeat visit (all cannot see, this diff draws none of them; no controls, so no label or touch-target facts)   Dead ends found: 0
+
+---
+⏱  9249ms (9.2s)
+📊 Tokens — total: 4325, input: 2519, output: 1806, reasoning: 1271

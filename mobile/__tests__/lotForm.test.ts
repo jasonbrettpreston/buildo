@@ -60,14 +60,14 @@ describe('lotForm (pure)', () => {
 });
 
 describe('the mobile mirror of the lookup block', () => {
-  it('parses a payload with the block, without it (older server) and with null', () => {
+  it('parses a payload with the block, without it (older server), with null and with a server-added field', () => {
     expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: form(true) }).success).toBe(true);
     expect(ConsumerParcelLookupResultSchema.safeParse({ ...base }).success).toBe(true);
     expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: null }).success).toBe(true);
+    expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { ...form(true), extra: 1 } }).success).toBe(true); // task-450 L1 (GROUNDER-B D1): plain, a server-added field still parses
   });
   it('refuses a block outside the contract', () => {
     expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { detected: 'maybe', basis: 'o4_not_met', unsure: false } }).success).toBe(false);
     expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { detected: 'semi_half', basis: 'x', unsure: false } }).success).toBe(false);
-    expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { ...form(true), extra: 1 } }).success).toBe(false);
   });
 });

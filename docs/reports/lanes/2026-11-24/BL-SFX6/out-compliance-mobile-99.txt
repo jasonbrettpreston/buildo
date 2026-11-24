@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T18:35:17.355Z file_sha256=75523a3996a437028e70eb7f01076af5c9f23c3678d6174c8657eb32d8a4f6be prompt_sha256=589f6d48a0379af9a710e2e2ae4830dc0253d52c485c3f276b6cc3b8fd50f923
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX6/in-out-compliance-mobile-99.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — GROUNDER-B D1 / plan section 7, as recorded "Deviation from plan section 7: the task-450 note could not ride this commit (check-task-files refuses a file outside the Files line of task-461); the task-450 note is owed to the orchestrator, not written." — mobile/__tests__/lotForm.test.ts "// task-450 L1 (GROUNDER-B D1): plain, a server-added field still parses" — the planned task-450 note is written nowhere in this change, the deviation declares it owed — land the note in a task whose Files line includes mobile/src/lib/schemas.ts or paste the orchestrator ledger entry that carries it
+
+DEFER severity=LOW — RR-0461 "Card 461 clean seat report: run a fresh integration seat (names task-461)" — NONE — no fresh integration seat report appears in the pasted material, cannot see one — attach the seat report to the card before the push station
+
+DEFER severity=LOW — AC #2 "No other phone test asserts the old strict form of the lot-form block" — NONE — the negative is carried only by a self-reported grep in the Implementation Notes ("git grep 'strict()' -- mobile/__tests__ finds nothing ... schemas.test.ts:326-335 (plain form) and useParcelLookup.test.ts:163,:200"), the cited files are not pasted, cannot see them — paste the grep output or the two cited test ranges
+
+MET — AC #1 "states that an extra field in the lot-form block still parses" — mobile/__tests__/lotForm.test.ts "+    expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { ...form(true), extra: 1 } }).success).toBe(true);" — the extra-field case now asserts parse success inside the retitled 'parses ... with a server-added field' case
+
+MET — description "the schema is not changed back" — mobile/__tests__/lotForm.test.ts (whole diff) — only the test file is touched, no schema file appears in the diff
+
+MET — RR-0460 "Phone tests local first" — Implementation Notes "npx jest __tests__/lotForm.test.ts __tests__/schemas.test.ts --ci --coverage=false (from mobile/) ... 2 suites passed, 40 tests passed" — a local phone test run was made, red before the edit and green after
+
+MET — RR-0392 "no other infrastructure beyond this" — mobile/__tests__/lotForm.test.ts (whole diff) — the change adds one assertion relocation and no infrastructure
+
+REJECT — Spec 99 §8.6 "A pre-commit script mobile/scripts/check-spec99-matrix.mjs MUST parse the Zod object keys from mobile/src/lib/userProfile.schema.ts and the §3.1 markdown table" — the change is accused of schema drift — the drift check covers userProfile.schema.ts and the §3.1 matrix only, not the parcel lot-form schema this test exercises
+
+REJECT — Spec 99 B1 "Validation: every response MUST be parsed through a Zod schema before TanStack stores it" — the change is accused of loosening the Zod boundary — the payload is still parsed through ConsumerParcelLookupResultSchema, B1 does not prescribe strict versus plain object shape, and task-450's ruling set the plain form deliberately
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0 (3 deferred, none CRIT/HIGH)
+Rules met: none
+
+---
+⏱  29717ms (29.7s)
+📊 Tokens — total: 31702, input: 25380, output: 6322, reasoning: 5547

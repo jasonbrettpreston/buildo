@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T18:35:17.362Z file_sha256=ac99e853da7280fc9d3afc9ee933a7af874ef2ba22c4df0aea05392471682af4 prompt_sha256=9a52ed84c3a829552e30f2698eb5c8067e5ed7bf470f254c9d9d6b61b6c7f7e1
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX6/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-461 AC#1 "The phone test file lotForm passes in a local phone test run and states that an extra field in the lot-form block still parses" — NONE "cannot see the local run; the material pastes only the diff, the green result lives in the Implementation Notes prose (2 suites passed, 40 tests passed, lane dir green.out)" — the "still parses" half is shown by the diff, the "passes in a local phone test run" half rests on an unquoted claim — paste the green.out head (command, 2 suites, 40 tests) onto card 461 before merge, per RR-0460 "Phone tests local first"
+DEFER severity=LOW — task-461 AC#2 "No other phone test asserts the old strict form of the lot-form block" — NONE "cannot see any file other than mobile/__tests__/lotForm.test.ts in this chunk" — the diff cannot break AC#2 because it touches no other file, but the grep proof the notes cite is absent from the material — attach the `git grep ConsumerParcelLookupResultSchema -- mobile/__tests__` output to the card
+MET — task-461 AC#1 (the stated plain form) — mobile/__tests__/lotForm.test.ts "@@ -60,14 +60,14 @@ ... expect(ConsumerParcelLookupResultSchema.safeParse({ ...base, lotForm: { ...form(true), extra: 1 } }).success).toBe(true);" — the extra-field case moved into the "parses ... with null and with a server-added field" case as toBe(true), and the "refuses" case keeps only the two closed-enum refusals
+MET — task-461 Description "the test line states the plain form; the schema is not changed back" — diff header "diff --git a/mobile/__tests__/lotForm.test.ts b/mobile/__tests__/lotForm.test.ts" — the sole changed path is the test file, mobile/src/lib/schemas.ts is untouched so the schema is not reverted to strict
+REJECT — doc-2 D.2 "Lot form on the lookup hit (detected, basis, unsure)" — that making the block plain drops the lot form's contracted fields — the test still refuses `detected: 'maybe'` and `basis: 'o4_not_met'`, only unknown extra keys now pass, and D.2 names no strictness requirement
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+Rules met: none
+
+---
+⏱  36186ms (36.2s)
+📊 Tokens — total: 14626, input: 10002, output: 4624, reasoning: 4058
