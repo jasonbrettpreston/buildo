@@ -61,3 +61,5 @@ rg#5 CONFIRMED mobile/src/lib/parcelSearchMatch.ts:298 "const unexpected = error
 rg#6 CONFIRMED docs/specs/03-mobile/99_mobile_state_architecture.md:783 "any change to §3 (Field Ownership Matrix), §4 (Bridge Patterns), or §5 (Routing Authority Rules)" MED: true and already folded in round 1: the note is placed in §6.5, the cite is :783, and risk 8 no longer carries the fallback.
 rg#7 CONFIRMED mobile/src/lib/semiQuestion.ts:53 "The redirect state's target (the report; the Lookup route with no data), else null." LOW: true: the :53 comment and the golden test title go stale, and Spec 99 section 8.3 wants an isFetching-toggle case. Folded in a few words in AC5 (FOLD-450b); the fixture key keeps its name.
 rg#8 CONFIRMED docs/reports/reviews/mcfixreborn-fold/FOLD-PLAN.md:15 "| 8 | FIX.SEARCH-TESTS | fix | X2, X4, X5" LOW: true: task 8 and task 3 in risk 7 are fold-plan numbers (backlog task-8 and task-3 are other cards). Folded: risk 7 names task-456, task-451 and task-454 (FOLD-450b).
+
+Plan: task-450 sha256:e7587a0bb08a
