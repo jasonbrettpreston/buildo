@@ -4,14 +4,31 @@ title: >-
   SEARCHFIX.2 Search page: a street with no number asks for a house number;
   no-match flicker, strict lot-form check, typed "3", double retry message and
   the wrong-lot help topic corrected
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-SFX2'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T15:35:00Z'
+updated_date: '2026-11-24T15:38:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/reviews/task-450/GROUNDER-PLAN.md
+  - docs/reports/reviews/task-450/TRIAGE-PLAN.md
+  - docs/reports/reviews/task-450/seat-integration-1.md
+  - docs/reports/reviews/task-450/seat-reality-check-1.md
+  - docs/reports/reviews/task-450/seat-regression-1.md
+  - compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md
+  - compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md
+  - compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md
+  - compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - compliance:step-132 docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: fix
 ordinal: 150020
 ---
@@ -246,4 +263,34 @@ Risks:
 - /Users/brettpreston_macmini/Buildo-wt-board/src/components/surfaces/web/SearchBinding.tsx
 - /Users/brettpreston_macmini/Buildo-wt-board/mobile/src/lib/semiQuestion.ts
 - /Users/brettpreston_macmini/Buildo-wt-board/scripts/surfaces/_schema/static-page.json
+
+Plan review round 1: 28 folded, 0 task, 0 ruling, 0 wontfix, 1 pile; grounder docs/reports/reviews/task-450/GROUNDER-PLAN.md; triage docs/reports/reviews/task-450/TRIAGE-PLAN.md
+plan-plan-review-deepseek#6 MED folded land in one commit a
+plan-plan-review-deepseek#8 MED folded but not its digit te
+plan-plan-review-deepseek#10 MED folded edit hunks of those 
+plan-ux#1 HIGH folded Ruled (Q8.2): the co
+plan-ux#2 HIGH folded so a one-row street 
+plan-ux#5 MED folded on the Files line si
+in#1 HIGH folded drops SEARCH_MIN_QUE
+in#2 HIGH folded so it stays a check 
+in#3 HIGH folded so under Q19 every r
+in#4 MED folded pins it for all thre
+in#5 MED folded Ruled by an in-memor
+in#6 MED folded so 454 corrects them
+in#7 MED folded then the one-line bu
+in#8 MED folded Known differences, a
+rc#1 MED folded are hand-written inp
+rc#2 MED folded Synthetic until task
+rc#4 MED folded 84.3% of streets (75
+rg#1 HIGH folded the 2026-09-16 words
+rg#2 HIGH folded No Spec 100 note is 
+rg#4 MED folded The superseding date
+rg#5 MED folded pins it for all thre
+rg#6 MED folded placed in §6.5 after
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-24 taken on the board at lane launch (lane BL-SFX2, worktree /Users/brettpreston_macmini/Buildo-wt-sfx2, branch wf2/inc1b-sfx2), RR-0240
+<!-- SECTION:NOTES:END -->
