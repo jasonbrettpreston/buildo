@@ -1,0 +1,41 @@
+== mobile-typecheck
+
+> mobile@1.0.0 typecheck
+> tsc --noEmit
+
+rc=0
+== mobile-tests
+
+> mobile@1.0.0 test:ci
+> jest --coverage --ci --coverage=false --silent
+
+A worker process has failed to exit gracefully and has been force exited. This is likely caused by tests leaking due to improper teardown. Try running with --detectOpenHandles to find leaks. Active timers can also cause this, ensure that .unref() was called on them.
+
+Test Suites: 58 passed, 58 total
+Tests:       866 passed, 866 total
+Snapshots:   0 total
+Time:        8.706 s
+rc=0
+== R2 planted (no-such-test-path)
+
+> mobile@1.0.0 test:ci
+> jest --coverage --ci --coverage=false --silent no-such-test-path
+
+No tests found, exiting with code 1
+Run with `--passWithNoTests` to exit with code 0
+In /Users/brettpreston_macmini/Buildo-wt-proc462/mobile
+  221 files checked.
+  testMatch: **/__tests__/**/*.?([mc])[jt]s?(x), **/?(*.)+(spec|test).?([mc])[jt]s?(x) - 58 matches
+  testPathIgnorePatterns: /node_modules/ - 221 matches
+  testRegex:  - 0 matches
+Pattern: no-such-test-path - 0 matches
+rc=1
+== git status --porcelain
+ M .husky/pre-push-checks.sh
+ M CLAUDE.md
+M  "backlog/tasks/task-462 - PROC.PHONEGATE-Phone-typecheck-and-phone-tests-join-the-push-gate-list.md"
+ M docs/specs/03-mobile/98_mobile_testing_protocol.md
+M  src/tests/hooks-composition.infra.test.ts
+?? docs/reports/reviews/task-462/context-r2.md
+?? mobile/node_modules
+ls: mobile/coverage: No such file or directory

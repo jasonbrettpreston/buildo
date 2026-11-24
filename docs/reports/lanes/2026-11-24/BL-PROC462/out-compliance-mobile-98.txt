@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:20:04.185Z file_sha256=b6cc2d3bd41c389976b508b950cb8ba6e5c6839f3a45a0500880c348a967d979 prompt_sha256=68863cf7b53d554705e274d52257983db8cb9cfdd88bdd405612a1d3e6d85890
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC462/in-out-compliance-mobile-98.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — card Description "Files: .husky/pre-push-checks.sh, src/tests/hooks-composition.infra.test.ts, CLAUDE.md, docs/specs/03-mobile/98_mobile_testing_protocol.md" — implementation note "that generated path is not on the Files line, and check-task-files refuses it beside a code file" — the change also writes docs/reports/generated/rule-lists-by-kind.md, a fifth path the card's Files line never declares, carried only as a recorded deviation — add the generated page to the card's Files line, or write the exception into the card, before close
+DEFER severity=MED — acceptance criterion #1 "A push station run shows the two new steps and then PASS, and the worktree is clean afterwards (no coverage folder)" — implementation note "R3 by hand from the worktree root (through guard.mjs --file)" — no push station run is recorded for the code commit, only a by-hand run of the same commands — run the push station once and attach a log showing mobile-typecheck, mobile-tests, then PASS with a clean tree
+DEFER severity=LOW — acceptance criterion #3 "A phone test made to fail stops the run before the web suite starts" — implementation note "the planted no-such-test-path run exits 1 (No tests found)" — the condition exercised is a missing test path, not a phone test made to fail — plant one failing phone test, show the chain stops before suite, then revert it
+DEFER severity=NIT — RR-0429 "Keep notes short." — CLAUDE.md:34 "a worktree without the mobile/node_modules link stops at mobile-typecheck. To remove them: two lines in .husky/pre-push-checks.sh and two entries in src/tests/hooks-composition.infra.test.ts." — the dated note carries a second claim and a removal recipe beyond naming the two new steps — cut it to the one dated sentence naming the steps
+DEFER severity=NIT — card Description "the phone unit tests run with a command that writes nothing (no coverage folder: the station refuses a worktree that changed during the run)" — .husky/pre-push-checks.sh:13 "step mobile-tests npm --prefix mobile run test:ci -- --coverage=false --silent &&" — --silent suppresses reporter and console output, which no pasted clause or ruling names; the clause names only writing nothing — drop --silent, or have the card name it
+MET — card Description "two plain step lines join the one pre-push list (.husky/pre-push-checks.sh), after the typecheck step and before the web suite" — .husky/pre-push-checks.sh:12-13 — mobile-typecheck and mobile-tests sit between typecheck and the suite line, plain step lines, no function or branch
+MET — acceptance criterion #2 "The gate-list test names the two new lines and step names and passes; it fails on the old six-step list" — src/tests/hooks-composition.infra.test.ts:551-552 and :557 — LIST_LINES gains both lines and STEP_NAMES both names in script order, with red proven at 6 vs 8
+MET — acceptance criterion #4 "CLAUDE.md and the phone testing spec section 5 each carry one dated line naming the new steps" — CLAUDE.md:34 and docs/specs/03-mobile/98_mobile_testing_protocol.md:125 — one dated 2026-11-24 line in each, both naming mobile-typecheck and mobile-tests
+MET — RR-0392 "Push for all 4. I  don't think we need any other infastrcuture beyond this.. we are good to go!" — .husky/pre-push-checks.sh:12-13 — two step lines only, no switch file and no environment setting added
+MET — Spec 98 §5 "On every PR targeting `main`, GitHub Actions runs: `npm run typecheck` (TypeScript compiler) `npm run lint` (ESLint) `npm run test` (Jest unit tests)" — docs/specs/03-mobile/98_mobile_testing_protocol.md:125 — the pre-push additions sit outside the PR CI clause, which the diff does not change
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: none
+
+---
+⏱  52226ms (52.2s)
+📊 Tokens — total: 19155, input: 8423, output: 10732, reasoning: 9776

@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T19:20:04.208Z file_sha256=d7cd3072f5f2c90226c1e5e01ebe49f7731a3b22e33af90dc0e7401f120038e1 prompt_sha256=75d1a8cc9bdcc9f97dbb934b64b023aa6ddeb3583588bc98864971a4e8b010f8
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC462/in-out-error-paths.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — .husky/pre-push-checks.sh added line "+step mobile-typecheck npm --prefix mobile run typecheck &&" — if the phone typecheck is an incremental or build-mode tsc it writes .tsbuildinfo inside mobile/ during the run, and the station then refuses a worktree that changed mid-run after the phone tests have already spent their ~9 s; the operator sees only "worktree changed" — fix: run the phone typecheck no-emit and non-incremental, or add the artifact to the mobile ignore list; grounder to confirm mobile/package.json's typecheck script and tsconfig — cannot see mobile/package.json, fail-closed but blocks every push when it bites.
+
+DEFER severity=MED — src/tests/hooks-composition.infra.test.ts:551 "step mobile-tests npm --prefix mobile run test:ci -- --coverage=false --silent &&" — the no-write guarantee rests on two unproven facts: that the phone runner parses `--flag=false` as off, and that no stale mobile/coverage survives from an earlier full run in the same worktree; if either is false the folder is written and the station refuses the push after the tests pass — fix: confirm the off-form against the phone runner (or `--coverage.enabled=false`), and confirm mobile/coverage is ignored so a leftover cannot trip the station.
+
+DEFER severity=MED — CLAUDE.md added line "To remove them: two lines in `.husky/pre-push-checks.sh` and two entries in `src/tests/hooks-composition.infra.test.ts`." — a red or flaky phone check now blocks every push of web-only work and the only documented remedy edits the shared eight-step gate, so the fast escape is `git push --no-verify`, which skips all eight checks including the web suite — fix: name one supported bypass (env switch or skip file) or state in the same line that the operator edits the list.
+
+DEFER severity=LOW — .husky/pre-push-checks.sh added line "step mobile-tests npm --prefix mobile run test:ci -- --coverage=false --silent" — `--silent` suppresses the failing phone test's console output in the pre-push run, so the red step reports the suite and test name but not its diagnostics, which pushes the developer to rerun by hand — fix: keep `--silent` only when green, or print the failed suite list from the step.
+
+DEFER severity=LOW — .husky/pre-push-checks.sh last line "step suite env VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test $SUITE_ARGS" — cannot see the root test config's include globs; if the web suite also picks up mobile tests, each push runs the phone tests twice, doubling flake exposure against a gate that has no skip — fix: grounder confirm the root suite excludes mobile/ so the phone tests run once per push.
+
+REJECT — CLAUDE.md added line "a worktree without the `mobile/node_modules` link stops at `mobile-typecheck`" — looks like a hard stop for a web-only worktree with no phone packages — handled: `npm --prefix mobile` exits nonzero, the chain stops before the web suite (fail closed, no wrong result), the failing step name is printed, and removal is two lines.
+
+REJECT — .husky/pre-push-checks.sh added lines "step mobile-typecheck npm --prefix mobile run typecheck &&" and "step mobile-tests npm --prefix mobile run test:ci -- --coverage=false --silent" — looks like a double-run risk when the station runs the list and then git push runs it again — handled: both steps only read and exit, no write and no counted event, so a repeat is a no-op; dedup key: none needed.
+
+VERDICT: PASS on error-path safety
+Paths walked: phone typecheck failure, missing mobile/node_modules, missing mobile folder, phone test failure, no tests found, coverage write, second push and station+hook double run, silent output, tsbuildinfo write   Unguarded: 2
+
+---
+⏱  41959ms (42.0s)
+📊 Tokens — total: 12522, input: 5002, output: 7520, reasoning: 6631

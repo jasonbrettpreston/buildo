@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T19:20:04.189Z file_sha256=d7cd3072f5f2c90226c1e5e01ebe49f7731a3b22e33af90dc0e7401f120038e1 prompt_sha256=29227f1985cd2d87c398444a88dc2737eccc0b5afcc9585540e630abadff2411
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC462/in-out-code-review.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — `.husky/pre-push-checks.sh:14` "step mobile-tests npm --prefix mobile run test:ci -- --coverage=false --silent &&" — `--silent` suppresses the phone tests' own console output in the one run a developer actually reads before a push, so a failing phone test reports without its diagnostics — drop `--silent` (keep the default reporter) or let it print on failure. — bounded blast radius, the failure itself still exits non-zero and stops the chain before the web suite.
+
+DEFER severity=LOW — `CLAUDE.md:35` "To remove them: two lines in `.husky/pre-push-checks.sh` and two entries in `src/tests/hooks-composition.infra.test.ts`." — the removal recipe is incomplete: the two `it(...)` titles ("the eight chain lines") and the block comment ("The eight non-interactive pre-push checks") hardcode the count too, so following the recipe leaves stale text — extend the recipe to name the two titles and the comment line.
+
+REJECT — `src/tests/hooks-composition.infra.test.ts:555` "const STEP_NAMES = ['mcbylaws-gate', 'step-validate-staged', 'step-validate-all', 'spec-split', 'typecheck', 'mobile-typecheck', 'mobile-tests', 'suite'];" — looks like a second hand-maintained list that can drift from LIST_LINES — it is correct here because both arrays were extended in this same commit and T2 pins LIST_LINES against the real file (`expect(lines).toEqual(LIST_LINES)`).
+
+REJECT — `src/tests/hooks-composition.infra.test.ts:522` "The eight non-interactive pre-push checks live in ONE file, .husky/pre-push-checks.sh: eight" — the count looks off against the old "six" wording — it is right: the eight lines are mcbylaws-gate, step-validate-staged, step-validate-all, spec-split, typecheck, mobile-typecheck, mobile-tests, suite, in that order in both arrays and in the script.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  44919ms (44.9s)
+📊 Tokens — total: 14214, input: 4985, output: 9229, reasoning: 8758

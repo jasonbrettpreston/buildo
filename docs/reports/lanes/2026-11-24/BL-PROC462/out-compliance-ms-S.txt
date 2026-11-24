@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:20:04.205Z file_sha256=6c184e37858b7703f0d7096513a5828b2435e86a1a4a6a4716a5c6f7eec93932 prompt_sha256=06ba778561ecac42b08bc89543747a7fb43bfc5fd4e51c0c2ecc2acbe0bbe54c
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC462/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Files clause "Files: .husky/pre-push-checks.sh, src/tests/hooks-composition.infra.test.ts, CLAUDE.md, docs/specs/03-mobile/98_mobile_testing_protocol.md" — pasted Implementation Note "that generated path is not on the Files line, and check-task-files refuses it beside a code file" — the work also rewrites docs/reports/generated/rule-lists-by-kind.md, a path the Files line does not name, and splits into two commits to clear check-task-files — add docs/reports/generated/rule-lists-by-kind.md to the card Files line, as task-435 and task-446 did.
+
+DEFER severity=LOW — AC#1 "A push station run shows the two new steps and then PASS, and the worktree is clean afterwards (no coverage folder)" — NONE — cannot see a push station run in the pasted material; the notes cite only a by-hand R3 (mobile-tests 58/58 suites, 866/866 tests, rc=0; git status shows no mobile/coverage) and a pre-commit related run — paste the push station step log showing mobile-typecheck, mobile-tests, PASS and a clean worktree.
+
+DEFER severity=NIT — RR-0429 "Keep notes short." — CLAUDE.md "Dated 2026-11-24 (task-462, RR-0462): pre-push also runs `mobile-typecheck` and `mobile-tests` (phone typecheck and phone tests, no coverage) after `typecheck` and before the web suite; a worktree without the `mobile/node_modules` link stops at `mobile-typecheck`. To remove them: two lines in `.husky/pre-push-checks.sh` and two entries in `src/tests/hooks-composition.infra.test.ts`." — the dated note also carries removal instructions and a link caveat, longer than a short note — trim to one sentence naming the two new steps.
+
+MET — AC#2 "The gate-list test names the two new lines and step names and passes; it fails on the old six-step list" — src/tests/hooks-composition.infra.test.ts "const STEP_NAMES = ['mcbylaws-gate', ..., 'mobile-typecheck', 'mobile-tests', 'suite'];" — LIST_LINES and STEP_NAMES pin both new lines and names.
+
+MET — AC#4 "CLAUDE.md and the phone testing spec section 5 each carry one dated line naming the new steps" — CLAUDE.md "Dated 2026-11-24 (task-462, RR-0462): pre-push also runs `mobile-typecheck` and `mobile-tests`" — one dated line names both steps.
+
+MET — AC#4 section 5 — docs/specs/03-mobile/98_mobile_testing_protocol.md "Dated note 2026-11-24 (task-462, RR-0462, step 4 of the approved quick plan): the phone typecheck and phone tests also run before every push, as steps `mobile-typecheck` and `mobile-tests` of `.husky/pre-push-checks.sh`" — one dated line placed at the end of section 5, before the section 6 header.
+
+MET — Description "two plain step lines join the one pre-push list ... after the typecheck step and before the web suite" — .husky/pre-push-checks.sh "step mobile-typecheck npm --prefix mobile run typecheck &&" — placed after typecheck and before the suite line.
+
+MET — Description "the phone unit tests run with a command that writes nothing (no coverage folder)" — .husky/pre-push-checks.sh "step mobile-tests npm --prefix mobile run test:ci -- --coverage=false --silent &&" — coverage suppressed.
+
+MET — Description "no switch file, no environment setting" — diff adds neither.
+
+REJECT — AC#3 "A phone test made to fail stops the run before the web suite starts" — the change is accused of only reordering steps with no proof of a stop — not a real issue: mobile-tests sits before suite in the same && chain, so a non-zero phone exit stops the chain before suite (R2 noted).
+
+VERDICT: FAIL
+Clauses checked: 15   Unmet: 2
+Rules met: none
+
+---
+⏱  81518ms (81.5s)
+📊 Tokens — total: 23030, input: 6085, output: 16945, reasoning: 16001

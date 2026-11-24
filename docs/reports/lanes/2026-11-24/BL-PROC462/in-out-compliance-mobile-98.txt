@@ -1,0 +1,219 @@
+LIST mobile-98 sha256:a010fdfa188dfac4360838474341fb6806166b923ed9830a9eb35708bed7824d material sha256:d7cd3072f5f2c90226c1e5e01ebe49f7731a3b22e33af90dc0e7401f120038e1 part 1 of 1 chunk 1 of 1
+RULE LIST mobile-98 (docs/specs/03-mobile/98_mobile_testing_protocol.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: [".husky/pre-push-checks.sh","CLAUDE.md","docs/specs/03-mobile/98_mobile_testing_protocol.md","src/tests/hooks-composition.infra.test.ts"]
+
+# Spec 98 — Mobile Testing Protocol & Local Environment
+
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 2** of `.cursor/active_task.md`.
+
+**Status:** ACTIVE
+**Cross-references:** Spec 90 (Engineering Protocol), Spec 93 (Auth), Spec 94 (Onboarding), Spec 96 (Subscription)
+
+## 1. Goal & Scope
+**Goal:** Establish a bulletproof, reproducible testing environment for the Buildo mobile app, focusing on End-to-End (E2E) testing via Maestro, unit testing via Jest, and safe data-seeding practices.
+**Scope:** This spec defines the Windows/Android local development startup routine, the organization of Maestro E2E test flows, database cloning for realistic test data, and the unit testing boundaries for Zustand stores and routing guards.
+
+## 2. Local Environment Setup (Windows / Android)
+This is the canonical startup routine for developing and testing the Buildo native app locally on a Windows machine.
+
+### 2.1 Prerequisites
+- **Android Studio:** Installed with a configured Virtual Device (Emulator). Target: Pixel 8 (API 34+).
+- **Maestro CLI:** Installed via WSL or Windows command line.
+- **Postgres CLI Tools:** `pg_dump` and `pg_restore` installed and added to the Windows System PATH.
+- **Expo CLI:** `npm install -g eas-cli`
+
+### 2.2 Boot Sequence
+**Step 1: Boot the Physical Environment (Emulator)**
+Always start the emulator via Android Studio before running any Expo commands to ensure background ADB daemons initialize correctly.
+1. Open Android Studio.
+2. Open Device Manager.
+3. Click Play on the Pixel 8 emulator. Wait for the home screen.
+
+**Step 2: Boot the App (Metro Bundler)**
+Open a PowerShell terminal at the project root:
+```powershell
+cd mobile
+npx expo run:android
+```
+*Note: `run:android` compiles the native C++/Java shell (Firebase, Reanimated) and boots the Metro bundler. Leave this terminal open. To recover from a red-screen crash, press `r` in this terminal to reload the JS bundle.*
+
+**Step 3: Seed Local Database (Production Clone)**
+To test real-world scrolling, ranking, and UI rendering, tests must run against production-volume data. Do NOT point the local app at the live production database. Open a second PowerShell terminal:
+```powershell
+# 1. Download a snapshot of production
+pg_dump "postgresql://<PROD_USER>:<PASSWORD>@<HOST>:5432/<DB_NAME>" -F c -f buildo_prod.dump
+
+# 2. Restore to local Postgres instance
+pg_restore --clean --if-exists --no-owner --host=localhost --port=5432 --username=postgres --dbname=buildo buildo_prod.dump
+```
+
+## 3. End-to-End (E2E) Testing Strategy
+**Tool:** Maestro
+**Location:** `mobile/maestro/`
+
+Maestro is used to validate critical user journeys from the perspective of a black-box user. Tests interact with the rendered UI accessibility layer, not internal state.
+
+### 3.1 State Management in Tests
+Every Maestro YAML file must explicitly define its state expectations using `clearState`:
+- **`clearState: true` (Clean Slate):** Used for Auth and Onboarding flows. Wipes MMKV cache and Firebase Auth session before the test runs, simulating a fresh App Store install.
+- **`clearState: false` (Persistent State):** Used for Feed, Settings, and Flight Board flows. Assumes the user has already completed onboarding. Requires manual setup (or a setup script) to populate the local MMKV state before running.
+
+### 3.2 Required Test Suites (Launch Blockers)
+The following YAML flows must pass cleanly before any production release:
+- **`auth.yaml`**: `clearState: true`. Validates sign-in (email/password), sign-out reset behavior, and account linking UI.
+- **`onboarding-leads.yaml`**: `clearState: true`. Validates trade selection lock, address geocoding bounds validation, and routing to the Lead Feed.
+- **`onboarding-tracking.yaml`**: `clearState: true`. Validates bypassing address input, supplier selection, and routing to the Flight Board.
+- **`scroll-feed.yaml`**: `clearState: false`. Validates infinite scrolling, empty states (NO LEADS IN RANGE), and tap-to-save interactions.
+- **`subscription-paywall.yaml`**: Validates the 14-day expiry lock, the lead-count display on the paywall, and the "Maybe later" inline-blur feed state.
+
+### 3.3 Maestro Execution Commands
+Run from the mobile directory in PowerShell:
+```powershell
+# Run a specific flow
+maestro test maestro/auth.yaml
+
+# Open Maestro Studio to inspect UI elements and auto-generate YAML commands
+maestro studio
+```
+
+## 4. Unit & Integration Testing Strategy
+**Tool:** Jest + jest-expo
+**Location:** `mobile/__tests__/`
+
+Unit tests focus strictly on business logic, state machines, and Expo Router guards. UI component snapshot testing is deliberately excluded (Maestro handles UI validation).
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-35 · McFrontend queue · lane MF-35 build; H9, P35-D6 as recommended; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: Wave 1 decision batch"; plan `~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md`): a render smoke (throws / renders non-empty / finds its test ids, labels and host props) and a screen-behaviour test are not snapshots. React Native Testing Library is the tool Spec 90 names for logic hooks (90:88); MF-35 extends its use to the mobile binding and the parcel search screen, and adds it as a dev dependency (`@testing-library/react-native` 13.3.3 with `react-test-renderer` 19.1.0). No Maestro flow covers parcel-tool today.
+
+### 4.1 Required Test Boundaries
+
+This section is **non-exhaustive**. The normative test mandate set lives in **Spec 99 §8 (Test Mandates)** — every implementation MUST satisfy:
+- **§8.1** — idempotency tests for every bridge (B1 server→TanStack, B2 TanStack→Zustand, B3 mutation rollback, B4 auth invalidation, B5 sign-out reset, B6 mid-session 401 refresh).
+- **§8.2** — router branch coverage (AuthGate's 9 routing arms per §5.3).
+- **§8.3** — gate-stability tests (no `isFetching` in render gates per §6.5).
+- **§8.5** — store-enumeration grep test (`mobile/__tests__/storeReset.coverage.test.ts`) — every `create<*Store>(` in `mobile/src/store/*.ts` has a `.getState().reset()` call in `clearLocalSessionState`.
+
+The boundaries below are illustrative examples within those mandates.
+
+**AuthGate & Routing (`subscriptionGate.test.ts`)** — Spec 99 §8.2 + §8.3
+- Validates that unauthenticated users are forced to `/(auth)`.
+- Validates that incomplete profiles are forced to `/(onboarding)`.
+- Validates that `subscription_status = 'expired'` forces `<PaywallScreen>`.
+- Validates that `account_deleted_at = NOT NULL` forces sign-out.
+
+**Zustand Stores (`store.test.ts`)** — Spec 99 §8.1 (idempotency) + §8.5 (store-enumeration)
+- `authStore`: `signOut()` must trigger the §B5 fan-out (`filterStore.reset()`, `userProfileStore.reset()`, `paywallStore.reset()`, `notificationStore.reset()`, `onboardingStore.reset()`, `flightBoardSeenStore.reset()` + `queryClient.clear()` + `mmkvPersister.removeClient()`).
+- `paywallStore`: Must default to `visible: false, dismissed: false` on cold boot. Method renamed `clear()` → `reset()` on 2026-05-03 per Spec 99 §3.4 + §9.19.
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-35 · McFrontend queue · lane MF-35 build; operator, verbatim: "D15 b, D16 a, D17 a D18 a, D-2 a , D-9 a, D-1 a"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-10: MF-35 v3 and MF-51 decisions"; plan `~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md`): the §B5 fan-out above also calls `recentSearchesStore.reset()` (MF-35; Spec 99 §3.4c). `mobile/__tests__/recentSearchesStore.test.ts` pins the store's own reset, and `storeReset.coverage.test.ts` finds it with no count change.
+
+**Data Transformations (`utils.test.ts`)**
+- `snapCoord.ts`: Verify 500m snapping logic and Toronto bounding box re-validation.
+- `formatCurrency.ts`: Verify CAD formatting for permit valuations.
+
+**Parcel Cost Tool (Spec 100)** — Spec 90 §13 (Zod boundary) + Spec 100 §6
+- `useParcelLookup.test.ts`: `fetchParcelLookup` Zod-parses the whitelist envelope (`raw.data`); miss (`match:null, parcel:null`) is a valid parse; drift → `ParcelLookupSchemaError`; the CROSS-CONTRACT LOCK (a server-emitted `parcelId` from the SEARCH response pipes into the LOOKUP path, same schema); `shouldRetryParcelLookup` skips 400/403/429/drift.
+- `parcelCostFormat.test.ts`: envelope-fallback label ("maximum envelope" when `opt_aor` null), absent ≠ `fits:false`, `getCostLine`/`costLineState`, currency/FSI/area formatters, and `SponsorSlot` renders `null` while flag-off.
+
+## 5. Continuous Integration (CI)
+**Tool:** GitHub Actions + EAS (Expo Application Services)
+
+**Pull Request Checks:** On every PR targeting `main`, GitHub Actions runs:
+- `npm run typecheck` (TypeScript compiler)
+- `npm run lint` (ESLint)
+- `npm run test` (Jest unit tests)
+
+**Pre-Build Checks:** EAS Build runs the above sequence natively before attempting an iOS/Android build. If tests fail, the build is aborted to save queue time and credits.
+
+**E2E Automation (Phase 2):** Maestro tests will be integrated into GitHub Actions via Maestro Cloud to run automatically against staging builds.
+
+> Dated note 2026-11-24 (task-462, RR-0462, step 4 of the approved quick plan): the phone typecheck and phone tests also run before every push, as steps `mobile-typecheck` and `mobile-tests` of `.husky/pre-push-checks.sh` (before the web suite, no coverage written); Mobile CI still runs after the push.
+
+## 6. Historical Context & Past Issues
+To prevent future developers from falling into the same local development traps, we document the major environment issues that forced the transition to this protocol.
+
+### 6.1 The "Pointing" Issues (Path Configuration)
+There were persistent issues related to Windows environment variables failing to point correctly to the ADB (Android Debug Bridge) and Android SDK paths. The system would lose track of where the necessary Android build tools were located. This caused frustrating moments where the emulator was running perfectly in Android Studio, but Expo or Maestro couldn't connect to it because they couldn't find the `adb` executable. *Fix: Ensure ANDROID_HOME and platform-tools are permanently added to the Windows System PATH.*
+
+### 6.2 The Great Migration: Expo Go vs. Development Builds
+**The Errors:** The project hit massive dependency mismatches between React Native, Expo Go, and the Reanimated library, resulting in fatal TurboModule and worklet compatibility errors.
+**The Solution:** Expo Go is a sandboxed testing app and cannot run custom native code. Because the Buildo app requires heavy native modules (like Firebase Auth, Apple Sign-In, and Sentry), the transition to a standalone "Development Build" was mandatory. That is why the boot sequence now explicitly uses `npx expo run:android` to physically compile a custom version of the app directly onto the emulator, rather than relying on Expo Go.
+
+### 6.3 Navigation and Missing Plugins
+After moving to the native development build, two significant configuration bugs emerged:
+- **Expo Router Timing Crash:** There were navigation-related crashes where the Expo Router tried to aggressively redirect users (e.g., sending an unauthenticated user to the onboarding flow) before the root app layout had finished mounting.
+- **Plugin Resolution Failures:** There were native build failures related to missing or improperly configured Expo plugins in `app.json`, specifically `@sentry/react-native/app-plugin`, which aborted the native compile step.
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/.husky/pre-push-checks.sh b/.husky/pre-push-checks.sh
+index 3eec7dded9dc8fd36f2f1cb02750ed9fc6b31c1a..b09cd8a85f8a104181349cec99fb04491c284231 100644
+--- a/.husky/pre-push-checks.sh
++++ b/.husky/pre-push-checks.sh
+@@ -9,4 +9,6 @@ step step-validate-staged node scripts/analysis/step-validate.mjs --staged --fas
+ step step-validate-all node scripts/analysis/step-validate.mjs --all --fast &&
+ step spec-split node scripts/analysis/spec-split-check.mjs --check &&
+ step typecheck npm run typecheck &&
++step mobile-typecheck npm --prefix mobile run typecheck &&
++step mobile-tests npm --prefix mobile run test:ci -- --coverage=false --silent &&
+ step suite env VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test $SUITE_ARGS
+diff --git a/CLAUDE.md b/CLAUDE.md
+index ba90979f258949f29d709e75f56af8a8304c6cac..6b2931199d0fde51c67bd4077ad5a8bdbd832dc4 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -31,6 +31,7 @@ Operator runbook + one-off script index: `docs/runbook/README.md` — read befor
+ 3. **Traceability:** Every test file MUST have a `SPEC LINK` header.
+ 4. **Verification:** Never declare a task done until `npm run test` passes.
+ 5. **Automated Gate (Spec 124 R-AG, 2026-09-14):** Husky pre-commit runs the cheap gates + `npm run typecheck && npm run lint && npx vitest related <staged files>`; pre-push runs the FULL `npm run test` (`VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8` since Spec 124 R-CQ, 2026-10-15, Mac mini — two clean 8-fork suites, 68 s each; pre-commit `related` and the J2 steps run at 4; never above 10. Both variables are needed — they are what vitest's forks pool reads, and on a 12-CPU host a lone max throws a min/max conflict; `VITEST_MAX_WORKERS` is ignored. History: 1 fork, then 2 under R-BV on the Windows PC, whose WSL VM OS-killed a 4-fork run — `.husky/pre-push-checks.sh` (the one pre-push check list, run by `.husky/pre-push` and the push station) is the source of truth and `step-validate.mjs` parses its value). **Host concurrency (R-CQ):** no heavy lane — only dev-DB writers, full suites and programme-branch landings run one at a time; everything else runs in parallel; memory floor = `memory_pressure` free ≥ 25 % (`ai-env-check` Host memory line); set-up: `docs/runbook/dev_host_setup.md`. Live-DB tests run under `npm run test:db`. Composition is locked by `src/tests/hooks-composition.infra.test.ts`. ESLint enforces `no-empty` and bans `process.exit()` in `src/`.
++   Dated 2026-11-24 (task-462, RR-0462): pre-push also runs `mobile-typecheck` and `mobile-tests` (phone typecheck and phone tests, no coverage) after `typecheck` and before the web suite; a worktree without the `mobile/node_modules` link stops at `mobile-typecheck`. To remove them: two lines in `.husky/pre-push-checks.sh` and two entries in `src/tests/hooks-composition.infra.test.ts`.
+ 6. **Pre-Flight:** Run `node scripts/ai-env-check.mjs` before starting any task.
+ 7. **Engineering Standards:** Adhere to `docs/specs/00_engineering_standards.md` for all API, UI, and DB code.
+ 8. **Lessons:** Read `tasks/lessons.md` at session start — project-specific gotchas that have already bitten us. When fixing a CRITICAL/HIGH bug or running WF5/WF6, also read `docs/specs/00-architecture/05_knowledge_operating_model.md` for the lesson-routing protocol.
+diff --git a/docs/specs/03-mobile/98_mobile_testing_protocol.md b/docs/specs/03-mobile/98_mobile_testing_protocol.md
+index cb897ba7018ecc33b36363806947fd0431b56f36..2f0488304152a9361ab41470f6eea3b20446fd70 100644
+--- a/docs/specs/03-mobile/98_mobile_testing_protocol.md
++++ b/docs/specs/03-mobile/98_mobile_testing_protocol.md
+@@ -122,6 +122,8 @@ The boundaries below are illustrative examples within those mandates.
+ 
+ **E2E Automation (Phase 2):** Maestro tests will be integrated into GitHub Actions via Maestro Cloud to run automatically against staging builds.
+ 
++> Dated note 2026-11-24 (task-462, RR-0462, step 4 of the approved quick plan): the phone typecheck and phone tests also run before every push, as steps `mobile-typecheck` and `mobile-tests` of `.husky/pre-push-checks.sh` (before the web suite, no coverage written); Mobile CI still runs after the push.
++
+ ## 6. Historical Context & Past Issues
+ To prevent future developers from falling into the same local development traps, we document the major environment issues that forced the transition to this protocol.
+ 
+diff --git a/src/tests/hooks-composition.infra.test.ts b/src/tests/hooks-composition.infra.test.ts
+index a0d93996336774bdd009c91dee14e95e7cec4050..b7745bf9314644684c1111fdb5cece4bf5d9fd16 100644
+--- a/src/tests/hooks-composition.infra.test.ts
++++ b/src/tests/hooks-composition.infra.test.ts
+@@ -521,8 +521,9 @@ describe('hooks-composition (MB-67) — the McBylaws gate lines', () => {
+ 
+ // ---------------------------------------------------------------------------
+ // task-424 STATION.ONELIST (RR-0370 option C, operator: "one list of push checks kept in the repo, used by both the
+-// hook and the station"). The six non-interactive pre-push checks live in ONE file, .husky/pre-push-checks.sh: six
+-// `step <name> <command>` lines joined by `&&`, no function and no branch. Each caller defines step(), GATE_MODE
++// hook and the station"). The eight non-interactive pre-push checks live in ONE file, .husky/pre-push-checks.sh: eight
++// `step <name> <command>` lines joined by `&&`, no function and no branch (task-462, RR-0462: the phone typecheck and
++// phone tests). Each caller defines step(), GATE_MODE
+ // and SUITE_ARGS and sources it; .husky/pre-push supplies a plain step(), GATE_MODE=--push and an empty SUITE_ARGS.
+ // ---------------------------------------------------------------------------
+ describe('task-424 — one list of pre-push checks', () => {
+@@ -547,16 +548,18 @@ describe('task-424 — one list of pre-push checks', () => {
+     'step step-validate-all node scripts/analysis/step-validate.mjs --all --fast &&',
+     'step spec-split node scripts/analysis/spec-split-check.mjs --check &&',
+     'step typecheck npm run typecheck &&',
++    'step mobile-typecheck npm --prefix mobile run typecheck &&',
++    'step mobile-tests npm --prefix mobile run test:ci -- --coverage=false --silent &&',
+     'step suite env VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test $SUITE_ARGS',
+   ];
+-  const STEP_NAMES = ['mcbylaws-gate', 'step-validate-staged', 'step-validate-all', 'spec-split', 'typecheck', 'suite'];
++  const STEP_NAMES = ['mcbylaws-gate', 'step-validate-staged', 'step-validate-all', 'spec-split', 'typecheck', 'mobile-typecheck', 'mobile-tests', 'suite'];
+ 
+   it('T1 — .husky/pre-push runs no check itself: its executable lines are only the step runner, the gate mode, the suite arguments and the source line', () => {
+     expect(checksIn(PRE_PUSH)).toEqual([]);
+     expect(execLines(PRE_PUSH)).toEqual(HOOK_LINES);
+   });
+ 
+-  it('T2 — the list holds exactly the six chain lines, in order, each but the last ending in ` &&`, and the suite once', () => {
++  it('T2 — the list holds exactly the eight chain lines, in order, each but the last ending in ` &&`, and the suite once', () => {
+     const lines = execLines(PRE_PUSH_CHECKS);
+     expect(lines).toEqual(LIST_LINES);
+     lines.slice(0, -1).forEach((l) => expect(l.endsWith(' &&'), l).toBe(true));
+

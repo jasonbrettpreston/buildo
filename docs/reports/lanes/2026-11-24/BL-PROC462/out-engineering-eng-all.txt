@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T19:20:04.228Z file_sha256=bcc88964cc6222fae61b69e5bf74762b32e3ea39e51d1b7e2bc135bd71a67a17 prompt_sha256=798a9933555cc5e37ebcc35ff7172f1933551c25362081235221040fcf040774
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC462/in-out-engineering-eng-all.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 14. The Prevention Loop "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — Implementation Notes "instead the work lands in two commits: (1) the docs commit (Spec 98 note, CLAUDE.md line, the regenerated page ...), (2) the code commit (the list and its pin)" — the RR-0462 gate change puts the Spec 98 / CLAUDE.md lines in a different commit from the two step lines they describe — land the doc lines and the `.husky/pre-push-checks.sh` lines in one commit, or record in the card why the split is safe (same push, no main window where the gate list and its spec disagree).
+
+DEFER severity=LOW — 11. Plan Compliance Checklist "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests" — Implementation Notes "2026-11-24 R1 red: hooks-composition.infra.test.ts now pins the eight-line list (LIST_LINES + STEP_NAMES, plan 4.1)" — the lane report records red/green and R3 runs but no 5-10 item PASS/FAIL checklist walked before the tests — append the checklist with per-item PASS/FAIL to the lane report.
+
+DEFER severity=LOW — 14. The Prevention Loop "Every source/test file's SPEC LINK points at the spec AND the section (§N); new couplings update Cross-Spec Dependencies both directions" — docs/specs/03-mobile/98_mobile_testing_protocol.md "the phone typecheck and phone tests also run before every push, as steps `mobile-typecheck` and `mobile-tests` of `.husky/pre-push-checks.sh`" — a new Spec 98 ↔ pre-push-list coupling is created and the reverse Cross-Spec Dependencies entry is not visible in the material — add the reverse reference (or state that Spec 98 has no Cross-Spec Dependencies block to update).
+
+MET — 5.3 Red-Green Test Cycle "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code" — Implementation Notes "R1 red proven: commit attempt refused ... (T2 expected 6 to equal 8 lines; T4 FAIL_AT=mobile-typecheck expected 0 to be 1)" — the pin was extended and demonstrably failed against the old six-line list before the step lines were added.
+
+MET — 2.1 The "Unhappy Path" Test Mandate "you MUST include tests for error paths and silent failures" — Implementation Notes "the planted no-such-test-path run exits 1 (No tests found), so a phone failure propagates through npm and the chain (T4) stops before suite" — the failing-phone-step path is exercised, not just the happy pass.
+
+MET — 5.5 Test-Layer Map, Parity battery "generated doc ↔ its generator (the drift guard — regenerate to a buffer, diff the committed file)" — Implementation Notes "the pre-commit rule-lists page --check ... refuses the commit until docs/reports/generated/rule-lists-by-kind.md is regenerated (page --write: mobile-98 11,496 -> 11,801 characters)" — the generated page was regenerated to match the Spec 98 edit.
+
+REJECT — 9.4 Pipeline SDK Mandate — that `.husky/pre-push-checks.sh` bypasses `pipeline.run`/`withTransaction` — the rule binds `scripts/*.js` only and the changed file is a husky step list, not a pipeline script.
+
+REJECT — 11. Cross-Layer Contracts Check — that the new steps duplicate a numeric threshold — the two lines add no threshold crossing spec, SQL, Zod or migration, so no `_contracts.json` row is due.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 6   Unmet: 2
+
+---
+⏱  36615ms (36.6s)
+📊 Tokens — total: 24470, input: 17270, output: 7200, reasoning: 6339

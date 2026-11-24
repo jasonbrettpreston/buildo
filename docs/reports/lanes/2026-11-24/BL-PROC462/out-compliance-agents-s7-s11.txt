@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:20:04.188Z file_sha256=63f7b5660b85f8e51c2dca7b42400b04d6b224261b1b6b4847cd7a1db5eafc81 prompt_sha256=a028c01a2cc5dfbdea4e731e18e898a981df6fb64aebe9a5d56bd8ce32891825
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC462/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+DEEFER/BUG etc. — output below.
+
+DEFER severity=MED — Acceptance #3 "A phone test made to fail stops the run before the web suite starts" — src/tests/hooks-composition.infra.test.ts "T4 FAIL_AT=mobile-typecheck" and Implementation Notes "R2: the planted no-such-test-path run exits 1 (No tests found)" — the only evidence that a phone failure halts the chain is a runner error on a nonexistent path, not a test made to fail, so the clause is unproven at its designed assertion (§11.3 "Red must land at the DESIGNED assertion; red-for-the-wrong-reason is a test defect found NOW") — plant a failing assertion in a real phone test, record rc=1 at the mobile-tests step with the suite step never reached, and put that run in the lane report.
+DEFER severity=MED — Acceptance #1 "A push station run shows the two new steps and then PASS, and the worktree is clean afterwards (no coverage folder)" — Implementation Notes "R3 by hand from the worktree root (through guard.mjs --file): mobile-typecheck rc=0" — no push station run is recorded, only by-hand invocations, so an executable claim of the card stands on paper (§11.1 "No unexecuted executable claim") — run the push station once, record the two step names, the PASS and a clean `git status`, and cite that output on the card.
+DEFER severity=LOW — TKT-1 "Wider scope than the header is a new MB item, not a longer brief." — src/tests/hooks-composition.infra.test.ts header block "// task-424 STATION.ONELIST" and card Files line "Files: .husky/pre-push-checks.sh, src/tests/hooks-composition.infra.test.ts, CLAUDE.md, docs/specs/03-mobile/98_mobile_testing_protocol.md" — commit 1 also carries docs/reports/generated/rule-lists-by-kind.md and context-r2.md, paths the card does not name — name those two paths on the card's Files line in a follow-up edit, or file the widened scope as its own item with the pre-commit refusal as the reason.
+DEFER severity=LOW — clause 11.1 "a plan or fold may not contain a claim that COULD be executed but wasn't" — CLAUDE.md "a worktree without the `mobile/node_modules` link stops at `mobile-typecheck`" — that new behaviour claim carries no recorded run in the lane notes, so the documentation asserts an executable fact nobody exercised — run the missing-link case once and cite the output, or drop the sentence from the note.
+DEFER severity=NIT — card "Step 4, 4a and 4b of the approved plan" — docs/specs/03-mobile/98_mobile_testing_protocol.md "> Dated note 2026-11-24 (task-462, RR-0462, step 4 of the approved quick plan)" — the note attributes the change to step 4 only while the card attributes it to steps 4, 4a and 4b — change the parenthetical to "steps 4, 4a and 4b".
+
+MET — card "two plain step lines join the one pre-push list (.husky/pre-push-checks.sh) ... after the typecheck step and before the web suite" — .husky/pre-push-checks.sh "step mobile-typecheck npm --prefix mobile run typecheck &&" — both lines sit after typecheck and before the suite line.
+MET — card "The test that pins the list (src/tests/hooks-composition.infra.test.ts, LIST_LINES and STEP_NAMES) is updated in the same commit" — src/tests/hooks-composition.infra.test.ts "const STEP_NAMES = ['mcbylaws-gate', ... 'mobile-typecheck', 'mobile-tests', 'suite'];" — LIST_LINES and STEP_NAMES plus the T2 text all move to eight in this diff.
+MET — Acceptance #2 "The gate-list test names the two new lines and step names and passes; it fails on the old six-step list" — Implementation Notes "commit attempt refused by the pre-commit related run, 2 failed | 52 passed (T2 expected 6 to equal 8 lines" — red at T2 against the old list, green against the new one.
+MET — Acceptance #4 "CLAUDE.md and the phone testing spec section 5 each carry one dated line naming the new steps" — CLAUDE.md "Dated 2026-11-24 (task-462, RR-0462): pre-push also runs `mobile-typecheck` and `mobile-tests`" — one dated line in each of the two documents names both steps.
+MET — card "the phone unit tests run with a command that writes nothing (no coverage folder: the station refuses a worktree that changed during the run)" — .husky/pre-push-checks.sh "step mobile-tests npm --prefix mobile run test:ci -- --coverage=false --silent &&" — the coverage write is turned off in the command itself.
+MET — card "Off means removing the two lines ... no switch file, no environment setting" — CLAUDE.md "To remove them: two lines in `.husky/pre-push-checks.sh` and two entries in `src/tests/hooks-composition.infra.test.ts`." — the documented off path is line deletion, with no switch and no env setting.
+MET — RR-0429 "Keep notes short." — docs/specs/03-mobile/98_mobile_testing_protocol.md "the phone typecheck and phone tests also run before every push, as steps `mobile-typecheck` and `mobile-tests`" — the spec note is a single dated sentence.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 2
+Rules met: none
+
+---
+⏱  51516ms (51.5s)
+📊 Tokens — total: 28254, input: 18163, output: 10091, reasoning: 8793
