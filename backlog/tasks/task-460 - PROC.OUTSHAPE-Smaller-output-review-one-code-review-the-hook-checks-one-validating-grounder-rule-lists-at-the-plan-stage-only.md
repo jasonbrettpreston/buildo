@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-PROC460'
 created_date: '2026-11-24T18:04:00Z'
-updated_date: '2026-11-24T19:56:00Z'
+updated_date: '2026-11-24T19:57:00Z'
 labels:
   - ProcessImprovement
 milestone: m-1
@@ -256,3 +256,15 @@ rg#3 MED folded are lists of docs/sp
 
 2026-11-24 fix commit 7de2c9777 (red-r2: T4b and T11 failed; green-r2: 2 files, 179 passed). Round-1 grounder and triage kept byte for byte outside the lane folder: docs/reports/reviews/task-460/GROUNDER-OUT-R1.md and TRIAGE-OUT-R1.md (FIXSHA set to 7de2c9777). Output review round 2 re-made under the same names on the new diff (base e61a12e0a, head 7de2c9777; context-r4.md; eng-all now 4 parts): 31 BUG/DEFER lines, 1 HIGH (out-engineering-eng-all-p2#1). No board merge this round. Grounder owed (round 2).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+What landed (work 77286d717, 585733c10, fix 7de2c9777; every commit through the real hooks, last green 179 passed, earlier 370 passed): the output review of a build or fix task is the code review on the diff, the hook checks and one validating grounder (diff against plan and acceptance lines, code-review findings, changed descriptors, milestone objectives, changed sensitive files for exploit paths, red then green); every rule list is off at output (rule-lists.json output_off names all 58 lists); security off at output per RR-0464; plan stage unchanged; a check or doc task keeps every list.
+
+Review round 1: 7 fixed, 0 task, 0 ruling, 0 wontfix, 7 pile; grounder docs/reports/reviews/task-460/GROUNDER-OUT-R1.md; triage docs/reports/reviews/task-460/TRIAGE-OUT-R1.md
+out-compliance-agents-s5-1to3#1 MED fixed 7de2c97
+out-compliance-agents-s7-s11-p1#1 MED fixed 7de2c97
+out-compliance-inc-S-p1#1 MED fixed 7de2c97
+out-compliance-ms-S#3 MED fixed 7de2c97
+<!-- SECTION:FINAL_SUMMARY:END -->
