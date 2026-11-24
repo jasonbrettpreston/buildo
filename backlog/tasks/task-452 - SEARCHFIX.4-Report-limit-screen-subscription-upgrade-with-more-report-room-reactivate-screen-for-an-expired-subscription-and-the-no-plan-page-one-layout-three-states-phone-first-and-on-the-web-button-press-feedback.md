@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T20:03:00Z'
+updated_date: '2026-11-24T20:14:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -216,7 +216,7 @@ AC3:
 - Behaviour "no plan yet": status null keeps today's notice (a lock until task-357: the test carries a comment naming task-357, whose card says to flip it).
 - unauthorized golden.
 
-Report-mount stubs: reportScreen.gateStability (:22), reportScreen.mount (:33) and semiQuestionPage (:35) give their useParcelLookup mock a useParcelEntitlement stub; gateStability is re-run.
+Report-mount stubs: reportScreen.gateStability (:22), reportScreen.mount (:33) and semiQuestionPage (:35) give their useParcelLookup mock a useParcelEntitlement stub; gateStability is re-run. reportScreen.mount also gets two cases that mount the real route (the wiring of [parcelId].tsx): a ReportLimitError with a limit read shows the wall (red first, as the route passes no error today), and the same error with the read pending shows the loading lifecycle, not the error one.
 
 AC4 (web unchanged):
 - check-task-files: no web path in the diff.
@@ -326,13 +326,15 @@ O3. RULED, order: 452 lands before 357, because 357 extends 452's surface, hook,
 - The next free S id.
 - The test total after the change.
 
-Plan review round 1: 58 folded, 0 task, 0 ruling, 0 wontfix, 6 pile; grounder docs/reports/reviews/task-452/GROUNDER-PLAN.md; triage docs/reports/reviews/task-452/TRIAGE-PLAN.md
+Plan review round 1: 60 folded, 0 task, 0 ruling, 0 wontfix, 6 pile; grounder docs/reports/reviews/task-452/GROUNDER-PLAN.md; triage docs/reports/reviews/task-452/TRIAGE-PLAN.md
 plan-compliance-inc-S#1 MED folded once the entitlement
 plan-compliance-mobile-90#1 HIGH folded ACCOUNT_DELETED stil
 plan-compliance-mobile-90#2 HIGH folded it reads the existin
 plan-compliance-mobile-90#5 MED folded SEARCHFIX.2 is task-
-plan-compliance-mobile-98#1 HIGH folded once the entitlement
-plan-compliance-mobile-98#3 MED folded Gate stability (Spec
+plan-compliance-mobile-98#2 HIGH folded once the entitlement
+plan-compliance-mobile-98#3 MED folded task-357 takes a dep
+plan-compliance-mobile-98#4 MED folded Gate stability (Spec
+plan-compliance-mobile-98#5 MED folded mount the real route
 plan-compliance-mobile-99-p1#1 HIGH folded Gate stability (Spec
 plan-compliance-mobile-99-p1#2 MED folded ACCOUNT_DELETED stil
 plan-compliance-mobile-99-p1#4 MED folded task-357 takes a dep
