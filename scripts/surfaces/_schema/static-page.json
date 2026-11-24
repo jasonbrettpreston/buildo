@@ -30,6 +30,12 @@
        },
        {
         "role": "mailto",
+        "content": "help.mailto.wrong_lot",
+        "topic": "wrong-lot",
+        "value": "support_inbox"
+       },
+       {
+        "role": "mailto",
         "content": "help.mailto.lot_match",
         "topic": "lot_match",
         "value": "support_inbox"

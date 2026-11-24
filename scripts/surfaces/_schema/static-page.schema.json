@@ -181,6 +181,7 @@
             "general",
             "address_match",
             "lot_match",
+            "wrong-lot",
             "billing",
             "enterprise"
           ]

@@ -4,9 +4,10 @@
 //
 // SRCH.DAYLIGHT (task-322) · the search pages (search + candidate list, choose-your-lot map page, semi question page) use only the Daylight
 // report-* tokens of mobile/tailwind.config.js, and the three elements small pages v8 drops are gone: A.13 (in-bar Account button), B.8 (faint
-// tappable neighbour outlines), C.9 (lot card frontage and zoning line). Scope of the legacy-class rule: the three layout tables and the render
+// tappable neighbour outlines), C.9 (lot card frontage and zoning line). Scope of the legacy-class rule: the two layout tables and the render
 // trees; the Account, Tracked Lots and shelf constants (PARCEL_SEARCH_TOKENS, TRACKED_LOTS_HEX, PARCEL_SHELF_HEX, PARCEL_SEARCH_HEX) are named
-// exemptions because those screens still read them.
+// exemptions because those screens still read them. Dated 2026-11-24 (task-450 R5, GROUNDER-D D7; prior text kept): "three layout tables" read "two": the rule reads
+// PARCEL_SEARCH_LAYOUT and LOT_MAP_LAYOUT.
 import fs from 'node:fs';
 import path from 'node:path';
 import { searchProps, SEARCH_SLICE, type PropsNode } from '@/components/surfaces/SearchBinding';
@@ -40,7 +41,7 @@ const classTokens = (c: string): string[] => c.split(/\s+/).filter(Boolean);
 const LEGACY = /(\[#[0-9a-fA-F]{3,8}\]|zinc-\d+|red-\d+|bg-feed|text-primary$)/;
 
 describe('Daylight tokens only (R-D1, small pages v8)', () => {
-  it('the three layout tables hold no legacy dark class and no raw hex class', () => {
+  it('the two layout tables hold no legacy dark class and no raw hex class', () => {
     const bad: string[] = [];
     for (const [table, o] of Object.entries({ PARCEL_SEARCH_LAYOUT, LOT_MAP_LAYOUT }) as Array<[string, Record<string, string>]>) {
       for (const [k, v] of Object.entries(o)) for (const t of classTokens(v)) if (LEGACY.test(t.replace(/^[a-z-]*:/, ''))) bad.push(`${table}.${k}: ${t}`);

@@ -38,7 +38,7 @@ describe('MF-46 follow-up: "Report incorrect address match" (OUTPUT regression F
   it('the address list carries the report link; a press calls open_help with the topic and the typed address', () => {
     const a = show('ambiguous');
     fireEvent.press(screen.getByTestId('parcel-search-report'));
-    expect(a.open_help).toHaveBeenCalledWith('address_match', (S.ambiguous as SearchSituation).input);
+    expect(a.open_help).toHaveBeenCalledWith('wrong-lot', (S.ambiguous as SearchSituation).input); // task-450 AC6 (B.7): the topic "Wrong address or lot"
   });
   it('RED: a host that does not pass open_help cannot render the address list (the unknown-action fence)', () => {
     const { open_help: _unused, ...rest } = actions();
@@ -73,11 +73,16 @@ describe('mobile render smoke (FE-33 mobile case)', () => {
     expect(a.set_input).toHaveBeenCalledWith('26 Hurlingham Cres');
     expect(screen.getByLabelText('Search Bathurst St')).toBeTruthy();
   });
-  it('RateLimitError(0): "0s" and the error notice with Retry, both (RG-12, MF35-DF1); Retry is inside the error notice and called with no argument', () => {
-    const a = show('rate_limited_zero');
+  // Dated 2026-11-24 (task-450 L3; prior title kept: "RateLimitError(0): "0s" and the error notice with Retry, both (RG-12, MF35-DF1)"): MF35-DF1 is closed.
+  it('RateLimitError(0): "0s" only, one message, no error notice and no Retry (MF35-DF1 closed, task-450)', () => {
+    show('rate_limited_zero');
     expect(within(screen.getByTestId('parcel-search-ratelimit')).getByText('Too many searches. Try again in 0s.')).toBeTruthy();
-    const retry = within(screen.getByTestId('parcel-search-error')).getByLabelText('Retry the search');
-    fireEvent.press(retry);
+    expect(screen.queryByTestId('parcel-search-error')).toBeNull();
+    expect(screen.queryByLabelText('Retry the search')).toBeNull();
+  });
+  it('Retry inside the error notice is called with no argument', () => {
+    const a = show('error');
+    fireEvent.press(within(screen.getByTestId('parcel-search-error')).getByLabelText('Retry the search'));
     expect(a.retry).toHaveBeenCalledWith();
   });
   it('schema drift: its own text and no Retry; 403: the entitlement text, never the miss copy', () => {

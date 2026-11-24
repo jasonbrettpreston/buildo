@@ -27,7 +27,6 @@ import {
   isOutsideToronto,
   isOverCandidateCap,
   parcelSearchRoute,
-  type ParcelMatchType,
 } from '@/lib/parcelSearchMatch';
 import { shouldHideAppTabBar } from '@/lib/appShell';
 import {
@@ -50,13 +49,10 @@ function response(over: Partial<ConsumerParcelLookupResult> = {}): ConsumerParce
 
 const candidate = (parcelId: string, address: string) => ({ parcelId, address });
 
-/** Force a match type the current `matchType` enum cannot express — the future contract's value. */
-function withDeclaredType(type: ParcelMatchType): ConsumerParcelLookupResult {
-  return response({
-    // Deliberate cast: `ParcelMatchSchema.matchType` is the narrow 'exact'|'typeahead'|'direct'
-    // enum today. This is the shape the widened contract will send.
-    match: { parcelId: 'PIN-1', matchType: type, address: '1 Test St' },
-  } as unknown as Partial<ConsumerParcelLookupResult>);
+/** A payload that names its outcome, as the server sends it (MF-53). Dated 2026-11-24 (task-450 SEARCHFIX.2, Q19): the declared-matchType helper
+ * withDeclaredType went with the deleted client derivation; a payload without `resolution` now reads as the server's no_match. */
+function withResolution(resolution: NonNullable<ConsumerParcelLookupResult['resolution']>, extra: Partial<ConsumerParcelLookupResult> = {}): ConsumerParcelLookupResult {
+  return { ...response(), resolution, map: null, ...extra } as ConsumerParcelLookupResult;
 }
 
 describe('the SEARCH archetype parameters match the descriptor', () => {
@@ -80,7 +76,7 @@ describe('the SEARCH archetype parameters match the descriptor', () => {
 
 describe('deriveMatchType — all five ruled types', () => {
   it('unique: a resolved match navigates straight to the lot', () => {
-    const data = response({ match: { parcelId: 'PIN-777', matchType: 'exact', address: '26 Hurlingham Cres' } });
+    const data = withResolution('unique', { match: { parcelId: 'PIN-777', matchType: 'exact', address: '26 Hurlingham Cres' } });
     expect(deriveMatchType('26 Hurlingham Cres', data)).toBe('unique');
     expect(parcelSearchRoute('unique', { parcelId: 'PIN-777', query: '26 Hurlingham Cres' })).toBe(
       '/(app)/parcel-tool/PIN-777',
@@ -88,12 +84,12 @@ describe('deriveMatchType — all five ruled types', () => {
   });
 
   it('unique: a typeahead single hit is the same type — the branch is not on matchType flavour', () => {
-    const data = response({ match: { parcelId: 'PIN-8', matchType: 'typeahead', address: '8 Elm St' } });
+    const data = withResolution('unique', { match: { parcelId: 'PIN-8', matchType: 'typeahead', address: '8 Elm St' } });
     expect(deriveMatchType('8 Elm', data)).toBe('unique');
   });
 
   it('text_candidates: several text matches render a list, not a map', () => {
-    const data = response({
+    const data = withResolution('text_candidates', {
       candidates: [candidate('PIN-1', '10 Elm St'), candidate('PIN-2', '10 Elm Ave')],
     });
     expect(deriveMatchType('10 Elm', data)).toBe('text_candidates');
@@ -101,18 +97,18 @@ describe('deriveMatchType — all five ruled types', () => {
     expect(parcelSearchRoute('text_candidates', { query: '10 Elm' })).toBeNull();
   });
 
-  it('multi_parcel: the contract-declared type wins and routes to the map', () => {
-    // Not derivable from today's payload — one address point linked to 2+ parcels is
+  it('multi_parcel: the server resolution wins and routes to the map', () => {
+    // Not derivable from the payload shape — one address point linked to 2+ parcels is
     // indistinguishable from N separate text matches. Driven by the server value.
-    const data = withDeclaredType('multi_parcel');
+    const data = withResolution('multi_parcel');
     expect(deriveMatchType('1 Test St', data)).toBe('multi_parcel');
     expect(parcelSearchRoute('multi_parcel', { query: '1 Test St' })).toBe(
       '/(app)/parcel-tool/disambiguate?q=1%20Test%20St&kind=multi_parcel',
     );
   });
 
-  it('unlinked: the contract-declared type wins and routes to the map', () => {
-    const data = withDeclaredType('unlinked');
+  it('unlinked: the server resolution wins and routes to the map', () => {
+    const data = withResolution('unlinked');
     expect(deriveMatchType('1 Test St', data)).toBe('unlinked');
     expect(parcelSearchRoute('unlinked', { query: '1 Test St' })).toBe(
       '/(app)/parcel-tool/disambiguate?q=1%20Test%20St&kind=unlinked',
@@ -136,10 +132,10 @@ describe('deriveMatchType — all five ruled types', () => {
 
   it('every one of the five ruled types is reachable from deriveMatchType', () => {
     const reached = new Set<string>([
-      deriveMatchType('26 Hurlingham Cres', response({ match: { parcelId: 'P', matchType: 'exact', address: 'a' } })),
-      deriveMatchType('10 Elm', response({ candidates: [candidate('P', '10 Elm St')] })),
-      deriveMatchType('x', withDeclaredType('multi_parcel')),
-      deriveMatchType('x', withDeclaredType('unlinked')),
+      deriveMatchType('26 Hurlingham Cres', withResolution('unique', { match: { parcelId: 'P', matchType: 'exact', address: 'a' } })),
+      deriveMatchType('10 Elm', withResolution('text_candidates', { candidates: [candidate('P', '10 Elm St')] })),
+      deriveMatchType('x', withResolution('multi_parcel')),
+      deriveMatchType('x', withResolution('unlinked')),
       deriveMatchType('Queen & Spadina', response()),
     ]);
     expect([...PARCEL_MATCH_TYPES].every((t) => reached.has(t))).toBe(true);
@@ -188,7 +184,7 @@ describe('the Toronto-only rule (operator ruling 2026-09-16 (b))', () => {
   });
 
   it('refuses even when the server somehow returned a match', () => {
-    const data = response({ match: { parcelId: 'P', matchType: 'exact', address: 'x' } });
+    const data = withResolution('unique', { match: { parcelId: 'P', matchType: 'exact', address: 'x' } });
     expect(deriveMatchType('1 King St, Hamilton', data)).toBe('outside_toronto');
   });
 
@@ -386,15 +382,17 @@ describe('MF-35 situation helpers', () => {
   const S = require('./fixtures/parcelSearch.situations.json') as Record<string, unknown>;
   const base = { input: '', debounced: '', data: undefined, error: null as unknown, isFetching: false, schemaDrift: false, recent: [] as string[], selectedParcelId: null, cap: 10, minQueryLen: 3 };
   const cands = (S.ambiguous as { candidates: { parcelId: string; address: string }[] }).candidates;
-  const lookup = (candidates: { parcelId: string; address: string }[], match: unknown = null) => ({ match, candidates, warnings: [], parcel: null }) as never;
+  // Dated 2026-11-24 (task-450 SEARCHFIX.2, Q19): the payloads carry the server's `resolution`, as the server always sends it (a payload without it reads as no_match).
+  const lookup = (candidates: { parcelId: string; address: string }[], match: unknown = null) =>
+    ({ match, candidates, warnings: [], parcel: null, resolution: match ? 'unique' : candidates.length > 0 ? 'text_candidates' : 'no_match' }) as never;
 
   it('searchQueryArg: "" outside Toronto, the query otherwise (row 11)', () => {
     expect(M.searchQueryArg('100 City Centre Dr, Mississauga')).toBe('');
     expect(M.searchQueryArg('26 Hurlingham Cres')).toBe('26 Hurlingham Cres');
   });
-  it('classifyParcelSearchError on the real classes (row 12; MF35-DF1 pinned)', () => {
+  it('classifyParcelSearchError on the real classes (row 12; MF35-DF1 closed, task-450 L3: a retry-after of 0 is one message, not two)', () => {
     expect(M.classifyParcelSearchError(new RateLimitError(7), false)).toEqual({ rateLimited: true, retryAfterSeconds: 7, entitlement: false, unexpected: false, schemaDrift: false });
-    expect(M.classifyParcelSearchError(new RateLimitError(0), false)).toEqual({ rateLimited: true, retryAfterSeconds: 0, entitlement: false, unexpected: true, schemaDrift: false });
+    expect(M.classifyParcelSearchError(new RateLimitError(0), false)).toEqual({ rateLimited: true, retryAfterSeconds: 0, entitlement: false, unexpected: false, schemaDrift: false });
     expect(M.classifyParcelSearchError(new ApiError(403, 'x'), false).entitlement).toBe(true);
     expect(M.classifyParcelSearchError(new ApiError(400, 'x'), false)).toMatchObject({ entitlement: false, unexpected: true });
     expect(M.classifyParcelSearchError(new Error('drift'), true)).toMatchObject({ unexpected: true, schemaDrift: true });
@@ -409,23 +407,90 @@ describe('MF-35 situation helpers', () => {
     expect(M.buildSearchSituation({ ...base, input: 'zzzz qqqq', debounced: 'zzzz qqqq', data: lookup([]) })).toEqual(S.miss);
     expect(M.buildSearchSituation({ ...base, input: '26 Hurlingham Cres', debounced: '26 Hurlingham Cres', data: lookup([], { parcelId: '100026', matchType: 'exact' }), recent: ['Bathurst St'] })).toEqual(S.redirect);
   });
-  it('truth table: error + data lists no candidates; the cap after the slice with the refine line at >= the cap; a miss needs !isFetching and no error', () => {
+  it('truth table: error + data lists no candidates; the cap after the slice with the refine line at >= the cap; a settled miss keeps its line on a re-fetch (task-450 V4) and needs no error', () => {
     const many = lookup(cands.slice(0, 9));
     expect(M.buildSearchSituation({ ...base, debounced: 'Bathurst St', data: many, error: new Error('x') }).candidates).toEqual([]);
-    expect(M.buildSearchSituation({ ...base, debounced: 'Bathurst St', data: many }).overCap).toBe(false);
+    expect(M.buildSearchSituation({ ...base, debounced: '100 Bathurst St', data: many }).overCap).toBe(false);
     expect(M.buildSearchSituation({ ...base, debounced: 'Bathurst St', data: lookup(cands) }).overCap).toBe(true);
-    expect(M.buildSearchSituation({ ...base, debounced: 'zzzz qqqq', data: lookup([]), isFetching: true }).showMiss).toBe(false);
+    expect(M.buildSearchSituation({ ...base, debounced: 'zzzz qqqq', data: lookup([]), isFetching: true }).showMiss).toBe(true);
+    expect(M.buildSearchSituation({ ...base, debounced: 'zzzz qqqq', data: lookup([]), error: new Error('x') }).showMiss).toBe(false);
     expect(M.buildSearchSituation({ ...base, debounced: '26', error: new Error('x') }).showPrompt).toBe(false);
     expect(M.buildSearchSituation({ ...base, debounced: 'Bathurst St', data: lookup(cands), selectedParcelId: 'gone' }).selectedParcelId).toBeNull();
   });
+  it('task-450 AC2 (V4): a settled miss fetched again keeps the no-match line (no flicker)', () => {
+    const settled = M.buildSearchSituation({ ...base, input: 'zzzz qqqq', debounced: 'zzzz qqqq', data: lookup([]), isFetching: false });
+    const refetching = M.buildSearchSituation({ ...base, input: 'zzzz qqqq', debounced: 'zzzz qqqq', data: lookup([]), isFetching: true });
+    expect(settled.showMiss).toBe(true);
+    expect(refetching.showMiss).toBe(true);
+  });
 });
 
-// MF-53 · T5 (Spec 100 §2.6 dated note 2026-11-11; PLAN panel regression MED-4/MED-6): the server's `resolution` wins; a payload without it
-// keeps the client derivation above (an older server); a server `no_match` still defers to the intersection shape; a server
-// `text_candidates` now beats the intersection shape. The anti-guess and five-types tests above are unchanged.
+// ── task-450 SEARCHFIX.2 AC1 (fold section 2 line 42, finding 2a phone side; RR-0443 c MD:2284; ruled B, QUESTIONS-RULED.md Q8.1) ─────────────────────
+// A street typed with no house number shows the refine line ("Add a house number to narrow it down.") and keeps the close-address list. Rows are the
+// typed-address seat's real data (seat-reality-check-1.md); "Elm" with one row is synthetic until task-449 (today the server answers unique for it).
+describe('a street with no house number', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const M = require('@/lib/parcelSearchMatch') as typeof import('@/lib/parcelSearchMatch');
+  const base = { data: undefined, error: null as unknown, isFetching: false, schemaDrift: false, recent: [] as string[], selectedParcelId: null, cap: 10, minQueryLen: 3 };
+  const rows = (...r: [string, string][]) => r.map(([parcelId, address]) => ({ parcelId, address }));
+  const tc = (cands: { parcelId: string; address: string }[]) => withResolution('text_candidates', { candidates: cands });
+  const at = (q: string, data: ConsumerParcelLookupResult | undefined) => M.buildSearchSituation({ ...base, input: q, debounced: q, data });
+  const gerrard = rows(['5440777', '1 Gerrard St W'], ['10640216', '1000 Gerrard St E'], ['5402856', '1001 Gerrard St E']);
+
+  it.each([
+    ['Gerrard St', gerrard],
+    ['Elm', rows(['5379936', '1 Elm Ave'])],
+    ['Gerrard St W', rows(['5440777', '1 Gerrard St W'])],
+    ['Gerrard St, Toronto', gerrard],
+  ])('%s: the refine line shows and the rows are kept (ruled B)', (q, cands) => {
+    const s = at(q, tc(cands));
+    expect(s.outcome).toBe('text_candidates');
+    expect(s.overCap).toBe(true);
+    expect(s.candidates).toEqual(cands);
+    expect(s.route).toBeNull();
+  });
+
+  it('known state: "Highway 27" holds a digit, so it counts as numbered and shows no refine line (as today)', () => {
+    expect(at('Highway 27', tc(rows(['P1', '1 Highway 27']))).overCap).toBe(false);
+  });
+
+  it.each([
+    ['383 El', rows(['5106944', '383 Elm Ave']), 3],
+    ['679 Que', rows(['5476455', '679 Queen St W'], ['5497535', '679 Queen St E']), 2],
+    ['123 Yongee St', rows(['5179889', '123 Yonge St'], ['5464983', '123 Yonge Blvd']), 2],
+    ['Unit 4, 123 Yonge St', rows(['5464983', '123 Yonge St']), 1],
+  ])('%s: a numbered query keeps the list and shows no refine line', (q, cands) => {
+    const s = at(q, tc(cands));
+    expect(s.overCap).toBe(false);
+    expect(s.candidates).toEqual(cands);
+  });
+
+  it('other states: an intersection, a miss, outside Toronto and a short query show no refine line', () => {
+    const inter = at('King and Bay', withResolution('no_match'));
+    expect(inter.outcome).toBe('intersection');
+    expect(inter.overCap).toBe(false);
+    const miss = at('zzzz qqqq', withResolution('no_match'));
+    expect(miss.showMiss).toBe(true);
+    expect(miss.overCap).toBe(false);
+    expect(at('123 Main St, Mississauga', undefined).outcome).toBe('outside_toronto');
+    const short = at('12', undefined);
+    expect(short.showPrompt).toBe(true);
+    expect(short.overCap).toBe(false);
+  });
+
+  it('hasHouseNumber reads the text before the first comma', () => {
+    expect(M.hasHouseNumber('Gerrard St')).toBe(false);
+    expect(M.hasHouseNumber('Gerrard St, M4M 1A1')).toBe(false);
+    expect(M.hasHouseNumber('383 El')).toBe(true);
+    expect(M.hasHouseNumber('Unit 4, 123 Yonge St')).toBe(true);
+  });
+});
+
+// MF-53 · T5 (Spec 100 §2.6 dated note 2026-11-11; PLAN panel regression MED-4/MED-6): the server's `resolution` wins; a server `no_match` still
+// defers to the intersection shape; a server `text_candidates` now beats the intersection shape. Dated 2026-11-24 (task-450 SEARCHFIX.2, Q19;
+// prior text kept): "a payload without it keeps the client derivation above (an older server)" is no longer true: the client derivation is deleted
+// and a payload without `resolution` reads as the server's no_match (or the intersection shape). The server always sends it (lookup-flow.ts).
 describe('deriveMatchType — the server resolution (MF-53)', () => {
-  const withResolution = (resolution: NonNullable<ConsumerParcelLookupResult['resolution']>, extra: Partial<ConsumerParcelLookupResult> = {}) =>
-    ({ ...response(), resolution, map: null, ...extra }) as ConsumerParcelLookupResult;
   it.each(['unique', 'text_candidates', 'multi_parcel', 'unlinked'] as const)('server %s is the outcome', (r) => {
     const extra = r === 'unique' ? { match: { parcelId: 'P', matchType: 'exact' as const, address: '12 Main St' } } : {};
     expect(deriveMatchType('12 Main St', withResolution(r, extra))).toBe(r);
@@ -437,12 +502,17 @@ describe('deriveMatchType — the server resolution (MF-53)', () => {
   it('server text_candidates beats the intersection shape (the new order, stated)', () => {
     expect(deriveMatchType('Queen and Spadina', withResolution('text_candidates', { candidates: [candidate('P', 'Queen St')] }))).toBe('text_candidates');
   });
-  it('server unlinked is taken as sent even with zero candidates; without resolution a zero-candidate payload stays no_match', () => {
+  it('server unlinked is taken as sent even with zero candidates; without resolution a payload reads as no_match', () => {
     expect(deriveMatchType('12 Main St', withResolution('unlinked'))).toBe('unlinked');
     expect(deriveMatchType('12 Main St', response())).toBe('no_match');
   });
-  it('a server unique without a match is not trusted (falls through to the derivation; OUTPUT panel RG-1)', () => {
+  it('a server unique without a match is not trusted (reads as no_match; OUTPUT panel RG-1)', () => {
     expect(deriveMatchType('12 Main St', withResolution('unique', { match: null }))).toBe('no_match');
+  });
+  it('task-450 Q19: a payload without resolution is no_match even with a match', () => {
+    expect(deriveMatchType('26 Hurlingham Cres', response({ match: { parcelId: 'P', matchType: 'exact', address: '26 Hurlingham Cres' } }))).toBe('no_match');
+    expect(deriveMatchType('10 Elm', response({ candidates: [candidate('P', '10 Elm St')] }))).toBe('no_match');
+    expect(deriveMatchType('Queen & Spadina', response())).toBe('intersection');
   });
   it('RED (planted): a client that ignores resolution would guess no_match for a server unlinked', () => {
     const legacy = ({ resolution: _r, ...rest }: ConsumerParcelLookupResult) => rest as ConsumerParcelLookupResult;

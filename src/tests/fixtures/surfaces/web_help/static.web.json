@@ -99,6 +99,26 @@
                 "component": "Button",
                 "props": {
                   "key": "help-4",
+                  "testID": "static-mailto-wrong-lot",
+                  "topic": "wrong-lot",
+                  "mailto": {
+                    "derived": "support_inbox"
+                  },
+                  "size": "lg",
+                  "variant": "light",
+                  "color": "amber",
+                  "className": "self-start rounded-xl"
+                },
+                "children": [
+                  {
+                    "content": "help.mailto.wrong_lot"
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "help-5",
                   "testID": "static-mailto-lot_match",
                   "topic": "lot_match",
                   "mailto": {
@@ -118,7 +138,7 @@
               {
                 "component": "Button",
                 "props": {
-                  "key": "help-5",
+                  "key": "help-6",
                   "testID": "static-mailto-billing",
                   "topic": "billing",
                   "mailto": {
@@ -138,7 +158,7 @@
               {
                 "component": "Button",
                 "props": {
-                  "key": "help-6",
+                  "key": "help-7",
                   "testID": "static-mailto-enterprise",
                   "topic": "enterprise",
                   "mailto": {
@@ -247,7 +267,7 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json": "36736ab836e9d830",
+      "scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json": "3a0857008230629b",
       "scripts/surfaces/parcel_product/F06/surfaces/web_help.descriptor.json": "a98d2ac367513978"
     }
   }

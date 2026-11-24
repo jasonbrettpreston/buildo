@@ -24,6 +24,11 @@ import Link from 'next/link';
 import { Alert, Button, Group, Loader, Stack, Text, TextInput, Title } from '@mantine/core';
 import { footerNode, type FooterLayout, type FooterSection } from './footerNode';
 import { diffCandidateAddress, parcelSearchPath, reportsLeftShown, type AddressSegment, type EntitlementLine, type SearchOutcome } from '../../../../mobile/src/lib/parcelSearchCore';
+// task-450 L5: the minimum length is the setting the phone reads (the generated slice's config.min_query_len, held to its bounds by sliceNumber).
+import { sliceNumber } from '../../../../mobile/src/lib/sliceConfig';
+import searchSlice from '../../../../mobile/src/generated/surfaces/mobile_parcel_search.json';
+
+const SEARCH_MIN_QUERY_LEN = sliceNumber(searchSlice, 'min_query_len');
 
 export type Ref = { content: string } | { contract: string } | { derived: string };
 export type Template = { text: Ref; vars: Record<string, Ref> };
@@ -122,7 +127,7 @@ const pill = (s: WebSituation): WebNode =>
       onChange: { action: 'change_input' },
       placeholder: content('search.input.placeholder'),
       ariaLabel: content('search.input.label'),
-      ariaDescription: content('search.input.hint'),
+      ariaDescription: { text: content('search.input.hint'), vars: { min: derived('min_query_len') } }, // task-450 L5
       autoComplete: 'off',
     }),
     ...(s.isFetching ? [node('Loader', { key: 'spinner', testID: 'parcel-search-spinner', size: 'sm', color: 'yellow', ariaLabel: content('search.searching') })] : []),
@@ -234,7 +239,7 @@ const addressList = (s: WebSituation): WebNode[] => {
       variant: 'subtle',
       color: 'gray',
       className: L.report,
-      onClick: { action: 'open_help', topic: 'address_match', q: derived('input') },
+      onClick: { action: 'open_help', topic: 'wrong-lot', q: derived('input') }, // task-450 AC6 (B.7 doc-2:49; prior topic address_match)
     }, [content('list.report')]),
   ];
 };
@@ -242,7 +247,7 @@ const addressList = (s: WebSituation): WebNode[] => {
 const tail = (s: WebSituation): WebNode[] => [
   ...(s.overCap ? [node('Text', { key: 'refine', testID: 'parcel-search-refine', className: L.refine }, [content('list.refine')])] : []),
   ...(s.showMiss ? [node('Text', { key: 'miss', testID: 'parcel-search-empty', className: L.miss }, [content('search.miss')])] : []),
-  ...(s.showPrompt ? [node('Text', { key: 'prompt', testID: 'parcel-search-prompt', className: L.prompt }, [content('search.prompt')])] : []),
+  ...(s.showPrompt ? [node('Text', { key: 'prompt', testID: 'parcel-search-prompt', className: L.prompt }, [{ text: content('search.prompt'), vars: { min: derived('min_query_len') } }])] : []),
 ];
 
 /** The props tree of one render. Block order is the mobile binding's (MF-35 must-survive row 17) without the legal line, which is in the footer (last child, MF-91). */
@@ -272,6 +277,7 @@ export function searchWebData(s: WebSituation): WebBindingData {
     },
     derived: {
       input: s.input,
+      min_query_len: SEARCH_MIN_QUERY_LEN,
       candidate_count: s.candidates.length,
       recent: s.recent,
       label: s.candidates.map((c) => c.address || c.parcelId),

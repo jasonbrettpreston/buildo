@@ -22,6 +22,8 @@
 // `deriveMatchType` obeys it; `no_match` still falls through to the intersection query shape (the server has no intersection parsing), and a
 // server `text_candidates` now beats the intersection shape. The text below describes the payload BEFORE MF-53 and the client derivation,
 // which still runs when `resolution` is absent (a payload from an older server). Prior text kept.
+// Dated 2026-11-24 (task-450 SEARCHFIX.2, Q19; GROUNDER-QUESTIONS.md:73; prior text kept): the client derivation is deleted, as its TODO(contract)
+// ordered; a payload without `resolution` reads as the server's no_match (or the intersection shape). The server always sends it (lookup-flow.ts).
 //
 // WHAT THE SERVER ACTUALLY SENDS TODAY, measured.
 // `GET /api/parcels/lookup?q=` returns `{ match, candidates, warnings, parcel }`. `match.matchType`
@@ -168,6 +170,8 @@ export function isIntersectionQuery(query: string): boolean {
  *
  * SERVER VALUE WINS. If the response already names one of the five ruled types, that is the
  * answer and nothing below runs. Everything after that line is the TODO(contract) shim.
+ * Dated 2026-11-24 (task-450 Q19; prior text kept): the shim is deleted; without a usable `resolution` the outcome is no_match, or intersection
+ * for an intersection-shaped query (the server has no intersection parsing).
  */
 export function deriveMatchType(
   query: string,
@@ -190,22 +194,19 @@ export function deriveMatchType(
     return data.resolution;
   }
 
-  // 1. Forward-compatible path: the contract declares the type, we obey it.
-  //    `matchType` is currently typed as the narrow 'exact' | 'typeahead' | 'direct' enum, so this
-  //    never fires today — it fires the day the contract and mobile/src/lib/schemas.ts widen.
-  const declared: unknown = data.match?.matchType;
-  if (isParcelMatchType(declared)) return declared;
+  // task-450 Q19: no usable resolution is the server's no_match. Never `unlinked` or a count-derived guess: that would be the silent fallback
+  // the ruling forbids.
+  return isIntersectionQuery(trimmed) ? 'intersection' : 'no_match';
+}
 
-  // 2. TODO(contract): derive the type from the shape of a response that does not declare one.
-  //    This is the ONLY place a count is read anywhere in the SEARCH surface. Delete this block
-  //    when `/api/parcels/lookup` returns a resolution type.
-  if (data.match) return 'unique';
-  if (isIntersectionQuery(trimmed)) return 'intersection';
-  if (data.candidates.length > 0) return 'text_candidates';
-  // NOTE: a zero-candidate response is reported as `no_match`, never as `unlinked`. `unlinked`
-  // means "the address resolved but no parcel is linked to it", which this payload cannot express.
-  // Guessing would be exactly the silent fallback the ruling forbids.
-  return 'no_match';
+/**
+ * task-450 SEARCHFIX.2 (2a, phone side; RR-0443 c): does the typed text carry a house number? True when the text before the first comma holds a
+ * digit. It copies the server's comma cut (src/lib/admin/parcel-lookup.ts) but not its first-word digit test: any digit counts, so
+ * "Unit 4, 123 Yonge St" is numbered. Known differences fail open to the behaviour before task-450 (no refine line, never a hidden list):
+ * "Highway 27", a bare "Unit 4" and a trailing unit ("King St W Apt 4") count as numbered.
+ */
+export function hasHouseNumber(query: string): boolean {
+  return /\d/.test(query.split(',')[0] ?? '');
 }
 
 /** True when the candidate list hit the contract cap and the user should be asked to narrow. */
@@ -273,6 +274,8 @@ export { diffCandidateAddress, type AddressSegment } from './parcelSearchCore';
 // mobile/app/(app)/parcel-tool/index.tsx verbatim (the must-survive list of ~/Buildo-scratch/mcfrontend/MF-35/plan.v2.md §4, rows 11-17):
 // the Toronto check before the network, the error classes, `deriveMatchType(debounced, error ? undefined : data)`, the 10-cap after the
 // slice with the refine line at >= the cap, the miss only when not fetching and no error, the prompt only below the minimum and with no error.
+// Dated 2026-11-24 (task-450 SEARCHFIX.2; prior text kept): the miss shows with no error whether or not a re-fetch runs (V4), the refine line also
+// shows for a candidate list typed with no house number (2a, ruled B), and a retry-after of 0 is one message (L3, MF35-DF1 closed).
 
 /** Row 11: the hook gets '' for an out-of-Toronto query, so a refusal costs nothing against the 60/min bucket. */
 export function searchQueryArg(debounced: string): string {
@@ -285,7 +288,7 @@ export type ParcelSearchErrorClass = {
   retryAfterSeconds: number | null;
   /** 403: the entitlement refusal, never the miss copy. */
   entitlement: boolean;
-  /** Everything else, and a RateLimitError(0) too (legacy `!retryAfter`; DEFECT MF35-DF1, pinned, not fixed). */
+  /** Everything else. MF35-DF1 closed (task-450 L3; prior text kept: "and a RateLimitError(0) too (legacy `!retryAfter`; DEFECT MF35-DF1, pinned, not fixed)"). */
   unexpected: boolean;
   /** The parse failure: its own text, no Retry. */
   schemaDrift: boolean;
@@ -295,7 +298,7 @@ export type ParcelSearchErrorClass = {
 export function classifyParcelSearchError(error: unknown, schemaDrift: boolean): ParcelSearchErrorClass {
   const retryAfterSeconds = error instanceof RateLimitError ? error.retryAfterSeconds : null;
   const entitlement = error instanceof ApiError && error.status === 403;
-  const unexpected = error != null && !retryAfterSeconds && !entitlement;
+  const unexpected = error != null && retryAfterSeconds == null && !entitlement;
   return { rateLimited: retryAfterSeconds != null, retryAfterSeconds, entitlement, unexpected, schemaDrift: unexpected && schemaDrift };
 }
 
@@ -308,6 +311,7 @@ export type SearchSituation = {
   errors: ParcelSearchErrorClass;
   /** Capped at the limit, after the slice. */
   candidates: ParcelCandidate[];
+  /** Show the refine line: the list hit the cap, or (task-450, ruled B) a candidate list for a query with no house number; the list stays. */
   overCap: boolean;
   showMiss: boolean;
   showPrompt: boolean;
@@ -339,6 +343,8 @@ export function buildSearchSituation(args: {
   const { debounced, data, error, isFetching } = args;
   const outcome = deriveMatchType(debounced, error ? undefined : data);
   const candidates = outcome === 'text_candidates' && data ? data.candidates.slice(0, args.cap) : [];
+  // task-450 (2a, RR-0443 c; QUESTIONS-RULED.md Q8.1 B): a candidate list for a query with no house number also asks for one; the rows are kept.
+  const noNumber = outcome === 'text_candidates' && !hasHouseNumber(debounced);
   const selected = candidates.some((c) => c.parcelId === args.selectedParcelId) ? args.selectedParcelId : null;
   return {
     input: args.input,
@@ -347,8 +353,9 @@ export function buildSearchSituation(args: {
     isFetching,
     errors: classifyParcelSearchError(error, args.schemaDrift),
     candidates,
-    overCap: isOverCandidateCap(candidates, args.cap),
-    showMiss: outcome === 'no_match' && !isFetching && error == null,
+    overCap: noNumber || isOverCandidateCap(candidates, args.cap),
+    // task-450 V4 (Spec 99 §6.5 :527-530): a settled miss keeps its line on a re-fetch; isFetching is not a render gate here.
+    showMiss: outcome === 'no_match' && error == null,
     showPrompt: outcome !== 'outside_toronto' && debounced.trim().length < args.minQueryLen && error == null,
     recent: [...args.recent],
     selectedParcelId: selected,
