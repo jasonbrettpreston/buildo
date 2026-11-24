@@ -1,4 +1,4 @@
-LIST eng-all sha256:e4ad258c2dde33284080daf24062fd026b24026e6aa4e18ce631199a5cb3eb3c material sha256:fc3b9915b029e3637e8b98eab961841d7eb827aeb21dfa8ca8b4152be41f0aa8 part 1 of 1 chunk 1 of 3
+LIST eng-all sha256:e4ad258c2dde33284080daf24062fd026b24026e6aa4e18ce631199a5cb3eb3c material sha256:70e4867bb60cf8a45a588c511dd3483a6e85628923dd88114789e8c97fac1900 part 1 of 1 chunk 1 of 3
 RULE LIST eng-all (docs/specs/00_engineering_standards.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: [".claude/review-templates/README.md","docs/reports/generated/rule-lists-by-kind.md","docs/specs/00-architecture/08_agents.md","scripts/analysis/backlog-brief.mjs","scripts/analysis/backlog-lane.mjs","scripts/analysis/proof-slice.mjs","scripts/analysis/proof-slices.json"]
 
 # Engineering Standards & Stability Guardrails
@@ -557,7 +557,7 @@ index 56e964fe7121343f4fe668f374ce1e080b9db5a0..9b61de06d39e3a76964980762aba240e
 -Known tool limits: the other four lens templates still carry the plan placeholder twice in their own prose (the material is sent twice there; `lens-compliance.md` is fixed); positional finding ids shift when a lens is re-run, so a re-run needs fresh verdicts.
 +Known tool limits: positional finding ids shift when a lens is re-run, so a re-run needs fresh verdicts.
 diff --git a/docs/reports/generated/rule-lists-by-kind.md b/docs/reports/generated/rule-lists-by-kind.md
-index 40d3e9ef23e216efd269417259241f860dd83950..094eabb69ea2e603520c1b079aff74cd339bb4ea 100644
+index 40d3e9ef23e216efd269417259241f860dd83950..1d1557bc5841b5fd107e27957c393e34ad3d3df4 100644
 --- a/docs/reports/generated/rule-lists-by-kind.md
 +++ b/docs/reports/generated/rule-lists-by-kind.md
 @@ -2,7 +2,7 @@
@@ -595,7 +595,12 @@ index 40d3e9ef23e216efd269417259241f860dd83950..094eabb69ea2e603520c1b079aff74cd
  
  ## phone
  
-@@ -46,11 +44,10 @@ Example Files line: `mobile/src/app/`; type build; milestone group [S].
+@@ -42,15 +40,14 @@ Example Files line: `mobile/src/app/`; type build; milestone group [S].
+ | --- | --- | --- | ---: | ---: |
+ | mobile-90 | docs/specs/03-mobile/90_mobile_engineering_protocol.md | whole file | 14,097 | 1 |
+ | mobile-98 | docs/specs/03-mobile/98_mobile_testing_protocol.md | whole file | 11,496 | 1 |
+-| mobile-99 | docs/specs/03-mobile/99_mobile_state_architecture.md | whole file | 83,401 | 1 |
++| mobile-99 | docs/specs/03-mobile/99_mobile_state_architecture.md | whole file | 84,452 | 1 |
  | surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 | 1 |
  | eng-front | docs/specs/00_engineering_standards.md | 1. Architecture & UI Standards | 3,214 | 1 |
  | eng-shared | docs/specs/00_engineering_standards.md | 2. Error Handling & Stability; 4. Security & API Contracts; 5. Testing Standards; 6. Centralized Logging; 7. Dual Code Path Safety; 8. Next.js & TypeScript Constraints; 10. Frontend/Backend Boundary; 11. Plan Compliance Checklist; 12. Frontend Foundation Tooling; 13. Observability Standards; 14. The Prevention Loop | 37,472 | 1 |
@@ -604,7 +609,7 @@ index 40d3e9ef23e216efd269417259241f860dd83950..094eabb69ea2e603520c1b079aff74cd
  | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
  | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
 -| total | 10 lists | | 216,416 | 10 |
-+| total | 9 lists | | 211,049 | 9 |
++| total | 9 lists | | 212,100 | 9 |
  
  ## storage
  

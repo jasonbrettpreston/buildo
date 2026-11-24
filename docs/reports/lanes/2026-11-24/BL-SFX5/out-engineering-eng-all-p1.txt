@@ -1,18 +1,30 @@
-◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
-REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T16:16:03.842Z file_sha256=ea82e82df2cd11084dc1b2a6e5d953f3ca390d202abb517cc3fdf99e0499551f prompt_sha256=dca94cfa97e31e08513f6acf4bae2e9c304dcbfaea3bd9cab171e1a2055cb575
-🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-engineering-eng-all-p1.txt (model: deepseek-reasoner)
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T16:56:35.354Z file_sha256=e99aec7924ea9f9e3657c7696850247200d139bcda29e447506d82025e4aa8d7 prompt_sha256=55e9b0d842ef7354c8685cd4d1670ebee3afa9aaeeabf3ddc32909cb04d836a4
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX5/in-out-engineering-eng-all-p1.txt (model: deepseek-reasoner)
 
-```
-DEFER severity=MED — 11. Plan Compliance Checklist "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests." — Task block, Implementation Notes "2026-11-24 build (lane BL-SFX5): step 1 (lists) and step 2 (close check) tests written first" — no PASS/FAIL self-checklist walked against the diff appears anywhere in the material before the red run, only the red-run claim — add the 5-10 item PASS/FAIL list (Spec 08 section 7 rule 4 / close-check behaviour and its edge cases) to the lane report before the test run.
-DEFER severity=MED — 14. The Prevention Loop "A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit**" — Task block, Files line "docs/specs/00-architecture/08_agents.md, src/tests/proof-slice.logic.test.ts" (plan-protocol.md absent) — the ruling turns plan-protocol off for output reviews and Spec 08 is updated, but docs/specs/00-architecture/plan-protocol.md, the document the turned-off list is defined by, is on no Files line, so the ruling cannot land in the doc it governs — add docs/specs/00-architecture/plan-protocol.md to the Files line and update the sentence that says where the protocol is pasted (or record that it names no stage).
-MET — 2.3 Assumption Documentation — scripts/analysis/proof-slice.mjs:148 — "head: (spawnSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).stdout ?? '').trim()" guards the nullable stdout before use, no non-null assertion added.
-MET — 5.5 Test-Layer Map (parity battery, generated doc vs generator) — docs/reports/generated/rule-lists-by-kind.md:78 — "| total | 6 lists | | 139,835 | 6 |" regenerated in this change, and the row sums match (14,705 + 46,314 + 46,613 + 8,825 + 20,869 + 2,509 = 139,835), so the drifted rows were regenerated, not hand-edited.
-REJECT — 9. Pipeline & Script Safety "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK" — the changed files are scripts/analysis/*.mjs that spawn git and the board CLI and touch no database or external data API, so the SDK, transaction, streaming and manifest rules do not bind them.
-REJECT — 10. Frontend/Backend Boundary "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — this is a tooling task (label SEARCHFIX, milestone m-1) whose subject is the review tooling itself, not a frontend WF, so editing scripts/ is the scope, not a boundary breach.
+BUG severity=<none raised> — none
+
+DEFER severity=<none raised> — none
+
+MET — 2.3 Assumption Documentation — scripts/analysis/proof-slice.mjs:146 — "head: (spawnSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).stdout ?? '').trim()" guards the nested `.stdout` with `??` before `.trim()`, exactly the optional/null check the clause asks for.
+
+MET — 14 The Prevention Loop (behavior-changing ruling updates the cited specs in the same commit) — docs/specs/00-architecture/08_agents.md:358 — "Dated note 2026-11-24 (M-246, prior text kept; task-453 SEARCHFIX.5; RR-0440, RR-0450, RR-0452 ...): five-words is off at both stages ... This supersedes, in the task-448 note above, 'the four every-task lists'" lands the ruling in the governing spec in the same change as the table, the README and the regenerated doc.
+
+MET — 5.2 Test File Pattern (pure derivation gets a `*.logic.test.ts`) — task Files line — "src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts ... backlog-brief.logic.test.ts, proof-slice.logic.test.ts" names a logic test for each changed pure module (`outputLists`, the two-commit Status-line branch, the `head` guard).
+
+MET — 5.3 Red-Green Test Cycle — Implementation Notes — "red proven by the refused commit attempt (36 failing cases, lane run file red.out); code: rule-lists.json (every_task plan-protocol only, output_off ...)" records the failing run before the code for steps 1-3, and "red for these was the same refused attempt (red.out)" for step 4.
+
+MET — 5.5 Test-Layer Map (generated doc regenerated, totals recompute) — docs/reports/generated/rule-lists-by-kind.md:16 — "| total | 6 lists | | 122,831 | 6 |" is the sum of the six remaining rows (47,779 + 5,377 + 37,472 + 8,825 + 20,869 + 2,509), so the artifact was regenerated from the table rather than hand-edited.
+
+REJECT — 9.4 Pipeline SDK Mandate — "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK (`scripts/lib/pipeline.js`)" applied to scripts/analysis/backlog-lane.mjs and backlog-brief.mjs — not a real issue: these are backlog/review tooling scripts, not `scripts/*.js` DB pipeline scripts; they open no `Pool` and write no database row.
+
+REJECT — 6.1 logError Mandate — backlog-lane.mjs failure output going through "process.stderr.write(`backlog-lane: FAILED at ${what}: ...`)`" instead of `logError()` — not a real issue: the clause is scoped to "API routes or lib modules", and this is a CLI script writing its own exit diagnostic.
+
+REJECT — 5.2/5.5 Parity battery (generated doc <-> generator drift guard) — the regenerated docs/reports/generated/rule-lists-by-kind.md shipping without a visible drift test — not a real issue: the task's Files line names "src/tests/backlog/rule-lists-table.logic.test.ts", which is outside this chunk (chunk 1 of 3, cut at file boundaries), so its absence here proves nothing.
+
 VERDICT: PASS on the pasted engineering rules
-Clauses checked: 7   Unmet: 0
-```
+Clauses checked: 8   Unmet: 0
 
 ---
-⏱  79919ms (79.9s)
-📊 Tokens — total: 47964, input: 32783, output: 15181, reasoning: 14480
+⏱  78071ms (78.1s)
+📊 Tokens — total: 47890, input: 32932, output: 14958, reasoning: 14125

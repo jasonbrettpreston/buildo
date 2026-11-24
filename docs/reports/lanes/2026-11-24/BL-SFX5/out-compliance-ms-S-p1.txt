@@ -1,33 +1,29 @@
-◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:16:03.862Z file_sha256=eec07cb84f69275b7c064b9478ced30b90d379318953b72684738a1c60d20b20 prompt_sha256=28d6884107ab4598ae1fe065359a6c64c3d6611aca2c1a6b38806002e928f4f3
-🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-compliance-ms-S-p1.txt (model: deepseek-reasoner)
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:58:53.307Z file_sha256=2b49da9872a1fe3851a4ab4801312fa628bd4a0e3ca34af2dadd5f8539fcf78d prompt_sha256=837fd0c897da2083c07f6017175cf3d44ca14e9505ab903a61d032925c04534c
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX5/in-out-compliance-ms-S-p1.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — card Acceptance criteria #2 "Emptying the output_off line turns plan-protocol back on for output reviews" — scripts/hooks/check-lane-close.mjs "ownsTable ? { ...table, ...pin, every_task: baseTable.every_task, output_off: baseTable.output_off }" — only a card whose Files line names the table can edit output_off, and that same card is judged by the range base's output_off, so emptying or setting the line changes nothing at its own close and AC #2 is never exercised at the gate (this card's own output review still carries five-words and plan-protocol) — take the branch table's output_off when it is a subset of the base's (an emptied or narrowed line only adds reviews) and keep the base pin only for a branch that adds ids.
+DEFER severity=MED — RR-0450 "queue rules and orchestrator note off for code reviews; step handbook for compute only; three questions replace the five principles" — docs/reports/generated/rule-lists-by-kind.md (section "McFrontend web") "| step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |" — the step handbook still attaches to the front-end web row, so "step handbook for compute only" is not met, and the Implementation Note "(b) the step handbook list stays on the compute rows only (orchestrator reading: already so, the plan confirms)" is contradicted by the regenerated page in this same diff — drop step-132 from the non-compute web row, or record the orchestrator's compute-only reading for that mixed row.
 
-DEFER severity=NIT — Description item 3 "the next round number is the highest plus one, an empty acceptance block warns, README corrected" — .claude/review-templates/README.md "outputs `out-<lens>.txt` (plan stage: `plan-<lens>.txt`), the only names the close check and `rule-lists.mjs findings` read" — the round-2 file is read too, scripts/analysis/backlog-lane.mjs "a file out-<lens>[-<list id>]-rN.txt is read for findings like any out- file", so the corrected README asserts an exclusivity the pipeline contradicts — write "the round-1 names the close reads; -rN files are read for findings only".
+DEFER severity=LOW — Acceptance criterion #6 "The CHK.3 proof row reads notbuilt with its reason; the next round number is the highest plus one" — NONE (scripts/analysis/backlog-brief.mjs, chunk 1, adds only the empty-AC line and the two-commit Status line) — no changed line in the file that writes context-rN.md computes the next round as highest existing plus one, so AC#6's second half is not shown in this chunk — compute the next context round as highest existing plus one in backlog-brief.mjs and cover it in backlog-brief.logic.test.ts.
 
-DEFER severity=NIT — Description item 1 "plan-protocol for output reviews only, by one data line (output_off) and a small reader of it" — scripts/analysis/backlog-lane.mjs "off: output_off; plan-protocol is asked at the plan stage only" — the brief parenthetical names plan-protocol whatever ids output_off holds, so it misdescribes a card that switches another every_task list off — print the off ids and drop the hard-coded sentence.
+MET — AC#1 "A build or fix task closes without output reviews for the two planning lists" — scripts/analysis/rule-lists.json "every_task": ["plan-protocol"], "output_off": ["plan-protocol"] — five-words is out of every_task and plan-protocol is in output_off, so neither planning list is required at an output review.
 
-MET — RR-0452 "five principles off" / Description item 1 "five-words ... at both stages by one data line, nothing replacing it" — scripts/analysis/rule-lists.json ""every_task": ["plan-protocol"]" — five-words is out of every_task, its definition kept so the id can be restored, and the three questions are nowhere in the diff.
+MET — AC#2 "Emptying the output_off line turns plan-protocol back on" — scripts/analysis/rule-lists.mjs "export const outputLists = (table, lists) => lists.filter((l) => !(table?.output_off ?? []).includes(l.id))" — an empty output_off keeps every list, so plan-protocol returns.
 
-MET — RR-0440 "Let's plan to drop the planning and process lists" / AC #1 — scripts/analysis/rule-lists.mjs "export const outputLists = (table, lists) => lists.filter((l) => !(table?.output_off ?? []).includes(l.id));" — the reader of output_off, used by the close check and the launch brief for build and fix tasks.
+MET — AC#3 "A branch with no rule table still reads the board; during a merge only merge-only staging is skipped" — scripts/hooks/check-lane-close.mjs "if (!tableInTree && !tableInHead && boardRef && ...status !== 0) return 0;" plus "let table = boardTable;" and "if (mh.status === 0 && ix.status === 0 && mh.stdout.trim() === ix.stdout.trim()) continue;" — board fallback and merge-blob comparison are present.
 
-MET — RR-0450 "I just dont see how queue rules and orchestrator notes are valuable to anything from a code persepctive." — scripts/analysis/rule-lists.json ""lists": ["agents-s5-1to3", "agents-s7-s11", "eng-all"]" — queue-137 and orchestrator-doc17 are off the lane-tools row, no row attaches them.
+MET — AC#4 "A seat finding needs a quote, a cited line and a reason" — scripts/hooks/check-lane-close.mjs "findings: [...findings, ...seatFindings(closeSeats, `${mine[0][0]}/`)]" — seat findings are routed through grounderErrors' quote and cited-line checks.
 
-MET — AC #3 "A branch with no rule table still reads the board; during a merge only merge-only staging is skipped" — scripts/hooks/check-lane-close.mjs "const inMerge = Boolean(mergeHead && fs.existsSync(path.resolve(mergeHead)));" and "let table = boardTable;" — the merge is no longer skipped whole and a branch that lost the table is judged by the board copy.
+MET — AC#5 "A lane closing after an edit to backlog-lib.mjs is refused unless its card names the file" — scripts/analysis/rule-lists.json protected_paths gains "scripts/analysis/backlog-lib.mjs".
 
-MET — AC #4 "A seat finding needs a quote, a cited line and a reason" — scripts/hooks/check-lane-close.mjs "findings: [...findings, ...seatFindings(closeSeats, `${mine[0][0]}/`)]" — seat findings now go through the same grounder verdict checks (20+ character quote, cited line, 30+ character reason).
+MET — AC#6 (first clause) "The CHK.3 proof row reads notbuilt with its reason" — scripts/analysis/proof-slices.json "\"notbuilt\": { \"blockedBy\": [], \"reason\": \"CHK.3 reads the staged diff; --all gives it no input\" }".
 
-MET — AC #5 "A lane closing after an edit to backlog-lib.mjs is refused unless its card names the file" — scripts/analysis/rule-lists.json ""scripts/analysis/backlog-lib.mjs"" — the helper is in protected_paths, so its range must be on the Files line and the closing commit cannot carry it.
+MET — RR-0450 "queue rules and orchestrator note off for code reviews" — scripts/analysis/rule-lists.json lane-tools "\"lists\": [\"agents-s5-1to3\", \"agents-s7-s11\", \"eng-all\"]" — queue-137 and orchestrator-doc17 are off the lane-tools row.
 
-MET — AC #6 "The CHK.3 proof row reads notbuilt with its reason" — scripts/analysis/proof-slices.json ""notbuilt": { "blockedBy": [], "reason": "CHK.3 reads the staged diff; --all gives it no input" }" — the row no longer claims a passing argv/expect pair.
-
-MET — RR-0419 "The rule-list table edit is approved as one task" — scripts/analysis/rule-lists.json "protected_paths": ["scripts/hooks/check-lane-close.mjs", "scripts/analysis/rule-lists.mjs", "scripts/analysis/rule-lists.json", ...] — the table, its reader and the close check are all on one card's Files line, each also protected.
-
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 18   Unmet: 1
+VERDICT: FAIL
+Clauses checked: 12   Unmet: 2
 Rules met: none
 
 ---
-⏱  238081ms (238.1s)
-📊 Tokens — total: 81341, input: 34590, output: 46751, reasoning: 45591
+⏱  269489ms (269.5s)
+📊 Tokens — total: 90421, input: 34743, output: 55678, reasoning: 54765
