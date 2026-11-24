@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:24:42.594Z file_sha256=063f853ea6b0effbe500d15483ed313bb8a7d6cc2c1b94567534c56ec46712c9 prompt_sha256=39c75dfcd28b09e816de4884aa085ee652a3988ce100c16b0f45d23099feb87e
+🔍 Lens review of docs/reports/reviews/task-452/in-plan-compliance-mobile-99-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card AC6 "Primary buttons spring and critical actions call the existing haptics wrapper" — plan 8.6 "The spring test depends on choice 8.6." — the spring half of AC6 is left to an undecided choice, so "Primary buttons spring" is unmet by this plan and its test cannot be red-then-green — decide 8.6(A) (spring part plus the C-8m lock edit) inside this plan, or obtain an operator ruling that removes the spring from AC6 before plan-lock.
+
+BUG severity=HIGH — card AC5 "The web shows the same three states" (with RR-0445 "we are mobie first ... but it works onthe web") — plan 8.5 "Recommend (b). Task-357 put the web no-plan page out of scope" and 8.4(a) "the web drops wall.plan" — the web would show reactivate where no-plan belongs and lose the upgrade line, so AC5's three states are not delivered — decide 8.5(a) (pass the status it already reads through to page.tsx and maxbld-web.ts) and keep wall.plan on the web, adding the three web situations to the AC5 test.
+
+BUG severity=HIGH — card AC2 "At the limit, the search page and the report screen show the wall with the count, the reset date and the upgrade line; never the reactivate copy" — plan 5 risk 3 "The reset line binds resetsOnDisplay. If the read has not answered, that line is left out (choice 8.11)." — the wall can render without the mandated reset date while the 403's kept resetsOn (AC1) is never drawn — bind the line to resetsOnDisplay when present and otherwise format ReportLimitError.resetsOn as the RR-0310 Toronto label, with a test for the pre-read case.
+
+BUG severity=HIGH — Spec 99 §4 B1 registry row "a display, never a gate; the caller's own, so no parameter" — plan step 9 "the host renders `top` and then `<Renderer tree={wall.tree} content={wall.content} data={wall.data} actions={wall.actions}/>` in place of the lifecycle" — the plan replaces the report lifecycle and the search state on the entitlement read's status (searchWall's no_plan vs reactivate branch, and the recheck that clears the wall), turning a read the registry declares display-only into a gate — drive the wall from the 403 alone and use the read only for count and date text, or amend the B1 registry row in the same commit.
+
+DEFER severity=MED — Spec 99 §2 amendment "Anything else computed on the client is a Spec 128 rule-2 violation needing a dated `deviations[]` row." — plan step 3 "New pure `searchWall(error, planStatus)`, which returns 'limit' | 'reactivate' | 'no_plan' | null" — the client decides which of three states and which lines render (reset line, hint vs none) and the plan names no deviations[] row — add the dated deviations[] row or move state selection into the search content descriptor before lock.
+
+DEFER severity=MED — RR-0392 "I  don't think we need any other infastrcuture beyond this.. we are good to go!" and the card's "primary buttons on the parcel pages" — plan step 6 "in renderNode (:157-159), a Button with variant 'default' wraps its onPress as `() => { lightImpact(); fn(); }`" — the haptic lands on every primary button of every surface, including the Select press the plan itself flags, which is wider than what the card names — scope the wrap to the parcel surfaces or the named primary actions, not renderNode at large.
+
+DEFER severity=MED — card AC4 "A signed-in customer with no plan sees the no-plan page in the app" — plan 5 limits "A person with no plan row at all sees the App A spinner and never reaches the wall. That is MF-49 (task-357, user state 1)." — a named slice of AC4's population is excluded with no pasted ruling authorising the exclusion — ground the state-1 exclusion with an operator ruling on the card, or bring it into scope.
+
+MET — card AC1 — plan 3.1 and 3.2 — two classes ReportLimitError and SubscriptionRequiredError, plus the widened catch at apiClient so the classes are not swallowed.
+MET — card AC3 — plan step 5 — the reactivate wall draws the existing search.entitlement copy for the expired status.
+MET — card Must not: move the report goldens (wall copy lives in the search content) — plan step 8 — "The report goldens and REPORT content do not move (FOLD-PLAN.md:83)."
+MET — card Must not: call expo-haptics directly — plan step 6 — "Nothing calls expo-haptics directly."
+MET — card "Dated note owed: task-320" — plan 7 — "task-320: `backlog task edit 320 --append-notes`, saying ST2 is closed."
+MET — RR-0446 "02 Agrred add to the plan." — plan step 5 — the no_plan wall with title, lead, recheck button, Account and Log out.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 34   Unmet: 7
+Rules met: none
+
+---
+⏱  77880ms (77.9s)
+📊 Tokens — total: 44280, input: 28094, output: 16186, reasoning: 14999

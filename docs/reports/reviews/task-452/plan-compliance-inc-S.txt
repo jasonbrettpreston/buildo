@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:24:42.604Z file_sha256=d408fbca196de5e084a3e97d0afadeca066006917d8afd645bd0efea7447bff1 prompt_sha256=ad20a706fcd9a361a9872ccb42f6b64f4f9ebed33544d0f1cf264ed50b6fa040
+🔍 Lens review of docs/reports/reviews/task-452/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — AC#6 "Primary buttons spring and critical actions call the existing haptics wrapper" — plan 8.6 "Recommend (B): RR-0392, and task-357's line that a new component kind 'needs a named reason and a ruling'." — the spring half of the pasted criterion is deferred to another card, so AC6 is unmet at plan-lock — commit to option (A) with the C-8m lock and bindings edit in this card, or get an operator ruling amending AC6 recorded before lock
+BUG severity=HIGH — AC#5 "The web shows the same three states" — plan 8.5 "Recommend (b). Binding parity only; the not-entitled page shows reactivate." — the web not-entitled page renders reactivate, so the web shows two of the three states — take 8.5(a) and have requireParcelToolPage's already-read status pick the wall, or record the operator ruling that narrows AC5
+BUG severity=HIGH — AC#1 "A 403 keeps its code, limit and reset date; limit reached and subscription required are two error classes" — plan step 1 "ReportLimitError extends ApiError (status 403, reportsLimit: number|null, resetsOn: string|null)" — neither new class stores the code and the AC1 test list asserts only limit, date, status and instanceof, so "keeps its code" is unmet — add a code member to both classes and an assertion on it in mobile/__tests__/apiClient.test.ts
+BUG severity=HIGH — AC#2 "the search page and the report screen show the wall with the count, the reset date and the upgrade line" — plan step 8 "wall={{ tree: wallTree(...), content: SEARCH_SLICE.content, data, actions: ... }}" — the report host is handed the report page's data and nothing says it carries errors.403.reportsLimit or the entitlement resetsOnDisplay the wall binds, so count and reset date on the report screen are unsupported (data shape cannot see) — build the wall data from searchData plus the entitlement read and assert both texts in reportPage.behaviour.test.tsx
+DEFER severity=MED — AC#4 "A signed-in customer with no plan sees the no-plan page in the app" — plan section 5 "A person with no plan row at all sees the App A spinner and never reaches the wall. That is MF-49 (task-357, user state 1)." and section 7 "which user states reach the page (state 2 only)" — the pasted AC is narrowed to one user state, so some signed-in customers with no plan never see the page — state the covered states and the ruling in the task-357 note, or widen the gate
+DEFER severity=MED — RR-0392 "I don't think we need any other infastrcuture beyond this" — plan step 6 "SurfaceActions (:34-45) gains optional sign_out?: () => void" and wall.noplan.account "Account" push — no pasted clause or ruling names a Log out or Account button on this wall, so new surface-action machinery is added on an unseen task-357 AC — quote task-357 AC3 verbatim in the plan (not pasted here) or drop the two buttons
+REJECT — AC#2 "the upgrade line" — the plan's limit wall offers no top-up or upgrade action, only wall.plan "Your plan is managed on the web." — the pasted orchestrator reading "the purchase itself happens on the web; the phone wall carries the line or link, not a checkout" makes a pointer line conform
+MET — AC#3 "An expired subscription shows the reactivate state" — plan step 3 "Any other 403 gives 'reactivate': an expired or cancelled status, a failed read, or no read yet" plus the AC3 behaviour case asserting search.entitlement inside parcel-search-wall-reactivate
+MET — RR-0442 "It should open on an exact match" — plan section 1 "This card changes no search outcome" and searchWall adding a key only when a 403 exists, deriveMatchType untouched
+MET — RR-0445 "we are mobie first ... but it works onthe web" — plan build order steps 1-9 mobile, step 10 src/components/surfaces/web/SearchBinding.tsx mirror
+MET — RR-0446 "02 Agrred add to the plan" — plan step 5 no_plan kind with wall.noplan.* keys and the AC4 behaviour cases, the no-plan page folded into this card
+MET — doc-2 G.6 "Report meter: a hit counts one report; report limit page when exhausted" — plan section 7 "G.6 (:94) BUILT is corrected" by backlog doc update plus task-320 append-notes
+MET — Must not "build a new plan or checkout flow" — plan 8.4 "(a) No buy button until MF-86, and the web drops wall.plan"
+MET — Must not "call expo-haptics directly" — plan step 6 "a Button with variant 'default' wraps its onPress as () => { lightImpact(); fn(); }. Nothing calls expo-haptics directly."
+MET — Must not "move the report goldens (wall copy lives in the search content)" — plan step 8 "The report goldens and REPORT content do not move"
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 19   Unmet: 6
+Rules met: G.6
+
+---
+⏱  52189ms (52.2s)
+📊 Tokens — total: 27832, input: 16987, output: 10845, reasoning: 9648

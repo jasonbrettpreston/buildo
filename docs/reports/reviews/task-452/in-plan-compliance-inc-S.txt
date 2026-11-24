@@ -1,0 +1,438 @@
+LIST inc-S sha256:294dccfb5cb249211234ece578abcd1c8efe723cdca65ea17f8e270941993db8 material sha256:8c7e19c2989a6d38d365fb41e195a8d3204b584258669fac2d2890c343e3f7ef part 1 of 1
+RULE LIST inc-S (backlog/docs/increments/doc-2 - Increment-S-requirements.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+---
+id: doc-2
+title: Increment S requirements
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-19T04:56:00Z'
+---
+# Increment S requirements
+
+Source: elements-by-inc.json, built.json (as of origin 154e7b13f), matrix-verified.json, current.json of the snapshot docs/reports/plan-import/raw/2026-11-19.
+
+## Built state
+The search pages are built on mobile (search page, choose-your-lot map page, semi question page) and in part on web (the web search page is built but sends no lookup while the live switch is false). The lookup route, resolver, meter and the report hand-off contract are on origin. Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map, web choose-your-parcel, the web footer, building footprints and street names on the map, the help link on the map page. All of it is the old dark look (zinc and #0e0e10), not Daylight.
+counts: {"BUILT":42,"BUILT-NO-DATA":7,"NOT BUILT":16}
+
+- F-SEARCH-MOBILE Mobile parcel search page: SEARCH binding (props), search screen, recent searches, match logic: ON ORIGIN (origin/wf1/mb-rulings); queue: phone check and device run OWED, UNVERIFIED on device
+- F-SEARCH-WEB Web search page (W4): the one web SEARCH binding, SearchPageClient mount, live switch: PARTLY: page built, controls disabled and no lookup request while MAXBLD_WEB_LIVE is false
+- F-LOTMAP Choose-your-lot map page (S-071): LIST binding with map projection, lot cards, states: ON ORIGIN (origin/wf1/mb-rulings); queue Status DONE
+- F-LOOKUP-RESOLVER Lookup resolver: address parse, exact match on parcels normalized keys, typeahead on address_points, classification: ON ORIGIN (origin/wf1/mb-rulings)
+- F-SHELL Product shelf and parcel-tool screens: ParcelShelf (Lookup, Tracked Lots, Account), tracked.tsx and account.tsx (example rows): PARTLY: shelf built; tracked and account are stubs
+- F-LANDING MaxBLD web landing (web_landing) with the footer legal line, and the MaxBLD post-login target: ON ORIGIN (origin/wf1/mb-rulings)
+- F-ADMIN-LOOKUP Admin Parcel Cost Model Tool (admin search over the same resolver) and SearchPermitsSheet (lead-gen permit search): ON ORIGIN (origin/wf1/mb-rulings)
+
+## Scenario
+Search first: the current search pages = latest rendering small-pages-v8 ("MaxBLD Small Pages" https://claude.ai/artifact/8KLUsAtd4JN6r2j8CxZSU7, 2026-11-12) + later rulings; built status from the 2026-11-17 sweep (search-delta/CURRENT-SEARCH.md, 176 quotes PASS)
+
+## Elements
+| id | element | where | status | deliverers | built |
+|---|---|---|---|---|---|
+| A.1 | A Search page · Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | details | AVAILABLE | GAP.13 | BUILT |
+| A.2 | A Search page · Search box: one pill, placeholder Enter lot address, search icon | main | AVAILABLE |  | BUILT |
+| A.3 | A Search page · Typeahead resolution of the typed text (street-prefix, up to 10) | main | AVAILABLE |  | BUILT |
+| A.4 | A Search page · Typed street direction (E/W/N/S) kept in the match | details | NOT-BUILT (parser) | 1.4 | NOT BUILT |
+| A.5 | A Search page · Unit number typed after the address | details | NOT-BUILT | 1.4 | NOT BUILT |
+| A.6 | A Search page · Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | details | NOT-BOUND · MISSED by the sweep | SRCH.A6 LS.12 LS.3 | NOT BUILT |
+| A.7 | A Search page · Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | details | AVAILABLE |  | BUILT |
+| A.8 | A Search page · Searching state: query in the box, the word Searching, clear button | details | AVAILABLE |  | BUILT |
+| A.9 | A Search page · Outside Toronto state: Lots are only available in Toronto. | details | AVAILABLE |  | BUILT |
+| A.10 | A Search page · Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | details | AVAILABLE | LS.6 | BUILT |
+| A.11 | A Search page · Clear (x) button inside the box | details | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| A.12 | A Search page · Bottom tab bar: Lookup, Tracked Lots, Account (app) | details | AVAILABLE · MISSED by the sweep | MF-49 | BUILT |
+| A.13 | A Search page · In-bar Account button (MF-35 builds it amber) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.1 | B Address confusion · Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | main | AVAILABLE |  | BUILT |
+| B.2 | B Address confusion · Select button after the pick (Select, Open the selected lot) | main | AVAILABLE |  | BUILT |
+| B.3 | B Address confusion · Candidate row area line (locality, e.g. Downtown Toronto) | details | NOT-BOUND · REMOVED by the design |  | NOT BUILT |
+| B.4 | B Address confusion · Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | main | AVAILABLE |  | BUILT |
+| B.5 | B Address confusion · Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | main | AVAILABLE |  | BUILT |
+| B.6 | B Address confusion · Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | main | AVAILABLE |  | BUILT |
+| B.7 | B Address confusion · Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | details | SERVED-NOT-POPULATED | SRCH.C12 LS.12 LS.6 | BUILT-NO-DATA |
+| B.8 | B Address confusion · Faint tappable neighbour outlines on the unlinked state | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.9 | B Address confusion · No-match state: No parcel found for that address. | details | AVAILABLE |  | BUILT |
+| B.10 | B Address confusion · Intersection on the map (corner lots at the centreline node) | details | NOT-BUILT · REMOVED by the design | LS.11 | NOT BUILT |
+| C.1 | C Lot confusion (lot map) · Heading: This address covers 2 lots. Which one do you mean? | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.2 | C Lot confusion (lot map) · Search pill on top (clear returns to search); hidden h1 Choose your lot | details | NOT TRACED · MISSED by the sweep | MF-53 | BUILT |
+| C.3 | C Lot confusion (lot map) · Map: each matched lot outlined (amber), neighbours in zinc | main | AVAILABLE |  | BUILT |
+| C.4 | C Lot confusion (lot map) · Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | main | AVAILABLE |  | BUILT |
+| C.5 | C Lot confusion (lot map) · Building footprint on each lot (or none), drawn on the map | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.6 | C Lot confusion (lot map) · Address pin and the street name drawn on the road (Dunmore Lane) | details | AVAILABLE · MISSED by the sweep | GAP.13 | BUILT |
+| C.7 | C Lot confusion (lot map) · Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | main | UNDESIGNED-DATA · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.8 | C Lot confusion (lot map) · Lot card size line: 1,614 sq ft · 150 m² | main | AVAILABLE |  | BUILT |
+| C.9 | C Lot confusion (lot map) · Lot card frontage and zoning string (7.6m • CR 2.5 style) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| C.10 | C Lot confusion (lot map) · Selection shared by map tap and card (radiogroup Choose a lot) | main | NOT TRACED · MISSED by the sweep | GAP.13 | BUILT |
+| C.11 | C Lot confusion (lot map) · Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | main | AVAILABLE |  | BUILT |
+| C.12 | C Lot confusion (lot map) · Link: Not sure which lot? Get help with an address | details | NOT-BOUND | SRCH.C12 LS.12 LS.6 | NOT BUILT |
+| C.13 | C Lot confusion (lot map) · Loading, error, rate-limit, entitlement, schema-drift states of the map page | details | AVAILABLE |  | BUILT |
+| C.14 | C Lot confusion (lot map) · Routing: one printed address over two or more lots opens this page (shown only then) | main | AVAILABLE |  | BUILT |
+| D.1 | D Semi question page · Page shown only when the lot is unsure (before the report) | main | AVAILABLE |  | BUILT |
+| D.2 | D Semi question page · Lot form on the lookup hit (detected, basis, unsure) | details | AVAILABLE |  | BUILT |
+| D.3 | D Semi question page · Question: Is this house one half of a semi-detached pair? | main | AVAILABLE |  | BUILT |
+| D.4 | D Semi question page · Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | main | AVAILABLE |  | BUILT |
+| D.5 | D Semi question page · Continue button (Choose an answer when none picked; Open the report with this answer) | main | AVAILABLE |  | BUILT |
+| D.6 | D Semi question page · Back to search link | details | AVAILABLE |  | BUILT |
+| D.7 | D Semi question page · Question-page states: loading, error, rate limit, entitlement, schema drift | details | AVAILABLE |  | BUILT |
+| D.8 | D Semi question page · Owner answer stored (a reopened lot does not ask again) | main | BOUND-NOT-STORED | GAP.12 | BUILT-NO-DATA |
+| D.9 | D Semi question page · Input: distance from your wall to the shared line, with an assumed default and an assumption line | main | NOT-BUILT | SRCH.SEMI MF-89 7.25 GAP.12 | NOT BUILT |
+| D.10 | D Semi question page · Semi override applied in the report | main | NOT-BUILT | SRCH.SEMI 7.25 | NOT BUILT |
+| D.11 | D Semi question page · Evidence columns linked_parcel_count, best_shared_len_m | details | STORED-NOT-SERVED |  | BUILT-NO-DATA |
+| E.1 | E Web search pages · W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | main | SERVED-NOT-POPULATED | LS.12 1.3 | BUILT-NO-DATA |
+| E.2 | E Web search pages · Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | details | AVAILABLE · MISSED by the sweep | MF-44 MF-46 | NOT BUILT |
+| E.3 | E Web search pages · W5 choose your parcel on the web, address list (text_candidates) | main | SERVED-NOT-POPULATED | LS.12 | NOT BUILT |
+| E.4 | E Web search pages · W5 on the web for several lots, no lot linked and intersection (map) | main | NOT-BUILT | LS.11 | NOT BUILT |
+| E.5 | E Web search pages · W6 web report route /parcel-tool/{lot} | main | NOT-BUILT | LS.12 1.3 MB-44 | BUILT-NO-DATA |
+| E.6 | E Web search pages · Recent-search chips on the web frame | details | NOT TRACED · MISSED by the sweep | LS.11 | NOT BUILT |
+| F.1 | F Landing (search entry and sample) · Hero call to action: Start free trial (to /signup); no search box on the landing page | main | NOT-BUILT | MF-76 | BUILT |
+| F.2 | F Landing (search entry and sample) · How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | details | NOT TRACED · MISSED by the sweep | MF-76 | BUILT |
+| F.3 | F Landing (search entry and sample) · Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | main | NOT TRACED · MISSED by the sweep | LS.7 | BUILT |
+| F.4 | F Landing (search entry and sample) · Landing legal line | details | AVAILABLE | LS.6 | BUILT |
+| F.5 | F Landing (search entry and sample) · After login the user lands on the search page (never the dashboard) | details | AVAILABLE |  | BUILT |
+| G.1 | G Hand-off to the report · Unique match goes straight to the report (no extra page) | main | AVAILABLE |  | BUILT |
+| G.2 | G Hand-off to the report · Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | main | NOT TRACED · MISSED by the sweep | 1.3 MF-62 | BUILT-NO-DATA |
+| G.3 | G Hand-off to the report · Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | main | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.4 | G Hand-off to the report · Skip control during the animation | details | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.5 | G Hand-off to the report · Report page for the lot on a hit | main | NOT-BUILT | MB-44 1.3 | BUILT-NO-DATA |
+| G.6 | G Hand-off to the report · Report meter: a hit counts one report; report limit page when exhausted | details | AVAILABLE | LS.12 | BUILT |
+
+## Search pages today (search-delta/current.json)
+| page | id | element | status | tasks |
+|---|---|---|---|---|
+| A Search page | A.1 | Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | AVAILABLE | NO TASK |
+| A Search page | A.2 | Search box: one pill, placeholder Enter lot address, search icon | AVAILABLE | NO TASK |
+| A Search page | A.3 | Typeahead resolution of the typed text (street-prefix, up to 10) | AVAILABLE | NO TASK |
+| A Search page | A.4 | Typed street direction (E/W/N/S) kept in the match | AVAILABLE | 1.4 |
+| A Search page | A.5 | Unit number typed after the address | NOT-BUILT | 1.4 |
+| A Search page | A.6 | Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | NOT-BOUND | SRCH.A6 |
+| A Search page | A.7 | Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | AVAILABLE | NO TASK |
+| A Search page | A.8 | Searching state: query in the box, the word Searching, clear button | AVAILABLE | NO TASK |
+| A Search page | A.9 | Outside Toronto state: Lots are only available in Toronto. | AVAILABLE | NO TASK |
+| A Search page | A.10 | Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | AVAILABLE | LS.6 |
+| A Search page | A.11 | Clear (x) button inside the box | NOT TRACED | NO TASK |
+| A Search page | A.12 | Bottom tab bar: Lookup, Tracked Lots, Account (app) | AVAILABLE | NO TASK |
+| A Search page | A.13 | In-bar Account button (MF-35 builds it amber) | AVAILABLE | NO TASK |
+| B Address confusion | B.1 | Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | AVAILABLE | NO TASK |
+| B Address confusion | B.2 | Select button after the pick (Select, Open the selected lot) | AVAILABLE | NO TASK |
+| B Address confusion | B.3 | Candidate row area line (locality, e.g. Downtown Toronto) | NOT-BOUND | NO TASK |
+| B Address confusion | B.4 | Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | AVAILABLE | NO TASK |
+| B Address confusion | B.5 | Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | AVAILABLE | NO TASK |
+| B Address confusion | B.6 | Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | AVAILABLE | NO TASK |
+| B Address confusion | B.7 | Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | SERVED-NOT-POPULATED | SRCH.C12 |
+| B Address confusion | B.8 | Faint tappable neighbour outlines on the unlinked state | AVAILABLE | NO TASK |
+| B Address confusion | B.9 | No-match state: No parcel found for that address. | AVAILABLE | NO TASK |
+| B Address confusion | B.10 | Intersection on the map (corner lots at the centreline node) | NOT-BUILT | LS.11 |
+| C Lot confusion (lot map) | C.1 | Heading: This address covers 2 lots. Which one do you mean? | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.2 | Search pill on top (clear returns to search); hidden h1 Choose your lot | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.3 | Map: each matched lot outlined (amber), neighbours in zinc | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.4 | Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.5 | Building footprint on each lot (or none), drawn on the map | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.6 | Address pin and the street name drawn on the road (Dunmore Lane) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.7 | Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | UNDESIGNED-DATA | NO TASK |
+| C Lot confusion (lot map) | C.8 | Lot card size line: 1,614 sq ft · 150 m² | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.9 | Lot card frontage and zoning string (7.6m • CR 2.5 style) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.10 | Selection shared by map tap and card (radiogroup Choose a lot) | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.11 | Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.12 | Link: Not sure which lot? Get help with an address | NOT-BOUND | SRCH.C12 |
+| C Lot confusion (lot map) | C.13 | Loading, error, rate-limit, entitlement, schema-drift states of the map page | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.14 | Routing: one printed address over two or more lots opens this page (shown only then) | AVAILABLE | NO TASK |
+| D Semi question page | D.1 | Page shown only when the lot is unsure (before the report) | AVAILABLE | NO TASK |
+| D Semi question page | D.2 | Lot form on the lookup hit (detected, basis, unsure) | AVAILABLE | NO TASK |
+| D Semi question page | D.3 | Question: Is this house one half of a semi-detached pair? | AVAILABLE | NO TASK |
+| D Semi question page | D.4 | Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | AVAILABLE | NO TASK |
+| D Semi question page | D.5 | Continue button (Choose an answer when none picked; Open the report with this answer) | AVAILABLE | NO TASK |
+| D Semi question page | D.6 | Back to search link | AVAILABLE | NO TASK |
+| D Semi question page | D.7 | Question-page states: loading, error, rate limit, entitlement, schema drift | AVAILABLE | NO TASK |
+| D Semi question page | D.8 | Owner answer stored (a reopened lot does not ask again) | BOUND-NOT-STORED | NO TASK |
+| D Semi question page | D.9 | Input: distance from your wall to the shared line, with an assumed default and an assumption line | NOT-BUILT | SRCH.SEMI |
+| D Semi question page | D.10 | Semi override applied in the report | NOT-BUILT | SRCH.SEMI 7.25 |
+| D Semi question page | D.11 | Evidence columns linked_parcel_count, best_shared_len_m | STORED-NOT-SERVED | NO TASK |
+| E Web search pages | E.1 | W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.2 | Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | AVAILABLE | NO TASK |
+| E Web search pages | E.3 | W5 choose your parcel on the web, address list (text_candidates) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.4 | W5 on the web for several lots, no lot linked and intersection (map) | NOT-BUILT | LS.11 |
+| E Web search pages | E.5 | W6 web report route /parcel-tool/{lot} | NOT-BUILT | LS.12 1.3 |
+| E Web search pages | E.6 | Recent-search chips on the web frame | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.1 | Hero call to action: Start free trial (to /signup); no search box on the landing page | NOT-BUILT | NO TASK |
+| F Landing (search entry and sample) | F.2 | How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.3 | Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | NOT TRACED | LS.7 |
+| F Landing (search entry and sample) | F.4 | Landing legal line | AVAILABLE | LS.6 |
+| F Landing (search entry and sample) | F.5 | After login the user lands on the search page (never the dashboard) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.1 | Unique match goes straight to the report (no extra page) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.2 | Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | NOT TRACED | 1.3 |
+| G Hand-off to the report | G.3 | Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.4 | Skip control during the animation | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.5 | Report page for the lot on a hit | NOT-BUILT | MB-44 1.3 |
+| G Hand-off to the report | G.6 | Report meter: a hit counts one report; report limit page when exhausted | AVAILABLE | LS.12 |
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Card opened 2026-11-24 by the orchestrator, Spec 137 rule 2, on the operator's rulings: RR-0444 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2290, fold the findings), RR-0447 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2308, add the new tasks with the search-fix labels, dependencies and order) and RR-0448 (the 8 merged cards). Source: the fold plan docs/reports/reviews/mcfixreborn-fold/FOLD-PLAN.md, task 5 (BUILD.REPORT-LIMIT) and 7 (FIX.PRESS-FEEDBACK) with amendment A2; every finding was ruled by a separate grounder (RR-0387, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1943; records under docs/reports/reviews/mcfixreborn-g1 to -g4). The plan's section 2 lines are this card's acceptance tests, each red first. Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975).
+
+What changes, in plain words: a customer at their report limit sees a screen offering a subscription upgrade with more report room (objective G.6, doc-2:94; RR-0443, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2283; RR-0444, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2290). A customer whose subscription has expired sees a reactivate screen (RR-0444). A signed-in customer with no plan sees the no-plan page (task-357, absorbed here by RR-0446, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2302). One wall layout serves the three states, built phone first and also on the web, following how the other pages were built (RR-0445, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2296). Last on the phone, primary buttons on the parcel pages get the spring and haptic feedback the engineering standard asks for.
+
+Findings folded: ST2, 2b, the O1 slot, Q14. Starts from the approved mocks (report-limit.html, small-pages-v8 no-plan.html) and existing components (the existing PaywallScreen is checked first for the reactivate state).
+
+Orchestrator reading, to be grounded at the plan stage: the purchase itself happens on the web; the phone wall carries the line or link, not a checkout.
+
+Must not: build a new plan or checkout flow; call expo-haptics directly; move the report goldens (wall copy lives in the search content).
+
+Runs after SEARCHFIX.2 and SEARCHFIX.3 (shared search binding, match file and content). Corrects the BUILT mark on objective G.6 by a dated note. Dated note owed: task-320.
+
+Files: mobile/src/lib/apiClient.ts, mobile/src/lib/errors.ts, mobile/src/lib/parcelSearchMatch.ts, mobile/src/components/surfaces/SearchBinding.tsx, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json, mobile/src/generated/surfaces/mobile_parcel_search.json, mobile/app/(app)/parcel-tool/[parcelId].tsx, mobile/src/components/surfaces/ReportPageHost.tsx, src/app/(maxbld)/parcel-tool/SearchPageClient.tsx, src/app/(maxbld)/parcel-tool/[parcelId]/page.tsx, mobile/src/components/surfaces/SurfaceRenderer.tsx, mobile/__tests__/apiClient.test.ts, mobile/__tests__/parcelSearchMatch.test.ts, mobile/__tests__/parcelSearchScreen.behaviour.test.tsx, mobile/__tests__/surfaceRenderer.smoke.test.tsx, src/tests/fixtures/surfaces/
+
+
+## Acceptance criteria
+- #1 A 403 keeps its code, limit and reset date; limit reached and subscription required are two error classes
+- #2 At the limit, the search page and the report screen show the wall with the count, the reset date and the upgrade line; never the reactivate copy
+- #3 An expired subscription shows the reactivate state
+- #4 A signed-in customer with no plan sees the no-plan page in the app
+- #5 The web shows the same three states
+- #6 Primary buttons spring and critical actions call the existing haptics wrapper
+
+
+## Implementation Plan
+Planner: Cairn-Plan-452
+Plan id: PLAN-452-v1
+
+Read-only. I ran no tests, hooks or generators and wrote no file. Cites were read at board head 9b709f475. For task-450 I also read its branch wf2/inc1b-sfx2 at de6d89d6f with `git diff`; it is built but not folded. Task-451 is read from its final plan in the working tree. MD means ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md.
+
+#### 1. Rules quoted first
+- RR-0443, MD:2283: "yes, they need a screen with a top up or a higher subscription". MD:2285: "(a) at the report limit the person gets a screen offering a top-up or a higher subscription (this is increment objective G.6 ... doc-2 ...:94)".
+- RR-0444, MD:2290-2291: "(2b) The report-limit screen is built: "a subscription upgrade with more report room"; a user with an expired subscription gets a reactivate screen".
+- RR-0445, MD:2296-2297: "we are mobie first ... but it works onthe web"; "built mobile first and also work on the web, by the same process". MD:2298 is the orchestrator's reading: ruling "a" (no-plan.html:292, App Store 3.1.1) means the purchase is on the web.
+- RR-0446, MD:2302-2303: "02 Agrred add to the plan." This adds task-357, the no-plan page.
+- RR-0442, MD:2276: "It should open on an exact match". This card changes no search outcome.
+- RR-0392, MD:1975: "I don't think we need any other infastrcuture beyond this".
+- Std 1.3, docs/specs/00_engineering_standards.md:24: "Primary interactive cards and buttons must use Reanimated `withSpring` ... Critical state transitions ... must trigger a haptic".
+- Grounder records:
+  - GROUNDER-SEATS.md (g3), B :31-44. Its smallest fix: "carry the error code on ApiError ... :63 throw plus mobile/src/lib/errors.ts. Then parcelSearchMatch.ts:297 splits REPORT_LIMIT_REACHED from a plain 403".
+  - GROUNDER-QUESTIONS.md:68, Q14: "Defect against the standard".
+- Mocks: report-limit.html (v8), state 3 (app wall) and states 4-5 (web). Mock note A1: "the app says only "Your plan is managed on the web."". no-plan.html (v8), states 1-3.
+
+#### 2. What exists and is reused
+- The server already sends a structured 403:
+  - Limit: `REPORT_LIMIT_REACHED` with details {reportsLimit, resetsOn} (error-mapping.ts:37, route.ts:112).
+  - No plan: `SUBSCRIPTION_REQUIRED` (error-mapping.ts:28, route.ts:73).
+  - The body shape is {error:{code,message,details}} (envelope.ts:56-80).
+- apiClient.ts:49-64 already parses the 403 body (for ACCOUNT_DELETED). This card extends that one block.
+- The entitlement read useParcelEntitlement (useParcelLookup.ts:161-170) gives status (null = no plan; 'expired' = lapsed; index.ts:59-77) and resetsOnDisplay (the server's Toronto date, RR-0310). The search screen already reads it (index.tsx:51-58).
+- The copy for the reactivate state is the existing `search.entitlement` (content :13). The tracked route exists: PARCEL_TAB_ROUTE.tracked (parcelSearchMatch.ts:254).
+- Existing parts and actions:
+  - Actions push, open_help (topic 'billing' exists, static-page.schema.json:179-187) and retry (SurfaceRenderer.tsx:111-146).
+  - The optional-action pattern: open_help? at :44.
+  - The notice and template builders: SearchBinding.tsx:120-124, :99-105.
+  - The conditional-key pattern of the situation, `...(args.entitlement ? ...)`, at parcelSearchMatch.ts:356-357.
+- authStore.signOut (mobile/src/store/authStore.ts:76). The haptics wrapper lightImpact, successNotification and errorNotification (mobile/src/lib/haptics.ts:6-27).
+- PaywallScreen checked first, as the card asks. It does NOT serve this user:
+  - It is the lead-gen paywall: prop leadViewsCount (PaywallScreen.tsx:29-31) and the lead-gen checkout useSubscribeCheckout.
+  - The parcel product may not reference lead-gen concepts (parcel-tool/_layout.tsx:3-4, Spec 116 OD5).
+  - So the reactivate state reuses `search.entitlement` inside the wall (FOLD-PLAN.md:80, the fallback).
+
+#### 3. The change, file by file, in build order
+1. mobile/src/lib/errors.ts, after :22: two classes. `ReportLimitError extends ApiError` (status 403, `reportsLimit: number|null`, `resetsOn: string|null`) and `SubscriptionRequiredError extends ApiError` (403). Because both extend ApiError, every `instanceof ApiError && status===403` check still holds: the retry guard useParcelLookup.ts:66, the lot map and the semi page.
+2. mobile/src/lib/apiClient.ts:51-63:
+   - Read errObj.code. REPORT_LIMIT_REACHED throws ReportLimitError, with the details taken only when typed right (number, string), never coerced. SUBSCRIPTION_REQUIRED throws SubscriptionRequiredError.
+   - The catch at :60-61 must rethrow `e instanceof ApiError` too, or the new errors are swallowed.
+   - Re-export the two classes at :12.
+   - Every other 403 stays ApiError(403,'Forbidden'). A lead-gen route's SUBSCRIPTION_REQUIRED becomes the subclass, which changes nothing for its callers.
+3. mobile/src/lib/parcelSearchMatch.ts. All new code; 452 does not touch the hunks 450 owns (§6).
+   - New pure `searchWall(error, planStatus)`, which returns 'limit' | 'reactivate' | 'no_plan' | null:
+     - ReportLimitError gives 'limit'.
+     - Any other 403 with planStatus === null (a read that answered "no plan") gives 'no_plan'.
+     - Any other 403 gives 'reactivate': an expired or cancelled status, a failed read, or no read yet.
+   - buildSearchSituation (:325-358) gains `planStatus?: string|null` and `planCheck?: 'idle'|'checking'|'none'`. After the entitlement spread it adds `...(wall ? { wall, planCheck } : {})`, so every existing situation and fixture is unchanged.
+   - SearchSituation (:302-322) gains the optional `wall` and `planCheck` keys.
+   - ParcelSearchErrorClass is unchanged: entitlement still means "a 403", so lotMap.ts:87 and semiQuestion.ts:68 are untouched.
+4. scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json: +17 keys, appended after "search.wordmark.max". The words are the mocks', with curly apostrophes:
+   - Limit:
+     - wall.limit.title "You’ve used all {limit} reports"
+     - wall.limit.reset "Your count resets on {date}."
+     - wall.limit.opened "Lots you’ve opened this period still open."
+     - wall.limit.stay "Your Tracked Lots stay."
+   - Shared:
+     - wall.plan "Your plan is managed on the web." (the O1 slot, shared by all three states)
+     - wall.tracked "Go to Tracked Lots"
+     - wall.counted "How are reports counted?"
+   - No plan:
+     - wall.noplan.title "Welcome back"
+     - .lead "This account has no active plan yet."
+     - .same "It’s the same MaxBLD account."
+     - .check "I’ve set up my plan"
+     - .hint "Tap after your plan is active."
+     - .checking "Checking your plan…"
+     - .none "We couldn’t find a plan yet. Try again in a minute."
+     - .account "Account"
+     - .logout "Log out"
+     - .stuck "Still stuck?" (its link reuses footer.help)
+5. mobile/src/components/surfaces/SearchBinding.tsx:
+   - A new `wall(s)` builder: a View with testID parcel-search-wall-<kind>, a role-header Text, AlertDescription-style lines, then one action row. Each part per kind:
+     - limit: title {limit: contract('errors.403.reportsLimit')}; the reset line {date: entitlement('resetsOnDisplay')}, drawn only when the read answered; opened; stay; wall.plan; a default Button "Go to Tracked Lots" (push PARCEL_TAB_ROUTE.tracked); a link "How are reports counted?" (open_help 'billing', choice 8.7).
+     - reactivate: search.entitlement and wall.plan, then the tracked button.
+     - no_plan: title, lead, wall.plan, same; then the button "I’ve set up my plan" (retry; disabled and busy, text wall.noplan.checking, when planCheck is 'checking'); then the hint, or `none` plus stuck and the help link when 'none'; then Account (push PARCEL_TAB_ROUTE.account) and Log out (sign_out).
+   - notices() :134-136 draws the entitlement notice only when `!s.wall`. searchProps (:233-240) puts `...wall(s)` after notices.
+   - Export `wallTree(kind, planCheck)` for the report screen.
+   - searchData (:250-253) adds `errors.403.reportsLimit` beside 429 when the wall is limit.
+6. mobile/src/components/surfaces/SurfaceRenderer.tsx:
+   - SurfaceActions (:34-45) gains optional `sign_out?: () => void`, with a case in action() (:115-145). The `in` fence covers it, as it covers open_help.
+   - Haptics, ruled in choice 8.6: in renderNode (:157-159), a Button with variant 'default' wraps its onPress as `() => { lightImpact(); fn(); }`. Nothing calls expo-haptics directly.
+   - The spring: see choice 8.6.
+7. OUTSIDE FILES LINE, mobile/app/(app)/parcel-tool/index.tsx. It is on task-357's absorbed Files line, and it is the only place the read and the recheck live.
+   - :53 passes `planStatus` (undefined until the read answers; data.status otherwise) and a local `planCheck` state.
+   - :109 retry also calls refetchEntitlement. A press with wall 'no_plan' sets planCheck 'checking'.
+   - When it settles: a still-null status sets 'none' and calls errorNotification(). An active status calls successNotification(), and the lookup refetch clears the wall.
+   - :105-117 actions gain sign_out, which calls useAuthStore.getState().signOut().
+8. mobile/app/(app)/parcel-tool/[parcelId].tsx:22-33:
+   - Read `error`, call useParcelEntitlement(), and compute `wall = searchWall(error, status)`.
+   - Pass the host one optional prop: `wall={{ tree: wallTree(...), content: SEARCH_SLICE.content, data, actions: {push, open_help, back, retry, sign_out} }}`, or null.
+   - The report goldens and REPORT content do not move (FOLD-PLAN.md:83).
+9. mobile/src/components/surfaces/ReportPageHost.tsx:34-68: an optional `wall` prop. When it is set, the host renders `top` and then `<Renderer tree={wall.tree} content={wall.content} data={wall.data} actions={wall.actions}/>` in place of the lifecycle. These are existing tags only, so C-8m holds (surface-conformance.logic.test.ts:751).
+10. OUTSIDE FILES LINE, src/components/surfaces/web/SearchBinding.tsx (450's file; AC5). It mirrors the mobile wall with its notice idiom (:175-180), and the entitlement notice is guarded by `!s.wall`. WebSituation (:33-48) gains the optional wall and planCheck. Web buttons are disabled while the site is not live (runtime.disabled). The web action row is choice 8.4.
+11. The census, scripts/surfaces/_schema/census/mobile-product.json, entry mobile_parcel_search. Two edits, as dated prior-text-kept sentences:
+    - errors.classes 403 ui: three wall states replace the one locked line (descriptor :377).
+    - checks :298: the wall replaces the entitlement block.
+    The descriptor is then rewritten by `node scripts/violations/generate-surface-registry.mjs --emit-descriptors`, then the plain run (which writes docs/reports/generated/127-surface-registry.md and 127-surface-review-queue.md), then `--check`. The generator has no --write.
+12. Fixtures and goldens. mobile/__tests__/fixtures/parcelSearch.situations.json is OUTSIDE FILES LINE (450 also edits it):
+    - 'unauthorized' gains `"wall":"reactivate"`, so its golden draws the reactivate wall (choice 8.2).
+    - New situations limit_wall, no_plan_wall, no_plan_checking and no_plan_none, used by the tests only.
+    - Regenerate in order: emit-mobile-surfaces.mjs --write, search-golden-capture.ts --write, emit --write again, the one-off in-memory buildGoldens call for *.web.json (the 450/451 method), surface-validate --check.
+    - Golden counts stay: S-screen 100, and the T7 lock of 70 at admin-media.golden.test.ts:38.
+13. OUTSIDE FILES LINE, the string-count pins (§6): surface-validate.logic.test.ts:91 and surface-conformance.logic.test.ts:261 go from 436 to 453, with a dated comment, measured before and after.
+14. src/app/(maxbld)/parcel-tool/SearchPageClient.tsx and [parcelId]/page.tsx: no edit.
+    - The client already passes the situation through.
+    - The web report route fails closed until MB-44 (page.tsx:17-20). Making it reachable is the live switch's row, not this card's.
+    - The web gate wiring is choice 8.5.
+
+#### 4. Tests first (red, then green)
+The mobile unit tests are not run by the commit hook; they run in the full suite at the push station. The lane runs them by hand before each commit.
+- AC1, fold :78 (ST2), mobile/__tests__/apiClient.test.ts, beside :132:
+  - "403 REPORT_LIMIT_REACHED keeps code, limit and reset". Input: body {error:{code:'REPORT_LIMIT_REACHED',details:{reportsLimit:10,resetsOn:'2026-12-09T05:00:00.000Z'}}}. Expected: a ReportLimitError with 10 and that ISO date, also instanceof ApiError, status 403.
+  - "403 SUBSCRIPTION_REQUIRED" gives SubscriptionRequiredError.
+  - ACCOUNT_DELETED is unchanged.
+  - A generic 403 is ApiError and neither subclass.
+  - Bad details give reportsLimit null.
+  - Red today: every case is ApiError(403,'Forbidden').
+- AC2 and AC3, fold :79-80, mobile/__tests__/parcelSearchMatch.test.ts, describe "searchWall":
+  - ReportLimitError with any status gives limit.
+  - SubscriptionRequiredError with null gives no_plan; with 'expired' gives reactivate; with undefined (a failed read) gives reactivate.
+  - A plain ApiError 403 with null gives no_plan.
+  - A 500, a 429 and no error give null.
+  - buildSearchSituation leaves out the wall key when there is no 403, so the existing truth table is unchanged.
+- AC2, mobile/__tests__/parcelSearchScreen.behaviour.test.tsx. The mocks at :34-39 gain an error and an entitlement data, and authStore :25 gains signOut.
+  - Limit with {reportsLimit:10, resetsOnDisplay:'9 Dec 2026', status:'active'} shows "You’ve used all 10 reports", "Your count resets on 9 Dec 2026." and "Your plan is managed on the web.".
+  - The search.entitlement text is absent (queryByText null).
+  - Pressing Go to Tracked Lots pushes '/(app)/parcel-tool/tracked'.
+- AC3: SubscriptionRequiredError with status 'expired' shows the search.entitlement text inside parcel-search-wall-reactivate.
+- AC4, from task-357 AC1 and AC3:
+  - Status null shows "Welcome back".
+  - A press refetches the read and the lookup. While the read is fetching, "Checking your plan…" shows with the button disabled and busy.
+  - A settled null shows "We couldn’t find a plan yet. Try again in a minute.".
+  - Log out calls signOut.
+- Report screen, OUTSIDE FILES LINE, mobile/__tests__/reportPage.behaviour.test.tsx: the host with a limit wall prop renders the wall and Back, and not states.lifecycle.error. Red: the prop does not exist.
+- AC5, OUTSIDE FILES LINE, src/tests/surfaces/search-web-binding.ui.test.tsx: the three wall situations render server-side with the same texts, and none holds search.entitlement for limit.
+- AC6, fold :91-92, mobile/__tests__/surfaceRenderer.smoke.test.tsx, a new describe "press feedback":
+  - With jest.mock('@/lib/haptics'), pressing a variant 'default' Button calls lightImpact once and then its action. A 'link' press calls none.
+  - A host without sign_out cannot render the no-plan wall (the unknown-action fence).
+  - The spring test depends on choice 8.6.
+- Grep plant, task-357 AC4: no new content value contains http, www, $ or maxbld.ca.
+- Fold A2 (FOLD-PLAN.md:226): one layout, three states is the three behaviour cases above.
+
+#### 5. Limits, and what could fail or surprise
+Limits:
+- No purchase and no checkout. No new route, setting, state name or server change.
+- The lead-detail page and the old permit route are untouched.
+- The semi page and the map page keep their own `state.entitlement` notice (semi content :14, map :23). A semi Continue that meters at the limit still says "reactivate" (choice 8.9).
+- A person with no plan row at all sees the App A spinner and never reaches the wall. That is MF-49 (task-357, user state 1).
+- The sign-up way is NOT delivered. It waits on MF-86, the Stripe price ids, and MF-70/MF-49 (task-357 AC6 close-out).
+Risks:
+1. If apiClient's catch block is not widened, the new classes are swallowed and come out as ApiError. The AC1 tests catch it.
+2. A failed or late entitlement read draws reactivate, not no-plan. Its words are today's notice, the task-357 fallback.
+3. The reset line binds resetsOnDisplay. If the read has not answered, that line is left out (choice 8.11).
+4. Every search golden moves, because the content fingerprint moves; 'unauthorized' also changes its tree. surface-validate --check and parcelScreens.golden.test.ts detect it. The golden count is unchanged.
+5. If signOut does not reset the gate's profile status, Log out may not end on sign-in. This is UNVERIFIED (task-357). The behaviour test asserts the call, and a device check happens once before close.
+6. The renderer haptic fires on every primary press, including Select. That is Std 1.3's "neutral action".
+
+#### 6. Who owns which hunk (450, then 451, then 452; re-read at the merge, edit by anchor text, not line)
+- parcelSearchMatch.ts:
+  - 450 owns deriveMatchType, hasHouseNumber, the `retryAfterSeconds == null` line, overCap and showMiss.
+  - 452 adds searchWall, the two args and the `wall` spread after "...(args.entitlement ?".
+- The search content:
+  - 450 owns list.refine, search.input.hint and search.prompt.
+  - 452 appends the wall.* keys.
+- Mobile SearchBinding:
+  - 450 owns DERIVED_NAMES, the pill hint, the report topic, the prompt template and the derived min_query_len.
+  - 452 adds wall(), the `!s.wall` guard, the searchProps line and the 403 data.
+- Web SearchBinding: 450 owns the sliceNumber import, the hint, the topic and the prompt. 452 adds the wall and the type keys.
+- static-page.json and web_help: 450 and 451 only. 452 does not touch them (choice 8.1).
+- Census mobile-product.json:
+  - 450 edits mobile_parcel_search purpose, metering, flag and notes; 451 edits the map entry.
+  - 452 edits mobile_parcel_search errors and checks :298.
+  - Whoever lands second re-runs the generator.
+- String pins: 450 moves 426 to 427, 451 moves 427 to 436, and 452 moves 436 to 453.
+- parcelSearch.situations.json: 450 owns rate_limited_zero; 452 owns 'unauthorized' and the new keys.
+- surfaceRenderer.smoke.test.tsx: 450 owns :41 and :76-82; 452 adds a new describe; task-456 runs later.
+- Files line to add: the census, the two 127 files, the descriptor, the slice, the mobile goldens copy, the five OUTSIDE files above, and reportPage.behaviour.test.tsx.
+
+#### 7. Dated notes and card notes owed (node_modules/.bin/backlog, never a hand edit)
+- doc-2, by `backlog doc update doc-2 --content`, built from a fresh read with prior text kept: G.6 (:94) BUILT is corrected. The wall is built by task-452, the web is drawn but not live, and there is no purchase.
+- task-320: `backlog task edit 320 --append-notes`, saying ST2 is closed. Read the notes first and append once.
+- task-357: --append-notes, saying it was built under task-452. It names which user states reach the page (state 2 only) and that the sign-up way waits on MF-86, the price ids and MF-70/MF-49 (its AC6).
+- task-452: --plan, the acceptance checks, and --append-notes with the evidence and any rulings on the choices below as verbatim dated rows.
+
+#### 8. Open choices (not decided)
+8.1 Where the wall is drawn:
+- (a) SearchBinding and the search content. This is the card's Files line and FOLD-PLAN.md:83.
+- (b) A screens row of static-page.json drawn by PageTableBinding.tsx. This was task-357's 2026-11-20 grounder note, and it needs its own surface, route and descriptor.
+- Recommend (a): the card is later and RR-0446 folds 357 into it.
+8.2 Goldens. SV-SCREEN refuses a state "declared twice" (screen-checks.mjs:264), and the state names are a closed list (surface.schema.json:2003-2056) with no limit or no-plan value.
+- (a) The 'unauthorized' golden shows reactivate, and limit and no-plan are proven by tests.
+- (b) New state names, which is a schema change and a new mechanism.
+- Recommend (a).
+8.3 O1 phone action row:
+- (a) "Your plan is managed on the web.": mock A1, ruling "a", and the reading of RR-0445 at MD:2298.
+- (b) An upgrade button.
+- Recommend (a). Switching later is one key.
+8.4 Web buy button. No target exists on maxbld.ca: MAXBLD_ROUTES (host-policy.ts:41-60) has no /subscribe, /plans or /account, and subscribe/actions.ts:7-9 says "No page imports them yet".
+- (a) No buy button until MF-86, and the web drops wall.plan.
+- (b) Draw "Upgrade to Pro" pointing at a route that does not exist yet.
+- Recommend (a), because the card says "Must not: build a new plan or checkout flow".
+8.5 Web no-plan versus reactivate:
+- (a) requireParcelToolPage returns the status it already reads (:54-61), and page.tsx and maxbld-web.ts pick the wall. These are three files OUTSIDE FILES LINE, and they bring the security lens in.
+- (b) Binding parity only; the not-entitled page shows reactivate.
+- Recommend (b). Task-357 put the web no-plan page out of scope ("Sign in -> Checkout", Spec 126:1080).
+8.6 Spring. SurfaceRenderer may render only COMPONENTS parts imported from the vendored parts, the React Native parts or the host list (surface-conformance.logic.test.ts:746, :781, :789). The vendored Button is sha-pinned (C-5), and withSpring needs a per-button hook. So meeting AC6's spring changes the C-8m lock and the bindings.json mapping.
+- (A) One spring part plus the lock edit (the MF-53 and MF-83 part-source precedent, :744-745).
+- (B) Haptics now and the spring on its own card.
+- Recommend (B): RR-0392, and task-357's line that a new component kind "needs a named reason and a ruling".
+8.7 "How are reports counted?":
+- (a) open_help 'billing', an existing topic.
+- (b) Leave the link out (there is no help answer).
+- Recommend (a).
+8.8 Log out on the no-plan wall:
+- (a) Add the sign_out action. That is task-357 AC3, and account.tsx:15-18 shows nothing, so there is no other Log out.
+- (b) Leave it out.
+- Recommend (a).
+8.9 Semi and map pages at the limit:
+- (a) Leave them; the card does not name them.
+- (b) Extend searchWall to them.
+- Recommend (a), and pile it.
+8.11 The wall's date:
+- (a) The read's resetsOnDisplay (RR-0310).
+- (b) Format the 403's resetsOn on the phone.
+- Recommend (a).
+
+#### 9. UNVERIFIED
+- Nothing was run.
+- Whether jest-expo mocks expo-haptics. The smoke test mocks the wrapper anyway.
+- The search-golden-capture.ts header (:6-7) says it reads each golden's situation from the committed golden; a changed situation is handled as task-320 did (read its commit).
+- That signOut ends on sign-in.
+- The exact string total. The lane measures it.
+- The 403 wall is unreachable today (the meter is off: GROUNDER-SEATS B "latent").
+
+#### Critical Files for Implementation
+- /Users/brettpreston_macmini/Buildo-wt-board/mobile/src/lib/apiClient.ts
+- /Users/brettpreston_macmini/Buildo-wt-board/mobile/src/lib/parcelSearchMatch.ts
+- /Users/brettpreston_macmini/Buildo-wt-board/mobile/src/components/surfaces/SearchBinding.tsx
+- /Users/brettpreston_macmini/Buildo-wt-board/mobile/src/components/surfaces/ReportPageHost.tsx
+- /Users/brettpreston_macmini/Buildo-wt-board/mobile/src/components/surfaces/SurfaceRenderer.tsx
+

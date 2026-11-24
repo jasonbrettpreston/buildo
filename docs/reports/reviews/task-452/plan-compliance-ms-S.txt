@@ -1,0 +1,47 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:24:42.580Z file_sha256=38ea4bc6e83765dc9a4aa42d2286646921631878e7097b644056c0f787bb14b0 prompt_sha256=2850fe16dfc7f5c70ad90cf50bc8b05bc416449f2017720b6b7ef32cb1ff44a8
+🔍 Lens review of docs/reports/reviews/task-452/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC6 "Primary buttons spring and critical actions call the existing haptics wrapper" — plan §8.6 "Recommend (B): RR-0392, and task-357's line that a new component kind "needs a named reason and a ruling"." — under the recommended option the spring half of AC6 is dropped, so primary buttons get lightImpact only and never Reanimated withSpring — fix: take 8.6(A) with the C-8m lock and bindings.json edit, or obtain a dated ruling that narrows AC6 before plan-lock.
+
+BUG severity=HIGH — AC5 "The web shows the same three states" — plan §8.5 "Recommend (b). Binding parity only; the not-entitled page shows reactivate." — under the recommended option the web never selects the no-plan state, and §8.4(a) "the web drops wall.plan", so the web shows two states plus a wall missing the line — fix: take 8.5(a) where requireParcelToolPage returns the status it already reads (:54-61), or get AC5 narrowed by ruling.
+
+BUG severity=HIGH — AC2 "At the limit, the search page and the report screen show the wall with the count, the reset date and the upgrade line" — plan §3.5 "the reset line {date: entitlement('resetsOnDisplay')}, drawn only when the read answered" — a limit wall drawn before the entitlement read answers, or after a failed read, shows the count with no reset date although the 403 carries one (§3.2 "details {reportsLimit, resetsOn}") — fix: fall back to the 403 resetsOn formatted Toronto-time (RR-0310) and add the red test for the unanswered read.
+
+BUG severity=HIGH — AC4 "A signed-in customer with no plan sees the no-plan page in the app" — plan §5 "A person with no plan row at all sees the App A spinner and never reaches the wall. That is MF-49" — AC4 as pasted is unqualified, so the class with no plan row is not served and the AC holds only for user state 2 — fix: deliver state 1 under this card or record a dated ruling narrowing AC4.
+
+DEFER severity=MED — RR-0443 "yes, they need a screen with a top up or a higher subscription" — plan §3.4 "wall.plan "Your plan is managed on the web."" — the limit wall names where the plan is managed but offers no top-up, no higher subscription and none of the RR-0444 "more report room" words — fix: add an upgrade line that names more report room and links to the web plan page once MF-86 names the route, or get a ruling on 8.3(a).
+
+DEFER severity=MED — AC1 "A 403 keeps its code, limit and reset date" — plan §4 "Expected: a ReportLimitError with 10 and that ISO date, also instanceof ApiError, status 403" — neither the test nor §3.1 asserts or states which code the two subclasses pass to ApiError, so "keeps its code" is unsatisfied on paper — fix: assert error.code is REPORT_LIMIT_REACHED and SUBSCRIPTION_REQUIRED and state the code in §3.1.
+
+DEFER severity=MED — RR-0447 "clean the board (label dead), review all tasks, then add the search-fix tasks" — plan §8.6 "Haptics now and the spring on its own card" and §8.9 "Recommend (a), and pile it" — the deferred spring and the piled semi/map work carry no task id, no SEARCHFIX label, no dependency on 452 and no order — fix: create both cards with the SEARCHFIX-PRIORITY label, dependency on 452 and an explicit order, or name the ruling that leaves them off-board.
+
+DEFER severity=LOW — rule list "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — card Files line "Files: mobile/src/lib/apiClient.ts, mobile/src/lib/errors.ts ... src/tests/fixtures/surfaces/" — the plan edits five files the Files line does not name (mobile/app/(app)/parcel-tool/index.tsx, src/components/surfaces/web/SearchBinding.tsx, parcelSearch.situations.json, the census, the string pins); the task-357 Files line that would authorise index.tsx is not pasted, so I cannot see it — fix: append these paths to the card Files line with the ruling that authorises each.
+
+MET — AC1 "limit reached and subscription required are two error classes" — plan §3.1 — ReportLimitError and SubscriptionRequiredError both extend ApiError so the existing status 403 guards still hold.
+
+MET — AC2 "never the reactivate copy" — plan §3.3 "ReportLimitError gives 'limit'" and §3.5 "draws the entitlement notice only when `!s.wall`".
+
+MET — AC3 "An expired subscription shows the reactivate state" — plan §4 "SubscriptionRequiredError with status 'expired' shows the search.entitlement text inside parcel-search-wall-reactivate".
+
+MET — RR-0445 "we are mobie first - we always take that approach but it works onthe web" — plan §3.3 to §3.9 mobile, §3.10 the web mirror.
+
+MET — card "Must not: build a new plan or checkout flow" — plan §5 "No purchase and no checkout. No new route, setting, state name or server change."
+
+MET — card "Must not: call expo-haptics directly" — plan §3.6 "Nothing calls expo-haptics directly."
+
+MET — card "Must not: move the report goldens (wall copy lives in the search content)" — plan §3.8 "The report goldens and REPORT content do not move".
+
+MET — RR-0310 "A.6 reset date served as a Toronto-time label" — plan §2 "resetsOnDisplay (the server's Toronto date, RR-0310)".
+
+MET — card "Corrects the BUILT mark on objective G.6 by a dated note. Dated note owed: task-320." — plan §7 "G.6 (:94) BUILT is corrected" and "task-320: ... saying ST2 is closed".
+
+REJECT — RR-0392 "I don't think we need any other infastrcuture beyond this" — the plan is accused of new infrastructure in the census descriptor, the wall builder and the sign_out action — the census generator and the optional-action pattern already exist (open_help precedent), so nothing new is being built.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 30   Unmet: 6
+Rules met: none
+
+---
+⏱  64228ms (64.2s)
+📊 Tokens — total: 25647, input: 11533, output: 14114, reasoning: 12630

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T16:24:42.579Z file_sha256=da453e866cc3b3ac92a7fee02e14033c2d8ae10ce8b186ad571290046a813df5 prompt_sha256=87c7c66131ba306b0b69b132ee09bcc5b7e79686717f28e15e3942593a4b23a3
+🔍 Lens review of docs/reports/reviews/task-452/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan §6 "in renderNode (:157-159), a Button with variant 'default' wraps its onPress as `() => { lightImpact(); fn(); }`." — when the action fence yields no handler (a host without sign_out, or any action the host omits) fn is undefined, and the new wrapper turns an inert button into a tap-time TypeError at the moment of press — wrap only when the resolved handler is a function, otherwise pass fn through untouched, and add the press of an action-less Button to surfaceRenderer.smoke.test.tsx.
+
+BUG severity=HIGH — plan §4 "wall.limit.title "You’ve used all {limit} reports"" — the title is drawn with no null fallback while §4 also fixes "Bad details give reportsLimit null", so the one screen this card exists for can render "You’ve used all reports" or an empty slot on a malformed 403 — draw the count only when contract('errors.403.reportsLimit') is a number and add a count-free title key for the null case.
+
+DEFER severity=MED — plan §7 ":109 retry also calls refetchEntitlement. A press with wall 'no_plan' sets planCheck 'checking'." — the plan-check press has no bound and no failure branch: if the refetch never settles or keeps retrying, the primary button stays disabled and busy showing "Checking your plan…" with no way back except Account or Log out — add a give-up bound (RR-0341's 60 s precedent) that flips planCheck to 'none' and shows the retry wording.
+
+DEFER severity=MED — plan §3 "Any other 403 gives 'reactivate'" — the default arm consults no code, so any 403 that is not a report limit draws the expired-subscription copy and hides the real failure (whether ACCOUNT_DELETED surfaces here as a plain 403 I cannot see) — allowlist the codes that may draw a wall and return null for the rest, or require the wall only once planCheck has answered.
+
+DEFER severity=MED — plan §5 "A person with no plan row at all sees the App A spinner and never reaches the wall. That is MF-49 (task-357, user state 1)." — the empty case is an unbounded spinner with no wall, no retry and no time-out, so that user never sees the no-plan page or an error — apply the same give-up bound to the entitlement read so the empty path lands on the no-plan or error copy.
+
+DEFER severity=MED — plan §4 "searchData (:250-253) adds `errors.403.reportsLimit` beside 429 when the wall is limit." — the count is placed in the search screen's data only, while §8 hands the report screen's wall `data` unchanged, so AC2's count on the report screen may bind empty (which data builder the report screen uses I cannot see) — state that the report screen's wall data also carries errors.403.reportsLimit, or build it in wallTree.
+
+DEFER severity=LOW — plan §5 "the reset line {date: entitlement('resetsOnDisplay')}, drawn only when the read answered" — at the limit with a pending or failed read the wall drops the date even though the 403 carries resetsOn and AC2 names the date — fall back to the 403's resetsOn when resetsOnDisplay is absent (choice 8.11 b as the fallback, 8.11 a as the preference).
+
+REJECT — plan §1 "the reset line ... drawn only when the read answered" and §5 risk 2 "A failed or late entitlement read draws reactivate, not no-plan." — a 403 with a failed read drawing the wrong wall copy looks like a misclassification — it is the named, ruled fallback: both wall kinds stay on the same layout, offer the metered-free actions, and no count or purchase is ever shown, so it fails closed.
+
+VERDICT: FAIL on error-path safety
+Paths walked: 403 parse and catch widening, entitlement read failure, null reportsLimit, missing reset date, no plan row, plan-check retry, plan-check time-out, wall button press with no handler, counted meter on the retry, web disabled buttons, golden fixture regeneration   Unguarded: 5
+
+---
+⏱  52145ms (52.1s)
+📊 Tokens — total: 33177, input: 23342, output: 9835, reasoning: 8909

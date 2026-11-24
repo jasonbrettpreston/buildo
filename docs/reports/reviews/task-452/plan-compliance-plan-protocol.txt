@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:24:42.576Z file_sha256=e973157973fd3ff1adfe3403c70b7892f8dd6f2898245108ceaad04c3062d050 prompt_sha256=76008e7395e304e9824116c908aca105c23b44a5b80fe7f0d2807ef8316e33e7
+🔍 Lens review of docs/reports/reviews/task-452/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC6 "#6 Primary buttons spring and critical actions call the existing haptics wrapper" — plan §8.6 "Recommend (B): RR-0392, and task-357's line that a new component kind \"needs a named reason and a ruling\"" — the spring half of AC6 is deferred to a later card, so this plan does not satisfy AC6 as written — build option (A) with the C-8m lock and bindings.json edit, or record a dated operator ruling that strikes the spring from AC6.
+
+BUG severity=HIGH — AC5 "#5 The web shows the same three states" — plan §8.5 "Recommend (b). Task-357 put the web no-plan page out of scope" — the web gets two states only, and plus §8.4 "(a) No buy button until MF-86, and the web drops wall.plan" drops the shared wall.plan slot on the web, so the one layout does not run as three states on the web — adopt 8.5(a) or record a dated ruling narrowing AC5 to two states on the web.
+
+BUG severity=HIGH — RR-0443 "yes, they need a screen with a top up or a higher subscription" — plan step 5, limit arm "a default Button \"Go to Tracked Lots\" (push PARCEL_TAB_ROUTE.tracked); a link \"How are reports counted?\"" with only "wall.plan \"Your plan is managed on the web.\"" — at the limit the wall offers tracked lots and a help link and nothing that offers more report room, so AC2's "upgrade line" and RR-0443's top-up/higher subscription have no deliverable — add an upgrade line plus link key aimed at the web purchase/account target, or a dated ruling.
+
+DEFER severity=MED — AC2 "the wall with the count, the reset date and the upgrade line" — plan §8.11 "(a) The read's resetsOnDisplay (RR-0310)" with step 5 "the reset line {date: entitlement('resetsOnDisplay')}, drawn only when the read answered" — the count comes from the 403 details while the date comes from a separate read, so a limit 403 with an unanswered read draws no reset date — render ReportLimitError.resetsOn when resetsOnDisplay is absent.
+
+DEFER severity=MED — card Description "A customer whose subscription has expired sees a reactivate screen (RR-0444)." — plan §3 "Any other 403 gives 'reactivate': an expired or cancelled status, a failed read, or no read yet." — reactivate copy is drawn for users whose status is not expired, and the pasted clause names it for expired only — restrict 'reactivate' to 'expired' (any wider set needs a cited ruling) and fall back to the existing notice otherwise.
+
+DEFER severity=MED — AC6 "critical actions call the existing haptics wrapper" — plan step 6 "a Button with variant 'default' wraps its onPress as `() => { lightImpact(); fn(); }`" and risk 6 "The renderer haptic fires on every primary press, including Select." — every primary press fires the haptic, not only the critical actions the clause names — gate the haptic to the actions the card calls critical, or cite the ruling that all primary presses count.
+
+DEFER severity=MED — AC4 "A signed-in customer with no plan sees the no-plan page in the app" — plan §5 "A person with no plan row at all sees the App A spinner and never reaches the wall. That is MF-49 (task-357, user state 1)." — a signed-in customer with no plan row never reaches the page, so AC4 holds for one user state only with no pasted ruling narrowing it — add the no-plan-row path or record a dated ruling narrowing AC4.
+
+MET — AC1 — plan §1 steps 1-2 "ReportLimitError extends ApiError ... SubscriptionRequiredError extends ApiError" — two error classes carrying code, reportsLimit and resetsOn, with the red-first tests at §4 AC1.
+MET — Must not: call expo-haptics directly — plan step 6 "Nothing calls expo-haptics directly." — the wrapper lightImpact is used.
+MET — Must not: move the report goldens — plan step 8 "The report goldens and REPORT content do not move" — wall copy is added to the search content at step 4.
+MET — Dated note on G.6 and note owed to task-320 — plan §7 doc-2 --content correction and task-320 --append-notes.
+MET — PaywallScreen checked first for the reactivate state — plan §2 "PaywallScreen checked first, as the card asks ... It does NOT serve this user".
+MET — RR-0310 reset date as the server's Toronto label — plan step 5 "entitlement('resetsOnDisplay')" and §8.11(a).
+MET — RR-0442 search outcome unchanged — plan §1 "This card changes no search outcome."
+MET — Runs after SEARCHFIX.2 and SEARCHFIX.3 — plan §6 "Who owns which hunk (450, then 451, then 452)".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 5
+Rules met: none
+
+---
+⏱  57770ms (57.8s)
+📊 Tokens — total: 25203, input: 13147, output: 12056, reasoning: 10895
