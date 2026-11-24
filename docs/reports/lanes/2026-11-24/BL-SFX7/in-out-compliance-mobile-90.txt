@@ -1,0 +1,358 @@
+LIST mobile-90 sha256:a35f6359cce4cf196797496385e86ef15014b73d358a929c0d82c26ee37fe1e2 material sha256:8cb8a87a8f3016613acf3259d4697990c01cae5dc7df2de13c51fe968dd9877e part 1 of 1 chunk 1 of 1
+RULE LIST mobile-90 (docs/specs/03-mobile/90_mobile_engineering_protocol.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["mobile/__tests__/semiQuestionPage.behaviour.test.tsx","mobile/__tests__/useAnswerParcelLookup.hook.test.tsx","mobile/__tests__/useParcelLookup.test.ts","mobile/app/(app)/parcel-tool/semi-question.tsx","mobile/src/hooks/useParcelLookup.ts","mobile/src/lib/semiQuestion.ts"]
+
+# Spec 90 — Mobile Engineering Protocol & Architecture (The Pivot)
+
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 2** of `.cursor/active_task.md`.
+
+> **Prevention loop (frontend/mobile home):** the frontend-tagged rows of the prevention registry (`docs/specs/00_engineering_standards.md` §14) live here. New CRITICAL/HIGH review findings (Spec 08 roster — incl. the User-Advocate/UX lens) that yield a *mobile* rule become protocol requirements in this spec and, where deterministic, a gate.
+
+## 1. Goal & User Story
+**Goal:** Build a truly native Expo application for tradespeople, relying on the Next.js backend for all heavy lifting. This establishes the foundation for offline reliability, native push notifications, and elite list performance. *Note: Push infrastructure is a cross-domain dependency requiring coordination with the Next.js backend for token registration and payload triggering.*
+**User Story:** As a tradesperson standing in a concrete basement with poor cell service, I need my Lead Feed to open instantly without crashing, allow me to scroll through thousands of local permits flawlessly, and ping my lock-screen the second a high-value job changes phases.
+
+## 2. Platform & Device Matrix
+This single Expo codebase targets three environments (Minimum OS requirements: iOS 16+ / Android 10+):
+1. **Mobile (iOS/Android):** Primary target. UI must accommodate notches, dynamic islands, and safe areas.
+2. **Tablet (iPad/Android):** UI must be responsive. Use NativeWind breakpoints (e.g., `md:flex-row`) to convert stacked mobile cards into side-by-side or grid layouts.
+3. **Web (Expo Web):** Compiles to a PWA. *Fallback constraint:* `@shopify/flash-list` does not support Web. You must implement a standard `<FlatList>` or TanStack Virtual fallback for the web target.
+
+> Dated note 2026-11-09 (M-246, prior text kept; spec review R-8, `~/Buildo-scratch/mcfrontend/PROGRAMME/SPEC-REVIEW-mobile-web.md`): descriptor-governed web surfaces render as Next.js RSC (Spec 126 §5.3; Spec 128 R-22); the MaxBLD web pages use the web library of Spec 126 §11b.4. The Expo Web build target is unruled.
+
+**Theme Constraint:** The app must natively support System Dark Mode. NativeWind `dark:` variants are required for all UI components.
+
+> Dated note 2026-11-09 (MF-42 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions"): measured at `ffb6b0610`, no `.tsx` file under `mobile/src` or `mobile/app` uses a `dark:` class, and the brand-primary surfaces are dark-mode-only (Spec 117 §3.4). How the React Native Reusables components carry their dark values is MF-35's to rule (coordinator direction, pending operator confirmation). Measured fact only; no rule changes.
+
+## 3. The Prime Directive: "Dumb Glass" Architecture
+You are an expert React Native / Expo developer. You are operating strictly in the **Mobile Domain**. 
+This mobile application is a "Dumb Glass" client. It **MUST NOT** perform complex data mutation, geographic PostGIS math, or algorithmic sorting. All heavy computational lifting is handled entirely by the Next.js API Backend. 
+
+The mobile app's sole responsibility is:
+1. Capturing device state (GPS coordinates, push tokens).
+2. Fetching pre-calculated JSON from the backend.
+3. Rendering the UI at 60fps.
+
+*Clarification:* This prohibits server-authoritative computed state. Ephemeral **optimistic UI state** (e.g., toggling a "Save" icon instantly before the server confirms) is highly encouraged and expected.
+
+## 4. The Tech Stack Constraints
+You must strictly adhere to the following stack:
+* **Framework:** Expo SDK (React Native) utilizing Expo Router.
+* **Core Native UI:** `react-native-reanimated` v3 and `react-native-gesture-handler` (required for 60fps animations and swipe gestures).
+* **Styling:** NativeWind v4 (Tailwind CSS for React Native).
+> ⚠️ **AMENDMENT 2026-09-15 (WF1 "Spec 126/127/128 surface standard") — two measured prose-vs-code drifts in this section. Additive; the original lines are retained below, unedited.**
+>
+> 1. **Auth is Supabase, not Firebase.** Measured: `mobile/package.json` declares `@supabase/supabase-js 2.110.7` and **no `@react-native-firebase/*` dependency at all**. The "Firebase Auth via `@react-native-firebase/auth`" line below predates the Supabase migration (Spec 113) and was never updated. Token persistence via Keychain/Keystore is still accurate in substance — it is the provider that is wrong.
+> 2. **There is no monorepo and no `packages/shared-types`.** Measured: no workspace of that name exists in either tree. Zod schemas are **transcribed per tree** today, which is precisely the defect Spec 126 §5.2 closes by *generating* the mobile mirror from the CONTRACT descriptor — the parcel cost contract is currently declared at **four** sites and locked at **one**, and the two Zod declarations disagree in strictness (`src/app/api/parcels/lookup/types.ts` uses `.strict()` six times; `mobile/src/lib/schemas.ts` uses `.passthrough()`/`z.record` five times — the client is looser than the server it mirrors).
+>
+> **§3's "Dumb Glass" prime directive is unaffected and is reinforced** — Spec 126 §5.3 makes it enforceable rather than merely stated, and preserves its optimistic-UI carve-out verbatim.
+
+* **Auth:** Firebase Auth via `@react-native-firebase/auth` (native module). Native Keychain (iOS) / Keystore (Android) handles token persistence; Play Integrity (Android) and APN silent-push (iOS) handle phone-auth bot prevention — no JS-rendered reCAPTCHA. Native dev build required (Spec 98); Expo Go is not supported.
+* **Server State:** `@tanstack/react-query` (v5).
+* **Client State:** `zustand` v5.
+* **Local Persistence:** `react-native-mmkv` (Synchronous C++ storage).
+* **Hardware:** `expo-location`, `expo-notifications`, `expo-haptics`.
+* **Infrastructure:** EAS (Expo Application Services) for CI/CD builds (`eas build`) and Over-The-Air updates (`eas update`).
+
+## 5. Strict Anti-Patterns (NEVER DO THESE)
+If you attempt to use any of the following web paradigms in this project, you have failed:
+* **NO HTML/DOM:** Never use `<div>`, `<span>`, `<a>`, `<p>`, or `<button>`. 
+* **NO Web Libraries:** Never import `shadcn/ui`, `@tremor/react`, `framer-motion`, or `lucide-react`. 
+* **NO DOM APIs:** Never use `window`, `document`, `localStorage`, `navigator.geolocation`.
+* **NO `useEffect` for Fetching:** Never fetch API data inside a `useEffect`. Always use TanStack Query.
+* **NO Inline `renderItem`:** Never pass an inline arrow function to a FlashList/FlatList `renderItem`. Always use `useCallback` or extract the function.
+* **NO standard `<Image>`:** Never use the base React Native `<Image>` for external URLs.
+
+## 6. The Component Philosophy: React Native Reusables
+We do not npm-install generic UI components. We use **React Native Reusables** (via `npx rn-reusables add [component]`). The code lives inside our repository, giving us full ownership of Tailwind styling and native dependency adjustments without version conflicts.
+
+> Dated note 2026-11-09 (MF-42 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions"): the command named above is not the CLI's package name: the CLI is `@react-native-reusables/cli` (version 0.7.1, registry `nativewind`; measured by the MF-42 plan lane), recorded in `scripts/surfaces/_schema/vendor-rnr.manifest.json`, with `mobile/components.json` aliases into the protected vendor dir `mobile/src/vendor/rnr/` (Spec 126 §11b.4). MF-35 runs it.
+
+> Dated note 2026-11-09 (McFrontend Phase 2; M-246, prior text kept; operator, verbatim: "D-0-D-4 approved D-3 we should used our existing components and approach as detailed in the mobile build specs"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9"): React Native Reusables is confirmed as the mobile library for MaxBLD pages (D-3). The CLI output is generated and never edited; it is vendored unmodified under a protected manifest (the vendor folder and its rule: Spec 126 §11b.4). It is installed by MF-35.
+
+## 7. State & Data Flow Protocol
+* **The API Contract:** The Next.js `src/app/api/*` routes are the absolute source of truth.
+* **Validation (Monorepo):** Zod schemas are shared via a `packages/shared-types` monorepo workspace to guarantee the mobile app and Next.js backend are never out of sync.
+* **Offline Mutation Queue:** Mutations (like saving a lead) made while offline MUST be queued using TanStack Query's offline mutation cache, backed by MMKV, ensuring they flush to the server upon reconnection.
+* **State Architecture & Ownership:** All Zustand stores, MMKV blobs, TanStack Query keys, and cross-layer bridges MUST conform to **Spec 99 — Mobile State Architecture & Ownership Protocol** (`docs/specs/03-mobile/99_mobile_state_architecture.md`). Adding a new field, store, or bridge requires either matching an existing pattern in Spec 99 §3-§5 or a Spec 99 amendment. Three render-loop incidents in 2026-05-02 traced to dual-source-of-truth violations precipitated this requirement.
+
+## 8. Hardware & Geolocation Protocol
+1. **Foreground Only:** Request ONLY foreground location (`requestForegroundPermissionsAsync()`). Background location invokes heavy App Store privacy scrutiny and is unnecessary for this feature.
+2. **App Store Compliance:** Ensure `NSLocationWhenInUseUsageDescription` is explicitly defined in `app.json` under `expo.ios.infoPlist`.
+3. **Debounce Map Pan:** Do not fire a TanStack Query refetch on every millimeter of map movement; wait for a 500ms pause.
+
+## 9. UI & Styling Rules
+* Touch targets for all interactive elements MUST be a minimum of `44px` by `44px`.
+* Use the established design system tokens from **Spec 74** (e.g., `bg-bg-feed`, `text-amber-hardhat`). 
+* **Font Loading:** Use `expo-font` to load custom fonts, keeping the Splash Screen visible until fonts are ready to prevent FOIT (Flash of Unstyled Text).
+* Accommodate device Safe Areas using `react-native-safe-area-context`.
+
+## 10. Testing Mandate
+* **E2E / UI Testing (Maestro):** Specs are written in YAML and run directly against the iOS Simulator/Android Emulator. *Operational Note: Maestro Cloud will be used for CI to avoid the 10x cost premium of macOS GitHub Action runners.*
+* **Unit Testing (Jest):** Jest + React Native Testing Library for logic hooks. Minimum 80% coverage threshold.
+* **Offline Resilience Test:** Maestro flows MUST include a step that executes `toggleAirplaneMode` to verify the MMKV offline cache and empty states render without crashing.
+
+## 11. Best-in-Class: Observability
+* **Native Crash Reporting:** `@sentry/react-native`. *Critical:* Sentry source maps MUST be uploaded automatically during EAS Build using the `@sentry/react-native/app-plugin` in `app.json`.
+* **Product Telemetry:** `posthog-react-native`. Track funnel events (`lead_viewed`, `job_claimed`). **Strip all PII**.
+
+## 12. Best-in-Class: Scaling & Performance
+* **FlashList Mastery:** Use `@shopify/flash-list` for native GPU memory recycling.
+  * **v1 (legacy):** required an explicit `estimatedItemSize` prop for the recycler to pre-size cells.
+  * **v2 (current — `^2.3.1` per `mobile/package.json`, since Spring 2026):** `estimatedItemSize` is **removed from the public API**. The new render engine auto-measures item heights at first render and reuses the measurements; passing the prop is now a TypeScript error (`Property 'estimatedItemSize' does not exist on type 'FlashListProps'`). Per-item-type recycling is still preserved via `getItemType` (e.g., `flight-board.tsx` tags 'header' vs 'card'). If a future version reintroduces the prop or exposes a `_estimatedItemSize` measurement override, this section becomes the canonical site to update.
+  * **Use the typed `AnimatedFlashList` wrapper** (`mobile/app/(app)/index.tsx` + `flight-board.tsx`) so generic narrowing survives `Animated.createAnimatedComponent` (resolved 2026-04-30 by H4 commit `21520d9`).
+* **Image Caching:** You MUST use `expo-image` for aggressive disk caching (SDWebImage/Glide).
+* **Cache Management:** Configure TanStack Query with strict timeouts. Recommended: `gcTime: 86400000` (24h) and `staleTime: 300000` (5m) for the main feed. The MMKV persister requires `@tanstack/query-async-storage-persister`.
+* **Bundle Optimization:** `react-native-maps` adds ~15MB. Use Expo's `metro.config.js` to exclude Apple Maps bundles from Android builds.
+
+## 13. Best-in-Class: Bug Prevention
+* **EAS Update (Over-The-Air Patches):** The ultimate bug prevention. JavaScript bundle fixes will bypass App Store review via Expo Application Services (EAS), allowing us to fix logical bugs in production in minutes.
+* **The Zod Boundary:** Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema before hitting the UI to prevent fatal native app crashes from API drift.
+* **TypeScript Strictness:** `"strict": true` and `"noImplicitAny": true`. 
+
+## 14. Best-in-Class: User Experience (The "Native" Feel)
+* **Pull-to-Refresh:** Standard mobile expectation. Use `RefreshControl` combined with `queryClient.invalidateQueries()`.
+* **Empty States:** A new user in a low-permit area must see a "No leads in your area" state with an "Expand radius" CTA button.
+* **Optimistic Updates:** When a user taps "Save Lead", use `onMutate` to flip the UI instantly. Rollback on failure.
+* **Instant Rehydration:** Use `react-native-mmkv` to cache the feed. On cold boot, the app must paint page 1 from cache instantly, then fetch fresh data in the background silently.
+* **Tactile Feedback:** Use `expo-haptics` on major interactions.
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/mobile/__tests__/semiQuestionPage.behaviour.test.tsx b/mobile/__tests__/semiQuestionPage.behaviour.test.tsx
+index 33221cf7553527f7b6160d835f857c49d03009c6..1fc226b98abf2f254a91a0fde598945fee024bae 100644
+--- a/mobile/__tests__/semiQuestionPage.behaviour.test.tsx
++++ b/mobile/__tests__/semiQuestionPage.behaviour.test.tsx
+@@ -246,6 +246,43 @@ describe('the question page (semi-question.tsx)', () => {
+     fireEvent.press(screen.getByTestId('parcel-semi-retry'));
+     expect(mockHook.refetch).toHaveBeenCalledTimes(1);
+   });
++  // task-457 AC1 (RR-0456 Q4, MORNING-DECISIONS.md:2362 "Q4 add a limit"): the opening wait is bounded by the page's own wait limit (continue_wait_ms).
++  it('task-457 AC1: opened with no connection, the page stops waiting after the limit and shows the could-not-load message with Try again; Try again fetches again and waits again', async () => {
++    jest.useFakeTimers();
++    try {
++      mockHook = { ...mockHook, data: undefined, isFetching: false, error: null };
++      render(<Question />);
++      await act(async () => { jest.advanceTimersByTime(SEMI_CONTINUE_WAIT_MS - 1); });
++      expect(screen.getByText('Searching')).toBeTruthy();
++      expect(screen.queryByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeNull();
++      await act(async () => { jest.advanceTimersByTime(1); });
++      expect(screen.getByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeTruthy();
++      expect(screen.queryByText('Searching')).toBeNull();
++      expect(mockReplace).not.toHaveBeenCalled();
++      fireEvent.press(screen.getByTestId('parcel-semi-retry'));
++      expect(mockHook.refetch).toHaveBeenCalledTimes(1);
++      expect(screen.getByText('Searching')).toBeTruthy();
++      await act(async () => { jest.advanceTimersByTime(SEMI_CONTINUE_WAIT_MS); });
++      expect(screen.getByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeTruthy();
++    } finally {
++      jest.useRealTimers();
++    }
++  });
++  it('task-457: data arriving after the limit opens the question', async () => {
++    jest.useFakeTimers();
++    try {
++      mockHook = { ...mockHook, data: undefined, isFetching: false, error: null };
++      const view = render(<Question />);
++      await act(async () => { jest.advanceTimersByTime(SEMI_CONTINUE_WAIT_MS); });
++      expect(screen.getByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeTruthy();
++      mockHook = { ...mockHook, data: data(form(true)) };
++      view.rerender(<Question />);
++      expect(screen.getByText('Is this house one half of a semi-detached pair?')).toBeTruthy();
++      expect(screen.queryByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeNull();
++    } finally {
++      jest.useRealTimers();
++    }
++  });
+ });
+ 
+ describe('the report mount (the redirect)', () => {
+diff --git a/mobile/__tests__/useAnswerParcelLookup.hook.test.tsx b/mobile/__tests__/useAnswerParcelLookup.hook.test.tsx
+index 791ad3e223bd998d89b565762355a50f5ba7441a..ba6fce4168b0bc0b8d64d0611691a13e4371bc6b 100644
+--- a/mobile/__tests__/useAnswerParcelLookup.hook.test.tsx
++++ b/mobile/__tests__/useAnswerParcelLookup.hook.test.tsx
+@@ -15,7 +15,8 @@ jest.mock('@/store/authStore', () => ({
+ jest.mock('@sentry/react-native', () => ({ captureException: jest.fn() }));
+ 
+ import { fetchWithAuth } from '@/lib/apiClient';
+-import { answeredParcelLookup, useAnswerParcelLookup } from '@/hooks/useParcelLookup';
++import { RateLimitError } from '@/lib/errors';
++import { answeredParcelLookup, useAnswerParcelLookup, useParcelSearch } from '@/hooks/useParcelLookup';
+ 
+ const mockFetch = fetchWithAuth as jest.MockedFunction<typeof fetchWithAuth>;
+ 
+@@ -34,3 +35,44 @@ describe('useAnswerParcelLookup under a real QueryClient', () => {
+     expect(mockFetch.mock.calls).toEqual([['/api/parcels/lookup?parcelId=PIN-777&semi=answered']]);
+   });
+ });
++
++// task-457 AC2 (RR-0456 Q5, MORNING-DECISIONS.md:2362 "retry once auto at zero"): the REAL search hook under a REAL QueryClient; a zero-second rate limit
++// is retried once (TanStack's first retry delay, 1000 ms), and only once; any other wait is not retried.
++describe('task-457 useParcelSearch under a real QueryClient', () => {
++  const empty = { data: { match: null, candidates: [], warnings: [], parcel: null, page: null } };
++  const mount = () => {
++    const client = new QueryClient({ defaultOptions: { queries: { gcTime: Infinity } } });
++    const wrapper = ({ children }: { children: React.ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
++    return renderHook(() => useParcelSearch('26 Hurlingham Cres'), { wrapper });
++  };
++  beforeEach(() => { mockFetch.mockReset(); jest.useFakeTimers(); });
++  afterEach(() => { jest.useRealTimers(); });
++
++  it('a zero-second rate limit is retried once; the retry succeeds and no error shows while it waits', async () => {
++    mockFetch.mockRejectedValueOnce(new RateLimitError(0)).mockResolvedValueOnce(empty);
++    const { result } = mount();
++    await act(async () => { await jest.advanceTimersByTimeAsync(10); });
++    expect(mockFetch).toHaveBeenCalledTimes(1);
++    expect(result.current.error).toBeNull();
++    expect(result.current.isFetching).toBe(true);
++    await act(async () => { await jest.advanceTimersByTimeAsync(1000); });
++    expect(mockFetch).toHaveBeenCalledTimes(2);
++    expect(result.current.error).toBeNull();
++    expect(result.current.data).toEqual(empty.data);
++  });
++  it('a zero-second rate limit refused again ends in the rate-limit error after exactly two fetches', async () => {
++    mockFetch.mockRejectedValue(new RateLimitError(0));
++    const { result } = mount();
++    await act(async () => { await jest.advanceTimersByTimeAsync(60000); });
++    expect(mockFetch).toHaveBeenCalledTimes(2);
++    expect(result.current.error).toBeInstanceOf(RateLimitError);
++    expect((result.current.error as RateLimitError).retryAfterSeconds).toBe(0);
++  });
++  it('a rate limit with a wait above zero is not retried', async () => {
++    mockFetch.mockRejectedValue(new RateLimitError(7));
++    const { result } = mount();
++    await act(async () => { await jest.advanceTimersByTimeAsync(60000); });
++    expect(mockFetch).toHaveBeenCalledTimes(1);
++    expect(result.current.error).toBeInstanceOf(RateLimitError);
++  });
++});
+diff --git a/mobile/__tests__/useParcelLookup.test.ts b/mobile/__tests__/useParcelLookup.test.ts
+index e16974a961d4b486d559dabff6eafaed6eccfe04..99c2898775bfefa8c30168d147c9b3ae6e59ba56 100644
+--- a/mobile/__tests__/useParcelLookup.test.ts
++++ b/mobile/__tests__/useParcelLookup.test.ts
+@@ -28,6 +28,7 @@ import {
+   fetchParcelLookup,
+   parcelLookupParams,
+   shouldRetryParcelLookup,
++  shouldRetryParcelSearch,
+   ParcelLookupSchemaError,
+ } from '@/hooks/useParcelLookup';
+ 
+@@ -187,6 +188,20 @@ describe('shouldRetryParcelLookup — deterministic states are not retried', ()
+   });
+ });
+ 
++// task-457 AC2 (RR-0456 Q5, MORNING-DECISIONS.md:2362 "retry once auto at zero"): the search retries a zero-second rate limit once, on the first failure only.
++describe('task-457 AC2: shouldRetryParcelSearch', () => {
++  it('retries a zero-second rate limit once and only once; every other error follows shouldRetryParcelLookup', () => {
++    expect(shouldRetryParcelSearch(0, new RateLimitError(0))).toBe(true);
++    expect(shouldRetryParcelSearch(1, new RateLimitError(0))).toBe(false);
++    expect(shouldRetryParcelSearch(0, new RateLimitError(30))).toBe(false);
++    expect(shouldRetryParcelSearch(0, new ApiError(500, 'boom'))).toBe(true);
++    expect(shouldRetryParcelSearch(3, new ApiError(500, 'boom'))).toBe(false);
++  });
++  it('the lookup and the entitlement read keep no retry on a zero-second rate limit', () => {
++    expect(shouldRetryParcelLookup(0, new RateLimitError(0))).toBe(false);
++  });
++});
++
+ // FIX.SEMI (task-373, grounder D5; Spec 99 section 4 B1 99:219 "Every server fetch MUST go through TanStack Query"): the semi page's Continue lookup is the
+ // mutation of useAnswerParcelLookup. The two pins below keep what task-361 built: a failed or offline lookup ends in the error state at once (networkMode
+ // 'always': TanStack's default would pause a mutation offline, so the bounded wait would never start and the page would stay busy), and no retry re-sends it.
+diff --git a/mobile/app/(app)/parcel-tool/semi-question.tsx b/mobile/app/(app)/parcel-tool/semi-question.tsx
+index 12d8cca09b6602253ca94393e63a7325a67489e3..fc9e632cd45d76dfda0c0b2d3dbc51f022d788fc 100644
+--- a/mobile/app/(app)/parcel-tool/semi-question.tsx
++++ b/mobile/app/(app)/parcel-tool/semi-question.tsx
+@@ -18,7 +18,8 @@ import { SEMI_QUESTION_SLICE, semiQuestionData, semiQuestionProps } from '@/comp
+ import { useAnswerParcelLookup, useParcelLookup, useSetParcelLookup, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
+ import { useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
+ import { SEMI_ANSWERS, type SemiAnswer } from '@/lib/lotForm';
+-import { buildSemiQuestionSituation } from '@/lib/semiQuestion';
++import { buildSemiQuestionSituation, SEMI_CONTINUE_WAIT_MS } from '@/lib/semiQuestion';
++import { NetworkError } from '@/lib/errors';
+ 
+ export default function SemiQuestionScreen() {
+   const router = useRouter();
+@@ -29,6 +30,8 @@ export default function SemiQuestionScreen() {
+   const storeLookup = useSetParcelLookup();
+   const { mutateAsync: answerLookup } = useAnswerParcelLookup();
+   const [submitError, setSubmitError] = useState<unknown>(null);
++  // task-457 (RR-0456 Q4): the opening wait has a limit; past it the page shows the could-not-load notice with Try again. Data that arrives later replaces it.
++  const [waitError, setWaitError] = useState<unknown>(null);
+   const [submitting, setSubmitting] = useState(false);
+   const submittingRef = useRef(false);
+   const mountedRef = useRef(true);
+@@ -38,15 +41,22 @@ export default function SemiQuestionScreen() {
+     return () => { mountedRef.current = false; };
+   }, []);
+ 
+-  const situation = useMemo(
+-    () => buildSemiQuestionSituation({ parcelId: id, data, error: submitError ?? error, isFetching, schemaDrift: (submitError ?? error) instanceof ParcelLookupSchemaError, selected, submitting }),
+-    [id, data, error, submitError, isFetching, selected, submitting],
+-  );
++  const situation = useMemo(() => {
++    const shown = submitError ?? error ?? (data ? null : waitError);
++    return buildSemiQuestionSituation({ parcelId: id, data, error: shown, isFetching, schemaDrift: shown instanceof ParcelLookupSchemaError, selected, submitting });
++  }, [id, data, error, submitError, waitError, isFetching, selected, submitting]);
+ 
+   // The redirect state (a lot that is not unsure) replaces this page once, on settled data, never on a background refetch.
+   const markRedirected = useSettledRedirect(situation.navigate, isFetching);
+   const goBack = useGoBack();
+ 
++  // task-457: the limit is the page's own wait (continue_wait_ms, the same bound Continue uses); it runs only while the page is loading and is cleared on leaving it.
++  useEffect(() => {
++    if (situation.state !== 'loading') return;
++    const t = setTimeout(() => setWaitError(new NetworkError('task-457: the semi page wait limit')), SEMI_CONTINUE_WAIT_MS);
++    return () => clearTimeout(t);
++  }, [situation.state]);
++
+   // Continue: the answered lookup, stored under the report's key, then the report; never throws, a second press while it runs is ignored.
+   // No lookup with an empty id (the hook above is guarded the same way); the wait is bounded so the latch cannot stick (task-361, LX-R2, LX-E1):
+   // a lookup that does not settle ends in the same built error state as a failed one, and the next Continue works.
+@@ -76,7 +86,7 @@ export default function SemiQuestionScreen() {
+     () => ({
+       change_input: () => undefined,
+       set_input: () => undefined,
+-      retry: () => { if (submitError != null) setSubmitError(null); else void refetch(); },
++      retry: () => { if (submitError != null) setSubmitError(null); else { setWaitError(null); void refetch(); } },
+       // The renderer's `select` carries a string; here it is the answer (the descriptor's deviation entry).
+       select: (answer: string) => {
+         if ((SEMI_ANSWERS as readonly string[]).includes(answer)) setSelected(answer as SemiAnswer);
+diff --git a/mobile/src/hooks/useParcelLookup.ts b/mobile/src/hooks/useParcelLookup.ts
+index 342af672f716a98abc7938801325d0255763ecca..d2d879ffe41332bf92dad19624ef9e3db9d6264f 100644
+--- a/mobile/src/hooks/useParcelLookup.ts
++++ b/mobile/src/hooks/useParcelLookup.ts
+@@ -69,6 +69,12 @@ export function shouldRetryParcelLookup(failureCount: number, err: unknown): boo
+   );
+ }
+ 
++/** task-457 (RR-0456 Q5): the search retries a zero-second rate limit once, on the first failure only; everything else is shouldRetryParcelLookup. A zero-second wait is not a throttle the person must sit out, so the 429 guard above stays for every other wait. Once is the ruling and not a setting (RR-0392). */
++export function shouldRetryParcelSearch(failureCount: number, err: unknown): boolean {
++  if (err instanceof RateLimitError && err.retryAfterSeconds === 0) return failureCount === 0;
++  return shouldRetryParcelLookup(failureCount, err);
++}
++
+ /**
+  * Debounced typeahead search. Fires when the trimmed query is ≥ 3 chars (the server min).
+  * The screen owns the ≥400ms debounce (Spec 100 §4); this hook just caches per query string.
+@@ -81,7 +87,7 @@ export function useParcelSearch(q: string) {
+     queryFn: () => fetchParcelLookup({ q: trimmed }),
+     enabled: trimmed.length >= LOOKUP_MIN_QUERY_LEN && !!accessToken,
+     staleTime: LOOKUP_STALE_MS,
+-    retry: shouldRetryParcelLookup,
++    retry: shouldRetryParcelSearch,
+   });
+ }
+ 
+diff --git a/mobile/src/lib/semiQuestion.ts b/mobile/src/lib/semiQuestion.ts
+index 3d0bb19b5e44cc2ba3f32e10a54dd1d6d2000c80..6d34c7862adc1ef44fdf5cb843613df2a5c19fa1 100644
+--- a/mobile/src/lib/semiQuestion.ts
++++ b/mobile/src/lib/semiQuestion.ts
+@@ -14,7 +14,7 @@ import type { ConsumerParcelLookupResult } from '@/lib/schemas';
+ import { classifyParcelSearchError, PARCEL_TAB_ROUTE, parcelSearchRoute, type ParcelSearchErrorClass } from '@/lib/parcelSearchMatch';
+ import { reportRouteAfterAnswer, SEMI_ANSWERS, type SemiAnswer } from '@/lib/lotForm';
+ 
+-/** SRCH.SEMI-3 (task-361, LX-E1): how long Continue waits for the answered lookup before it ends in the built error state (a timeframe; operator item in the lane report). FIX.TUNE (task-378): read from the surface config `continue_wait_ms` (the generated slice), not typed here. */
++/** SRCH.SEMI-3 (task-361, LX-E1): how long Continue waits for the answered lookup before it ends in the built error state (a timeframe; operator item in the lane report). FIX.TUNE (task-378): read from the surface config `continue_wait_ms` (the generated slice), not typed here. It also bounds the page's opening wait (task-457, RR-0456). */
+ export const SEMI_CONTINUE_WAIT_MS: number = sliceNumber(slice, 'continue_wait_ms');
+ 
+ class SemiContinueTimeoutError extends Error {
+

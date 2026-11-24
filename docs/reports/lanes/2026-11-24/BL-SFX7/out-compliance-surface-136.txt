@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:44:33.094Z file_sha256=6cbdb3072473f3c7d4656752eed682ba0f7e659e2ecc7a2618cdffc6a2f21d29 prompt_sha256=b47a73ad048f0156f00ddd7325e49fd0ebe77655fd2e68578afc153870fb3a59
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX7/in-out-compliance-surface-136.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — card FE-40 "Limits and budgets are read from DB fields or admin settings, never typed." vs card "the length of the limit is for the plan grounder to rule from existing settings." — mobile/src/lib/semiQuestion.ts "It also bounds the page's opening wait (task-457, RR-0456)." — cannot see the grounder ruling that picks continue_wait_ms for the opening wait, the reuse is asserted only in a comment and the job's plan is not pasted — paste the grounder ruling (or name it in the lane report) so the choice of continue_wait_ms is a visible ruling, not a comment
+DEFER severity=LOW — fe.47 "All tunables are data; zero thresholds in src/." — mobile/src/hooks/useParcelLookup.ts "if (err instanceof RateLimitError && err.retryAfterSeconds === 0) return failureCount === 0;" — a zero boundary and a retry count are typed in src, the owed tunables lock will trip on them, whether the operator words exempt them cannot see — register the ruled zero and the once count as a logic variable (or cite RR-0456 Q5 in the tunables register) so the owed lock resolves instead of failing
+DEFER severity=LOW — RR-0456 "Q5 retry once auto at zero" cited as RR-0392 "one push for all four; no other infrastructure beyond this" — mobile/src/hooks/useParcelLookup.ts "Once is the ruling and not a setting (RR-0392)." — the pasted RR-0392 words do not say the retry count is fixed, the operative words for this task are RR-0456 Q5 — cite RR-0456 at that comment so the reason the count is not a setting is the ruling that actually says "retry once"
+DEFER severity=LOW — RR-0460 "Phone tests local first; inline report it link accepted; proof for new phone tests" — Implementation Notes "Full local phone run owed before the push (RR-0460)." — the ruling's proof for the new phone tests is claimed (red.out/green.out, 45 of 45) but the run output is not in the material, so the proof clause cannot be checked here — attach the full local phone run output before the push and leave it with the card
+MET — fe.40 — mobile/src/lib/semiQuestion.ts "export const SEMI_CONTINUE_WAIT_MS: number = sliceNumber(slice, 'continue_wait_ms');" — the new wait limit is the registered surface setting, not a number typed in the page
+MET — fe.54 — mobile/app/(app)/parcel-tool/semi-question.tsx "const t = setTimeout(() => setWaitError(new NetworkError('task-457: the semi page wait limit')), SEMI_CONTINUE_WAIT_MS);" — the newly possible failure (an unbounded opening wait) has a declared visible state with Try again, not a blank or endless Searching
+MET — fe.33 — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "Couldn’t reach the lot service. Check your connection and try again." — the diff adds no production string, the notice reuses the existing built error copy, so every displayed string still comes from content
+MET — fe.36 — mobile/app/(app)/parcel-tool/semi-question.tsx "retry: () => { if (submitError != null) setSubmitError(null); else { setWaitError(null); void refetch(); } }" — Try again refetches in place and moves no user, no view swap and no route is added by this change
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+Rules met: fe.33, fe.36, fe.40, fe.54
+
+---
+⏱  80633ms (80.6s)
+📊 Tokens — total: 30255, input: 15093, output: 15162, reasoning: 14320

@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T19:44:33.093Z file_sha256=f0222b1a52d8df5718c29000c9ed079ed40e03ac38afd6739f5e6128fb3ddcc5 prompt_sha256=2c1d5e1d721e92ac9d6a7a8317a4acb8d82b82db2f8620b141339454666040ec
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX7/in-out-error-paths-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — mobile/app/(app)/parcel-tool/semi-question.tsx:89 "retry: () => { if (submitError != null) setSubmitError(null); else { setWaitError(null); void refetch(); }" — the two error sources are cleared exclusively: when submitError and waitError are both set (a Continue failure after the opening wait ran out) the press clears only submitError, leaves the wait notice showing and issues no fetch, so Try again reads as inert — clear waitError in both branches and refetch whenever data is absent.
+DEFER severity=LOW — mobile/app/(app)/parcel-tool/semi-question.tsx:56 "const t = setTimeout(() => setWaitError(new NetworkError('task-457: the semi page wait limit')), SEMI_CONTINUE_WAIT_MS);" — the limit failure is synthetic, the query itself never fails, so a page that times out on every open leaves no trace anywhere (nothing reported); capture it once per arming before/with setWaitError.
+DEFER severity=LOW — mobile/src/lib/semiQuestion.ts:19 "export const SEMI_CONTINUE_WAIT_MS: number = sliceNumber(slice, 'continue_wait_ms');" — the constant now also bounds the page at open and is passed straight to setTimeout with no positive-value guard, so a 0 or absent config value turns into an instant could-not-load notice on every open (before this change it only shortened Continue) — clamp to a positive floor before arming the timer.
+REJECT — mobile/src/hooks/useParcelLookup.ts:74 "if (err instanceof RateLimitError && err.retryAfterSeconds === 0) return failureCount === 0;" — looks like an unbounded auto-retry loop on repeated 0s rate limits — bounded to a single retry because only the first failure has failureCount 0, and the hook test pins exactly two fetches for two consecutive zero-second limits.
+REJECT — mobile/src/hooks/useParcelLookup.ts:90 "    retry: shouldRetryParcelSearch," — a retried search could double a write or a counted event — it is the fetchParcelLookup read only, and the page's write path (useAnswerParcelLookup) keeps its no-retry pin plus the submittingRef latch, so nothing is sent twice.
+REJECT — mobile/app/(app)/parcel-tool/semi-question.tsx:45 "const shown = submitError ?? error ?? (data ? null : waitError);" — a stale wait error could mask a real failure or outlive it — the chain shows submitError then the query error ahead of waitError, and any data suppresses the wait notice, so a real error wins and late data clears the notice.
+REJECT — mobile/app/(app)/parcel-tool/semi-question.tsx:89 "void refetch();" — a double-tapped Try again re-sends the lookup twice — the call is the idempotent parcel lookup read; a second press only re-arms the wait and cancels the in-flight fetch, no write or count repeats.
+
+VERDICT: PASS on error-path safety
+Paths walked: open with no connection past the limit, data arriving after the limit, Try again single and double tap, Try again while still offline, wait error plus Continue error both set, search 429 with 0s retried once, search 429 retried and refused again, search 429 with a wait above zero, search 500 through shouldRetryParcelLookup, Continue mutation no-retry   Unguarded: 1
+
+---
+⏱  142265ms (142.3s)
+📊 Tokens — total: 22615, input: 6871, output: 15744, reasoning: 14972

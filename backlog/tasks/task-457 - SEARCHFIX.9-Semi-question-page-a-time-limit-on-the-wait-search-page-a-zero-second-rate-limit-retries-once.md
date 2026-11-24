@@ -3,11 +3,11 @@ id: TASK-457
 title: >-
   SEARCHFIX.9 Semi question page: a time limit on the wait; search page: a
   zero-second rate limit retries once
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-SFX7'
 created_date: '2026-11-24T17:29:00Z'
-updated_date: '2026-11-24T19:41:00Z'
+updated_date: '2026-11-24T19:58:00Z'
 labels:
   - SEARCHFIX-LATER
 milestone: m-1
@@ -27,6 +27,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-24/BL-SFX7/GROUNDER.md
+  - docs/reports/lanes/2026-11-24/BL-SFX7/TRIAGE.md
+  - docs/reports/lanes/2026-11-24/BL-SFX7/REPORT.md
 type: fix
 ordinal: 151210
 ---
@@ -41,8 +44,8 @@ Files: mobile/app/(app)/parcel-tool/semi-question.tsx, mobile/src/hooks/useParce
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The semi question page stops waiting after the limit and shows a message with Try again
-- [ ] #2 A zero-second rate limit retries the search once, and only once
+- [x] #1 The semi question page stops waiting after the limit and shows a message with Try again
+- [x] #2 A zero-second rate limit retries the search once, and only once
 <!-- AC:END -->
 
 ## Definition of Done
@@ -245,4 +248,16 @@ rg#1 MED folded useParcelSearch serv
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-24 taken on the board at lane launch (lane BL-SFX7, worktree /Users/brettpreston_macmini/Buildo-wt-sfx7, branch wf2/inc1b-sfx7), RR-0240
+
+2026-11-24 built per PLAN-457-v1 steps 1-4 (no deviation in code). Tests written first: T1, T2 (semiQuestionPage.behaviour), T3, T4 (useParcelLookup.test), T5-T7 (useAnswerParcelLookup.hook.test). Red (lane file red.out, npx jest on the three files from mobile/, RR-0460 local phone run; the pre-commit related run does not reach phone tests): 5 failed, 40 passed of 45; T5 red on error not null, T6 red on 1 fetch not 2, T3 red on the missing export, T1 and T2 red on no notice after the limit. Deviation in test only: T2 also asserts the notice after the limit before data lands, so it is red before the change, not green before and after as the plan said. Green (green.out): 3 suites, 45 of 45. Mobile typecheck (tsc --noEmit in mobile/) exit 0. Full local phone run owed before the push (RR-0460).
+
+2026-11-24 work commit db2c04efe (hooks: typecheck, lint, GATE OK, POLICY CHECKS OK; related run skipped, no src/ or scripts/ staged). Output review round 1: context-r3.md, 11 DeepSeek lens outputs in docs/reports/lanes/2026-11-24/BL-SFX7 (code-review, ux, error-paths; compliance mobile-90, mobile-98, mobile-99, surface-136, inc-S, ms-S; engineering eng-front, eng-shared); 33 findings (0 CRITICAL, 0 HIGH, 4 MED, 25 LOW, 4 NIT) in FINDINGS.md. Grounder owed: the lane does not rule its own findings.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed db2c04efe (6 files): semi question page opening wait bounded by continue_wait_ms (60 s) then the could-not-load notice with Try again (AC1); useParcelSearch retries a zero-second rate limit once via shouldRetryParcelSearch (AC2). Red 5 failed 40 passed of 45, green 45 of 45 in 3 suites (local phone run, RR-0460), mobile typecheck exit 0, hooks green (typecheck, lint, GATE OK, POLICY CHECKS OK). Review records ecadae702. Owed by the orchestrator: full local phone run, push, Mobile CI, task-450 dated note.
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 3 pile; grounder docs/reports/lanes/2026-11-24/BL-SFX7/GROUNDER.md; triage docs/reports/lanes/2026-11-24/BL-SFX7/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->

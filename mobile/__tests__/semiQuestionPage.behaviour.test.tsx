@@ -246,6 +246,43 @@ describe('the question page (semi-question.tsx)', () => {
     fireEvent.press(screen.getByTestId('parcel-semi-retry'));
     expect(mockHook.refetch).toHaveBeenCalledTimes(1);
   });
+  // task-457 AC1 (RR-0456 Q4, MORNING-DECISIONS.md:2362 "Q4 add a limit"): the opening wait is bounded by the page's own wait limit (continue_wait_ms).
+  it('task-457 AC1: opened with no connection, the page stops waiting after the limit and shows the could-not-load message with Try again; Try again fetches again and waits again', async () => {
+    jest.useFakeTimers();
+    try {
+      mockHook = { ...mockHook, data: undefined, isFetching: false, error: null };
+      render(<Question />);
+      await act(async () => { jest.advanceTimersByTime(SEMI_CONTINUE_WAIT_MS - 1); });
+      expect(screen.getByText('Searching')).toBeTruthy();
+      expect(screen.queryByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeNull();
+      await act(async () => { jest.advanceTimersByTime(1); });
+      expect(screen.getByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeTruthy();
+      expect(screen.queryByText('Searching')).toBeNull();
+      expect(mockReplace).not.toHaveBeenCalled();
+      fireEvent.press(screen.getByTestId('parcel-semi-retry'));
+      expect(mockHook.refetch).toHaveBeenCalledTimes(1);
+      expect(screen.getByText('Searching')).toBeTruthy();
+      await act(async () => { jest.advanceTimersByTime(SEMI_CONTINUE_WAIT_MS); });
+      expect(screen.getByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeTruthy();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+  it('task-457: data arriving after the limit opens the question', async () => {
+    jest.useFakeTimers();
+    try {
+      mockHook = { ...mockHook, data: undefined, isFetching: false, error: null };
+      const view = render(<Question />);
+      await act(async () => { jest.advanceTimersByTime(SEMI_CONTINUE_WAIT_MS); });
+      expect(screen.getByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeTruthy();
+      mockHook = { ...mockHook, data: data(form(true)) };
+      view.rerender(<Question />);
+      expect(screen.getByText('Is this house one half of a semi-detached pair?')).toBeTruthy();
+      expect(screen.queryByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeNull();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });
 
 describe('the report mount (the redirect)', () => {

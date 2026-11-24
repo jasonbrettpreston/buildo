@@ -28,6 +28,7 @@ import {
   fetchParcelLookup,
   parcelLookupParams,
   shouldRetryParcelLookup,
+  shouldRetryParcelSearch,
   ParcelLookupSchemaError,
 } from '@/hooks/useParcelLookup';
 
@@ -184,6 +185,20 @@ describe('shouldRetryParcelLookup — deterministic states are not retried', () 
     expect(shouldRetryParcelLookup(0, new ApiError(500, 'boom'))).toBe(true);
     expect(shouldRetryParcelLookup(2, new ApiError(500, 'boom'))).toBe(true);
     expect(shouldRetryParcelLookup(3, new ApiError(500, 'boom'))).toBe(false);
+  });
+});
+
+// task-457 AC2 (RR-0456 Q5, MORNING-DECISIONS.md:2362 "retry once auto at zero"): the search retries a zero-second rate limit once, on the first failure only.
+describe('task-457 AC2: shouldRetryParcelSearch', () => {
+  it('retries a zero-second rate limit once and only once; every other error follows shouldRetryParcelLookup', () => {
+    expect(shouldRetryParcelSearch(0, new RateLimitError(0))).toBe(true);
+    expect(shouldRetryParcelSearch(1, new RateLimitError(0))).toBe(false);
+    expect(shouldRetryParcelSearch(0, new RateLimitError(30))).toBe(false);
+    expect(shouldRetryParcelSearch(0, new ApiError(500, 'boom'))).toBe(true);
+    expect(shouldRetryParcelSearch(3, new ApiError(500, 'boom'))).toBe(false);
+  });
+  it('the lookup and the entitlement read keep no retry on a zero-second rate limit', () => {
+    expect(shouldRetryParcelLookup(0, new RateLimitError(0))).toBe(false);
   });
 });
 

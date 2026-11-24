@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:44:33.094Z file_sha256=ae9b09a218ae29e700eaa71a6bd07dc780d61fa1597f41a11d72024262dc2b1f prompt_sha256=5ed7a59aff87a57b48b9c0327f914b17f6559860980fe930d68966e88cc9e2fe
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX7/in-out-compliance-mobile-90.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — RR-0456 "Q5 retry once auto at zero" — mobile/__tests__/useAnswerParcelLookup.hook.test.tsx:40 "TanStack's first retry delay, 1000 ms" — the automatic retry is scheduled on TanStack's default backoff, so the zero-second case still leaves about a second with no retry and no message on screen, which is not "auto at zero" in the literal sense — return a zero retryDelay for the zero-second RateLimitError case, or record in the ruling file that the 1 s backoff is accepted
+DEFER severity=LOW — task card "the length of the limit is for the plan grounder to rule from existing settings" (PLAN-457-v1 not pasted, cannot see) — mobile/app/(app)/parcel-tool/semi-question.tsx:56 "setTimeout(() => setWaitError(new NetworkError('task-457: the semi page wait limit')), SEMI_CONTINUE_WAIT_MS)" and mobile/src/lib/semiQuestion.ts:17 "It also bounds the page's opening wait" — the length ruling cannot be checked because the plan is not pasted, and the opening wait is now tied to a setting whose own comment scopes it to Continue, so a later tuning of Continue silently moves this limit — cite the ruling in the card or add a separate setting for the opening wait
+
+MET — task-457 AC1 "The semi question page stops waiting after the limit and shows a message with Try again" — mobile/app/(app)/parcel-tool/semi-question.tsx:56 — the timer sets waitError into the situation and the loading state ends at the limit
+MET — task-457 AC1 "Try again" — mobile/app/(app)/parcel-tool/semi-question.tsx:89 "retry: () => { if (submitError != null) setSubmitError(null); else { setWaitError(null); void refetch(); } }" — the notice's retry clears the wait error and refetches, and the timer restarts on the new loading state
+MET — task-457 AC2 "A zero-second rate limit retries the search once, and only once" — mobile/src/hooks/useParcelLookup.ts:74 "if (err instanceof RateLimitError && err.retryAfterSeconds === 0) return failureCount === 0;" — retry is granted on the first failure only, every other error and every other wait falls through to the existing policy
+MET — Spec 90 §5 "NO `useEffect` for Fetching: Never fetch API data inside a `useEffect`. Always use TanStack Query." — mobile/app/(app)/parcel-tool/semi-question.tsx:54 "useEffect(() => {" — the added effect schedules a timer only, the fetch stays in the TanStack query
+MET — Spec 90 §4 "Server State: `@tanstack/react-query` (v5)" — mobile/src/hooks/useParcelLookup.ts:74 — the retry is expressed through the query's `retry` option, no bespoke refetch loop added
+MET — Spec 90 §10 "Unit Testing (Jest): Jest + React Native Testing Library for logic hooks" — mobile/__tests__/useAnswerParcelLookup.hook.test.tsx:39 — the change ships Jest/RNTL cases for both the real hook under a real QueryClient and the pure predicate
+
+REJECT — Spec 90 §5 "NO `useEffect` for Fetching" — accused of fetching inside the new useEffect — the effect body only calls setTimeout and its cleanup, no fetch call appears in it
+
+VERDICT: PASS
+Clauses checked: 6   Unmet: 0
+Rules met: none
+
+---
+⏱  67555ms (67.6s)
+📊 Tokens — total: 24227, input: 10677, output: 13550, reasoning: 12735

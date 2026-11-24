@@ -1,0 +1,258 @@
+LIST ms-S sha256:88ee2c10fa967d62bb0523de27dbf207ca7b5fe36f2bf3616016f3b47b5c29bd material sha256:8cb8a87a8f3016613acf3259d4697990c01cae5dc7df2de13c51fe968dd9877e part 1 of 1 chunk 1 of 1
+RULE LIST ms-S (backlog/milestones/m-1 - increment-1·b-search-[s].md, sections Project objectives; Increment objectives; Objectives), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["mobile/__tests__/semiQuestionPage.behaviour.test.tsx","mobile/__tests__/useAnswerParcelLookup.hook.test.tsx","mobile/__tests__/useParcelLookup.test.ts","mobile/app/(app)/parcel-tool/semi-question.tsx","mobile/src/hooks/useParcelLookup.ts","mobile/src/lib/semiQuestion.ts"]
+
+## Project objectives
+- Objective: finish a completed project, a database that works and is ready (operator 2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "our objective is to finish a completed project ie a database that works and is ready"
+- The database exists to service the designed report, details and search page (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "the database is created to service the existing report and details as clairfied in the McFrontend. This includes the search page"
+- A task that serves neither a designed element nor a supporting function is most likely not relevant (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code"
+- Five principles, keep it simple, no scope creep (~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md:3) "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep"
+- One plan only (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "we need one plan - we can only execute one plan"
+
+## Increment objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion (docs/reports/plan-import/raw/2026-11-19/search-brief.json inc; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+- The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report; the semi calculation stays in Increment 7 (7.25) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796) "Maybe the search portion done now with the page."
+- What the customer sees: the 65 designed search elements A (search page), B (address confusion), C (lot confusion, lot map), D (semi question page), E (web search pages), F (landing entry), G (hand-off to the report) (backlog/docs/increments/doc-2 - Increment-S-requirements.md:27) "| id | element | where | status | deliverers | built |"
+
+## Objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion; most of it is already built (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "Operator, verbatim: "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/mobile/__tests__/semiQuestionPage.behaviour.test.tsx b/mobile/__tests__/semiQuestionPage.behaviour.test.tsx
+index 33221cf7553527f7b6160d835f857c49d03009c6..1fc226b98abf2f254a91a0fde598945fee024bae 100644
+--- a/mobile/__tests__/semiQuestionPage.behaviour.test.tsx
++++ b/mobile/__tests__/semiQuestionPage.behaviour.test.tsx
+@@ -246,6 +246,43 @@ describe('the question page (semi-question.tsx)', () => {
+     fireEvent.press(screen.getByTestId('parcel-semi-retry'));
+     expect(mockHook.refetch).toHaveBeenCalledTimes(1);
+   });
++  // task-457 AC1 (RR-0456 Q4, MORNING-DECISIONS.md:2362 "Q4 add a limit"): the opening wait is bounded by the page's own wait limit (continue_wait_ms).
++  it('task-457 AC1: opened with no connection, the page stops waiting after the limit and shows the could-not-load message with Try again; Try again fetches again and waits again', async () => {
++    jest.useFakeTimers();
++    try {
++      mockHook = { ...mockHook, data: undefined, isFetching: false, error: null };
++      render(<Question />);
++      await act(async () => { jest.advanceTimersByTime(SEMI_CONTINUE_WAIT_MS - 1); });
++      expect(screen.getByText('Searching')).toBeTruthy();
++      expect(screen.queryByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeNull();
++      await act(async () => { jest.advanceTimersByTime(1); });
++      expect(screen.getByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeTruthy();
++      expect(screen.queryByText('Searching')).toBeNull();
++      expect(mockReplace).not.toHaveBeenCalled();
++      fireEvent.press(screen.getByTestId('parcel-semi-retry'));
++      expect(mockHook.refetch).toHaveBeenCalledTimes(1);
++      expect(screen.getByText('Searching')).toBeTruthy();
++      await act(async () => { jest.advanceTimersByTime(SEMI_CONTINUE_WAIT_MS); });
++      expect(screen.getByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeTruthy();
++    } finally {
++      jest.useRealTimers();
++    }
++  });
++  it('task-457: data arriving after the limit opens the question', async () => {
++    jest.useFakeTimers();
++    try {
++      mockHook = { ...mockHook, data: undefined, isFetching: false, error: null };
++      const view = render(<Question />);
++      await act(async () => { jest.advanceTimersByTime(SEMI_CONTINUE_WAIT_MS); });
++      expect(screen.getByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeTruthy();
++      mockHook = { ...mockHook, data: data(form(true)) };
++      view.rerender(<Question />);
++      expect(screen.getByText('Is this house one half of a semi-detached pair?')).toBeTruthy();
++      expect(screen.queryByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeNull();
++    } finally {
++      jest.useRealTimers();
++    }
++  });
+ });
+ 
+ describe('the report mount (the redirect)', () => {
+diff --git a/mobile/__tests__/useAnswerParcelLookup.hook.test.tsx b/mobile/__tests__/useAnswerParcelLookup.hook.test.tsx
+index 791ad3e223bd998d89b565762355a50f5ba7441a..ba6fce4168b0bc0b8d64d0611691a13e4371bc6b 100644
+--- a/mobile/__tests__/useAnswerParcelLookup.hook.test.tsx
++++ b/mobile/__tests__/useAnswerParcelLookup.hook.test.tsx
+@@ -15,7 +15,8 @@ jest.mock('@/store/authStore', () => ({
+ jest.mock('@sentry/react-native', () => ({ captureException: jest.fn() }));
+ 
+ import { fetchWithAuth } from '@/lib/apiClient';
+-import { answeredParcelLookup, useAnswerParcelLookup } from '@/hooks/useParcelLookup';
++import { RateLimitError } from '@/lib/errors';
++import { answeredParcelLookup, useAnswerParcelLookup, useParcelSearch } from '@/hooks/useParcelLookup';
+ 
+ const mockFetch = fetchWithAuth as jest.MockedFunction<typeof fetchWithAuth>;
+ 
+@@ -34,3 +35,44 @@ describe('useAnswerParcelLookup under a real QueryClient', () => {
+     expect(mockFetch.mock.calls).toEqual([['/api/parcels/lookup?parcelId=PIN-777&semi=answered']]);
+   });
+ });
++
++// task-457 AC2 (RR-0456 Q5, MORNING-DECISIONS.md:2362 "retry once auto at zero"): the REAL search hook under a REAL QueryClient; a zero-second rate limit
++// is retried once (TanStack's first retry delay, 1000 ms), and only once; any other wait is not retried.
++describe('task-457 useParcelSearch under a real QueryClient', () => {
++  const empty = { data: { match: null, candidates: [], warnings: [], parcel: null, page: null } };
++  const mount = () => {
++    const client = new QueryClient({ defaultOptions: { queries: { gcTime: Infinity } } });
++    const wrapper = ({ children }: { children: React.ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
++    return renderHook(() => useParcelSearch('26 Hurlingham Cres'), { wrapper });
++  };
++  beforeEach(() => { mockFetch.mockReset(); jest.useFakeTimers(); });
++  afterEach(() => { jest.useRealTimers(); });
++
++  it('a zero-second rate limit is retried once; the retry succeeds and no error shows while it waits', async () => {
++    mockFetch.mockRejectedValueOnce(new RateLimitError(0)).mockResolvedValueOnce(empty);
++    const { result } = mount();
++    await act(async () => { await jest.advanceTimersByTimeAsync(10); });
++    expect(mockFetch).toHaveBeenCalledTimes(1);
++    expect(result.current.error).toBeNull();
++    expect(result.current.isFetching).toBe(true);
++    await act(async () => { await jest.advanceTimersByTimeAsync(1000); });
++    expect(mockFetch).toHaveBeenCalledTimes(2);
++    expect(result.current.error).toBeNull();
++    expect(result.current.data).toEqual(empty.data);
++  });
++  it('a zero-second rate limit refused again ends in the rate-limit error after exactly two fetches', async () => {
++    mockFetch.mockRejectedValue(new RateLimitError(0));
++    const { result } = mount();
++    await act(async () => { await jest.advanceTimersByTimeAsync(60000); });
++    expect(mockFetch).toHaveBeenCalledTimes(2);
++    expect(result.current.error).toBeInstanceOf(RateLimitError);
++    expect((result.current.error as RateLimitError).retryAfterSeconds).toBe(0);
++  });
++  it('a rate limit with a wait above zero is not retried', async () => {
++    mockFetch.mockRejectedValue(new RateLimitError(7));
++    const { result } = mount();
++    await act(async () => { await jest.advanceTimersByTimeAsync(60000); });
++    expect(mockFetch).toHaveBeenCalledTimes(1);
++    expect(result.current.error).toBeInstanceOf(RateLimitError);
++  });
++});
+diff --git a/mobile/__tests__/useParcelLookup.test.ts b/mobile/__tests__/useParcelLookup.test.ts
+index e16974a961d4b486d559dabff6eafaed6eccfe04..99c2898775bfefa8c30168d147c9b3ae6e59ba56 100644
+--- a/mobile/__tests__/useParcelLookup.test.ts
++++ b/mobile/__tests__/useParcelLookup.test.ts
+@@ -28,6 +28,7 @@ import {
+   fetchParcelLookup,
+   parcelLookupParams,
+   shouldRetryParcelLookup,
++  shouldRetryParcelSearch,
+   ParcelLookupSchemaError,
+ } from '@/hooks/useParcelLookup';
+ 
+@@ -187,6 +188,20 @@ describe('shouldRetryParcelLookup — deterministic states are not retried', ()
+   });
+ });
+ 
++// task-457 AC2 (RR-0456 Q5, MORNING-DECISIONS.md:2362 "retry once auto at zero"): the search retries a zero-second rate limit once, on the first failure only.
++describe('task-457 AC2: shouldRetryParcelSearch', () => {
++  it('retries a zero-second rate limit once and only once; every other error follows shouldRetryParcelLookup', () => {
++    expect(shouldRetryParcelSearch(0, new RateLimitError(0))).toBe(true);
++    expect(shouldRetryParcelSearch(1, new RateLimitError(0))).toBe(false);
++    expect(shouldRetryParcelSearch(0, new RateLimitError(30))).toBe(false);
++    expect(shouldRetryParcelSearch(0, new ApiError(500, 'boom'))).toBe(true);
++    expect(shouldRetryParcelSearch(3, new ApiError(500, 'boom'))).toBe(false);
++  });
++  it('the lookup and the entitlement read keep no retry on a zero-second rate limit', () => {
++    expect(shouldRetryParcelLookup(0, new RateLimitError(0))).toBe(false);
++  });
++});
++
+ // FIX.SEMI (task-373, grounder D5; Spec 99 section 4 B1 99:219 "Every server fetch MUST go through TanStack Query"): the semi page's Continue lookup is the
+ // mutation of useAnswerParcelLookup. The two pins below keep what task-361 built: a failed or offline lookup ends in the error state at once (networkMode
+ // 'always': TanStack's default would pause a mutation offline, so the bounded wait would never start and the page would stay busy), and no retry re-sends it.
+diff --git a/mobile/app/(app)/parcel-tool/semi-question.tsx b/mobile/app/(app)/parcel-tool/semi-question.tsx
+index 12d8cca09b6602253ca94393e63a7325a67489e3..fc9e632cd45d76dfda0c0b2d3dbc51f022d788fc 100644
+--- a/mobile/app/(app)/parcel-tool/semi-question.tsx
++++ b/mobile/app/(app)/parcel-tool/semi-question.tsx
+@@ -18,7 +18,8 @@ import { SEMI_QUESTION_SLICE, semiQuestionData, semiQuestionProps } from '@/comp
+ import { useAnswerParcelLookup, useParcelLookup, useSetParcelLookup, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
+ import { useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
+ import { SEMI_ANSWERS, type SemiAnswer } from '@/lib/lotForm';
+-import { buildSemiQuestionSituation } from '@/lib/semiQuestion';
++import { buildSemiQuestionSituation, SEMI_CONTINUE_WAIT_MS } from '@/lib/semiQuestion';
++import { NetworkError } from '@/lib/errors';
+ 
+ export default function SemiQuestionScreen() {
+   const router = useRouter();
+@@ -29,6 +30,8 @@ export default function SemiQuestionScreen() {
+   const storeLookup = useSetParcelLookup();
+   const { mutateAsync: answerLookup } = useAnswerParcelLookup();
+   const [submitError, setSubmitError] = useState<unknown>(null);
++  // task-457 (RR-0456 Q4): the opening wait has a limit; past it the page shows the could-not-load notice with Try again. Data that arrives later replaces it.
++  const [waitError, setWaitError] = useState<unknown>(null);
+   const [submitting, setSubmitting] = useState(false);
+   const submittingRef = useRef(false);
+   const mountedRef = useRef(true);
+@@ -38,15 +41,22 @@ export default function SemiQuestionScreen() {
+     return () => { mountedRef.current = false; };
+   }, []);
+ 
+-  const situation = useMemo(
+-    () => buildSemiQuestionSituation({ parcelId: id, data, error: submitError ?? error, isFetching, schemaDrift: (submitError ?? error) instanceof ParcelLookupSchemaError, selected, submitting }),
+-    [id, data, error, submitError, isFetching, selected, submitting],
+-  );
++  const situation = useMemo(() => {
++    const shown = submitError ?? error ?? (data ? null : waitError);
++    return buildSemiQuestionSituation({ parcelId: id, data, error: shown, isFetching, schemaDrift: shown instanceof ParcelLookupSchemaError, selected, submitting });
++  }, [id, data, error, submitError, waitError, isFetching, selected, submitting]);
+ 
+   // The redirect state (a lot that is not unsure) replaces this page once, on settled data, never on a background refetch.
+   const markRedirected = useSettledRedirect(situation.navigate, isFetching);
+   const goBack = useGoBack();
+ 
++  // task-457: the limit is the page's own wait (continue_wait_ms, the same bound Continue uses); it runs only while the page is loading and is cleared on leaving it.
++  useEffect(() => {
++    if (situation.state !== 'loading') return;
++    const t = setTimeout(() => setWaitError(new NetworkError('task-457: the semi page wait limit')), SEMI_CONTINUE_WAIT_MS);
++    return () => clearTimeout(t);
++  }, [situation.state]);
++
+   // Continue: the answered lookup, stored under the report's key, then the report; never throws, a second press while it runs is ignored.
+   // No lookup with an empty id (the hook above is guarded the same way); the wait is bounded so the latch cannot stick (task-361, LX-R2, LX-E1):
+   // a lookup that does not settle ends in the same built error state as a failed one, and the next Continue works.
+@@ -76,7 +86,7 @@ export default function SemiQuestionScreen() {
+     () => ({
+       change_input: () => undefined,
+       set_input: () => undefined,
+-      retry: () => { if (submitError != null) setSubmitError(null); else void refetch(); },
++      retry: () => { if (submitError != null) setSubmitError(null); else { setWaitError(null); void refetch(); } },
+       // The renderer's `select` carries a string; here it is the answer (the descriptor's deviation entry).
+       select: (answer: string) => {
+         if ((SEMI_ANSWERS as readonly string[]).includes(answer)) setSelected(answer as SemiAnswer);
+diff --git a/mobile/src/hooks/useParcelLookup.ts b/mobile/src/hooks/useParcelLookup.ts
+index 342af672f716a98abc7938801325d0255763ecca..d2d879ffe41332bf92dad19624ef9e3db9d6264f 100644
+--- a/mobile/src/hooks/useParcelLookup.ts
++++ b/mobile/src/hooks/useParcelLookup.ts
+@@ -69,6 +69,12 @@ export function shouldRetryParcelLookup(failureCount: number, err: unknown): boo
+   );
+ }
+ 
++/** task-457 (RR-0456 Q5): the search retries a zero-second rate limit once, on the first failure only; everything else is shouldRetryParcelLookup. A zero-second wait is not a throttle the person must sit out, so the 429 guard above stays for every other wait. Once is the ruling and not a setting (RR-0392). */
++export function shouldRetryParcelSearch(failureCount: number, err: unknown): boolean {
++  if (err instanceof RateLimitError && err.retryAfterSeconds === 0) return failureCount === 0;
++  return shouldRetryParcelLookup(failureCount, err);
++}
++
+ /**
+  * Debounced typeahead search. Fires when the trimmed query is ≥ 3 chars (the server min).
+  * The screen owns the ≥400ms debounce (Spec 100 §4); this hook just caches per query string.
+@@ -81,7 +87,7 @@ export function useParcelSearch(q: string) {
+     queryFn: () => fetchParcelLookup({ q: trimmed }),
+     enabled: trimmed.length >= LOOKUP_MIN_QUERY_LEN && !!accessToken,
+     staleTime: LOOKUP_STALE_MS,
+-    retry: shouldRetryParcelLookup,
++    retry: shouldRetryParcelSearch,
+   });
+ }
+ 
+diff --git a/mobile/src/lib/semiQuestion.ts b/mobile/src/lib/semiQuestion.ts
+index 3d0bb19b5e44cc2ba3f32e10a54dd1d6d2000c80..6d34c7862adc1ef44fdf5cb843613df2a5c19fa1 100644
+--- a/mobile/src/lib/semiQuestion.ts
++++ b/mobile/src/lib/semiQuestion.ts
+@@ -14,7 +14,7 @@ import type { ConsumerParcelLookupResult } from '@/lib/schemas';
+ import { classifyParcelSearchError, PARCEL_TAB_ROUTE, parcelSearchRoute, type ParcelSearchErrorClass } from '@/lib/parcelSearchMatch';
+ import { reportRouteAfterAnswer, SEMI_ANSWERS, type SemiAnswer } from '@/lib/lotForm';
+ 
+-/** SRCH.SEMI-3 (task-361, LX-E1): how long Continue waits for the answered lookup before it ends in the built error state (a timeframe; operator item in the lane report). FIX.TUNE (task-378): read from the surface config `continue_wait_ms` (the generated slice), not typed here. */
++/** SRCH.SEMI-3 (task-361, LX-E1): how long Continue waits for the answered lookup before it ends in the built error state (a timeframe; operator item in the lane report). FIX.TUNE (task-378): read from the surface config `continue_wait_ms` (the generated slice), not typed here. It also bounds the page's opening wait (task-457, RR-0456). */
+ export const SEMI_CONTINUE_WAIT_MS: number = sliceNumber(slice, 'continue_wait_ms');
+ 
+ class SemiContinueTimeoutError extends Error {
+

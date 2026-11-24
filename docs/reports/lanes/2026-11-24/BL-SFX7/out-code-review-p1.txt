@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T19:44:33.093Z file_sha256=f0222b1a52d8df5718c29000c9ed079ed40e03ac38afd6739f5e6128fb3ddcc5 prompt_sha256=c80aa9f6a9f7cea7a39bbe1595bf7172d4af1c4810f4ea4c29f9ebf9946a469c
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX7/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — mobile/app/(app)/parcel-tool/semi-question.tsx:34 "const [waitError, setWaitError] = useState<unknown>(null);" — waitError is only ever cleared by the retry handler, so it survives after data arrives and the question opens, leaving stale error state behind the page — clear it when the page leaves loading (effect cleanup or on data), bounded today only because "const shown = submitError ?? error ?? (data ? null : waitError);" hides it while data is present.
+
+DEFER severity=LOW — mobile/__tests__/semiQuestionPage.behaviour.test.tsx:251 "mockHook = { ...mockHook, data: undefined, isFetching: false, error: null };" — both new page tests pin isFetching false, so the notice is never exercised while the query is still fetching; buildSemiQuestionSituation's precedence of isFetching over error cannot be seen, so whether the notice actually replaces Searching in that state is unverified — add one case with isFetching true and no data, or confirm the builder checks error before isFetching.
+
+DEFER severity=LOW — mobile/__tests__/useParcelLookup.test.ts:201 "expect(shouldRetryParcelLookup(0, new RateLimitError(0))).toBe(false);" — the test titled "the lookup and the entitlement read keep no retry on a zero-second rate limit" only exercises shouldRetryParcelLookup, nothing here touches the entitlement read — retitle it to the lookup, or add the entitlement call it claims to pin.
+
+DEFER severity=NIT — mobile/app/(app)/parcel-tool/semi-question.tsx:56 "const t = setTimeout(() => setWaitError(new NetworkError('task-457: the semi page wait limit')), SEMI_CONTINUE_WAIT_MS);" — the synthetic wait error is constructed and shown but never reported anywhere in the diff, so there is no signal of how often the opening wait hits the limit — capture it once (or settle for the display-only path deliberately).
+
+REJECT — mobile/src/hooks/useParcelLookup.ts:73 "if (err instanceof RateLimitError && err.retryAfterSeconds === 0) return failureCount === 0;" — a zero-based failureCount looks off by one against TanStack's retry contract — it is correct: the real-QueryClient test in useAnswerParcelLookup.hook.test.tsx observes exactly two fetches before the rate-limit error, so the first failure does arrive as failureCount 0.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none
+
+---
+⏱  105873ms (105.9s)
+📊 Tokens — total: 27422, input: 6854, output: 20568, reasoning: 19993

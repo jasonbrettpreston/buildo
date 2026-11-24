@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T19:44:33.093Z file_sha256=84a6fd133f724cb794044691a942b72e226b6264b249fa932e5f045f29a9788c prompt_sha256=a2747256f767e97f6ae3397278ec35fdebd51dca835b9a5f70290f4bdf325386
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX7/in-out-engineering-eng-shared.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 5. Testing Standards §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — mobile/__tests__/useAnswerParcelLookup.hook.test.tsx:42 "const empty = { data: { match: null, candidates: [], warnings: [], parcel: null, page: null } };" — the new search test hand-builds the lookup envelope inline instead of through a typed factory, so envelope drift is invisible to the test — build the fixture from the typed hook-data factory already used at semiQuestionPage.behaviour.test.tsx "data: data(form(true))", or add a typed search-envelope factory and import it.
+DEFER severity=MED — 11. Plan Compliance Checklist, Pre-Review Self-Checklist "Output PASS/FAIL per item in the response BEFORE running tests" — Implementation Notes "Green (green.out): 3 suites, 45 of 45." — the notes record red/green/typecheck but no 5-10 item PASS/FAIL self-skeptical list before the test run, and no WF3 3-5 sibling-bug list (the nearest sibling is the Continue wait bound, which is not enumerated) — add the PASS/FAIL list and the sibling-bug list to the notes before the push.
+DEFER severity=LOW — 14. The Prevention Loop "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**; new couplings update **Cross-Spec Dependencies both directions**" — mobile/src/lib/semiQuestion.ts:17 "It also bounds the page's opening wait (task-457, RR-0456)." — the new coupling that makes one config value govern two different waits cites a task id and a decisions line, no spec section and no dependency note — cite the SRCH.SEMI spec section that owns the wait and record the cross-spec dependency.
+MET — 5. Testing Standards §5.3 — Implementation Notes "Red (lane file red.out, npx jest on the three files from mobile/, RR-0460 local phone run): 5 failed, 40 passed of 45" — failing tests were run and recorded before the fix, green after.
+MET — 11. Plan Compliance Checklist, Cross-Layer Contracts Check "Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal" — mobile/app/(app)/parcel-tool/semi-question.tsx:21 "import { buildSemiQuestionSituation, SEMI_CONTINUE_WAIT_MS } from '@/lib/semiQuestion';" — no new literal threshold is introduced, the limit reuses the existing surface-config constant.
+MET — 5. Testing Standards §5.2 `*.regression.test.ts` "Pin a load-bearing behavior a diff must NOT retire" — mobile/__tests__/useParcelLookup.test.ts "expect(shouldRetryParcelLookup(0, new RateLimitError(0))).toBe(false);" — pins that the new search-only retry does not leak into the lookup/entitlement path.
+REJECT — 2. Error Handling & Stability §2.2 "Every newly created API route ... MUST have an overarching `try-catch`" — the change is accused of no try-catch boundary — no `src/app/api/` handler is created or modified, so the clause has no subject.
+REJECT — 12. Frontend Foundation Tooling §12.2 "NEVER use `useEffect` for data fetching" — the change is accused of adding a useEffect in a component — the effect at semi-question.tsx:54 only arms and clears a timeout and fetches nothing, data fetching stays in `useParcelLookup` (TanStack Query).
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 11   Unmet: 3
+
+---
+⏱  72518ms (72.5s)
+📊 Tokens — total: 30808, input: 16749, output: 14059, reasoning: 13198
