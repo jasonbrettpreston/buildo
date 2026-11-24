@@ -7,16 +7,17 @@ status: WAITS
 assignee:
   - '@lane-BL-LOOSE'
 created_date: '2026-11-19T20:30:00Z'
-updated_date: '2026-11-20T15:41:00Z'
+updated_date: '2026-11-24T14:47:00Z'
 labels:
   - S
   - loose-ends
 milestone: m-1
-dependencies: []
+dependencies:
+  - TASK-268
 references:
   - ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md#L1160
 type: record
-ordinal: 43012
+ordinal: 150210
 ---
 
 ## Description
@@ -155,4 +156,6 @@ task-360 (BL-METER2) loose ends: (1) race UNVERIFIED: a no-flag lookup in flight
 2026-11-20 (task-354, BL-MOBILECI): the mobile jest tests are run by no hook and no station; only the manual GitHub Mobile CI job runs them, so cases written in a lane stay unrun until a push (run 44741125636: 18 of 786 failing).
 
 Operator 2026-11-20, verbatim: "Task 370 yes . approved" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1427; the table put to him is quoted in that entry). Leftovers added from McFix (2026-11-20): (1) the proof runner typed timeout DEFAULT_TIMEOUT_MS = 120000 (scripts/analysis/proof-slice.mjs) needs a registered setting: migration number from the ID ledger, operator typed GO (task-375 partial); (2) the security lens terms for admin and personal data at scripts/analysis/rule-lists.mjs:128 (task-375 D11b); (3) the entitlement contract cite useParcelLookup.ts:96 should be :134, locked by search-reports-left.logic.test.ts:132 (D15; with task-378); (4) no rule-list row for docs/reports/generated/** (a lane that regenerates one cannot resolve it); (5) no regression lens template exists in .claude/review-templates; (6) the DB mirror migration for the two lot-size settings from task-372.
+
+2026-11-24: ordered last in the search milestone, after TASK-268 (RR-0447, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2308).
 <!-- SECTION:NOTES:END -->
