@@ -4,9 +4,11 @@ title: V2.OUTSIDE a code file changed outside the Files line is reviewed after a
 status: LATER
 assignee: []
 created_date: '2026-11-20T23:40:00Z'
+updated_date: '2026-11-24T14:42:00Z'
 labels:
   - McFix
   - McFix V2
+  - dead
 milestone: m-1
 dependencies:
   - TASK-410

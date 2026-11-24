@@ -5,6 +5,7 @@ status: DONE
 assignee:
   - '@operator'
 created_date: '2026-11-19T04:57:00Z'
+updated_date: '2026-11-24T14:42:00Z'
 labels:
   - '6'
   - plan:6.4
@@ -16,6 +17,7 @@ labels:
   - comp:DN
   - comp:REN
   - comp:BYL
+  - dead
 milestone: m-7
 dependencies: []
 references:

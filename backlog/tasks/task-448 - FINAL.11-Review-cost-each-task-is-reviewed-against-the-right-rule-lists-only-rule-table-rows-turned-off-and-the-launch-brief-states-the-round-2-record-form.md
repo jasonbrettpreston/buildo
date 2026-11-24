@@ -8,10 +8,11 @@ status: BUILT
 assignee:
   - '@lane-BL-LISTS448'
 created_date: '2026-11-23T20:11:00Z'
-updated_date: '2026-11-23T22:15:00Z'
+updated_date: '2026-11-24T14:42:00Z'
 labels:
   - McFix
   - McFix Final
+  - dead
 milestone: m-1
 dependencies: []
 references:

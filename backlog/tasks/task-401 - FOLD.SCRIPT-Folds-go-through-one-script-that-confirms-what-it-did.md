@@ -4,11 +4,12 @@ title: FOLD.SCRIPT Folds go through one script that confirms what it did
 status: LATER
 assignee: []
 created_date: '2026-11-20T16:34:00Z'
-updated_date: '2026-11-20T22:38:00Z'
+updated_date: '2026-11-24T14:42:00Z'
 labels:
   - McFix
   - McFix Z
   - McFix V2
+  - dead
 milestone: m-1
 dependencies: []
 type: build

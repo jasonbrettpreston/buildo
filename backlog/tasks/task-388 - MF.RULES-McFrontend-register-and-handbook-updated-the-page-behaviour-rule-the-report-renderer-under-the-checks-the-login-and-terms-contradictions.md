@@ -7,10 +7,11 @@ status: RUNNING
 assignee:
   - '@lane-BL-MFRULES'
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-24T00:29:00Z'
+updated_date: '2026-11-24T14:42:00Z'
 labels:
   - McFix
   - McFix E
+  - dead
 milestone: m-1
 dependencies: []
 type: build

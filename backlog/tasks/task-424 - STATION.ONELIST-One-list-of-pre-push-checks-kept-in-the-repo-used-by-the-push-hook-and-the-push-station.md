@@ -7,11 +7,12 @@ status: BUILT
 assignee:
   - '@lane-BL-ONE424'
 created_date: '2026-11-21T22:20:00Z'
-updated_date: '2026-11-23T14:48:00Z'
+updated_date: '2026-11-24T14:42:00Z'
 labels:
   - McFix
   - McFix V2
   - McFix Final
+  - dead
 milestone: m-1
 dependencies: []
 references:

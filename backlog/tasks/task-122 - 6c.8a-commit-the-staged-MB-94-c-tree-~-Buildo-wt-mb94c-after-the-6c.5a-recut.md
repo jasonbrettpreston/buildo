@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-T122'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:49:00Z'
+updated_date: '2026-11-24T14:42:00Z'
 due_date: '2026-11-26'
 labels:
   - 6c
@@ -20,6 +20,7 @@ labels:
   - comp:BLD
   - comp:HS
   - comp:BYL
+  - dead
 milestone: m-8
 dependencies:
   - TASK-62

@@ -8,11 +8,12 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATE375'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-23T16:06:00Z'
+updated_date: '2026-11-24T14:42:00Z'
 labels:
   - McFix
   - McFix A
   - McFixReborn
+  - dead
 milestone: m-1
 dependencies: []
 references:

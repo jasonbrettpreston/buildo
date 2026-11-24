@@ -7,10 +7,11 @@ status: RUNNING
 assignee:
   - '@lane-BL-CFGBOUNDS'
 created_date: '2026-11-20T15:54:00Z'
-updated_date: '2026-11-24T00:48:00Z'
+updated_date: '2026-11-24T14:42:00Z'
 labels:
   - McFix
   - McFix A
+  - dead
 milestone: m-1
 dependencies:
   - TASK-378
