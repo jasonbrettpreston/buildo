@@ -23,7 +23,8 @@ Status line (Spec 137 rule 3): task-453 RUNNING, grounder owed. Work landed in t
 ## Output review round 1
 - Diff: the brief's command, base 1f37000f1 (launch commit), 154,620 characters, sha256 c738a1acb206...; context docs/reports/reviews/task-453/context-r3.md (written by backlog-brief.mjs before the round; context-r2.md, the launch file, committed with it).
 - 29 outputs in docs/reports/lanes/2026-11-24/BL-SFX5/ with their in- inputs: compliance per list (agents-s5-1to3, agents-s7-s11, queue-137, orchestrator-doc17, step-132, five-words, plan-protocol, inc-S, ms-S; split by lens-input), engineering eng-all, code-review and error-paths (split -p1, -p2).
-- 95 findings (1 CRITICAL, 5 HIGH, 42 MED, 41 LOW, 7 NIT), listed with ids in FINDINGS.md. The lane does not rule on them: a separate grounder (Sonnet) writes GROUNDER.md; then TRIAGE.md outcomes, any fix round (r2), and the closing records commit.
+- 89 findings (1 CRITICAL, a none-found placeholder, 4 HIGH, 36 MED, 41 LOW, 5 NIT, 2 with no severity raised), listed with ids in FINDINGS.md. The lane does not rule on them: a separate grounder (Sonnet) writes GROUNDER.md; then TRIAGE.md outcomes, any fix round (r2), and the closing records commit.
+- After the board fold the chunk 1 files of 7 outputs (code-review, compliance agents-s5-1to3, agents-s7-s11, inc-S, ms-S, engineering eng-all, error-paths) were re-made on the diff of the 18 covered paths, 155,039 bytes, sha256 311004e0f34a (commit 346fbf523); chunks 2 and 3 were byte-identical and kept.
 
 ## Not done / open
 - GROUNDER.md, TRIAGE.md, AC checks and the closing commit: owed after the grounder.
