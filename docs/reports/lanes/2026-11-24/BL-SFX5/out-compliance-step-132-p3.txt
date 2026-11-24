@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:16:03.843Z file_sha256=ee5ae80b6c47c90e6ff259b5d0e9e08730f6fc76e858ea438b68093f175dcbb7 prompt_sha256=a065d93ff9a0fddf2e5c8687140054cf32cbfb2d0bb3b27af50842e4288285fe
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-compliance-step-132-p3.txt (model: deepseek-reasoner)
+
+```
+DEFER severity=MED — core.8 (R-A) "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero." — src/tests/backlog/check-lane-close.logic.test.ts "the quote must be 20\+ characters" / "a reason under 30 characters" — the close check (a tool) now thresholds on 20 and 30 characters; the pasted chunk shows them as fixed numbers and cannot see a registered tooling_* variable behind them, so externalization is unproven here — register the two thresholds as pinned logic variables (or cite the variable that already holds them) so the check reads them, not literals
+DEFER severity=LOW — task-453 card "Findings folded: G4 S1, S2, S3, S4, S5, S9, T1, T2, T3, T4 (git stack part), T6, T7, T8, T9, T10, T11, T12; ST4, ST5." — src/tests/backlog/backlog-lane.logic.test.ts "expect(ok.status, ok.stdout + ok.stderr).toBe(3); // D4 (task-453)" — the ATTACK 11 change pins exit 3 for a fake-table override and cites "D4", but no D4 appears in the pasted folded-findings list (only S/T/ST ids), so this behaviour may exceed what the card names — name the folded finding this maps to (like T4/T7/T9 for D1/D2/D16), or drop the exit-3 assertion
+MET — AC #6 "the next round number is the highest plus one" — src/tests/backlog/review-templates.logic.test.ts "context-r1 and context-r3 give round 4" — highest plus one is asserted for a gap, plus r2→3, none→1, missing dir→1
+MET — AC #5 "A lane closing after an edit to backlog-lib.mjs is refused unless its card names the file" — src/tests/backlog/check-lane-close.logic.test.ts "the real table protects scripts/analysis/backlog-lib.mjs" — the protected-path assertion plus the ST4 refusal cases prove it
+MET — AC #2 "Emptying the output_off line turns plan-protocol back on" — src/tests/backlog/rule-lists.logic.test.ts "an empty or missing output_off keeps every list (AC #2)" — outputLists is asserted to keep plan-protocol when output_off is empty or absent
+MET — AC #4 "A seat finding needs a quote, a cited line and a reason" — src/tests/backlog/check-lane-close.logic.test.ts "S1 PLANTED DEFECT: a seat verdict needs a 20+ character quote on its cited line and a 30+ character reason" — short quote, short reason and a valid control are all asserted
+MET — x-captures.5 "proven by a both-directions lock, shown red then green" — src/tests/backlog/check-lane-close.logic.test.ts "S1 ... (was accepted)" with an "ok = scenario(...)" control — the planted-defect cases pair a refusal with a passing control
+MET — x-tooling.1 "Tests needing Postgres are `*.db.test.ts`" — src/tests/proof-slice.logic.test.ts "fs.mkdtempSync(path.join(fs.realpathSync(process.env.TMPDIR ?? '/tmp'), 'nogit-'))" — the file is *.logic.test.ts and writes to a tmp sandbox, no DB
+REJECT — core.1 "A step is three files: a descriptor ... a compute module and a thin shell" — the diff edits only review-tooling test files, no step descriptor/compute/shell — the material is not a pipeline step, so the §2/§3 step clauses do not bind this change
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+Rules met: x-captures.5, x-tooling.1
+```
+
+---
+⏱  98876ms (98.9s)
+📊 Tokens — total: 55877, input: 35444, output: 20433, reasoning: 19518

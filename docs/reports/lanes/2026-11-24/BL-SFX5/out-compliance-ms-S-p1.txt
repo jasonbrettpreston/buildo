@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:16:03.862Z file_sha256=eec07cb84f69275b7c064b9478ced30b90d379318953b72684738a1c60d20b20 prompt_sha256=28d6884107ab4598ae1fe065359a6c64c3d6611aca2c1a6b38806002e928f4f3
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-compliance-ms-S-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — card Acceptance criteria #2 "Emptying the output_off line turns plan-protocol back on for output reviews" — scripts/hooks/check-lane-close.mjs "ownsTable ? { ...table, ...pin, every_task: baseTable.every_task, output_off: baseTable.output_off }" — only a card whose Files line names the table can edit output_off, and that same card is judged by the range base's output_off, so emptying or setting the line changes nothing at its own close and AC #2 is never exercised at the gate (this card's own output review still carries five-words and plan-protocol) — take the branch table's output_off when it is a subset of the base's (an emptied or narrowed line only adds reviews) and keep the base pin only for a branch that adds ids.
+
+DEFER severity=NIT — Description item 3 "the next round number is the highest plus one, an empty acceptance block warns, README corrected" — .claude/review-templates/README.md "outputs `out-<lens>.txt` (plan stage: `plan-<lens>.txt`), the only names the close check and `rule-lists.mjs findings` read" — the round-2 file is read too, scripts/analysis/backlog-lane.mjs "a file out-<lens>[-<list id>]-rN.txt is read for findings like any out- file", so the corrected README asserts an exclusivity the pipeline contradicts — write "the round-1 names the close reads; -rN files are read for findings only".
+
+DEFER severity=NIT — Description item 1 "plan-protocol for output reviews only, by one data line (output_off) and a small reader of it" — scripts/analysis/backlog-lane.mjs "off: output_off; plan-protocol is asked at the plan stage only" — the brief parenthetical names plan-protocol whatever ids output_off holds, so it misdescribes a card that switches another every_task list off — print the off ids and drop the hard-coded sentence.
+
+MET — RR-0452 "five principles off" / Description item 1 "five-words ... at both stages by one data line, nothing replacing it" — scripts/analysis/rule-lists.json ""every_task": ["plan-protocol"]" — five-words is out of every_task, its definition kept so the id can be restored, and the three questions are nowhere in the diff.
+
+MET — RR-0440 "Let's plan to drop the planning and process lists" / AC #1 — scripts/analysis/rule-lists.mjs "export const outputLists = (table, lists) => lists.filter((l) => !(table?.output_off ?? []).includes(l.id));" — the reader of output_off, used by the close check and the launch brief for build and fix tasks.
+
+MET — RR-0450 "I just dont see how queue rules and orchestrator notes are valuable to anything from a code persepctive." — scripts/analysis/rule-lists.json ""lists": ["agents-s5-1to3", "agents-s7-s11", "eng-all"]" — queue-137 and orchestrator-doc17 are off the lane-tools row, no row attaches them.
+
+MET — AC #3 "A branch with no rule table still reads the board; during a merge only merge-only staging is skipped" — scripts/hooks/check-lane-close.mjs "const inMerge = Boolean(mergeHead && fs.existsSync(path.resolve(mergeHead)));" and "let table = boardTable;" — the merge is no longer skipped whole and a branch that lost the table is judged by the board copy.
+
+MET — AC #4 "A seat finding needs a quote, a cited line and a reason" — scripts/hooks/check-lane-close.mjs "findings: [...findings, ...seatFindings(closeSeats, `${mine[0][0]}/`)]" — seat findings now go through the same grounder verdict checks (20+ character quote, cited line, 30+ character reason).
+
+MET — AC #5 "A lane closing after an edit to backlog-lib.mjs is refused unless its card names the file" — scripts/analysis/rule-lists.json ""scripts/analysis/backlog-lib.mjs"" — the helper is in protected_paths, so its range must be on the Files line and the closing commit cannot carry it.
+
+MET — AC #6 "The CHK.3 proof row reads notbuilt with its reason" — scripts/analysis/proof-slices.json ""notbuilt": { "blockedBy": [], "reason": "CHK.3 reads the staged diff; --all gives it no input" }" — the row no longer claims a passing argv/expect pair.
+
+MET — RR-0419 "The rule-list table edit is approved as one task" — scripts/analysis/rule-lists.json "protected_paths": ["scripts/hooks/check-lane-close.mjs", "scripts/analysis/rule-lists.mjs", "scripts/analysis/rule-lists.json", ...] — the table, its reader and the close check are all on one card's Files line, each also protected.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 1
+Rules met: none
+
+---
+⏱  238081ms (238.1s)
+📊 Tokens — total: 81341, input: 34590, output: 46751, reasoning: 45591

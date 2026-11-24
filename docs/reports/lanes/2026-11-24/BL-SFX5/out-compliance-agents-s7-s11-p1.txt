@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:12:10.063Z file_sha256=b26feed36832e0eb24b28982406bb2922ecf5bf43cec79165cf2766d06e27f3c prompt_sha256=b6656bd530dcaacf3d1d22bd8477d8bf27ade47718410291635a88baf1c5bf67
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-compliance-agents-s7-s11-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 08 §11.9 TKT-1/T-2 "Items 1 and 2 apply to every seat and lane agent, Claude and DeepSeek (Sonnet seats, lane agents, panel seats, lane reports)." — .claude/review-templates/README.md:145 "The strict-format lens templates are closed by their `VERDICT:` line and carry no TKT-1 Ticket header or TKT-2 STATUS line (exempt: the close check reads the VERDICT line, GROUNDER-A D5)." — the added README line states the compliance/engineering lens seats are exempt from TKT-1 and TKT-2 while the pasted rule applies both to every seat and to DeepSeek, and the exemption rests on a grounder decision, not on a pasted operator ruling — either cite the operator ruling that exempts the lens templates or write the conflict as a known limit rather than as an exemption.
+
+DEFER severity=MED — Spec 08 §7 rule 4 dated note 2026-11-24 "plan-protocol is off for the output review of a build or fix task (rule-lists.json output_off) and kept at a build task's plan review", card "a fix task, which has no per-list plan review, gets none" — scripts/analysis/backlog-lane.mjs:190 "off: output_off; plan-protocol is asked at the plan stage only" — the launch brief prints that sentence into the output-stage instructions of a fix task, telling a fix lane plan-protocol is asked at the plan stage where the card and the note keep it only at a build task's plan review — print that parenthetical only when the task type is build.
+
+DEFER severity=MED — card "Dated notes owed: Spec 08 section 7 rule 4 (short; RR-0429 cap); task-448; task-268 (the proof row); task-406 (migration 334 finding)." — docs/specs/00-architecture/08_agents.md:358 "Dated note 2026-11-24 (M-246, prior text kept; task-453 SEARCHFIX.5; RR-0440, RR-0450, RR-0452;" — the only dated note this chunk adds names task-453 and supersedes task-448, and neither task-268 (the CHK.3 proof-row change made in this chunk) nor task-406 is recorded; the target file of the other owed notes cannot see — add the task-268 and task-406 supersession to this note, or record in the card which file carries each owed note.
+
+DEFER severity=LOW — Spec 08 §7 rule 4 dated note 2026-11-24 "plan-protocol is off for the output review of a build or fix task (rule-lists.json output_off)" — .claude/review-templates/README.md:153 "holds one compliance lens output per attached list (`out-compliance-<list id>.txt`)" — README item 5 still describes the close as requiring an output for every attached list and carries no output_off carve-out, so a lane closing a build or fix task is told to file out-compliance-plan-protocol.txt — add the output_off exclusion to item 5.
+
+DEFER severity=LOW — Spec 08 §7 rule 4 pasted note (task-375) "Regression when the Files line names a path tracked at the board head" — .claude/review-templates/README.md:110 "with integration, and regression when the Files line names a tracked path" — the README drops the board-head qualifier, widening the regression trigger beyond the pasted condition — restore "tracked at the board head" in the same line.
+
+DEFER severity=NIT — Spec 08 §7 rule 1 "WF3 runs a LEAN plan roster (premise-verifiers only)" and §11.5 "Lean grounder-first PLAN panel (3–4 seats)" — .claude/review-templates/README.md:28 "lean plan roster (2-3 premise verifiers)" — the row adds a roster size attributed to section 6.4, which is not pasted, and the size differs from the pasted lean plan panel of 3 to 4 seats — cite the pasted clause for the count or drop the number.
+
+MET — Spec 08 §7 rule 4 dated note 2026-11-24 "five-words is off at both stages (out of every_task)" — docs/reports/generated/rule-lists-by-kind.md:5 "Every task gets the every_task lists (the plan protocol; off for the output review of a build or fix task by output_off)" — no row lists five-words and every total drops by its 5,367 characters.
+
+MET — Spec 08 §7 rule 4 dated note 2026-11-24 "queue-137 and orchestrator-doc17 are off the lane-tools row" — docs/reports/generated/rule-lists-by-kind.md:76 "| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 46,314 | 1 |" — the tooling row now holds agents-s5-1to3, agents-s7-s11, eng-all plus the every-task and milestone lists only.
+
+MET — Spec 08 §7 rule 4 dated note 2026-11-24 "plan-protocol is off for the output review of a build or fix task (rule-lists.json output_off)" — scripts/analysis/backlog-lane.mjs:186 "const outLs = code ? outputLists(ruleTable ?? {}, lists) : lists;" — the output lens ids and engineering ids are taken from the output_off-filtered set for a build or fix task.
+
+MET — task-448 note "a fix round re-makes every review file under the same names" — scripts/analysis/backlog-lane.mjs:192 "round 2 re-makes ALL of them under the SAME names" — the brief keeps the same names for the fix round.
+
+MET — card acceptance criterion 6 "The CHK.3 proof row reads notbuilt with its reason" — scripts/analysis/proof-slices.json:9 "\"notbuilt\": { \"blockedBy\": [], \"reason\": \"CHK.3 reads the staged diff; --all gives it no input\" }" — the chk3-nothing-new row is notbuilt with a reason and the WAITS field is gone.
+
+MET — Spec 08 §7 rule 4 "NEVER run one generic pass" — .claude/review-templates/README.md:108 "The lenses that fire run in parallel, one DeepSeek call each, one narrow prompt each" — the standard still states one narrow prompt per lens.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 6
+Rules met: none
+
+---
+⏱  127552ms (127.6s)
+📊 Tokens — total: 60715, input: 33676, output: 27039, reasoning: 25528

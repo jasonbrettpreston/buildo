@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:12:10.068Z file_sha256=55ac976c7d0addf1b3f83966f343e5a5002f8a7d731083562d705f5323b5070c prompt_sha256=d59671b3da30a988c5bdb744db1fa64e5fe09268f43abd819a9ce81fec85e26d
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx5/docs/reports/lanes/2026-11-24/BL-SFX5/in-out-compliance-orchestrator-doc17-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — doc-17 "Readings and register entries of the rulings register. They are NOT the operator's words as a ruling and never feed a review as a ruling" — scripts/hooks/check-lane-close.mjs:199 "ruling: 'ruling:RR-NNNN or ruling:decision-N'" — the refusal text that passes still offers a register id as a ruling, and the diff reworks the very line below it without narrowing this, so a reading (RR-0001..RR-0111) can still close a finding as if it were a ruling — accept only ruling:decision-N (or a decision record path plus id) and refuse an RR id in the outcome form.
+
+DEFER severity=LOW — task card "Findings folded: G4 S1, S2, S3, S4, S5, S9, T1, T2, T3, T4 (git stack part), T6, T7, T8, T9, T10, T11, T12; ST4, ST5" — scripts/hooks/check-lane-close.mjs:202 "'Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors'" — the same expression now cites rule 6 at :360 in the DEFER branch and at :350 in the BUG branch while the comment says rule 3 is :350, so one citation must be wrong and a refused lane is sent to the wrong spec line — cite rule 6 as :360 and rule 3 as :350 in every branch of this message.
+
+DEFER severity=LOW — acceptance criterion #4 "A seat finding needs a quote, a cited line and a reason" — scripts/hooks/check-lane-close.mjs:671 "const ge = grounderErrors({ g, label: 'GROUNDER-PLAN.md', lensFiles, findings: [...found, ...seatFindings(seats, dirNote)], ... })" — the plan gate resolves seat reports with a bare prefix test while the close gate passes "`${mine[0][0]}/`", so a seat file in a sibling directory whose name shares the prefix counts as that seat's evidence — pass a root with a trailing path separator at both call sites.
+
+REJECT — AC #2 "Emptying the output_off line turns plan-protocol back on for output reviews" — accused that a lane's own table can keep output_off set — not a real issue: the F10 pin adds "output_off: baseTable.output_off" and the planted-defect test refuses a lane table that sets it.
+
+REJECT — task card item (1) "plan-protocol for output reviews only" — accused that the change also drops plan-protocol from a build task's plan review — not a real issue: outputLists is applied only to the out phase ("const phases = build ? ['out'] : ['plan', 'out'];") and the plan gate still requires the every_task lists.
+
+MET — AC #1 "A build or fix task closes without output reviews for the two planning lists" — scripts/hooks/check-lane-close.mjs:524 "const ls = (build ? outputLists(i.table, r.lists) : r.lists).filter((l) => (split ? seatOf(l) : 'compliance') === seat);" — a build or fix close drops the output_off lists from the out review set, and the test closes both types with the list off.
+
+MET — AC #2 "Emptying the output_off line turns plan-protocol back on for output reviews" — scripts/analysis/rule-lists.mjs:306 "export const outputLists = (table, lists) => lists.filter((l) => !(table?.output_off ?? []).includes(l.id));" — one reader of output_off, empty or missing meaning every list, with the table-level validate rule refusing a non every_task id.
+
+MET — AC #3 "A branch with no rule table still reads the board; during a merge only merge-only staging is skipped" — scripts/hooks/check-lane-close.mjs:756 "if (inMerge) { const mh = git(['rev-parse', `MERGE_HEAD:${f}`]); const ix = git(['rev-parse', `:${f}`]); if (mh.status === 0 && ix.status === 0 && mh.stdout.trim() === ix.stdout.trim()) continue; }" — only a staged blob equal to the merged branch's own blob is skipped, and "let table = boardTable;" judges a table-less branch by the board copy.
+
+MET — AC #4 "A seat finding needs a quote, a cited line and a reason" — scripts/hooks/check-lane-close.mjs:143 "export const seatFindings = (seats, seatRoot = null) => seats.filter(...)" — seat report finding lines enter grounderErrors, so the 20+ character quote, the cited line and the 30+ character reason are checked on them.
+
+MET — AC #5 "A lane closing after an edit to backlog-lib.mjs is refused unless its card names the file" — src/tests/backlog/check-lane-close.logic.test.ts "expect(real.protected_paths).toContain('scripts/analysis/backlog-lib.mjs');" — asserted against the real table and the closing-commit refusal (the table line itself is in another chunk: cannot see).
+
+MET — AC #6 "the next round number is the highest plus one" — scripts/lib/review-template.js:138 "return Math.max(0, ...ns) + 1;" — the round is the highest context-rN plus one, so a numbered gap no longer names an existing file.
+
+VERDICT: PASS (no CRIT or HIGH finding)
+Clauses checked: 17   Unmet: 3
+Rules met: RR-0419, RR-0440, RR-0450, RR-0452
+
+---
+⏱  147239ms (147.2s)
+📊 Tokens — total: 64170, input: 36232, output: 27938, reasoning: 26649
