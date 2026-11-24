@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-24T15:02:00.765Z file_sha256=19471a3d196ec0af900e5bd04927a14a7b76b239db722d19fc21abfd0f613b69 prompt_sha256=4544bb011fcc39e8eae25285a77b5a373e83e55a90f1e472e699e77930d38343
+🔍 Lens review of docs/reports/reviews/task-450/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — PLAN-450 §5 risk 3, "`list.refine` says "More than 10 lots match". For a street with 3 rows that is false (see 8.2)." vs design card line "A query with no house number shows the existing refine line" — the person who types "Gerrard St" and sees 3 rows is told more than 10 lots match, so the very state this card adds carries a count that is untrue — before lock, make 8.2 a blocking item tied to 8.1, or give the no-number state a house-number sentence that is true whatever the row count.
+
+BUG severity=HIGH — PLAN-450 step 2 d, "Under option 8.1 A, candidates become [] when noNumber." with test row ""Elm" with [1 Elm Ave 5379936] (5b): overCap true with one row." vs design RR-0443 c, "Similar to an address mistake they need to select from the available addresses that are close" (MD:2284) — a person who types a street without a known house number sees only the refine line and no row to open, so the one Toronto lot that matched cannot be reached from this page — put the one-row case into the 8.1 question so the operator rules on a state where nothing is clickable.
+
+BUG severity=HIGH — PLAN-450 §5 risk 6, "a disabled query (no token) with an id would show loading for good. The app gate should keep signed-out users off this page. UNVERIFIED." with step 3, "New: no data with a parcelId is 'loading'." — on the semi page a stalled or disabled lookup leaves the person on a loading state with no message and no way forward or back — either prove the page gate makes that state unreachable before lock, or give the loading state a visible settled exit.
+
+DEFER severity=MED — PLAN-450 step 8, "The old topics stay; task 3 moves the map links." — until task 3 lands the help page lists the old address topic beside the new "Wrong address or lot", so a person with a wrong address picks between two topics that read alike — name in the plan which topic the person should choose while both are listed, or land the link move with this card.
+
+DEFER severity=MED — PLAN-450 step 9, "scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json, OUTSIDE FILES LINE" with "The page throws on a missing key (static-web-binding.ui.test.tsx:118-119)." — the only file carrying the new topic's visible words sits outside the card's Files line, so if the edit is dropped the help page throws for the person who follows the new link — add web_help.content.json to the card's Files line.
+
+DEFER severity=LOW — PLAN-450 §5 risk 9, "A text like "Highway 27" has a digit, so it lists as today." — the same partial-address rule gives the person a list for "Highway 27" and a house-number prompt for "Gerrard St", because a digit in the street name is read as a house number — record this asymmetry as a known state of the new rule so the operator sees it with 8.1.
+
+DEFER severity=LOW — PLAN-450 §4 fold 49, "New: "a payload without resolution is no_match even with a match."" vs §5 risk 5, "Q19 makes an older server's match a miss." — if any live server omits resolution the person is told "No match" for an address that does exist — keep the per-route assertion that resolution is always sent, and confirm the deployed lookup sends it before this build reaches a user.
+
+VERDICT: FAIL on the person's experience
+States checked: search first view, min-length prompt, street with no number, more than 10 candidates, candidates with a number, no match, miss during re-fetch, retry-after zero, intersection, outside Toronto, semi page cold offline loading, semi page settled, redirect to Lookup, help page with wrong-lot topic, web search help link   Dead ends found: 2
+
+---
+⏱  38189ms (38.2s)
+📊 Tokens — total: 28662, input: 21473, output: 7189, reasoning: 6287

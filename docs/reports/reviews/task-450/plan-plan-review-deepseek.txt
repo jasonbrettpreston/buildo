@@ -1,0 +1,47 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-24T15:02:00.766Z file_sha256=19471a3d196ec0af900e5bd04927a14a7b76b239db722d19fc21abfd0f613b69 prompt_sha256=0d7edf5c0a42207d9a1b41bbef4b3ec9bb9015188e09f7331edd8ee29bb44b2f
+🔍 Lens review of docs/reports/reviews/task-450/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — §3 step 6 / §8 ("did not check whether the Next build resolves the mobile slice JSON by relative path") — `src/components/surfaces/web/SearchBinding.tsx` will read `min_query_len` via a new relative JSON import of the mobile generated slice; if Next/TS refuses the JSON import the entire web search page fails to build (or `derived('min_query_len')` is `undefined` and the `{min}` template renders literally'/'crashes on `.replace`). No R-step exists to detect this except the full build. — Add a pre-template step that imports the JSON and runs `next build` (or mirrors the existing `parcelSearchCore` `.ts` wiring, which is proven, instead of a raw JSON import).
+
+BUG severity=HIGH — §3 step 1 (`mobile/src/lib/schemas.ts:428`) — the plan removes `.strict()` from `ParcelLotFormSchema` but does not audit the other consumer-side schemas; any sibling `.strict()`/closed resolution-result schema on the same lookup path rejects the same additive server fields and fails identically (the exact class of bug L1 fixes). — Add a check `grep -n '\.strict()' mobile/src/lib/schemas.ts` and downgrade/remove every strict schema reachable from the client lookup payload, or prove none remain.
+
+DEFER severity=MED — §3 step 2c (`parcelSearchMatch.ts:351`, drop `&& !isFetching`) — the flicker fix touches one render gate; any other surface gate that reads `isFetching` (banned by Spec 99 §6.5, :530) flickers the same way and is not covered by AC2. — Grep `mobile/src/components/surfaces/*` for `isFetching` in render conditions and either fold each or record a dated defer.
+
+DEFER severity=MED — §3 step 3 (`semiQuestion.ts:72-74`) — replacing "no data + no error + not fetching → redirect" with "no data with a parcelId → loading" risks masking an errored, data-empty lookup as a permanent spinner if the error branch does not strictly precede the new loading branch. — Add one AC5 case: errored + no data + has parcelId → `'error'`, never `'loading'`.
+
+DEFER severity=MED — §3 step 2a (Q19 shim, `parcelSearchMatch.ts:193-208`) — `return isIntersectionQuery(...) ? 'intersection' : 'no_match'` turns *any* resolution-less payload into a miss; §5 risk 5 only certifies the four `lookup-flow.ts` paths (:42,:53,:66,:94) — a cache/read path emitting a payload without `resolution` silently converts every exact match into a no-match. — Grep every lookup-payload emission (incl. any cache/read module) for `resolution` and add a test that a resolution-less cached hit is still handled.
+
+DEFER severity=MED — §3 steps 8/9 (static-page.json + OUTSIDE-FILES `web_help.content.json`) — the help page throws on a missing key (`static-web-binding.ui.test.tsx:118-119`); a content-id mismatch between step 8's `help.mailto.wrong_lot` and step 9's key white-screens the page, and step 9 is outside the declared FILES line. — Make step 9 a hard prerequisite with the existing :118-119 test asserted post-merge, and note steps 7–9 revert as one unit.
+
+DEFER severity=MED — §3 step 15 (`surface-validate.logic.test.ts:93`, `surface-conformance.logic.test.ts:258`) — the plan hard-codes the string count 426→427, but a mailto part carrying both a topic and a value may contribute two strings; the new expected literal is a guess. — Run the count after step 8 and set the literal from actual output (assert on delta, not absolute), or the test fails on the wrong value.
+
+DEFER severity=MED — §3 step 2a (`hasHouseNumber`) — the "digit before first comma" heuristic false-positives on unit/phase tokens: a bare "Unit 4" (no street number) contains a digit and would list instead of asking, and the AC1 case "Unit 4, 123 Yonge St" only passes because of the trailing `123`. — Strip a leading `Unit N`/`Apt N`/`Phase N` before the digit test, or confirm the server's comma-cut (`parcel-lookup.ts:225-226`) treats these identically so client and server agree.
+
+DEFER severity=MED — §3 step 2a (`overCap = noNumber || isOverCandidateCap`) — under 8.1 A `candidates=[]` while `overCap=true`; if the UI renders the candidate-list section on `overCap`, an empty list container/header appears on one platform. — Add a behaviour test asserting no empty list region renders when `noNumber` suppresses candidates.
+
+DEFER severity=MED — §3 step 15 / §5 risk 7 — several patch hunks are pinned to sibling-owned files with hard-coded line numbers (`surfaceRenderer.smoke.test.tsx` owned by task 8; `static-page.logic.test.ts:229-234` by task 3); if those tasks land first the line numbers drift and the patch silently mis-applies. — State the required merge order and anchor hunks on surrounding context, not line numbers.
+
+DEFER severity=LOW — §3 step 13 — regenerating every search/semi/web_help golden assumes the generators are output-deterministic (no timestamps/ordering); a non-deterministic capture yields a recurring diff storm that blocks the push. — Run each generator twice and `diff` before relying on the regenerated goldens.
+
+DEFER severity=LOW — §4 AC4 (`Type at least {SEARCH_MIN_QUERY_LEN} characters`) — if `SEARCH_MIN_QUERY_LEN === 3` (:38) the test asserting copy equals the constant is tautological and proves sourcing without any observable change. — Confirm the current value; if 3, note in the test that this is a source-routing fix, not a copy change.
+
+DEFER severity=LOW — §8.2 (`list.refine` "More than 10 lots match") — same "typed constant in copy" class as L5: the "10" is hard-coded and will lie if the cap moves. — Acknowledge as a tracked sibling of L5 rather than only a wording question in 8.1.
+
+DEFER severity=LOW — §4 AC3 fixture (`detected:'semi_half'`, `basis:'doubt_multi_parcel_abut'`) — if these literals are not members of the closed enums (:424-425) the test throws on the enum check before it ever exercises the removed `.strict()`, giving a false red/green. — Verify the literals against schemas.ts enum definitions before locking the fixture.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- Web search page reads `min_query_len` through a new relative JSON import of the mobile slice — unverified build path with whole-page blast radius and no detection step (§3 step 6, §8).
+- Sibling `.strict()`/closed consumer schemas on the lookup path are not audited; L1 is fixed on one schema while the same additive-field rejection can survive elsewhere (§3 step 1).
+- Sibling `isFetching` render gates (Spec 99 §6.5) are not swept; the V4 flicker fix is localized to `showMiss` and the same flash persists on any other surface gate (§3 step 2c).
+
+Top 3 unverified data premises (regardless of verdict):
+- "The server always sends `resolution` on every lookup path" — verify by grepping every payload emission incl. any cache/read module for a `resolution` field: `grep -rn "resolution" src/lib/admin/parcel-lookup.ts src/lib/**/lookup*flow* mobile/src` (not just the four `lookup-flow.ts` lines).
+- "`SEARCH_MIN_QUERY_LEN` makes AC4 non-tautological" — verify the current value at `mobile/src/components/surfaces/SearchBinding.tsx:38`; if it is 3 the L5 test proves nothing observable.
+- "`semi_half` / `doubt_multi_parcel_abut` are valid closed-enum members" — verify against the enum defs at `mobile/src/lib/schemas.ts:424-425` so AC3's fixture exercises `.strict()` and not the enum guard.
+
+---
+⏱  56245ms (56.2s)
+📊 Tokens — total: 32871, input: 22360, output: 10511, reasoning: 8608

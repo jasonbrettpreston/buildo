@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-24T15:02:00.765Z file_sha256=19471a3d196ec0af900e5bd04927a14a7b76b239db722d19fc21abfd0f613b69 prompt_sha256=7b52e295f48be1df9cc167e1a2cb8bb533beac8cf75f6c819cca9f979e7b227d
+🔍 Lens review of docs/reports/reviews/task-450/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — PLAN-450-v1 §5 risk 6 "V5: a disabled query (no token) with an id would show loading for good. The app gate should keep signed-out users off this page. UNVERIFIED." — a settled fetch error (the old branch read "no data, no error and not fetching") also lands in the new 'loading' state because V5 no longer reads error or isFetching, so a failed or disabled lookup spins with no error line, no Try again and no time-out — fix: keep an explicit error/disabled branch that shows the retry affordance, keep only the empty parcelId redirect, and pass the query's pending flag rather than inferring loading from absent data.
+
+BUG severity=MED — PLAN-450-v1 §3 step 2d "compute `noNumber = outcome === 'text_candidates' && !hasHouseNumber(debounced)`" — pairs an outcome derived from the last settled payload with the live debounced text, so during a retry for a new query, or with previous data retained across query keys (cannot see), a numbered query can be flagged no-number, which under option 8.1 A empties a real candidate list — fix: compare against the query string the payload was produced for, or drop outcome when the query key changes.
+
+BUG severity=MED — PLAN-450-v1 §3 step 5 "- :84 the input hint and :221 the prompt become templates `{text, vars: {min: derived('min_query_len')}}`" — no fallback is named for a missing derived value, and the web side reads the mobile generated slice by relative path (plan UNVERIFIED "I did not check whether the Next build resolves the mobile slice JSON by relative path"), so a stale or unresolved slice renders the min-length copy unfilled or as undefined — fix: fall back to SEARCH_MIN_QUERY_LEN when the derived value is absent and add a test for the missing-key case.
+
+DEFER severity=MED — PLAN-450-v1 §5 risk 2 "Until task 449 lands, "Gerrard St W" still opens a lot as 'unique'. The phone rule acts on text_candidates only." — the no-house-number guard is client-side and fires on one server outcome, so before 449 a partial address fails open and opens a lot — rationale: disclosed in the plan, so 449 must land before or with 450, or the guard must also cover the unique path.
+
+DEFER severity=LOW — PLAN-450-v1 §3 step 2a "A payload with no `resolution` is then read as the server's no_match." — a server regression or an older build now shows "no match" for a real address with no log, metric or dated signal that the field went missing — rationale: it fails closed (no wrong lot opens) and RR-0392 forbids new infrastructure, so the dated header sentence is the whole guard.
+
+REJECT — PLAN-450-v1 §3 step 9 "The page throws on a missing key (static-web-binding.ui.test.tsx:118-119)." — an unregistered help.mailto.wrong_lot key looks like a help-page crash at render — handled: adding the topic without its content key fails loud in an existing test, so the page cannot ship in that state.
+
+REJECT — PLAN-450-v1 §3 step 10 "- metering :419-421: the page counts nothing; the lookup it calls counts a produced report (F02)." — a double tap or a re-fetch on the search page could double-count — handled: this change adds no write and no count on this page, the report meter stays in the lookup route (RR-0331), so there is nothing here to key or dedup.
+
+DEFER severity=LOW — PLAN-450-v1 §3 step 1 "Old: `.strict()`. New: delete that word." — dropping strict makes an unknown lot-form field strip silently, so if a parsed lot form is re-serialized into a cache entry or a write a server-added field disappears with no error — rationale: the change targets the read path and AC3 keeps the enums closed.
+
+VERDICT: FAIL on error-path safety
+Paths walked: settled fetch error on the semi page, disabled query with an id, empty parcelId, empty/zero candidate list, payload missing resolution, missing help content key, missing derived min value, retry-after of zero, stale data on a re-query, double-submit of search and of any count   Unguarded: 2
+
+---
+⏱  53494ms (53.5s)
+📊 Tokens — total: 31534, input: 21474, output: 10060, reasoning: 9096
