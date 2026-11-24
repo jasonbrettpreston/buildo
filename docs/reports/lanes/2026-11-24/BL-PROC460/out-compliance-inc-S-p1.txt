@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:47:35.531Z file_sha256=36fd9c6016272722967c7e96ecbf3ae01a6b761cb74e0d0dca9b35277e8db52a prompt_sha256=9ad8058f95e379aafd920e360403ec7f667637ca5a6ca2507b65abd4f99ac9ac
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC460/in-out-compliance-inc-S-p1.txt (model: deepseek-reasoner)
+
+BUG severity=<none raised> — not applicable — NONE — no pasted clause is left unmet at CRIT or HIGH — none
+
+DEFER severity=MED — AC #4 "A check or doc task still gets every list at either stage" — .claude/review-templates/README.md item 5 "holds, for a check or doc task, one compliance lens output per attached list" — the rewritten close clause leaves record-only tasks outside every limb (check/doc, build/fix), while the same file's lens table still says the compliance lens fires on "every task, including record-only tasks (the only lens for those)", so a record task can close with no compliance output and no pasted clause names that narrowing — add "record" back to the clause (or show check-lane-close.mjs still requiring it), since a record task's only close evidence is its compliance output
+
+DEFER severity=LOW — AC #1 "The table check passes with output_off naming lists that are not every-task lists; an unknown id is still refused" — scripts/analysis/rule-lists.json "task-453 (SEARCHFIX.5; ...): `output_off` names every_task lists that are off for OUTPUT reviews only" — that same note now also states "task-460 ...: output_off may name any defined list and names every list", so the paragraph carries two rules and the first is false after this change — reword the task-453 clause to "names lists that are off for OUTPUT reviews only" so the note states one rule
+
+MET — AC #2 "The output lens set of a build or fix task is the code review alone for every Files line ... the plan lens set is unchanged" — scripts/analysis/rule-lists.mjs "out: [...(code ? ['code-review'] : [])]" — build and fix return code-review alone, and the plan line above it is untouched (T3 lock pins the old plan sets)
+
+MET — AC #3 "A build or fix lane closes with the code review output, its records and plan evidence and no compliance, engineering, ux or error-paths output files ... emptying output_off puts every list back" — src/tests/backlog/check-lane-close.logic.test.ts "T6: output_off naming every list, no out-compliance file and no out-error-paths: a build and a fix task close" — the check passes with the table's output_off naming every list, and outputLists keeps every list when output_off is emptied
+
+MET — AC #4 "A check or doc task still gets every list at either stage" — src/tests/backlog/backlog-lane.logic.test.ts "expect(lensBrief('check', ... )).toContain('lens-input --list L --context docs/reports/reviews/')" — a check brief still carries the per-list run and the out-compliance names, and T9 refuses a check task that drops out-compliance-first
+
+MET — AC #1 "The table check passes with output_off naming lists that are not every-task lists; an unknown id is still refused" — scripts/analysis/rule-lists.mjs "for (const id of table.output_off) if (!Object.hasOwn(table.lists ?? {}, id)) bad.push(`output_off: list ${id} is not defined`)" — step-132 (not an every_task id) validates clean and constructor (not an own key) is refused
+
+MET — AC #5 "The launch brief names the code review plus the descriptor and milestone-objective duties of the grounder, and names no compliance run at output" — scripts/analysis/backlog-lane.mjs "VALIDAATION" duty text "each changed descriptor ... TRUE or FALSE with a file:line quote" and "none for this task (every list it resolves is off: output_off ...)" — the build and fix brief names the descriptor, milestone and exploit-path duties and orders no list run at output
+
+MET — RR-0464 "C: grounder reads instead" — docs/specs/00-architecture/08_agents.md dated note "Security is off at output and stays at the plan stage; the grounder reads the changed sensitive files for exploit paths (RR-0464, :2402, \"C: grounder reads instead\")" — security leaves the output set and stays in the plan set, and the grounder gains the exploit-path duty (T3 asserts plan security, output not)
+
+MET — Description "Must not: ... delete a lens template; add a table key or a scoping mechanism" — scripts/analysis/rule-lists.json "\"output_off\": [\"five-words\", \"plan-protocol\", ...]" — no template is deleted, no table key is added, and the existing output_off line carries the switch
+
+MET — inc-S whole file "| G.1 | G Hand-off to the report · Unique match goes straight to the report (no extra page) |" — scripts/analysis/rule-lists.mjs, scripts/analysis/backlog-lane.mjs, .claude/review-templates/README.md, docs/specs/00-architecture/08_agents.md, src/tests/backlog/* — the material touches review tooling and specs only, no product surface element of the pasted list is changed
+
+REJECT — RR-0394 "security lens option A: API routes and library code" — that removing security from the output set breaks the security-lens ruling — RR-0394 is not scoped to a stage, the plan set still carries security on those paths, and RR-0464 rules the output stage off
+
+REJECT — RR-0458 "the context reviews for the step handbook are front-end specific" — that step-132 goes off at output for front-end cards — step-132 is switched only by output_off (output stage), its row attachment and the plan stage are unchanged, and AC #3 names every list off at output
+
+REJECT — RR-0429 "Keep notes short." — that the new Spec 08 dated note is too long — it is shorter than the task-453 and task-439 notes it sits beside and matches the section's dated-note form
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 0
+Rules met: none
+
+---
+⏱  173056ms (173.1s)
+📊 Tokens — total: 68070, input: 33193, output: 34877, reasoning: 33528

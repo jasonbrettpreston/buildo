@@ -1,0 +1,13 @@
+# TRIAGE BL-PROC460 (task-460), ROUND 2 (grounder Cairn-Ground-O460)
+out-code-review-p1#3 pile:"kinds count pin is test fragility only; the same LOW was piled in round 1; recorded"
+out-code-review-p1#4 pile:"title words are stale only, the body proves RR-0464; recorded as LOW, no behaviour"
+out-code-review-p1#5 pile:"the mutate is a harmless no-op in a test whose body still proves the close; LOW is recorded"
+out-code-review-p1#6 pile:"the layout parenthetical in a check brief is harmless wording; NIT is recorded"
+out-compliance-agents-s5-1to3#2 pile:"the table comment keeps two sentences about output_off; no behaviour; LOW is recorded"
+out-compliance-agents-s5-1to3#3 pile:"record-only tasks are missing from README item 5 wording only; hook unchanged; LOW is recorded"
+out-compliance-agents-s7-s11-p1#1 pile:"plan-review row cell was false before this card and piled at the plan (rg#6); NIT is recorded"
+out-compliance-agents-s7-s11-p2#1 pile:"T6 drops no engineering file; the shared outputLists line carries it; LOW is recorded"
+out-compliance-agents-s7-s11-p2#3 pile:"the B1 control repeats the case negative; the same point piled in round 1; NIT is recorded"
+out-compliance-inc-S-p1#2 pile:"same record-only omission as out-compliance-agents-s5-1to3#3; no behaviour; LOW is recorded"
+out-compliance-inc-S-p1#3 pile:"same stale comment half as out-compliance-agents-s5-1to3#2; no behaviour; LOW is recorded"
+out-compliance-inc-S-p2#2 pile:"record-only omission again, one README item 5 wording; no behaviour; LOW is recorded"

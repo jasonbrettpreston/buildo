@@ -3,11 +3,11 @@ id: TASK-460
 title: >-
   PROC.OUTSHAPE Smaller output review: one code review, the hook checks, one
   validating grounder; rule lists at the plan stage only
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-PROC460'
 created_date: '2026-11-24T18:04:00Z'
-updated_date: '2026-11-24T18:37:00Z'
+updated_date: '2026-11-24T19:57:00Z'
 labels:
   - ProcessImprovement
 milestone: m-1
@@ -24,6 +24,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-24/BL-PROC460/REPORT.md
+  - docs/reports/lanes/2026-11-24/BL-PROC460/GROUNDER.md
+  - docs/reports/lanes/2026-11-24/BL-PROC460/TRIAGE.md
 type: fix
 ordinal: 154210
 ---
@@ -44,12 +47,12 @@ Files: scripts/analysis/rule-lists.json, scripts/analysis/rule-lists.mjs, script
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The table check passes with output_off naming lists that are not every-task lists; an unknown id is still refused
-- [ ] #2 The output lens set of a build or fix task is the code review alone for every Files line (unless the operator keeps the security lens at output, plan Q7: then security joins it where the Files line triggers it); the plan lens set is unchanged
-- [ ] #3 A build or fix lane closes with the code review output, its records and plan evidence and no compliance, engineering, ux or error-paths output files (and no security file unless Q7 keeps it); emptying output_off puts every list back
-- [ ] #4 A check or doc task still gets every list at either stage
-- [ ] #5 The launch brief names the code review plus the descriptor and milestone-objective duties of the grounder, and names no compliance run at output
-- [ ] #6 The Spec 08 dated note and the README lines are present and the compliance-file cap cases of task-423 (a) and (e) stay green
+- [x] #1 The table check passes with output_off naming lists that are not every-task lists; an unknown id is still refused
+- [x] #2 The output lens set of a build or fix task is the code review alone for every Files line (unless the operator keeps the security lens at output, plan Q7: then security joins it where the Files line triggers it); the plan lens set is unchanged
+- [x] #3 A build or fix lane closes with the code review output, its records and plan evidence and no compliance, engineering, ux or error-paths output files (and no security file unless Q7 keeps it); emptying output_off puts every list back
+- [x] #4 A check or doc task still gets every list at either stage
+- [x] #5 The launch brief names the code review plus the descriptor and milestone-objective duties of the grounder, and names no compliance run at output
+- [x] #6 The Spec 08 dated note and the README lines are present and the compliance-file cap cases of task-423 (a) and (e) stay green
 <!-- AC:END -->
 
 ## Definition of Done
@@ -242,4 +245,28 @@ rg#3 MED folded are lists of docs/sp
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-24 taken on the board at lane launch (lane BL-PROC460, worktree /Users/brettpreston_macmini/Buildo-wt-proc460, branch wf2/inc1b-proc460), RR-0240
+
+2026-11-24 build started (lane BL-PROC460). Plan Q7 (security at output) is UNANSWERED: MORNING-DECISIONS.md read to its last entry (RR-0461, :2385); no Q7 ruling. Deviation from plan step 1 order, recorded here: the lensSet out line is edited now ONLY to drop ux and error-paths (common to Q7 options A, B and C; RR-0459 MD:2377 and RR-0457/0458); the security term of that line is left exactly as it is today, the security test pins are not edited, and the Spec 08 note names security as pending Q7. Removing or keeping security waits for the operator's Q7 answer. Red tests first: T1, T2, T3, T4, T6, T7, T8, T9, T10 written before any code edit.
+
+2026-11-24 plan Q7 answered: RR-0464 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2399-2403). Operator, verbatim: "for task 460 what security answer do we need. yes security doesn run on the output" and his selection, verbatim: "C: grounder reads instead". Ruled (RR-0464): option C; the security lens is off at output and stays at the plan stage; the validating grounder's duty gains one sentence: read the changed sensitive files for exploit paths. Build: lensSet out drops the security term (plan set unchanged), security pins edited to plan yes / output no, README security row, Spec 08 note last sentence, one grounder duty sentence in the brief. Board (wf2/board) merged into the lane branch at 8491e7c4f before the lens run.
+
+2026-11-24 output review round 1 run on the whole change (base e61a12e0a, head 5a807f972 after the board merge; context docs/reports/reviews/task-460/context-r3.md): code-review (1 part, error-paths skipped per plan Q5 and RR-0459, no security per RR-0464), compliance agents-s5-1to3, agents-s7-s11 (2 parts), inc-S (2 parts), ms-S, engineering eng-all (3 parts), as the board table still requires (output_off [plan-protocol] at the range base, check-lane-close.mjs:855). 27 BUG/DEFER lines in docs/reports/lanes/2026-11-24/BL-PROC460/FINDINGS.md. Grounder owed.
+
+2026-11-24 fix round (round 1 grounder Cairn-Ground-O460 at 07aa4155a: 27 ids, 14 CONFIRMED (4 MED = 2 text defects, 8 LOW, 2 NIT), 13 REJECTED). Red first: T4b (README item 5 guards the list files by task type) and T11 (the layout sentence names the output lenses above). Fix 1: README item 5, two in-place replacements; Fix 2: one phrase in scripts/analysis/backlog-lane.mjs. No board merge in this round (the orchestrator folds after the close).
+
+2026-11-24 fix commit 7de2c9777 (red-r2: T4b and T11 failed; green-r2: 2 files, 179 passed). Round-1 grounder and triage kept byte for byte outside the lane folder: docs/reports/reviews/task-460/GROUNDER-OUT-R1.md and TRIAGE-OUT-R1.md (FIXSHA set to 7de2c9777). Output review round 2 re-made under the same names on the new diff (base e61a12e0a, head 7de2c9777; context-r4.md; eng-all now 4 parts): 31 BUG/DEFER lines, 1 HIGH (out-engineering-eng-all-p2#1). No board merge this round. Grounder owed (round 2).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+What landed (work 77286d717, 585733c10, fix 7de2c9777; every commit through the real hooks, last green 179 passed, earlier 370 passed): the output review of a build or fix task is the code review on the diff, the hook checks and one validating grounder (diff against plan and acceptance lines, code-review findings, changed descriptors, milestone objectives, changed sensitive files for exploit paths, red then green); every rule list is off at output (rule-lists.json output_off names all 58 lists); security off at output per RR-0464; plan stage unchanged; a check or doc task keeps every list.
+
+Review round 1: 7 fixed, 0 task, 0 ruling, 0 wontfix, 7 pile; grounder docs/reports/reviews/task-460/GROUNDER-OUT-R1.md; triage docs/reports/reviews/task-460/TRIAGE-OUT-R1.md
+out-compliance-agents-s5-1to3#1 MED fixed 7de2c97
+out-compliance-agents-s7-s11-p1#1 MED fixed 7de2c97
+out-compliance-inc-S-p1#1 MED fixed 7de2c97
+out-compliance-ms-S#3 MED fixed 7de2c97
+
+Review round 2: 0 fixed, 0 task, 0 ruling, 0 wontfix, 12 pile; grounder docs/reports/lanes/2026-11-24/BL-PROC460/GROUNDER.md; triage docs/reports/lanes/2026-11-24/BL-PROC460/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->

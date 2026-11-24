@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T19:47:35.578Z file_sha256=41fe5602cb2d030bceda8eb9206229719f8a747523d8d12d26815ab1104b8c19 prompt_sha256=0202c70e88ab0a3be49c489469767def2ce593cd807af6cc7405c04b6d2e5578
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC460/in-out-engineering-eng-all-p4.txt (model: deepseek-reasoner)
+
+BUG severity=MED — 14. The Prevention Loop, registry row 4 "A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit**" — docs/specs/00-architecture/08_agents.md:359 "the output review of a build or fix task is the code-review lens on the diff, the commit hook's checks and one separate read-only grounder" — the ruling changes the output review of backend, admin and mobile work, and the pasted rule names "Spec 47 (backend/pipeline), Spec 34 (admin), Spec 90 (frontend/mobile)" as the domain owners, yet none of those three files is in this change's paths list (nine files: README, the generated page, 08_agents.md, three scripts, three tests) — add a one-line dated note (or a Cross-Spec Dependencies line) to each of Spec 47, Spec 34 and Spec 90 in this same commit.
+
+DEFER severity=MED — 14. The Prevention Loop, registry row 5 "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**; new couplings update **Cross-Spec Dependencies both directions**" — scripts/analysis/backlog-lane.mjs:198 "for a build or fix task the grounder also validates; prose in GROUNDER.md, not a seat report" plus the duty text "each changed descriptor against the code it describes: \"For every changed descriptor (scripts/**/*.descriptor.json, *.notes.json, and a file under scripts/surfaces/ with its census row)" — the new duty couples Spec 08 §7 to the descriptor and census protocol but names only decision ids (RR-0457, MORNING-DECISIONS.md lines) and no spec section, and the diff records no Cross-Spec Dependencies entry in either direction — name the descriptor spec section in the comment above `validate` and add the reciprocal Cross-Spec Dependencies line.
+
+DEFER severity=MED — 14. The Prevention Loop "where deterministic, **promoted to a machine-read GATE** (husky footgun / ESLint / migration hook) — the strongest form: *a NO-GO the machine reads cannot be shipped past; a guideline eventually will*" — .claude/review-templates/README.md:152 "Presence, form and the quote check only: the check cannot prove that the grounder did the work well" with the brief duty "It ends GROUNDER.md with a Validation section, one line per duty above, each naming what it read (file:line) or none" — the new validation duty is deterministic (a Validation section, one line per named duty) but no gate reads it: check-lane-close.mjs is not in the change and README item 5's refusal list still names only the lens set and GROUNDER.md, so a build or fix lane closes with no Validation section — extend check-lane-close.mjs to refuse a build or fix GROUNDER.md with no Validation section or with a named duty missing its line, pinned by a test.
+
+MET — 14. The Prevention Loop, registry row 5 (machine-read gate) — scripts/analysis/rule-lists.mjs:161 "if (!Object.hasOwn(table.lists ?? {}, id)) bad.push(`output_off: list ${id} is not defined`)" — a typo'd or inherited output_off id is refused by validate, and the new test pins it with the "constructor" case.
+
+MET — 14. The Prevention Loop, "The rule is placed here (or in the domain doc)" — docs/specs/00-architecture/08_agents.md:359 — the standing shape rule ("the output review of a build or fix task is the code-review lens on the diff, the commit hook's checks and one separate read-only grounder") is written into the domain doc in the same commit, with the operator line cited.
+
+REJECT — 14. The Prevention Loop, the class question on findings ("Every CRITICAL/HIGH review finding ... is triaged with a second question") — the lane may have skipped asking what standing rule would have prevented its findings — no CRITICAL or HIGH finding exists to trigger it: the Implementation Notes record "27 ids, 14 CONFIRMED (4 MED = 2 text defects, 8 LOW, 2 NIT)".
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 9   Unmet: 3
+
+---
+⏱  69209ms (69.2s)
+📊 Tokens — total: 43328, input: 30002, output: 13326, reasoning: 12367

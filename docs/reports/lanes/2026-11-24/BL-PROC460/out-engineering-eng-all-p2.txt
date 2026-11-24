@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T19:47:35.546Z file_sha256=99ad96cdb06ced64f184f50cb88ec5e063eef95bea72a0c6a012df1c38b27ee8 prompt_sha256=fd9d525dda5e9158300aebc4d5844fb9ec245e9514d5daf861abf4e6112f35e8
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC460/in-out-engineering-eng-all-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 8.2 TypeScript Target Gotchas "The project `tsconfig.json` targets **ES2017**. Be aware of these constraints:" — scripts/analysis/rule-lists.mjs:162 "if (!Object.hasOwn(table.lists ?? {}, id)) bad.push(`output_off: list ${id} is not defined`)" or NONE — clause unmet: the change introduces an ES2022 runtime API (`Object.hasOwn`) in a production module and an ES2019 one (`Object.fromEntries`, src/tests/backlog/check-lane-close.logic.test.ts:1347 `const dropLists = (l: Lane): Lane => Object.fromEntries(Object.entries(l).map(...))`), neither available under the stated ES2017 target if the typecheck covers these files, so `npm run typecheck` can fail the build — replace with `Object.prototype.hasOwnProperty.call(table.lists ?? {}, id)` and build the filtered object with a loop or `reduce`.
+
+DEFER severity=MED — 11 Plan Compliance Checklist "generate a 5-10 item self-skeptical checklist from the spec section that governs the change" — NONE — clause unmet: the material carries no 5-10 item PASS/FAIL self-skeptical checklist (and no WF3 sibling-bug list), the task's Implementation Notes record only test ids, review rounds and fixes ("Red tests first: T1, T2, T3, T4, T6, T7, T8, T9, T10 written before any code edit"), so the always-applies item cannot be seen to have run — add the 5-10 item PASS/FAIL checklist for the Spec 08 section 7 governing text to the lane's Final Summary before Green Light.
+
+MET — 11 Plan Compliance Checklist (If Shared Logic Touched) — scripts/analysis/rule-lists.mjs:186 "Shared by the launch brief and the close check." — both dual consumers are updated in one change: the brief text at scripts/analysis/backlog-lane.mjs:190-194 and the close check's required set through `lensSet` (scripts/analysis/rule-lists.mjs:196 "out: [...(code ? ['code-review'] : [])]"), each pinned by tests in the same diff.
+
+MET — 8.1 API Route Export Rule — .claude/review-templates/README.md:99 "| `lens-engineering.md` | Is it built to every pasted engineering rule? |" — no Next.js `route.ts` file appears among the changed paths (README, docs, scripts/analysis/*.mjs, three test files), so no non-handler export is added to a route file.
+
+REJECT — 9.4 Pipeline SDK Mandate — accused: the changed scripts/analysis/backlog-lane.mjs and rule-lists.mjs use no `pipeline.run`, `emitSummary` or `emitMeta` — not a real issue: the rule binds `scripts/*.js` pipeline scripts that touch the database, and these are review-tooling modules under scripts/analysis/ with no pool and no write.
+
+REJECT — 10.2 Boundary Rules During Frontend Phase — accused: the diff edits files under `scripts/` — not a real issue: this is a process tooling task (label ProcessImprovement, Files line scripts/analysis/*), not a frontend WF, and `scripts/lib/` and `migrations/` are untouched.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 12   Unmet: 2
+
+---
+⏱  83187ms (83.2s)
+📊 Tokens — total: 42445, input: 32346, output: 10099, reasoning: 9332

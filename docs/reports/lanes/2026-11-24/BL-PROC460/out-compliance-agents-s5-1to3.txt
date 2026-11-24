@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:47:35.532Z file_sha256=cc86c3f0aca72f3ae702b86f3060f49b5f30adf2be4aa0ad0392b72d2ec962a5 prompt_sha256=df276312d939118b86e1b27745d161ef3ae798a84145226595f0d36433c0aea1
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC460/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — RR-0429 "Keep notes short." — docs/specs/00-architecture/08_agents.md:357 "Dated note 2026-11-24 (M-246, prior text kept; task-460 PROC.OUTSHAPE; RR-0457, RR-0458, RR-0459; ...): the output review of a build or fix task is the code-review lens on the diff, ... (RR-0464, :2402, "C: grounder reads instead")." — the added dated note is one roughly 170-word sentence against the operator's instruction to keep notes short — cut it to a few lines and point to the card and the README for the detail.
+DEFER severity=LOW — task-460 AC #1 "The table check passes with output_off naming lists that are not every-task lists; an unknown id is still refused" — scripts/analysis/rule-lists.json:8 "task-453 ...: `output_off` names every_task lists that are off for OUTPUT reviews only ... task-460 ...: output_off may name any defined list" — the same string still says output_off names every_task lists while the code and the appended sentence allow any defined list — reword the task-453 half to "names list ids" so the table's own contract matches validateTable.
+DEFER severity=LOW — task-448 "a record-only task gets the every-task and milestone lists only, task-448" — .claude/review-templates/README.md:153 "for a check or doc task, one compliance lens output per attached list, and, for a build or fix task, one per attached list that output_off leaves on (none today: task-460)" — item 5 now names only check/doc and build/fix, leaving record-only tasks (which the brief still asks for every list) unstated — add "or a record task" to the non-code branch so the close contract covers every non-code type.
+MET — task-460 AC #1 — scripts/analysis/rule-lists.mjs:162 — validateTable now tests Object.hasOwn(table.lists, id), so non-every-task ids pass and unknown ids (including constructor) are refused.
+MET — task-460 AC #2 — scripts/analysis/rule-lists.mjs:197 — lensSet out is the code review alone; the plan line is untouched.
+MET — task-460 AC #3 — scripts/analysis/rule-lists.json:238 — output_off names every list, so outputLists drops every list at the output of a build or fix task and emptying the line restores them.
+MET — task-460 AC #4 — scripts/analysis/rule-lists.mjs:197 — lensSet keeps out [] for non-code types, and test T9 locks that a check task with output_off all-off is still refused without out-compliance-first.
+MET — task-460 AC #5 — scripts/analysis/backlog-lane.mjs:188 — the brief emits "none for this task" and the descriptor, milestone and exploit-path validation sentences for build and fix.
+MET — RR-0459 "Let's not do it. Create the task and go! Add label to it - ProcessImprovement." — scripts/analysis/rule-lists.mjs:197 — error-paths is removed from the output set and the task label is ProcessImprovement.
+MET — RR-0464 "C: grounder reads instead" — scripts/analysis/backlog-lane.mjs:188 — security leaves the output set and the grounder reads the changed sensitive files for exploit paths.
+MET — RR-0457 and RR-0458 "the output approach can stay for all front-end back end etc." — scripts/analysis/rule-lists.json:238 — the single global output_off applies to every row, front end and back end alike.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 0
+Rules met: none
+
+---
+⏱  183772ms (183.8s)
+📊 Tokens — total: 71440, input: 33358, output: 38082, reasoning: 37229

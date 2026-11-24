@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T19:47:35.536Z file_sha256=12f8aee74e1ccaa11fed6ff5194db1e80d53cb33b613273134c04db16e2a918c prompt_sha256=b092533755f755f763ce734a02226f3fbd43bd96498b147c93caebacb16950be
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC460/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings only; quotes are from the material under review.
+
+DEFER severity=MED — scripts/analysis/backlog-lane.mjs "none for this task (every list it resolves is off: output_off in scripts/analysis/rule-lists.json); make no out-compliance or out-engineering file." — the brief derives "off" from the table loaded now, while the close check reads output_off at the range base (task-460 Implementation Notes: "as the board table still requires (output_off [plan-protocol] at the range base, check-lane-close.mjs:855)"), so a brief regenerated after the fold tells the lane to make no compliance file that the close at that lane's base still refuses without — two sources for one decision — derive the off statement from the same revision the close reads, or add "unless the table at your range base still lists them".
+
+DEFER severity=LOW — scripts/analysis/backlog-lane.mjs "code && outLs.length === 0 && lists.length > 0" — when lists is empty the guard falls through to the per-list `per` text, which then prints "Files to produce, one per list: " with no ids and tells the lane to run one compliance lens per list it does not have — drop the lists.length term so an empty list set takes the `none` branch, or branch on lists.length === 0 explicitly.
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts "expect(FILES).toHaveLength(12);" — the count pins kinds.length + 6, so adding or removing one kind row in rule-lists.json fails a test about the output lens set for a reason unrelated to it — assert the security paths are covered with expect.arrayContaining([...SEC]) and drop the hard 12.
+
+DEFER severity=LOW — src/tests/backlog/check-lane-close.logic.test.ts "it('security joins the required set by the Files line, as the launch brief names it; task-460 T7: a surface path closes with no out-ux (and no out-error-paths)'" — the title states security joins the required set, which the body now proves false (noSec.status === 0), so the name contradicts the assertion and misleads the next reader — retitle to "security does not join the required set at output (RR-0464)".
+
+DEFER severity=LOW — src/tests/backlog/check-lane-close.logic.test.ts "const noUx = scenario({ files: 'src/a.ts, src/components/x.tsx', mutate: (l) => ({ ...l, 'out-error-paths.txt': null }) });" — with out = ['code-review'] for every build/fix Files line, deleting out-error-paths.txt is a no-op, so the mutation proves nothing about the change and hides which assertion carries the test — drop the mutate and let the unmutated scenario close, as the noSec case does.
+
+DEFER severity=NIT — scripts/analysis/backlog-lane.mjs "the output lenses named above (the code review for a build or fix task) whose prompt would pass the bound" — in a check or doc brief lensSet out is [], so no output lens is named above and the sentence still tells the lane to run "the code review for a build or fix task" under lens-<lens>.md — gate the clause on `code` so the layout text only names lenses the brief ordered.
+
+REJECT — scripts/analysis/backlog-lane.mjs "const ids = outLs.filter((l) => seatOf(l) === 'compliance').map((l) => l.id);" — it looks dead now that a build brief takes the `none` branch and discards ids/engIds — they are still consumed by the non-none branch of `per` (the joined/per-list sentences and the engineering clause), so nothing is unused.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- The `none` instruction is derived from the loaded table while the close reads output_off at the range base, so the brief can forbid files the close demands.
+- The `lists.length > 0` guard sends an empty list set into the per-list sentence, which then names no list ids.
+- Test title for the security case states the opposite of what the body asserts, and the noUx/noSec mutations are now no-ops.
+
+---
+⏱  127440ms (127.4s)
+📊 Tokens — total: 55428, input: 29272, output: 26156, reasoning: 25204

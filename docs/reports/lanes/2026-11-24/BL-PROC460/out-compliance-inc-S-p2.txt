@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:47:35.539Z file_sha256=7b26049714439449e9f319dc2405122878ad5d305b6d9b9a02f49deedaa79be6 prompt_sha256=ce444667428ba32dd818b136f8d8a3d6cdaa987290d6019e5539c0a878df2125
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC460/in-out-compliance-inc-S-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC #3 "A build or fix lane closes with the code review output, its records and plan evidence and no compliance, engineering, ux or error-paths output files" — src/tests/backlog/check-lane-close.logic.test.ts:1350 "const r = scenario({ type, tableEdit: ALL_OFF, mutate: (l) => ({ ...dropLists(l), 'out-error-paths.txt': null }) });" — the only proof a build closes with no list outputs puts output_off into the same table the fixture hands the check, while the card's own notes record this lane is judged at the range base ("output_off [plan-protocol] at the range base, check-lane-close.mjs:855"), so the build lane that lands the change still has to close with the compliance files; the clause is proven for the next lane, not this one — record that transition in the card's Implementation Notes, or add the case whose range-base table still holds output_off ["plan-protocol"] and show what the close then requires.
+
+DEFER severity=LOW — .claude/review-templates/README.md:101 "every task, including record-only tasks (the only lens for those)" — .claude/review-templates/README.md:156 "for a check or doc task, one compliance lens output per attached list, and, for a build or fix task, one per attached list that output_off leaves on (none today: task-460)" — a record-only task (no Files line, every-task plus increment plus milestone lists attached, output_off applied only to build and fix) now falls in neither branch of item 5, although the same table says the compliance lens is "the only lens for those" — add record-only tasks to the check or doc clause so item 5 and the lens table name the same set.
+
+DEFER severity=LOW — RR-0450 "Switches or text changes only" and the card's Must not "change the plan stage, the close check's grounder rules" — .claude/review-templates/README.md:155 "for a build or fix task the grounder also validates, in a Validation section of GROUNDER.md (one line per duty, naming what it read or none)" — the new text makes a Validation section a required part of GROUNDER.md and adds "never filed as a seat report", neither of which any pasted clause or ruling names and neither of which the close check reads, so the brief now orders a form the hook cannot see; state it as advisory guidance in the brief and README, or record the source of the section in the card.
+
+DEFER severity=LOW — RR-0429 "Keep notes short." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2202) — docs/specs/00-architecture/08_agents.md:359 "Dated note 2026-11-24 (M-246, prior text kept; task-460 PROC.OUTSHAPE; RR-0457, RR-0458, RR-0459; operator, verbatim, MORNING-DECISIONS.md:2372 ...): the output review of a build or fix task is the code-review lens on the diff ... Security is off at output and stays at the plan stage; the grounder reads the changed sensitive files for exploit paths (RR-0464, :2402, \"C: grounder reads instead\")." — one dated note of about 1,050 characters carries three RR ids, a verbatim quote, a four-item supersede list and the later RR-0464 tail, longer than the task-453 note it follows — split the RR-0464 security sentence into its own dated note and cut the supersede list to the ids that actually change.
+
+MET — AC #1 — scripts/analysis/rule-lists.mjs:162 — output_off accepts any id that is an own key of lists and still refuses an unknown one ("output_off: list ${id} is not defined"), with 'step-132' and 'constructor' pinned in rule-lists.logic.test.ts.
+MET — AC #2 — scripts/analysis/rule-lists.mjs:196 — the out line is "out: [...(code ? ['code-review'] : [])]," and the plan line above it is untouched.
+MET — AC #4 — src/tests/backlog/check-lane-close.logic.test.ts:1354 — a check task with output_off naming every list is still refused without out-compliance-first.
+MET — AC #5 — scripts/analysis/backlog-lane.mjs:188 — the build brief carries "none for this task" plus the validate block naming "each changed descriptor" and "milestone objectives".
+MET — AC #6 — docs/specs/00-architecture/08_agents.md:359 — the Spec 08 dated note is present and sits after the task-453 note and before rule 5, as T4 pins.
+MET — RR-0459 — scripts/analysis/rule-lists.mjs:196 — error-paths is dropped from the output set and the pins were moved to plan yes, output no.
+MET — RR-0464 — scripts/analysis/backlog-lane.mjs:188 — the brief reads "each changed file on an API route, library, money, sign-in, personal-data or admin path ... read for exploit paths (RR-0464)".
+MET — card Must not (no new table key or scoping mechanism) — scripts/analysis/rule-lists.json:238 — the existing output_off key is reused and no table key is added.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 19   Unmet: 0
+Rules met: none
+
+---
+⏱  154231ms (154.2s)
+📊 Tokens — total: 63964, input: 32889, output: 31075, reasoning: 29835

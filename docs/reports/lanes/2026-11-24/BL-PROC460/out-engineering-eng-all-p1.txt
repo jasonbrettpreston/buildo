@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T19:47:35.556Z file_sha256=057ee112badfafcea88131bc9d5b7548f0813cb7cc2044e378a72b4666fd2f0c prompt_sha256=920ac72ef4e836538c20df8547f92d218e85c75a311dc2a236b4a564ed47dc50
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC460/in-out-engineering-eng-all-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 5.2 Testing Standards (parity battery) "Two parallel implementations stay in sync ... Any dual-surface or generated artifact (drift guard)" — src/tests/backlog/backlog-lane.logic.test.ts:1024 "expect(x).toContain('out-compliance-');" — the check-stage control asserts a substring the joined-run clause ("one set out-compliance-rules[-pN].txt") also supplies, so nothing locks the check brief's file list to the close's, while T9 pins the close to "a check task with output_off naming every list is still asked every list" (src/tests/backlog/check-lane-close.logic.test.ts:1355) and the brief's ids come from the filtered outLs ("Files to produce, one per list: ${ids.map(...)}", scripts/analysis/backlog-lane.mjs:191) — add an assertion that a check brief under an all-off table names each out-compliance-<list id> the close demands, or a parity test comparing lensLine's ids with the check's required set — bounded blast radius: a check lane closes with a brief that names no file the close requires, caught only at close.
+
+MET — 5.3 Red-Green Test Cycle — pasted context, Implementation Notes "Red tests first: T1, T2, T3, T4, T6, T7, T8, T9, T10 written before any code edit." and "Red first: T4b (README item 5 guards the list files by task type) and T11" — both the feature change and the fix round record a failing test before the edit, in the mandated .logic.test.ts layer.
+
+MET — 2.3 Assumption Documentation — scripts/analysis/rule-lists.mjs:162 "if (!Object.hasOwn(table.lists ?? {}, id))" — the nested lookup is preceded by an isArray guard and the missing table is handled with "?? {}", no non-null assertion.
+
+MET — 5.2 Testing Standards "generated doc ↔ its generator" — docs/reports/generated/rule-lists-by-kind.md:5 "the output review of a build or fix task receives none of the lists" matches scripts/analysis/rule-lists.mjs:551 verbatim, and the row counts move with the Spec 08 note (agents-s7-s11 46,314 to 47,357, total to 144,162), so the page was regenerated, not hand-edited.
+
+MET — 5.2 Test File Pattern — src/tests/backlog/rule-lists.logic.test.ts:1144 "describe('task-460: the output lens set is the code review (AC #2)" — the pure derivation (lensSet, outputLists, validateTable) is pinned in .logic.test.ts, the layer the table assigns to pure logic.
+
+REJECT — 4.1 Route Guarding "All endpoints within src/app/api/ must be analyzed for protection" — the diff drops the security lens from the output set (scripts/analysis/rule-lists.mjs:193 "out: [...(code ? ['code-review'] : [])]") — 4.1's gate is "verifyAdminAuth(request) as the FIRST statement of the handler", locked by the source scan in src/tests/api.infra.test.ts and src/tests/admin-route-guard.infra.test.ts, none of which this diff edits; a review lens enforces nothing.
+
+REJECT — 2.1 The "Unhappy Path" Test Mandate — the change adds no error-path tests for the new brief text — the mandate is scoped to "When writing integration tests (.infra.test.ts)", and this change writes none; the new unhappy-path cases (unknown output_off id, inherited key) are in the layer 5.2 assigns them.
+
+REJECT — 5.1 Typed Factories Only — the new tests build table literals such as src/tests/backlog/rule-lists.logic.test.ts:1129 "validateTable({ ...real(), output_off: ['constructor'] }, ROOT)" — these spread the real table and are checked by validateTable's own signature, not untyped domain mocks of the cells factories.ts exists for, and the same shape is already accepted at task-453.
+
+VERDICT: PASS on the pasted engineering rules
+Clauses checked: 7   Unmet: 1
+
+---
+⏱  93600ms (93.6s)
+📊 Tokens — total: 51244, input: 33287, output: 17957, reasoning: 17012

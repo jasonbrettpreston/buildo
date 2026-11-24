@@ -273,10 +273,10 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
     expect(spec, r.stdout + r.stderr).not.toBeNull();
     return spec.extra.join('\n') as string;
   };
-  it('a build on a surface: compliance, code-review, ux, error-paths, in parallel, outputs out-<lens>.txt (no plan lens: RR-0374), a separate grounder rules in GROUNDER.md; no security', () => {
+  it('a build on a surface: code-review alone (task-460: no compliance, ux or error-paths at output), in parallel, outputs out-<lens>.txt (no plan lens: RR-0374), a separate grounder rules in GROUNDER.md; no security', () => {
     const e = lensBrief('build', 'mobile/app/(app)/x.tsx, src/tests/');
-    for (const l of ['lens-compliance.md', 'lens-code-review.md', 'lens-ux.md', 'lens-error-paths.md']) expect(e).toContain(l);
-    expect(e).not.toContain('lens-security.md');
+    expect(e).toContain('lens-code-review.md');
+    for (const l of ['lens-compliance.md', 'lens-ux.md', 'lens-error-paths.md', 'lens-security.md']) expect(e).not.toContain(l);
     expect(e).not.toContain('plan-review-deepseek.md'); // task-423 D2: the brief orders no plan stage
     expect(e).not.toMatch(/plan review/i);
     expect(e).toMatch(/output review/i);
@@ -307,7 +307,7 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
       expect(e).toContain('under the SAME names'); // task-448 (RR-0422): a fix round re-makes the review files under the same names
       expect(e).toContain('fix-*.txt');
       // V2.WHOLE (task-410): lens-input splits the rule list at its headings AND, when the diff leaves no room for a list part, the DIFF at file boundaries (the tool, never by hand)
-      expect(e).toContain('The compliance lens reviews the WHOLE change');
+      expect(e).toContain('Every output lens reviews the WHOLE change'); // task-460 (plan Q6)
       expect(e).toContain('git -c core.quotepath=false diff --no-ext-diff --no-textconv --text --full-index --diff-algorithm=myers --indent-heuristic --inter-hunk-context=0 --no-color --no-renames --src-prefix=a/ --dst-prefix=b/ -U3');
       expect(e).toMatch(/\$\(git log refs\/heads\/\S+ --first-parent --reverse --format=%H -S@lane-\S+ -- 'backlog\/tasks\/[^']+' \| head -1\) HEAD -- /);
       expect(e).toContain('the base is the task\'s launch commit on the board');
@@ -342,11 +342,12 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
     const ctx = /docs\/reports\/reviews\/\S+?\/context-r2\.md/.exec(e)?.[0] ?? '(none)';
     expect(ctx).not.toBe('(none)');
     const cmds = e.match(/scripts\/deepseek-review\.js review [^`]*/g) ?? [];
-    expect(cmds.length).toBeGreaterThanOrEqual(2); // output lenses and the compliance command; no plan lens (RR-0374)
+    expect(cmds.length).toBeGreaterThanOrEqual(1); // the output lens command (task-460: no compliance command for a build); no plan lens (RR-0374)
     for (const c of cmds) { expect(c, c).toContain(`--context ${ctx}`); expect(c, c).toContain(SECT); }
     expect(e).not.toContain('<pasted-context file>');
     expect(e).not.toMatch(/context-<date>|context-20\d\d/);
-    expect(e).toContain(`lens-input --list L --context ${ctx}`); // the per-document form is the default (RR-0374)
+    expect(e).not.toContain('lens-input --list L'); // task-460: a build brief orders no compliance run at output
+    expect(lensBrief('check', 'scripts/analysis/x.mjs, src/tests/')).toContain('lens-input --list L --context docs/reports/reviews/'); // the per-document form is the default (RR-0374) where lists are asked
     expect(e).not.toContain('plan: --material-from'); // no plan stage
     expect(e).toMatch(/lens-input --context \S+ --material <diff file>/);
   });
@@ -366,9 +367,10 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
       expect(e).toContain('Fresh context every review round');
     }
   });
-  it('security joins when the Files line touches entitlements, auth, stripe or a metered route', () => {
+  it('task-460 (RR-0464): no security lens at output when the Files line touches entitlements, auth, stripe or a metered route; the grounder reads those files for exploit paths', () => {
     for (const files of ['src/lib/entitlements.ts', 'src/app/api/auth/x.ts', 'src/lib/stripe/webhook.ts', 'src/app/api/parcels/lookup/route.ts (metered route)']) {
-      expect(lensBrief('build', files), files).toContain('lens-security.md');
+      expect(lensBrief('build', files), files).not.toContain('lens-security.md');
+      expect(lensBrief('build', files), files).toContain('exploit paths');
     }
   });
   it('a build that is not on a surface has no ux lens', () => {
@@ -382,8 +384,8 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
     for (const l of ['lens-code-review.md', 'lens-ux.md', 'lens-error-paths.md', 'lens-security.md']) expect(e).not.toContain(l);
   });
   // task-445 (FINAL.8, RR-0391): the launch brief names the security lens for an API route or library path
-  it('B1: a build on an API route or a src/lib path names lens-security.md; control (survive-the-fix): a front-end component does not', () => {
-    for (const files of ['src/app/api/parcels/search/route.ts', 'src/lib/massing/geometry.ts']) expect(lensBrief('build', files), files).toContain('lens-security.md');
+  it('B1: a build on an API route or a src/lib path names no lens-security.md at output (task-460, RR-0464); control: a front-end component does not either', () => {
+    for (const files of ['src/app/api/parcels/search/route.ts', 'src/lib/massing/geometry.ts']) expect(lensBrief('build', files), files).not.toContain('lens-security.md');
     expect(lensBrief('build', 'src/components/x.tsx')).not.toContain('lens-security.md');
   });
 });
@@ -410,7 +412,8 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
     expect(inputs).toContain('backlog/docs/increments/doc-1 - Increment-F-requirements.md');
   });
   it('task-423 (d), RR-0374: the lens line orders the per-document compliance review at the output stage only (one run per resolved list), names the joined command in one clause as an accepted form that is not the default, and no longer says to copy plan-*.txt', () => {
-    const { extra } = dry({ files: 'mobile/src/app/x.tsx, src/app/api/parcels/search/route.ts', type: 'build' });
+    // task-460: the list text is pinned on a check brief (a build or fix brief asks no list at output, asserted at the end of this case)
+    const { extra } = dry({ files: 'mobile/src/app/x.tsx, src/app/api/parcels/search/route.ts', type: 'check' });
     expect(extra).not.toContain('out-compliance-storage-doc16'); // task-448 (RR-0421 item 3 a)
     for (const l of ['mobile-98', 'inc-F']) {
       expect(extra).toContain('out-compliance-' + l);
@@ -445,10 +448,14 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
     expect(extra).not.toContain('plan: --material-from');
     expect(extra).not.toMatch(/Plan review lenses/);
     expect(extra).toContain('scripts/analysis/rule-lists.mjs lens-input');
-    expect(extra).toContain('lens-code-review.md');
-    expect(extra).toContain('lens-error-paths.md');
     expect(extra).toMatch(/a separate grounder rules on every finding/);
     expect(extra).toContain('GROUNDER.md');
+    const b = dry({ files: 'mobile/src/app/x.tsx, src/app/api/parcels/search/route.ts', type: 'build' }).extra;
+    expect(b).toContain('lens-code-review.md');
+    expect(b).not.toContain('lens-error-paths.md');
+    expect(b).not.toContain('out-compliance-');
+    expect(b).not.toContain('out-engineering-');
+    expect(b).toContain('ONCE PER RULE LIST');
   });
   it('A3/D2: the extra block carries no plan review line (the plan is reviewed before launch, RR-0374)', () => {
     const { extra } = dry({ files: 'scripts/analysis/x.mjs, src/tests/', type: 'build' });
@@ -586,7 +593,8 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
     expect(brief).toContain('Rule lists that govern this task');
     expect(brief).toContain('mobile-98: docs/specs/03-mobile/98_mobile_testing_protocol.md');
     expect(brief).not.toContain('storage-doc16');
-    expect(brief).toContain('out-compliance-mobile-98');
+    expect(brief).not.toContain('out-compliance-mobile-98'); // task-460: no list at the output of a build
+    expect(brief).toContain('Compliance lens, ONCE PER RULE LIST'); // the marker the --spec merge reads
     expect(brief).toContain('own input');
     expect(brief).toContain('own extra');
     expect(fs.readFileSync(spec, 'utf8')).not.toContain('Rule lists that govern'); // the orchestrator's own file is not rewritten
@@ -984,7 +992,7 @@ describe('task-453: output_off in the brief, and the recovery lines after a fail
     for (const type of ['build', 'fix']) {
       const x = extraOf({ type });
       expect(x, type).not.toContain('out-compliance-plan-protocol');
-      expect(x, type).toContain('plan-protocol is asked at the plan stage only');
+      expect(x, type).toContain('none for this task'); // task-460: every list is off at output
       expect(x, type).not.toContain('out-compliance-five-words');
     }
     expect(extraOf({ type: 'check' })).toContain('out-compliance-plan-protocol');
@@ -999,5 +1007,39 @@ describe('task-453: output_off in the brief, and the recovery lines after a fail
     expect(r.stderr).toContain(`git -C ${f.board} worktree remove ${f.wt}`);
     expect(r.stderr).toContain(`git -C ${f.board} branch -D wf2/t1`);
     expect(statusOf(f)).toBe('RUNNING');
+  });
+});
+
+// task-460 (PROC.OUTSHAPE; RR-0457 MORNING-DECISIONS.md:2367, RR-0458 :2372, RR-0459 :2377): the launch brief of a build or fix task names the code review and the grounder's validation duties, and no compliance run at output (AC #5)
+describe('task-460: the brief names the code review and the validating grounder', () => {
+  const extraOf = (o: Parameters<typeof fixture>[0]) => {
+    const f = fixture(o);
+    const r = lane(f, ['--dry-run']);
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    return ((JSON.parse(/^TASK-JSON .*?: (\{.*\})$/m.exec(r.stdout)?.[1] ?? 'null') as { extra?: string[] } | null)?.extra ?? []).join('\n');
+  };
+  it('T10: a build and a fix brief name lens-code-review.md, "none for this task" and the descriptor and milestone duties; no list lens, ux or error-paths template, no out-compliance or out-engineering file', () => {
+    for (const type of ['build', 'fix']) {
+      const x = extraOf({ type, files: 'mobile/src/app/x.tsx, scripts/analysis/x.mjs' });
+      expect(x, type).toContain('lens-code-review.md');
+      expect(x, type).toContain('none for this task');
+      for (const t of ['lens-compliance.md', 'lens-engineering.md', 'lens-ux.md', 'lens-error-paths.md', 'out-compliance-', 'out-engineering-']) expect(x, `${type} ${t}`).not.toContain(t);
+      for (const t of ['each changed descriptor', 'TRUE or FALSE with a file:line quote', 'milestone objectives', 'Validation section', 'exploit paths']) expect(x, `${type} ${t}`).toContain(t);
+      expect(x, type).toContain('Compliance lens, ONCE PER RULE LIST');
+    }
+  });
+  it('T10 control: a check brief keeps the list text and carries no validation duty sentence', () => {
+    const x = extraOf({ type: 'check', files: 'mobile/src/app/x.tsx, scripts/analysis/x.mjs' });
+    expect(x).toContain('out-compliance-');
+    expect(x).toContain('lens-compliance.md');
+    expect(x).not.toContain('each changed descriptor');
+    expect(x).not.toContain('exploit paths');
+  });
+  it('T11 (round 1 grounder, out-compliance-agents-s7-s11-p1#1): the layout sentence names the output lenses above, not error-paths, ux and security', () => {
+    for (const type of ['build', 'fix']) {
+      const x = extraOf({ type, files: 'mobile/src/app/x.tsx, scripts/analysis/x.mjs' });
+      expect(x, type).not.toContain('error-paths, ux and security lenses');
+      expect(x, type).toContain('the output lenses named above (the code review for a build or fix task)');
+    }
   });
 });

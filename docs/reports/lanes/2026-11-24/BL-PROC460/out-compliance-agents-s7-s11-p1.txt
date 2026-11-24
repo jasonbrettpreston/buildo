@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:47:35.538Z file_sha256=71fbcec7a0d03570e91d3e634d774b87ce52e0533d161ddee0b638ad4f055384 prompt_sha256=4403ce376d9192c6324c06d96f99b6266a41f6881c166e9d0357c3ca3837f426
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC460/in-out-compliance-agents-s7-s11-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-460 AC #2 "The output lens set of a build or fix task is the code review alone for every Files line" — .claude/review-templates/README.md:99 "| `plan-review-deepseek.md` | Failure modes and rollback, data reality, sibling bugs | A2 DeepSeek (adversarial) | every task | plan, and output on money or pipeline work |" — the lens table still sends the failure-modes lens to the output of a money or pipeline task, which AC #2 and the new Spec 08 note ("the output review of a build or fix task is the code-review lens on the diff, the commit hook's checks and one separate read-only grounder") leave no room for — set that altitude cell to "plan (task-460: not at output)" like the ux, error-paths and security rows, or name the ruling that keeps the lens at output
+
+DEFER severity=MED — 08_agents.md §7 rule 6 dated note 2026-11-20 "the lane close now refuses unless every CONFIRMED or CONFLICT finding of the lane's GROUNDER.md ... has one outcome line in the lane's TRIAGE.md" — .claude/review-templates/README.md "each prose field TRUE or FALSE with a file:line quote ... A finding raised there is fixed in the lane's own round or reported, never filed as a seat report" and scripts/analysis/backlog-lane.mjs "It ends GROUNDER.md with a Validation section, one line per duty above, each naming what it read (file:line) or none" — a FALSE descriptor field or an exploit-path hit recorded only in the new Validation section is a duty line, not a `<finding id> CONFIRMED|REJECTED|CONFLICT` line, so the --outcomes guard reads nothing and a build or fix lane can close with a confirmed defect and no TRIAGE outcome line — state that such a result is also written as a normal CONFIRMED finding line with its id, so the existing outcome check covers it
+
+MET — AC #5 "names no compliance run at output" — scripts/analysis/backlog-lane.mjs "Compliance lens, ONCE PER RULE LIST, at the output stage only: none for this task (every list it resolves is off: output_off in scripts/analysis/rule-lists.json); make no out-compliance or out-engineering file." — the brief names the code review and no compliance or engineering run at output
+
+MET — RR-0464 "C: grounder reads instead" — scripts/analysis/backlog-lane.mjs "Each changed file on an API route, library, money, sign-in, personal-data or admin path (the paths that fire the security lens at the plan stage) read for exploit paths (RR-0464)" — the grounder duty carries the exploit-path read that replaces the security lens at output
+
+MET — RR-0459 "no error-paths review at the output stage" — .claude/review-templates/README.md "plan (task-460: not at output, RR-0459)" — the error-paths row no longer fires at output
+
+MET — AC #3 "no compliance, engineering, ux or error-paths output files" — .claude/review-templates/README.md "one per attached list that output_off leaves on (none today: task-460)" and "`out-code-review.txt` (task-460: no error-paths, ux or security output)" — the close requirement is stated as the code review plus plan evidence only
+
+MET — Spec 08 dated note 2026-11-24 (task-460 PROC.OUTSHAPE) "every rule list is off at output (rule-lists.json output_off)" — scripts/analysis/rule-lists.json "output_off": ["five-words", "plan-protocol", "step-132", ..., "ms-AL", "policy-124-s2-s5"] — every defined list id is named, so a build or fix task receives no list at output
+
+MET — RR-0458 "the output approach can stay for all front-end back end etc." — docs/specs/00-architecture/08_agents.md "the output review of a build or fix task is the code-review lens on the diff, the commit hook's checks and one separate read-only grounder" — the shape is written for every build or fix task, front end and back end
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 2
+Rules met: none
+
+---
+⏱  165378ms (165.4s)
+📊 Tokens — total: 64899, input: 32081, output: 32818, reasoning: 31823

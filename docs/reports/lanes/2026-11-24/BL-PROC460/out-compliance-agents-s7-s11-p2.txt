@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T19:47:35.548Z file_sha256=2e07e780f095a636c934fd8f0b8b6e113e528ada97a1a304767d5033c431acc9 prompt_sha256=cf27c574fdf9b0b91baef359a3984e9945bccb6ceaebbe666f86141f7bfe5136
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-PROC460/in-out-compliance-agents-s7-s11-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — AC #3 "no compliance, engineering, ux or error-paths output files" — src/tests/backlog/check-lane-close.logic.test.ts:1345 "const dropLists = (l: Lane): Lane => Object.fromEntries(Object.entries(l).map(([n, t]) => [n, /^(in-)?out-compliance-/.test(n) ? null : t]));" — the T6 close at :1346 proves the compliance-name half only; no out-engineering- file is dropped, so the engineering half of the clause has no lock (the fixture's eng outputs, if any, stay and are tolerated as extras) — add an out-engineering-<id> removal to dropLists or a separate T6 case.
+DEFER severity=LOW — AC #4 "A check or doc task still gets every list at either stage" — src/tests/backlog/check-lane-close.logic.test.ts:1356 "it('T9 (AC #4 lock): a check task with output_off naming every list is still asked every list', () => {" — the clause names two task types and only 'check' is exercised, 'doc' is unpinned — add a 'doc' scenario to T9.
+DEFER severity=NIT — Spec 08 s11.3 "Every lock is proven in BOTH directions (fails on the old shape, passes on the new) before red is claimed" — src/tests/backlog/backlog-lane.logic.test.ts:388 "expect(lensBrief('build', 'src/components/x.tsx')).not.toContain('lens-security.md');" — the surviving "control" in B1 is the identical negative assertion as the body, so it separates a front-end path from an API/lib path no longer and cannot show the lock is not over-broad — state the case as green-both or keep one positive assertion (the plan stage still names the lens).
+MET — AC #1 "an unknown id is still refused" — scripts/analysis/rule-lists.mjs:162 "if (!Object.hasOwn(table.lists ?? {}, id)) bad.push(`output_off: list ${id} is not defined`);" — output_off may name any defined list, and a typo or an inherited key still fails closed.
+MET — AC #2 "The output lens set of a build or fix task is the code review alone for every Files line" — scripts/analysis/rule-lists.mjs:196 "out: [...(code ? ['code-review'] : [])]," — ux, error-paths and security leave the output set, the plan line at :195 is untouched.
+MET — RR-0464 "no separate security review at output; the validating grounder reads the sensitive files" — src/tests/backlog/rule-lists.logic.test.ts:733 "expect(r.out, `${type} ${f}`).toEqual(['code-review']);" — pinned for build and fix on lib, API and admin files with the plan set still holding security.
+MET — AC #3 "A build or fix lane closes with the code review output ... and no compliance ... output files" — src/tests/backlog/check-lane-close.logic.test.ts:1346 "it('T6: output_off naming every list, no out-compliance file and no out-error-paths: a build and a fix task close'" — a build and a fix close with the list outputs and out-error-paths removed.
+MET — AC #4 "A check or doc task still gets every list at either stage" — src/tests/backlog/check-lane-close.logic.test.ts:1357 "refused(scenario({ type: 'check', tableEdit: ALL_OFF, mutate: ..." — a check task under output_off that names every list is still refused when out-compliance-first is missing.
+MET — Spec 08 s7 rule 4 note 2026-11-24 "the output review of a build or fix task is the code-review lens on the diff ... every rule list is off at output (rule-lists.json output_off)" — src/tests/backlog/rule-lists.logic.test.ts:1117 "expect(t.output_off).toEqual(Object.keys(t.lists));" — the note is present in section 7 before rule 5 and the table switch is pinned whole.
+MET — Spec 08 s11.3 "Survive-the-fix locks (green-both) are stated as such per case" — src/tests/backlog/check-lane-close.logic.test.ts:231 "C1(c) control (survive-the-fix, green both ways): the src/lib scenario with out-security.txt passes" — the fence stays green both ways after security leaves the required set.
+MET — Spec 08 note 2026-11-21 "a list is never trimmed in either form" — scripts/analysis/rule-lists.mjs:162 — the diff only widens the output_off id set and touches no split or trim path.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+Rules met: agents-s7-s11.4, agents-s7-s11.7, agents-s7-s11.11.3
+
+---
+⏱  96245ms (96.2s)
+📊 Tokens — total: 47812, input: 27978, output: 19834, reasoning: 18696
