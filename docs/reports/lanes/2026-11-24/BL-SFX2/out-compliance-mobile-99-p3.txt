@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:01:58.296Z file_sha256=b855a3988f1296512ae1a762d1ad7eaffd8029c9d43844f45ca2beec81ca514b prompt_sha256=c1f7f4711342cda2ec90764b17664e46940fdff2c57ce802678ca741ee5423c7
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-mobile-99-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC#2 "A settled miss fetched again keeps the no-match line" — mobile/src/lib/parcelSearchMatch.ts "showMiss: outcome === 'no_match' && error == null," — risk: on a fresh query the hook passes data undefined with isFetching true, deriveMatchType falls to no_match, so the miss line renders before any result; the dropped `!isFetching` was replaced by no `data` guard, and every AC#2 assertion supplies data so this case is untested — add a `data != null` guard so only a settled result shows the miss line.
+DEFER severity=LOW — AC#1 "A query with no house number shows the refine line" — mobile/src/lib/parcelSearchMatch.ts "return /\d/.test(query.split(',')[0] ?? '');" — risk: "Highway 27" and "King St W Apt 4" hold a digit but no house number, so the refine line is suppressed for them (documented fail-open), which AC#1 does not name — use the server's first-word digit test (src/lib/admin/parcel-lookup.ts) so highway/unit-only inputs are not treated as numbered.
+DEFER severity=LOW — AC#4 "The minimum-length copy is filled from the setting, not a typed 3" — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "const { SEARCH_MIN_QUERY_LEN } = require('@/components/surfaces/SearchBinding')" — risk: the AC4 test reads the very exported constant used to render, so it stays green whether the copy is filled from config or a typed 3 of equal value, and it cannot be red-first — assert the literal config value or override SEARCH_SLICE.config in the test.
+MET — AC#3 — mobile/src/lib/schemas.ts "export const ParcelLotFormSchema = z.object({" — .strict() removed so one extra field parses while the z.enum lists still close.
+MET — AC#5 — mobile/src/lib/semiQuestion.ts "if (parcelId) state = 'loading';" — no data with a parcel id is loading, only an empty id redirects to Lookup.
+MET — AC#6 — mobile/src/components/surfaces/SearchBinding.tsx "onPress: { action: 'open_help', topic: 'wrong-lot', q: derived('input') }" — the phone search link points to the wrong-lot topic.
+MET — L3 (MF35-DF1 closed) — mobile/src/lib/parcelSearchMatch.ts "const unexpected = error != null && retryAfterSeconds == null && !entitlement;" — a retry-after of 0 is no longer unexpected, one message.
+MET — Q19 — mobile/src/lib/parcelSearchMatch.ts "return isIntersectionQuery(trimmed) ? 'intersection' : 'no_match';" — the client derivation is deleted, a payload without resolution reads as no_match or an intersection.
+MET — AC#1 — mobile/src/lib/parcelSearchMatch.ts "overCap: noNumber || isOverCandidateCap(candidates, args.cap)," — a no-house-number candidate list shows the refine line and keeps the rows.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+Rules met: none
+
+---
+⏱  181291ms (181.3s)
+📊 Tokens — total: 69844, input: 33918, output: 35926, reasoning: 35201

@@ -226,12 +226,13 @@ describe('T7 the support inbox read (MF-46 follow-up, dated 2026-11-12)', () => 
 
 describe('T8 the app link to Help & Support (MF-46 follow-up, P35-D18 a; dated 2026-11-12)', () => {
   const urlOf = (src: string): string | undefined => /export const MAXBLD_HELP_URL = '([^']+)';/.exec(src)?.[1];
-  it('MAXBLD_HELP_URL is MAXBLD_ORIGIN + /help, a public row; the ambiguous golden opens it with topic address_match and the query', () => {
+  // Dated 2026-11-24 (task-450 AC6, B.7 doc-2:49; prior title kept: "...opens it with topic address_match and the query"): the topic is wrong-lot.
+  it('MAXBLD_HELP_URL is MAXBLD_ORIGIN + /help, a public row; the ambiguous golden opens it with topic wrong-lot and the query', () => {
     expect(urlOf(fs.readFileSync(path.join(ROOT, 'mobile/src/lib/maxbldHelp.ts'), 'utf8'))).toBe(`${MAXBLD_ORIGIN}/help`);
     expect(matchMaxbldRoute('/help')?.routeClass).toBe('public');
     const find = (n: Json): Json | undefined => (n?.props?.testID === 'parcel-search-report' ? n : (n?.children ?? []).map(find).find(Boolean));
     const report = find(rj('src/tests/fixtures/surfaces/mobile_parcel_search/ambiguous.mobile.json').props);
-    expect([report?.props.onPress, report?.children[0].children]).toEqual([{ action: 'open_help', topic: 'address_match', q: { derived: 'input' } }, [{ content: 'list.report' }]]);
+    expect([report?.props.onPress, report?.children[0].children]).toEqual([{ action: 'open_help', topic: 'wrong-lot', q: { derived: 'input' } }, [{ content: 'list.report' }]]);
     expect(SEARCH['list.report']).toBe('Report incorrect address match');
   });
   it('RED: a second typed host is caught', () => {

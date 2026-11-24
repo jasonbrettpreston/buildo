@@ -368,7 +368,8 @@ export const ParcelCandidateSchema = z.object({
 
 // MF-53 (Spec 100 §3.2 dated note 2026-11-11): the outcome name and the map block. Both OPTIONAL, and the map objects are plain (not
 // .strict()), so a payload from an older server still parses and a server-added field never raises ParcelLookupSchemaError on an installed
-// build (PLAN panel regression LOW-9). The client derivation in parcelSearchMatch.ts runs only when `resolution` is absent.
+// build (PLAN panel regression LOW-9). The client derivation in parcelSearchMatch.ts runs only when `resolution` is absent. Dated 2026-11-24
+// (task-450 SEARCHFIX.2, Q19; prior text kept): that derivation is deleted; a payload without `resolution` reads as the server's no_match.
 const LatLngSchema = z.object({ lat: z.number(), lng: z.number() });
 const RingSchema = z.array(z.tuple([z.number(), z.number()]));
 export const LotOutlineSchema = z.union([
@@ -419,13 +420,13 @@ export const ReportPageViewSchema = z.object({
 
 // SEMI-B (Spec 78 O-4 + the doubt rule; operator "semi all y" / "semi ask a", 2026-11-13): mirrors src/app/api/parcels/lookup/types.ts
 // ConsumerLotFormSchema. Optional and nullable: an older server omits it and the app then never asks.
-export const ParcelLotFormSchema = z
-  .object({
-    detected: z.enum(['semi_half', 'detached']),
-    basis: z.enum(['o4_two_parcel_abut', 'doubt_multi_parcel_abut', 'o4_not_met']),
-    unsure: z.boolean(),
-  })
-  .strict();
+// Dated 2026-11-24 (task-450 SEARCHFIX.2, L1; GROUNDER-B D1; prior text kept: the object ended in .strict()): plain, the MF-53 form above, so a
+// server-added field never raises ParcelLookupSchemaError on an installed build. The closed enum lists stay.
+export const ParcelLotFormSchema = z.object({
+  detected: z.enum(['semi_half', 'detached']),
+  basis: z.enum(['o4_two_parcel_abut', 'doubt_multi_parcel_abut', 'o4_not_met']),
+  unsure: z.boolean(),
+});
 export type ParcelLotForm = z.infer<typeof ParcelLotFormSchema>;
 
 export const ConsumerParcelLookupResultSchema = z.object({

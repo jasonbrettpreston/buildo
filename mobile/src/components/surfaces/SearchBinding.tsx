@@ -44,7 +44,7 @@ export type PropsNode = { component: string; props: Record<string, unknown>; chi
 export type Child = PropsNode | Ref | Template;
 
 /** P35-D14 a: the closed list of derived names (patterns), declared in the descriptor's deviation entry. */
-export const DERIVED_NAMES = [/^input$/, /^candidate_count$/, /^recent\.(0|[1-9][0-9]*)$/, /^label\.(0|[1-9][0-9]*)$/, /^segments\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.text$/];
+export const DERIVED_NAMES = [/^input$/, /^min_query_len$/, /^candidate_count$/, /^recent\.(0|[1-9][0-9]*)$/, /^label\.(0|[1-9][0-9]*)$/, /^segments\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.text$/];
 
 /** SRCH.DAYLIGHT (task-322): the prop colours are the report's Daylight hexes (reportPage.ts REPORT_HEX, twins of the report-* keys of mobile/tailwind.config.js); the dark PARCEL_SEARCH_HEX stays for the Account screen and the shelf. */
 const H = { primary: R.amber, onPrimary: R.ink, check: R.ink, textMuted: R.muted, placeholder: R.muted } as const;
@@ -81,7 +81,7 @@ const pill = (s: SearchSituation): PropsNode =>
       autoCorrect: false,
       returnKeyType: 'search',
       accessibilityLabel: content('search.input.label'),
-      accessibilityHint: content('search.input.hint'),
+      accessibilityHint: { text: content('search.input.hint'), vars: { min: derived('min_query_len') } }, // task-450 L5: the setting fills {min}
     }),
     ...(s.isFetching
       ? [node('ActivityIndicator', { key: 'spinner', testID: 'parcel-search-spinner', size: 'small', color: H.primary, accessibilityLabel: content('search.searching') })]
@@ -199,13 +199,14 @@ const addressList = (s: SearchSituation): PropsNode[] => {
       node('Icon', { key: 'select-icon', icon: 'ArrowRight', size: I.button, color: H.onPrimary }),
     ]),
     // MF-46 follow-up (P35-D18 a, dated 2026-11-12): "Report incorrect address match" opens Help & Support with the topic and the query.
+    // Dated 2026-11-24 (task-450 AC6, B.7 doc-2:49; prior topic address_match): the topic is wrong-lot ("Wrong address or lot").
     node('Button', {
       key: 'report',
       testID: 'parcel-search-report',
       variant: 'link',
       className: L.report,
       accessibilityRole: 'link',
-      onPress: { action: 'open_help', topic: 'address_match', q: derived('input') },
+      onPress: { action: 'open_help', topic: 'wrong-lot', q: derived('input') },
     }, [node('Text', { key: 'report-text', className: L.reportText }, [content('list.report')])]),
   ];
 };
@@ -218,7 +219,7 @@ const tail = (s: SearchSituation): PropsNode[] => [
       node('Text', { key: 'miss-text', testID: 'parcel-search-empty', className: L.missText }, [content('search.miss')]),
     ])]
     : []),
-  ...(s.showPrompt ? [node('Text', { key: 'prompt', testID: 'parcel-search-prompt', className: L.prompt }, [content('search.prompt')])] : []),
+  ...(s.showPrompt ? [node('Text', { key: 'prompt', testID: 'parcel-search-prompt', className: L.prompt }, [{ text: content('search.prompt'), vars: { min: derived('min_query_len') } }])] : []),
 ];
 
 /** The props tree of one render. Block order is the legacy one (must-survive row 17). A navigable outcome adds `navigate` (the effect pushes it). */
@@ -253,6 +254,7 @@ export function searchData(s: SearchSituation): BindingData {
     },
     derived: {
       input: s.input,
+      min_query_len: SEARCH_MIN_QUERY_LEN, // task-450 L5: the setting (config.min_query_len through sliceNumber), never a typed 3
       candidate_count: s.candidates.length,
       recent: s.recent,
       label: s.candidates.map((c) => c.address || c.parcelId),

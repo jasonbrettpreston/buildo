@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T15:59:13.334Z file_sha256=4a44894dd7b46c0188210a10dda5fc82f75ad7b5c70340c48ac436678f84e4a0 prompt_sha256=c7424786b99bc5f22d48c93590f5e2a7de7c19181110b63d34f2dc184bae2c86
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-code-review-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — src/components/surfaces/web/SearchBinding.tsx:32 "const SEARCH_MIN_QUERY_LEN = sliceNumber(searchSlice, 'min_query_len');" — the number shown in the prompt and the input hint is read from the generated slice at module load, while whether the prompt shows at all is decided elsewhere (s.showPrompt from the situation's minQueryLen); two code paths now own one number and can disagree, and if sliceNumber can return undefined the copy renders "undefined" (cannot see its signature, grounder to check). — carry minQueryLen on WebSituation and fill {min} from it so the copy and the gate read one value.
+
+DEFER severity=LOW — mobile/src/lib/parcelSearchMatch.ts:356 "overCap: noNumber || isOverCandidateCap(candidates, args.cap)," — the field is now true for a list under the cap, so every consumer reads a name that says the opposite of its value (web tail: "...(s.overCap ? [node('Text', { key: 'refine', testID: 'parcel-search-refine'..."), and only the new doc comment stops a misread. — rename the field to showRefine in SearchSituation and both bindings.
+
+DEFER severity=LOW — mobile/src/lib/parcelSearchMatch.ts:197 (removed) "-  if (isParcelMatchType(declared)) return declared;" — this was the only use in the diff, so isParcelMatchType may now be an unused import or an unused export (cannot see the rest of the file or parcelSearchCore). — confirm the symbol still has a caller, or delete the import/export in the same change.
+
+DEFER severity=NIT — scripts/surfaces/_schema/static-page.schema.json:184 "wrong-lot", — the new enum value is hyphenated while its peers in the same closed list are snake_case ("address_match", "lot_match") and its own content key is underscore (web_help.content.json "help.mailto.wrong_lot"). — use wrong_lot in the enum, the help link topic and the tests, or state why the URL form wins.
+
+DEFER severity=NIT — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json:4 "answer.yes": "Yes, it’s one half of a semi" — the curly apostrophe is introduced while the next line still has a straight one ("answer.no": "No, it's detached"), so one screen shows two apostrophe styles. — fix both strings in this change (the search content already uses curly: "search.error": "Couldn’t reach the lot service...").
+
+DEFER severity=NIT — mobile/src/lib/semiQuestion.ts:61 "/** Kept in the type so callers do not change; not read since task-450 V5 (Spec 99 §6.5: isFetching is not a render gate). */" — an args field that is never read is dead input: a caller can still pass isFetching and believe it changes the state. — drop it from the args type and update the call site, or mark it as ignored in the signature.
+
+REJECT — mobile/src/lib/parcelSearchMatch.ts:300 "const unexpected = error != null && retryAfterSeconds == null && !entitlement;" — the loose "== null" on a number|null looks like a sloppy comparison. — it is the fix: "== null" matches only null and undefined, so RateLimitError(0) no longer classifies as unexpected while rateLimited stays true.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none blocking; the deferred items above (single owner for the min-length number, the overCap name, the possibly orphaned isParcelMatchType) are the ones to close before merge.
+
+---
+⏱  110284ms (110.3s)
+📊 Tokens — total: 53373, input: 30373, output: 23000, reasoning: 22169

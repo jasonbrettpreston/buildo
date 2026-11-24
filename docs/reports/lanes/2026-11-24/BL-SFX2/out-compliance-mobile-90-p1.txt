@@ -1,0 +1,41 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T15:59:13.333Z file_sha256=ca345a333caba6a0860e4be1855ec10d14e57a32f46eea2a88d20d6d2f57f12b prompt_sha256=20c367ce1228879dedd5993cde655c06af451d021eb6358f3b61e4a334ab0f51
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-mobile-90-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — RR-0392 "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)." — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "expect(screen.getByText('Yes, it’s one half of a semi')).toBeTruthy(); // task-450 Q8: the curly apostrophe" — no pasted ruling names a semi-answer apostrophe change; the pasted Q8.1 B and Q8.2 readings are the refine line, so this copy edit is unnamed — drop it or cite the ruling that names the apostrophe.
+
+DEFER severity=LOW — Spec 90 §10 "Maestro flows MUST include a step that executes `toggleAirplaneMode` to verify the MMKV offline cache and empty states render without crashing." — NONE, the card's Files line names no Maestro YAML — the new cold-offline surface path (AC #5) is proven only by a Jest render test, so the mandated airplane-mode verification does not reach the behaviour this task adds — add the semi page cold open under toggleAirplaneMode to the flow.
+
+DEFER severity=LOW — card "The plan's section 2 lines are this card's acceptance tests, each red first." — "The mobile jest tests are not reached by the hook's related run (src/ and scripts/ only), so their red is not proven by the hook (UNVERIFIED until the push station)" — the mobile acceptance tests behind AC #1, #2, #3, #4, #5 have no shown red, so "each red first" is unproven for them — run jest on the four mobile test files against the pre-change src and record red.out.
+
+DEFER severity=LOW — AC #4 "The minimum-length copy is filled from the setting, not a typed 3" — mobile/__tests__/parcelScreens.golden.test.ts "expect(SEARCH_SLICE.content['search.input.hint']).toContain('at least {min} characters');" — the accessibility hint is asserted only as an unfilled template, so a hint rendering a literal {min} would still pass; only the prompt has a filled-text assertion — add the rendered hint assertion next to the prompt one.
+
+DEFER severity=LOW — AC #6 "The help page has the topic wrong-lot and both search links go to it" and the R2 registry update — docs/reports/generated/127-surface-registry.md "the 'Report incorrect address match' link waits for MF-46, P35-D18 a" — the same entry now ships that link live at topic wrong-lot (parcel-search-report, topic "wrong-lot"), so the MF-35 sentence contradicts the shipped page — correct the MF-35 sentence in the same registry edit.
+
+MET — AC #1 — mobile/__tests__/parcelSearchMatch.test.ts "'%s: the refine line shows and the rows are kept (ruled B)'" — no-house-number queries set overCap true with candidates kept and route null, matching the ruled B.
+
+MET — AC #2 — mobile/__tests__/parcelSearchMatch.test.ts "it('task-450 AC2 (V4): a settled miss fetched again keeps the no-match line (no flicker)')" — settled and refetching both assert showMiss true.
+
+MET — AC #3 — mobile/__tests__/schemas.test.ts "expect(() => ParcelLotFormSchema.parse({ ...lotForm, detected: 'triplex' })).toThrow(ZodError)" — the extra field parses and the closed enum still throws.
+
+MET — AC #5 — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "expect(mockReplace).not.toHaveBeenCalled(); expect(screen.getByText('Searching')).toBeTruthy();" — cold-offline no-data is loading, never a redirect.
+
+MET — AC #6 (phone side) — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "expect(mockOpenBrowser).toHaveBeenCalledWith('https://maxbld.ca/help#topic=wrong-lot&q=Bathurst%20St');" — the phone search link points at wrong-lot.
+
+MET — card "a retry-after of zero shows one message" — mobile/__tests__/fixtures/parcelSearch.situations.json "\"unexpected\": false" with mobile/__tests__/parcelScreens.golden.test.ts "expect(order).toEqual(['parcel-search-ratelimit']);" — one message, no error block, no Retry.
+
+MET — card "Dated notes owed: Spec 99 (the redirect-once pattern)" — docs/specs/03-mobile/99_mobile_state_architecture.md "**Dated note 2026-11-24 ... the redirect-once pattern of the MaxBLD parcel-tool pages.**" with "No carve-out is added to the enumeration above." — the owed note lands and asserts no new carve-out.
+
+REJECT — Spec 90 §7 "Zod schemas are shared via a `packages/shared-types` monorepo workspace" — editing the mobile schema tree outside a shared workspace — the §4 amendment 2026-09-15 records "There is no monorepo and no `packages/shared-types`"; the drift predates this change and per-tree transcription is the current measured state.
+
+REJECT — Spec 90 §13 "Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema before hitting the UI" — AC #3 accused of loosening the Zod boundary with an additive lot form — the payload is still parsed and unknown enum values still throw per the third case, so nothing bypasses the boundary.
+
+REJECT — Spec 90 §4 "Auth: Firebase Auth via `@react-native-firebase/auth`" — change accused of ignoring the auth clause — the same 2026-09-15 amendment records Supabase as the measured provider and this change touches no auth path.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 0
+Rules met: none
+
+---
+⏱  121335ms (121.3s)
+📊 Tokens — total: 58725, input: 33195, output: 25530, reasoning: 24186

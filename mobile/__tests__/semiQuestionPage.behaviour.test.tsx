@@ -66,7 +66,7 @@ describe('the question page (semi-question.tsx)', () => {
     render(<Question />);
     expect(mockCalls.at(-1)).toBe('PCL-S1');
     expect(screen.getByText('Is this house one half of a semi-detached pair?')).toBeTruthy();
-    expect(screen.getByText("Yes, it's one half of a semi")).toBeTruthy();
+    expect(screen.getByText('Yes, it’s one half of a semi')).toBeTruthy(); // task-450 Q8: the curly apostrophe
     expect(screen.getByText("No, it's detached")).toBeTruthy();
     expect(screen.getByText('Not sure')).toBeTruthy();
     expect(screen.getAllByRole('radio')).toHaveLength(3);
@@ -218,6 +218,25 @@ describe('the question page (semi-question.tsx)', () => {
     mockCanGoBack = false;
     view.rerender(<Question />);
     fireEvent.press(screen.getByTestId('parcel-semi-back'));
+    expect(mockReplace.mock.calls).toEqual([['/(app)/parcel-tool']]);
+  });
+  it('task-450 AC5 (V5): opened cold and offline (no data, not fetching, no error) the page shows loading and does not redirect', () => {
+    mockHook = { ...mockHook, data: undefined, isFetching: false, error: null };
+    const view = render(<Question />);
+    expect(mockReplace).not.toHaveBeenCalled();
+    expect(screen.getByText('Searching')).toBeTruthy();
+    mockHook = { ...mockHook, isFetching: true };
+    view.rerender(<Question />);
+    expect(mockReplace).not.toHaveBeenCalled();
+    expect(screen.getByText('Searching')).toBeTruthy();
+    mockHook = { ...mockHook, isFetching: false };
+    view.rerender(<Question />);
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+  it('task-450 AC5 (V5): an empty parcel id with no data still goes to the Lookup route', () => {
+    mockParams = {};
+    mockHook = { ...mockHook, data: undefined, isFetching: false, error: null };
+    render(<Question />);
     expect(mockReplace.mock.calls).toEqual([['/(app)/parcel-tool']]);
   });
   it('an error shows its notice and Retry refetches', () => {

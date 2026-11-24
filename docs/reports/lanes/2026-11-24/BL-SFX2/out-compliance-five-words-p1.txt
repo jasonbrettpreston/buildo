@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T15:59:13.333Z file_sha256=366b59d560fa42f50dedfc7355a515a4502efed682374eb5a6853e4bba956a9d prompt_sha256=56a00d24800a953bdce91510453b0346091d067c12d3e1a444b138050fc86589
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-five-words-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #1 "A query with no house number shows the refine line (worded true at any row count) and keeps the candidate list" — mobile/__tests__/parcelSearchMatch.test.ts:450-451 "it('known state: \"Highway 27\" holds a digit, so it counts as numbered and shows no refine line (as today)'" and "expect(at('Highway 27', tc(rows(['P1', '1 Highway 27']))).overCap).toBe(false);" — the clause is knowingly unmet for every street whose name carries a number (Highway 27, 16th Ave, 5th Line): no house number is typed, yet no refine line shows, and the lane labels it "as today" with no pasted ruling naming that exception — decide "has a house number" on a leading house-number token (drop a leading unit clause, then require the segment before the first comma to start with a digit) and assert overCap true for 'Highway 27', or obtain an operator ruling for the exception and record it as a deviation
+DEFER severity=LOW — Findings folded "R2" and the pasted note "Dated 2026-11-24 (task-450 SEARCHFIX.2, R2; prior text kept): the two product_questions below are closed: the entitlement product by MF-45 D-4 (a) ... and the two unreachable branches by MF-53" — docs/reports/generated/127-surface-registry.md:759 "**❓ Product question(s) (2).**" — the heading still counts two open product questions one line after both are declared closed, so a reader of S-002 sees two open ❓ while the folded state is closed — drop the count (or mark each ❓ closed) so the heading agrees with the dated notes it now carries
+MET — AC #2 — mobile/__tests__/parcelSearchMatch.test.ts:420-421 — "expect(settled.showMiss).toBe(true);" / "expect(refetching.showMiss).toBe(true);" keeps the no-match line across a re-fetch of a settled miss
+MET — AC #3 — mobile/__tests__/schemas.test.ts:325 — "expect(ParcelLotFormSchema.parse(lotForm)).toMatchObject({ detected: 'semi_half', basis: 'doubt_multi_parcel_abut', unsure: true });" plus the unknown-enum throw over the closed list
+MET — AC #4 — mobile/src/components/surfaces/SearchBinding.tsx:257 — "min_query_len: SEARCH_MIN_QUERY_LEN," fills the {min} template from the setting, and the goldens carry it as "vars": {"min": {"derived": "min_query_len"}}
+MET — AC #6 (mobile half) — mobile/src/components/surfaces/SearchBinding.tsx:210 — "onPress: { action: 'open_help', topic: 'wrong-lot', q: derived('input') }," and the search goldens show "topic": "wrong-lot"
+MET — Dated notes owed: Spec 99 — docs/specs/03-mobile/99_mobile_state_architecture.md:556 — the dated note recording the redirect-once pattern is added in this change
+MET — RR-0446 "leave it as it is" / RR-0442 "if the lot is shared by two parcels - you need to pick one" — mobile/__tests__/parcelSearchMatch.test.ts:104-110 — multi_parcel still routes to "/(app)/parcel-tool/disambiguate?q=1%20Test%20St&kind=multi_parcel", the several-lots map is untouched
+MET — AC #1 (worded true at any row count) — mobile/__tests__/parcelScreens.golden.test.ts:217 — "expect(SEARCH_SLICE.content['list.refine']).toBe('Add a house number to narrow it down.');", the refine copy no longer names a count
+REJECT — AC #6 "both search links go to it" — accused of fixing only the mobile link — src/components/surfaces/web/SearchBinding.tsx and scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json sit outside this chunk (chunk 1 of 2) and are judged in their own run
+REJECT — Spec 99 "reviewers MUST reject any unenumerated carve-out" — accused of adding an unenumerated carve-out — the pasted note ends "No carve-out is added to the enumeration above." and describes state derivation from stable signals, not a new loading gate
+REJECT — AC #2 "A settled miss fetched again keeps the no-match line" — accused of dropping the in-flight guard on showMiss — the flipped assertion mobile/__tests__/parcelSearchMatch.test.ts:412 keeps a payload that is already settled while re-fetching, which is exactly the clause's case
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 1
+Rules met: none
+
+---
+⏱  275312ms (275.3s)
+📊 Tokens — total: 65980, input: 33109, output: 32871, reasoning: 31758

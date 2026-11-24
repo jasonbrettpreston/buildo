@@ -50,7 +50,7 @@ export type SemiQuestionSituation = {
   route: string | null;
   /** Continue's answered lookup is running (SRCH.SEMI-3): true only in the ask state. */
   busy: boolean;
-  /** The redirect state's target (the report; the Lookup route with no data), else null. */
+  /** The redirect state's target (the report; the Lookup route for an empty parcel id), else null. task-450 V5: no data with an id is loading. */
   navigate: string | null;
 };
 
@@ -58,19 +58,22 @@ export function buildSemiQuestionSituation(args: {
   parcelId: string;
   data: ConsumerParcelLookupResult | undefined;
   error: unknown;
+  /** Kept in the type so callers do not change; not read since task-450 V5 (Spec 99 §6.5: isFetching is not a render gate). */
   isFetching: boolean;
   schemaDrift: boolean;
   selected: SemiAnswer | null;
   /** Continue's answered lookup is running; optional, false when omitted. */
   submitting?: boolean;
 }): SemiQuestionSituation {
-  const { parcelId, data, error, isFetching } = args;
+  const { parcelId, data, error } = args;
   const errors = classifyParcelSearchError(error, args.schemaDrift);
   let state: SemiQuestionState;
   let navigate: string | null = null;
   if (error != null) state = 'error';
   else if (!data) {
-    if (isFetching) state = 'loading';
+    // task-450 V5 (Spec 99 §6.5 :527-530; QUESTIONS-RULED.md Q8.4 a): a paused offline first fetch reports isFetching false with no data, so no data
+    // with a parcel id is loading until the lookup settles; only an empty parcel id has nothing to wait for and goes to Lookup.
+    if (parcelId) state = 'loading';
     else { state = 'redirect'; navigate = PARCEL_TAB_ROUTE.lookup; }
   } else if (data.lotForm?.unsure === true) state = 'ask';
   else { state = 'redirect'; navigate = parcelSearchRoute('unique', { parcelId, query: '' }); }

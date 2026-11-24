@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:05:12.510Z file_sha256=7291176f5d3fec24a5d090c96eacc94d089d2a5272d6ab7ea6fa4e1dc4464cc4 prompt_sha256=0d21853d273851bf1d2c7c0b41de5d1c6b842a5d594c9ea4621770805161c4db
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-surface-136-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #1 "A query with no house number shows the refine line (worded true at any row count) and keeps the candidate list" — mobile/__tests__/parcelSearchMatch.test.ts "it('known state: \"Highway 27\" holds a digit, so it counts as numbered and shows no refine line (as today)'" — a street name carrying a digit (Highway 27, a bare Unit 4) has no house number yet the test asserts no refine line, so AC1 is unmet for those inputs and the copied rule is not the server's first-word test — use the server's first-word digit test (src/lib/admin/parcel-lookup.ts) so a digit in the street name and a unit-only query read as unnumbered and show the line.
+
+DEFER severity=MED — AC #2 "A settled miss fetched again keeps the no-match line" — mobile/src/lib/parcelSearchMatch.ts "showMiss: outcome === 'no_match' && error == null," — dropping the isFetching gate also makes showMiss true when data is undefined, so an unsettled first fetch paints the no-match line, a state AC2 does not name and no pasted ruling authorises — gate on data presence, for example outcome === 'no_match' && data !== undefined && error == null.
+
+DEFER severity=LOW — AC #4 "The minimum-length copy is filled from the setting, not a typed 3" — mobile/src/components/surfaces/SearchBinding.tsx "min_query_len: SEARCH_MIN_QUERY_LEN, // task-450 L5: the setting (config.min_query_len through sliceNumber), never a typed 3" — the definition of SEARCH_MIN_QUERY_LEN is not in this chunk (cannot see), so that the displayed minimum reads the descriptor setting rather than a literal is unverifiable here — confirm SEARCH_MIN_QUERY_LEN derives from config.min_query_len (data) in the merged file.
+
+MET — fe.03 — mobile/__tests__/schemas.test.ts "a lot form with one extra field parses" and "an unknown detected value still throws" — both directions of the additive schema rule are locked.
+
+MET — fe.06 — mobile/__tests__/schemas.test.ts "the closed enums stay: an unknown detected value still throws" — the closed enum/status lists are preserved, only extra-key tolerance changed.
+
+MET — fe.33 — mobile/src/components/surfaces/SearchBinding.tsx "{ text: content('search.input.hint'), vars: { min: derived('min_query_len') } }" — displayed strings stay content templates, and surfaceRenderer.smoke.test.tsx updates the render smoke for the changed rate-limit and help states.
+
+REJECT — fe.24 — the additive lot-form schema is accused of letting an unknown field cross the renderer's unknown-field throw — not a real issue, fe.24 governs the report renderer's catalogue field and status, not the consumer lookup lot-form payload.
+
+REJECT — fe.31 — the additive schema is accused of letting an unbound extra field pass the conformance boundary — not a real issue, the lot form is a consumer lookup payload, not a surface binding, and AC3 requires the extra field to parse while the enums stay closed.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 1
+Rules met: fe.03, fe.06, fe.24, fe.31, fe.33
+
+---
+⏱  138633ms (138.6s)
+📊 Tokens — total: 52756, input: 26882, output: 25874, reasoning: 25125

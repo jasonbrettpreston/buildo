@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:00:57.457Z file_sha256=aab5810404eb40e00f9fa7a86547f53b369d43c6d82f2847c21945d26a875c79 prompt_sha256=b1f3e2162cd241b1da0c44301313cb4f191a1b098c9078c828a06c26d31b5343
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-mobile-90-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — AC6 "#6 The help page has the topic wrong-lot and both search links go to it" — src/tests/surfaces/static-page.logic.test.ts:233 "const report = find(rj('src/tests/fixtures/surfaces/mobile_parcel_search/ambiguous.mobile.json').props);" — the mobile link half of AC6 is proven only from a generated fixture, nothing in this chunk ties the descriptor or content file to wrong-lot, so a fixture-only edit would satisfy the test — add one assertion against mobile_parcel_search.descriptor.json/content.json carrying topic wrong-lot.
+DEFER severity=LOW — AC6 "The help page has the topic wrong-lot" — src/tests/surfaces/search-web-binding.ui.test.tsx:145 "expect(topics).toContain(topic);" — the help page's owned rendering of that topic rests on table membership plus the 426 to 427 count lock, no assertion that the web_help page paints the help.mailto.wrong_lot row — assert the rendered help page markup contains the help.mailto.wrong_lot string.
+MET — AC4 "The minimum-length copy is filled from the setting, not a typed 3" — src/tests/surfaces/search-web-binding.ui.test.tsx:33 "const MIN = String((JSON.parse(fs.readFileSync(path.join(ROOT, 'mobile/src/generated/surfaces/mobile_parcel_search.json'), 'utf8')) as Json).config.min_query_len);" — the rendered prompt and input description are compared against templates filled with the setting, and 83 "expect(idle).toContain(PROMPT);" plus 85 "expect(idle).not.toContain('{min}');" prove the fill happens at render.
+MET — AC6 "both search links go to it", web half — src/tests/surfaces/search-web-binding.ui.test.tsx:146 "expect(topic).toBe('wrong-lot');" — the report link fragment topic is read back from the rendered anchor and matched to the web_help mailto topic table.
+MET — card "measured with surface-validate --check before ... and after" — src/tests/surfaces/surface-validate.logic.test.ts:92 "S-sbind ok (17 surfaces, 427 strings)" — the 427 string lock agrees with src/tests/surfaces/surface-conformance.logic.test.ts:262 "S-sbind ok (17 surfaces, 427 strings)" and with the 426 to 427 note, no stale count left in either file.
+REJECT — Spec 90 §5 "NO HTML/DOM: Never use <div>, <span>, <a>, <p>, or <button>." — the change asserts a.tagName 'A' in the search surface — the §2 dated note "descriptor-governed web surfaces render as Next.js RSC (Spec 126 §5.3; Spec 128 R-22)" leaves the Expo Web target unruled, so §5 does not reach the Next.js web binding under test.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 3   Unmet: 0
+Rules met: none
+
+---
+⏱  67465ms (67.5s)
+📊 Tokens — total: 24217, input: 12116, output: 12101, reasoning: 11408

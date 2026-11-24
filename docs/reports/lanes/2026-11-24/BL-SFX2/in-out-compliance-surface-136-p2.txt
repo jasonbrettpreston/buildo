@@ -1,0 +1,886 @@
+LIST surface-136 sha256:c4de01897b08522808dcb713db60aa5dc9bea0ee04c4ad647f3571c2cda379e5 material sha256:2382158307d6f5ca842a754c77e1133eb7969e734962806af68f75439f9f2cae part 1 of 1 chunk 2 of 4
+RULE LIST surface-136 (docs/specs/02-web-admin/136_mcfrontend_handbook.md, sections 2. Rules), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["mobile/__tests__/parcelSearchMatch.test.ts","mobile/__tests__/parcelSearchScreen.behaviour.test.tsx","mobile/__tests__/schemas.test.ts","mobile/__tests__/semiQuestionPage.behaviour.test.tsx","mobile/__tests__/semiQuestionScreens.golden.test.ts","mobile/__tests__/surfaceRenderer.smoke.test.tsx","mobile/src/components/surfaces/SearchBinding.tsx","mobile/src/generated/surfaces/mobile_parcel_search.json","mobile/src/generated/surfaces/mobile_parcel_semi_question.json","mobile/src/lib/parcelSearchMatch.ts","mobile/src/lib/schemas.ts","mobile/src/lib/semiQuestion.ts"]
+
+## 2. Rules
+
+- **fe.01** McFrontend is documents only now; the build starts after McBylaws increment 2 closes, with the 2026-11-02 infra freeze lifted for it by name; scope mobile, web, admin and PDF. Surface paths are held (pending globs) until Phase 1 opens. Current reading (lane text, notes 2026-11-06, 2026-11-09): Phase 1 (the report page) is open since 2026-11-06 and Phase 2 (every MaxBLD page, Spec 126 §11b) since 2026-11-09; the 2026-11-02 infra freeze is lifted by name for both. The lock asserts that the Spec 126 status line names Phase 1 and Phase 2, not Phase 1 only.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-status.infra.test.ts · +5 dated notes
+
+- **fe.02** P1 Declared, not coded: a screen is a descriptor; the only code is the shared archetype components. Current reading (lane text, notes 2026-11-11): The standard is confirmed for the web pages as well as the report, and the working standard is written down in Spec 126 §0b.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-generated-only.infra.test.ts · +3 dated notes
+
+- **fe.03** P2 Proven, not reviewed: declarations checked against live contracts and the catalogue; golden states; both-directions locks; observability inside.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/surface-validate.infra.test.ts · +1 dated note
+
+- **fe.04** P3 Fast: a REPORT performance budget (load, payload); a new field ships in hours. Payload is mechanical; load time and "hours" are PROSE-ONLY. Numbers are measured first, then ruled (Q-MF5).
+  Status: OWED · lock owed: src/tests/surfaces/budget.infra.test.ts
+
+- **fe.05** P4 Single source: the front end may show more, never derive differently; every number from McBylaws; no maths in the UI.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-no-maths.logic.test.ts · +1 dated note
+
+- **fe.06** P5 Honest display: disclosures, confidence, "at least", not_evaluated, not_modelled always shown; closed status list; oracle = catalogue flags.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts · +2 dated notes
+
+- **fe.07** P6 Same everywhere: mobile, web, admin and PDF render the same declaration; parity compares each target's real output. Current reading (lane text, notes 2026-11-09): The parity rule applies to every MaxBLD page with more than one declared target (Spec 126 §11b.2), keyed by surface; for non-REPORT surfaces it is checked inside the conformance lock (FE-31). This lock, its REPORT scope and its status are unchanged.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/parity.golden.test.ts · +3 dated notes
+
+- **fe.08** Doc set: specs in docs/specs/02-web-admin; 135 = decisions register; 136 = generated handbook.
+  Status: RULED 2026-11-04
+
+- **fe.09** A separate decisions spec, 124a/69a form, with a Lock column that resolves.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/register-locks-resolve.infra.test.ts · +1 dated note
+
+- **fe.10** The generator lives in the spec: the REPORT section of Spec 126.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/handbook-rule-map.logic.test.ts · +1 dated note
+
+- **fe.11** The product (report page) goes first; the admin converts on touch, with no fixed admin pilot; /admin/surfaces is built when the admin next needs that view. Current reading (lane text, notes 2026-11-09): Admin tasks only as listed for Phase 2 (MF-30, MF-37, MF-40); no MF task outside Phase 0-2 or convert-on-touch.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +3 dated notes
+
+- **fe.12** Admin market-metrics is DASHBOARD (126:207, :717); its descriptor's REPORT is an error fixed at conversion.
+  Status: OWED · lock owed: src/tests/surfaces/dashboard-not-report.logic.test.ts
+
+- **fe.13** surface-validate.mjs (MF-15) is the first gate McFrontend builds, part of the build after increment 2. Focus stays on McBylaws.
+  Status: RULED 2026-11-04 · Enforced by: src/tests/surfaces/surface-validate.logic.test.ts · +3 dated notes
+
+- **fe.14** LEAN: the report page converts first (generator, one REPORT renderer, goldens, locks); reuse the back-end machinery; other screens convert on touch. Current reading (lane text, notes 2026-11-09): LEAN now covers McFrontend Phase 2 as ruled: no MF task outside Phase 0-2 or convert-on-touch.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +3 dated notes
+
+- **fe.15** "How we know it works": the McFront proof canaries a-f, EXECUTABLE (planted defect in a temp copy: non-zero exit; clean copy: zero), are in the plan's acceptance criteria.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfront-proof.infra.test.ts · +2 dated notes
+
+- **fe.16** Q-MF1: all McFrontend specs in docs/specs/02-web-admin; 135 = register; 136 = handbook. No tooling change.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/spec-paths.infra.test.ts · +1 dated note
+
+- **fe.17** Q-MF2: one card per building type, variants[] inside (roof form flat/pitched A/pitched B; unit class houseplex 2-4 at 4, 6 not_modelled), generated from the catalogue; headline flag emitted by the generator; ad slots outside the card list.
+  Status: OWED · lock owed: src/tests/surfaces/report-variants.logic.test.ts
+
+- **fe.18** Q-MF3 binding rule (core premise): every displayed field binds to a source in the closed set catalogue / content / user_input / ad_slot (and external_embed, the fifth source, by FE-21); the schema references the field only (no old engine names, no older-rule text, no code). Labels, help text and legal copy are content fields, not an exception. The set is in a protected file. Current reading (lane text, notes 2026-11-06): The closed set has six sources: catalogue, content, user_input, ad_slot, external_embed and parcels (FE-27); it lives in scripts/surfaces/_schema/binding-sources.json.
+  Status: RULED 2026-11-06 · Enforced by: src/tests/surfaces/report-binding.logic.test.ts · +3 dated notes
+
+- **fe.19** User inputs are shared, not private: an entered fact updates the shared database, raises that lot's confidence for every viewer, and keeps provenance (source user, entered_at). Confidence by source: estimated low, user medium, verified high. McBylaws re-evaluates (increment 6); McFrontend declares the form and renders results. Current reading (lane text, notes 2026-11-11, 2026-11-15): Confidence for a user lot-size entry reads high, not medium; the re-evaluation is McBylaws MB-89, not increment 6; the entry is width and depth, with the area form as the link's alternative.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/user-input-provenance.logic.test.ts · +3 dated notes
+
+- **fe.20** Conflict rule for user entries: verified permit/plan facts outrank user entries; the newest user entry is shown; earlier entries are kept in history so a bad entry can be reverted. Current reading (lane text, notes 2026-11-11, 2026-11-15): One active entry per lot, whichever form made it; "the newest user entry is shown" reads as the active entry; history is kept; a width entry then an area attempt is a 409.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/user-entry-precedence.logic.test.ts · +3 dated notes
+
+- **fe.21** external_embed (map tiles, payment checkout, analytics) is the fifth binding source: each embed declared, never coded.
+  Status: OWED · lock owed: src/tests/surfaces/report-binding-embed.logic.test.ts
+
+- **fe.22** Ad targeting only on declared database keys; never on user-entered facts without consent.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/ad-targeting-keys.logic.test.ts · +1 dated note
+
+- **fe.23** Ad slots: own source (ad_slot) and disclosure (R-17), never inside a card (R-34), outside variants[] and the card list.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/ad-slot.golden.test.ts · +1 dated note
+
+- **fe.24** A new catalogue row reaches mobile, web, admin and PDF with zero front-end code; the renderer throws on an unknown field or status.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/new-row-zero-code.golden.test.ts · +4 dated notes
+
+- **fe.25** The 25 golden lots render end to end the McBylaws answer-key numbers on every target. Runs as a db-type test in a named CI step.
+  Status: OWED · lock owed: src/tests/surfaces/answer-key-e2e.db.test.ts
+
+- **fe.26** In-product error count and budget breach are shown on admin, through the real writer and reader. The on-screen part is a manual operator check (PROSE-ONLY).
+  Status: OWED · lock owed: src/tests/surfaces/error-count.db.test.ts
+
+- **fe.27** parcels is a source in the closed binding set: a field bound to a column of the parcels table (a DB field the consumer payload reads, Spec 100 §3.2 whitelist). A column that is not in the migrations, or a path not on the whitelist, fails.
+  Status: RULED 2026-11-06 · Enforced by: src/tests/surfaces/report-binding.logic.test.ts
+
+- **fe.28** none is a closed status value, "no reading on this node", valid only on the message node of a lifecycle tree (loading / miss / error); the tree carries lifecycle, closed loading | miss | error. Omission of status stays a build failure; every node carries one.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts
+
+- **fe.29** The report node contract has ONE home, scripts/surfaces/_schema/report-tree.schema.json (draft 2020-12, additionalProperties false): a tree is lifecycle? (loading | miss | error) plus nodes[]; each node requires field, source, label, value (string or null), status (the 11a.3 forms plus none), confidence (high | medium | medium-low | low | none), provenance (estimated | permit | plan | user | none) and disclosures (array, empty allowed). The honest lock reads it and holds no copy; the renderer and validator (MF-14, MF-15) read the same file. Current reading (lane text, notes 2026-11-11): One closed image node kind exists (field, source, kind image, label, images); it carries no value, status, confidence, provenance or disclosures, because an image is not a reading; every other node is unchanged.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts · +2 dated notes
+
+- **fe.30** Report fields are generated from the catalogue, one home per fact. (1) Every effective-ON catalogue row (its switch ON and its building type ON) is a report field, automatically; off yields none; retirement is the switchboard row OFF, never a retired-rows list. (2) scripts/surfaces/_schema/report-v2-seed/row-presentation.json holds one ORDERED headline list per scenario (building_type plus design_option); a row not listed is detail, in catalogue order; the lists ship empty and are authored with MF-14. (3) One check, fail closed: a listed row that does not exist in that scenario, a scenario no catalogue row carries, a row listed twice in one list, a listed row that is switched off. (4) Only a HEADLINE row with no authored label fails (GEN-ROW-NO-LABEL); a detail row shows its row id and the generator lists the labels owed. A row may lead more than one scenario. Which variant wins on a lot stays McBylaws' rule (126:749).
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-generator-fields.logic.test.ts · +1 dated note
+
+- **fe.31** Every MaxBLD page (a converted non-REPORT surface) is descriptor + content + standard library components configured by schema: descriptor valid with no UNRESEARCHED and no golden: "none"; in the converted manifest (two-direction totality); one props golden per reachable state per declared target, each covers a state or check, every state covered; one render smoke per archetype per platform; every string from content (listed exempt files only); every value through a binding kind; library imports only in binding modules; generated and vendored files pass --check/manifest. Current reading (lane text, notes 2026-11-09, 2026-11-11, 2026-11-20): The render-smoke clause is its own row, FE-33, and this row's lock does not check it. The mount-file import rule governs UI page, screen and mount files only. Every build reuses existing components, bindings and patterns; a new library, component kind or binding is an operator ruling first; an element in a Stitch export or scratch mock with no source is left out. The web footer is one shared component, footerNode.ts.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/surface-conformance.logic.test.ts · +7 dated notes
+
+- **fe.32** contract is a binding kind: a displayed value may bind to a field of a declared CONTRACT descriptor's response projection; the member must exist in that descriptor; any other value fails.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/contract-binding.logic.test.ts · +2 dated notes
+
+- **fe.33** One render smoke per archetype per platform: each binding renders its archetype's goldens on each platform (web renderToStaticMarkup in the root suite; mobile jest-expo), and every displayed string, library default strings and form error messages included, comes from content.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/render-smoke.logic.test.ts · +2 dated notes
+
+- **fe.34** The v21 report PAGE tree has ONE contract, scripts/surfaces/_schema/report-page.schema.json, beside the node contract (FE-29; an ad section reuses its $defs/slot): the sections of the page table scripts/surfaces/_schema/report-page.json in screen order; each part is one shown text bound to a declared field (the server-formatted string as sent; a number throws), a content:page text, or a ruled pending text (Q-G4 a, never a value). A tile area value is two server-formatted parts, the number and its unit (D-J). A page-table section that names details is drawn only on layout rows with that details value (D-K: the lot-size box and the Add lot size sheet on collapsed rows only).
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.35** The REPORT loading state "What we checked" (MF-62): a lifecycle: loading tree may carry ONE root-only checked object (never a node, never on miss, error or a reading tree; the one-message-node rule unchanged): the title, the citywide and per-lot groups and the data dates, each line a content template (report-presentation.json states.checked, no digits) filled with a server-formatted value (FE-05), plus the pace the server computed from two admin logic_variables. The citywide counts are a stored, dated row written by the existing refresh_snapshot step, never a live count per request. Per lot: the evaluated by-law limit count (never the 270 rows); "exception noted, not yet modelled" on an exception_not_authored lot and "By-law limits not yet evaluated" on any other gate or no result, never "checked"; heritage reads "designated"; decisions are decided CoA applications in the lot's neighbourhood. No satellite or aerial wording, no "updated" or "latest", no live-progress word, no chatbot or AI comparison, the by-law rules count never beside "checked".
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/report-checked.logic.test.ts
+
+- **fe.36** Navigation is a route: a control that moves the user uses the platform router (web <Link>, redirect(), router.push/replace after an action; mobile expo-router with canGoBack() before back()); a view is never swapped by local state; local state is disclosure only; a navigating pressable has a role and a name; leaving the origin uses window.location.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/nav-by-route.logic.test.ts
+
+- **fe.37** A STATIC page may read declared stored values on the server: its values are content templates with one {value} slot filled on the server with a server-formatted string, each from a read declared in the page table and the page's server module; a failed read leaves its part out (never a 500, never a partial group), and the binding never skips a part silently.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/web-landing.logic.test.ts
+
+- **fe.38** Legacy values are neither sent nor shown on the live app (EI-D1). /api/parcels/lookup sends the legacy Spec 88 cost menu and the 12 cost scalars as null. It sends the legacy size headlines as null (keys kept for installed apps and declarations; CONSUMER_WITHHELD_LEGACY_COLS): opt_aor_*, opt_coa_*, max_buildable_gfa_sqm, max_build_fsi, max_build_stories, coa_fsi, max_newbuild_coa_gfa_sqm. The server goes first, so installed apps stop receiving them. The mobile parcel screen and the tracked-lots list then show none of them; a slot that must stay reads "Not yet evaluated" (FE-06, 126 §11a.3), never a number or $0. This is a stopgap: it does not discharge MB-37 or M-367. Current reading (lane text, notes 2026-11-12): The scope is wider: a hit with no evaluated option is not counted against the monthly allowance; max_buildable_footprint_sqm, envelope_constrained, envelope_constraint_reason and compStats.neighbourhoodCostPremium are also sent as null, and the screen shows no Envelope constrained note. Same lock, extended.
+  Status: RULED 2026-11-12 · Enforced by: src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts · +2 dated notes
+
+- **fe.39** Engine inputs bind (EI-D2..EI-D8). The report and its producer bind the final engine fields: one stored headline per lot and option. Size, status, reason and the CoA size come from Layer 3; cost comes from the Spec 88 scenario lines, joined by the producer (M-67 kept, EI-D8). The detail is computed on demand. An empty field shows "Not yet evaluated", never 0 (a new reason, not_in_engine_population). Engine values show before MB-38 only in the admin preview and in a tester-only preview: golden 25 + the MB-35 cohort, a "Preview" banner, no charge (EI-D2). The customer cost is base rate x escalation, with no income-based neighbourhood premium (EI-D3). "Can you build bigger?" stays "Not yet evaluated" until MB-38/MB-44 (EI-D4). Per-scenario neighbour reach is an admin setting: detached house 400 m, secondary suite 400 m, garden/laneway suite 750 m, houseplex 1,000 m; all years; the reach is always printed (EI-D5). Testing uses the cohort + 25, with a coverage check before payment (EI-D6). Copy: neighbours "approved", "at least", "records we could classify"; build-bigger is not a promise of approval; the cost-scope line stays in See details and goes to the lawyer list (EI-D7). Current reading (lane text, notes 2026-11-20): One record per lot and option, computed on first open (or track, or owner input) and stored with its stamp; a record whose stamp differs is never served and is recomputed (ST-5 as amended; the two sentences it replaces are SUPERSEDED). The cost sentence is not amended; it waits for open point 3 of doc-16 section 7. When the web live switch flips, engine numbers go to every paying user at once, not testers only (operator "4 a"). The amendment text is policy text of doc-16, not operator words.
+  Status: OWED · lock owed: src/tests/surfaces/engine-inputs-bind.logic.test.ts · +3 dated notes
+
+- **fe.40** McTest: the real app is proven wired by layers run against a separate local test stack, never the dev DB (API journeys, a dead-wire crawler, a lot sweep, stress, failure drills, phone runs). The cases are rows of one catalogue, tests/e2e/scenarios.json (data; no test code names a case). Every row names its owning task and a status; a row or journey step whose task is not built is WAITS, never PASS or FAIL; a page behind an off switch is "gate-only". A failure becomes one card for the owning task. Limits and budgets are read from DB fields or admin settings, never typed.
+  Status: RULED 2026-11-12 · Enforced by: src/tests/mctest/catalogue.infra.test.ts
+
+- **fe.41** The REPORT page table gains the section kind summary (options at a glance, Daylight B): no data of its own; every item is a reference (ref, FE-18, FE-32 part kind) to a part of the option's BUILT section, never a copied value. A hidden option is in neither the list nor the count; a not-evaluated option is listed with the existing not-evaluated text and no size (FE-06); the heading is a content template filled with the count of items (a derived value, server-built). It shows at the top on every target; the wide-web rail is NOT in this row.
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.42** The REPORT page table gains the part kind drawing (lot views, From above): the server sends the drawing already built in a fixed 0..1000 frame (state, outline, one class per edge as explicit lines, envelope and footprints when it has them); the client only draws it (inline SVG on web, react-native-svg on mobile) with no geometry maths (Spec 128 Rule 16). The state is closed: drawn, outline_shape, outline_edges, outline_unevaluated; the three outline states show the ruled fallback line. One caption for every state: "Not from a survey. Illustrative.". FAIL CLOSED: a part that needs a drawing is left out when the response has none, or its state or geometry is not valid; nothing is drawn, nothing faked. The envelope polygon and the buildable width are DECLARED DERIVED values (server-computed, derived ref kind), never typed numbers; the callout and dimension labels wait for by-law row parts that carry a field. The eligibility rule, its ten admin settings (including the convexity tolerance 0.995 and rectangularity 0.80, provisional) and the stored per-lot read are a separate gated McBylaws DB job (group 3), not this row.
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.43** See details opens as its own sheet on web and mobile, by a second CLOSED layout key details_view (inline or sheet) in report-layout.json: web and mobile sheet, admin and pdf inline. No existing details value changes: the six readers of details: collapsed (report-page.logic.test.ts, report-checked.logic.test.ts, ReportView.tsx, core.ts, report-page.ui.test.tsx, report-view.ui.test.tsx) keep their meaning. Web: each panel is a dialog with its own address (#<option>/size|cost|how), Back closes, focus returns to the opener; mobile: the existing @gorhom/bottom-sheet held by the screen host. This amends the v22 in-place ruling.
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.44** Units across the whole report: store METRIC only. The page producer sends each number pre-formatted in both units; the client only switches which is shown, with no maths (Spec 128 Rule 16, FE-18); the conversion factor is content/settings, never code; one toggle covers every area and length and is remembered per user; the default is imperial; by-law quotes keep their metric wording with the converted figure in brackets. Builds ui.format.area_unit (report schema, "proposed"), extended to lengths.
+  Status: OWED · lock owed: src/tests/surfaces/report-units.logic.test.ts
+
+- **fe.45** The client is just glass. "Five things may stay client-side (device state · optimistic UI · offline cache · animation · nav position); everything else is server-projected." (Spec 128 Rule 2, 128:29). "Anything else computed client-side is a Rule 2 violation and needs a deviations[] row with an adjudicator and a date." (128:55).
+  Status: OWED · lock owed: src/tests/surfaces/client-glass-boundary.logic.test.ts
+
+- **fe.46** Libraries. "the web library is Mantine 8.3" with @rjsf/mantine and mantine-datatable (126:1005, dated note 2026-11-09); mobile is "React Native Reusables per Spec 90 §6", vendored unmodified (126:1006). "No hand-built standard component." (126:925). "a new library, a new component kind or a new binding outside §11b.5 is an operator ruling before it is built" (126:75). This row says nothing on the toast library: RR-0384 did not rule it.
+  Status: OWED · lock owed: src/tests/surfaces/ui-library-set.logic.test.ts
+
+- **fe.47** Tunables are data. "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" (128:30, Rule 3). "All tunables are data; zero thresholds in src/." (126:189, admin principle P4, 126:180).
+  Status: OWED · lock owed: src/tests/surfaces/tunables-are-data.logic.test.ts
+
+- **fe.48** Scratch mocks are design inputs only. "Mocks, briefs, Stitch exports and research in ~/Buildo-scratch/ are references, never copied into the repo" (126:79, §0b item 8). "Anything in a Stitch export with no source (a ruling, a spec, a setting or a DB field) is left out and is not raised as a decision" (126:79); the dated note 2026-11-11 of FE-31 carries this second sentence.
+  Status: OWED · lock owed: src/tests/surfaces/scratch-mocks-not-in-repo.logic.test.ts
+
+- **fe.49** The scope fence. "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface." (128:205, R-03). "Scope D is fenced, and the fence is Spec 128 R-03." (126:140). "A scope-C change is a two-product change. Its plan says so, and its review panel is sized for it." (126:147).
+  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/scope-fence.logic.test.ts · +1 dated note
+
+- **fe.50** Auth and checkout. "Auth and checkout are existing or hosted, not converted. Sign-in is the existing Buildo sign-in (web and mobile), shared and declared" and "Checkout and billing are Stripe-hosted (Checkout, Customer Portal)." (126:928). Amended by the dated note of 2026-11-11 at 126:1120: "The monthly plan is also offered as an Apple in-app purchase beside web checkout, on one account and the same parcel_tool entitlement" (queued as MF-70); "the later operator ruling governs".
+  Status: OWED · lock owed: src/tests/surfaces/auth-checkout-hosted.logic.test.ts
+
+- **fe.51** Navigation extras that FE-36 does not state. "A tab switch uses navigate, not push." (126:82, §0b item 11). The navigation rule reaches "every MaxBLD screen, web and mobile" (126:82). Spec 126 calls the tab sentence "convention, not checked by the lock" (126:82), so it is PROSE-ONLY until the lock below exists.
+  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/nav-tab-switch.logic.test.ts · +1 dated note
+
+- **fe.52** The two parcel ids have two names. "parcel_ref = parcels.parcel_id VARCHAR(20) (municipal); parcel_pk = parcels.id SERIAL." and "usage_events.subject_kind is required and closed so a ledger row can never blend them." (Spec 128 R-04, 128:206, ACCEPTED). The id-translation seam: "the consumer API's parcelId = parcels.parcel_id = parcel_ref" (126:1238, §14).
+  Status: OWED · lock owed: src/tests/surfaces/parcel-id-names.logic.test.ts
+
+- **fe.53** POINTER, not a copy: before changing a MaxBLD page, read its row in Spec 126 §11b.3 (126:963) and the rules and amendments in §11b.7 (126:1032): routes, what is special, the ruled rules with the operator's words. Where a later dated note amends a rule above it, "the later operator ruling governs" (126:1120). The tables are not copied here. PROSE-ONLY: the lock below checks only that the two cited headings exist; it checks no page ruling.
+  Status: OWED · lock owed: src/tests/surfaces/page-set-pointer.logic.test.ts
+
+- **fe.54** A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39).
+  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/failure-state-declared.logic.test.ts · +1 dated note
+
+- **fe.55** The admin is a projection. "The admin is a projection, not a product. An admin page is the same SURFACE/CONTRACT descriptor with an admin audience — never a parallel data path." (126:186, admin principle P1).
+  Status: OWED · lock owed: src/tests/surfaces/admin-same-descriptor.logic.test.ts
+
+- **fe.56** Locks are proven red. "A rule without a lock is not yet a rule" (128:127, rule 4; Spec 135 rule 2). "Prove each lock RED on a fixture that declares a column or a policy that does not exist" and "a lock never red against the defect it names is not a lock" (127:59, the row numbered 6).
+  Status: OWED · lock owed: src/tests/surfaces/lock-planted-defect.logic.test.ts
+
+- **fe.57** Accessibility. The a11y check category is "touch-target floor (44×44) · labels · dark-mode tokens · safe-area · reduced-motion" (126:351, a row of the check vocabulary, not a mandate). The 44 px floor is also stated at docs/specs/00_engineering_standards.md:14: "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of" 44px x 44px. It is checked on converted web goldens (C-9) and mobile (C-9m) under FE-31; the rest is PROSE-ONLY until the lock below exists.
+  Status: OWED · lock owed: src/tests/surfaces/a11y-category.logic.test.ts
+
+- **fe.58** No Server Components on mobile. "React Native has no Server Components. Web is RSC on Vercel (max server side); mobile is a fetched projection plus build-time generation. Any Spec 125 mechanism assuming SSR must be re-specified for mobile before it is planned." (Spec 128 R-22, 128:224, ACCEPTED).
+  Status: OWED · lock owed: src/tests/surfaces/mobile-no-rsc.logic.test.ts
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/mobile/__tests__/parcelSearchMatch.test.ts b/mobile/__tests__/parcelSearchMatch.test.ts
+index a1f01b1662b76ee13bf0f7e08349fb097a2f9f70..304ab8d2177364fdaaa76f328e1df8ffe83aa532 100644
+--- a/mobile/__tests__/parcelSearchMatch.test.ts
++++ b/mobile/__tests__/parcelSearchMatch.test.ts
+@@ -27,7 +27,6 @@ import {
+   isOutsideToronto,
+   isOverCandidateCap,
+   parcelSearchRoute,
+-  type ParcelMatchType,
+ } from '@/lib/parcelSearchMatch';
+ import { shouldHideAppTabBar } from '@/lib/appShell';
+ import {
+@@ -50,13 +49,10 @@ function response(over: Partial<ConsumerParcelLookupResult> = {}): ConsumerParce
+ 
+ const candidate = (parcelId: string, address: string) => ({ parcelId, address });
+ 
+-/** Force a match type the current `matchType` enum cannot express — the future contract's value. */
+-function withDeclaredType(type: ParcelMatchType): ConsumerParcelLookupResult {
+-  return response({
+-    // Deliberate cast: `ParcelMatchSchema.matchType` is the narrow 'exact'|'typeahead'|'direct'
+-    // enum today. This is the shape the widened contract will send.
+-    match: { parcelId: 'PIN-1', matchType: type, address: '1 Test St' },
+-  } as unknown as Partial<ConsumerParcelLookupResult>);
++/** A payload that names its outcome, as the server sends it (MF-53). Dated 2026-11-24 (task-450 SEARCHFIX.2, Q19): the declared-matchType helper
++ * withDeclaredType went with the deleted client derivation; a payload without `resolution` now reads as the server's no_match. */
++function withResolution(resolution: NonNullable<ConsumerParcelLookupResult['resolution']>, extra: Partial<ConsumerParcelLookupResult> = {}): ConsumerParcelLookupResult {
++  return { ...response(), resolution, map: null, ...extra } as ConsumerParcelLookupResult;
+ }
+ 
+ describe('the SEARCH archetype parameters match the descriptor', () => {
+@@ -80,7 +76,7 @@ describe('the SEARCH archetype parameters match the descriptor', () => {
+ 
+ describe('deriveMatchType — all five ruled types', () => {
+   it('unique: a resolved match navigates straight to the lot', () => {
+-    const data = response({ match: { parcelId: 'PIN-777', matchType: 'exact', address: '26 Hurlingham Cres' } });
++    const data = withResolution('unique', { match: { parcelId: 'PIN-777', matchType: 'exact', address: '26 Hurlingham Cres' } });
+     expect(deriveMatchType('26 Hurlingham Cres', data)).toBe('unique');
+     expect(parcelSearchRoute('unique', { parcelId: 'PIN-777', query: '26 Hurlingham Cres' })).toBe(
+       '/(app)/parcel-tool/PIN-777',
+@@ -88,12 +84,12 @@ describe('deriveMatchType — all five ruled types', () => {
+   });
+ 
+   it('unique: a typeahead single hit is the same type — the branch is not on matchType flavour', () => {
+-    const data = response({ match: { parcelId: 'PIN-8', matchType: 'typeahead', address: '8 Elm St' } });
++    const data = withResolution('unique', { match: { parcelId: 'PIN-8', matchType: 'typeahead', address: '8 Elm St' } });
+     expect(deriveMatchType('8 Elm', data)).toBe('unique');
+   });
+ 
+   it('text_candidates: several text matches render a list, not a map', () => {
+-    const data = response({
++    const data = withResolution('text_candidates', {
+       candidates: [candidate('PIN-1', '10 Elm St'), candidate('PIN-2', '10 Elm Ave')],
+     });
+     expect(deriveMatchType('10 Elm', data)).toBe('text_candidates');
+@@ -101,18 +97,18 @@ describe('deriveMatchType — all five ruled types', () => {
+     expect(parcelSearchRoute('text_candidates', { query: '10 Elm' })).toBeNull();
+   });
+ 
+-  it('multi_parcel: the contract-declared type wins and routes to the map', () => {
+-    // Not derivable from today's payload — one address point linked to 2+ parcels is
++  it('multi_parcel: the server resolution wins and routes to the map', () => {
++    // Not derivable from the payload shape — one address point linked to 2+ parcels is
+     // indistinguishable from N separate text matches. Driven by the server value.
+-    const data = withDeclaredType('multi_parcel');
++    const data = withResolution('multi_parcel');
+     expect(deriveMatchType('1 Test St', data)).toBe('multi_parcel');
+     expect(parcelSearchRoute('multi_parcel', { query: '1 Test St' })).toBe(
+       '/(app)/parcel-tool/disambiguate?q=1%20Test%20St&kind=multi_parcel',
+     );
+   });
+ 
+-  it('unlinked: the contract-declared type wins and routes to the map', () => {
+-    const data = withDeclaredType('unlinked');
++  it('unlinked: the server resolution wins and routes to the map', () => {
++    const data = withResolution('unlinked');
+     expect(deriveMatchType('1 Test St', data)).toBe('unlinked');
+     expect(parcelSearchRoute('unlinked', { query: '1 Test St' })).toBe(
+       '/(app)/parcel-tool/disambiguate?q=1%20Test%20St&kind=unlinked',
+@@ -136,10 +132,10 @@ describe('deriveMatchType — all five ruled types', () => {
+ 
+   it('every one of the five ruled types is reachable from deriveMatchType', () => {
+     const reached = new Set<string>([
+-      deriveMatchType('26 Hurlingham Cres', response({ match: { parcelId: 'P', matchType: 'exact', address: 'a' } })),
+-      deriveMatchType('10 Elm', response({ candidates: [candidate('P', '10 Elm St')] })),
+-      deriveMatchType('x', withDeclaredType('multi_parcel')),
+-      deriveMatchType('x', withDeclaredType('unlinked')),
++      deriveMatchType('26 Hurlingham Cres', withResolution('unique', { match: { parcelId: 'P', matchType: 'exact', address: 'a' } })),
++      deriveMatchType('10 Elm', withResolution('text_candidates', { candidates: [candidate('P', '10 Elm St')] })),
++      deriveMatchType('x', withResolution('multi_parcel')),
++      deriveMatchType('x', withResolution('unlinked')),
+       deriveMatchType('Queen & Spadina', response()),
+     ]);
+     expect([...PARCEL_MATCH_TYPES].every((t) => reached.has(t))).toBe(true);
+@@ -188,7 +184,7 @@ describe('the Toronto-only rule (operator ruling 2026-09-16 (b))', () => {
+   });
+ 
+   it('refuses even when the server somehow returned a match', () => {
+-    const data = response({ match: { parcelId: 'P', matchType: 'exact', address: 'x' } });
++    const data = withResolution('unique', { match: { parcelId: 'P', matchType: 'exact', address: 'x' } });
+     expect(deriveMatchType('1 King St, Hamilton', data)).toBe('outside_toronto');
+   });
+ 
+@@ -386,15 +382,17 @@ describe('MF-35 situation helpers', () => {
+   const S = require('./fixtures/parcelSearch.situations.json') as Record<string, unknown>;
+   const base = { input: '', debounced: '', data: undefined, error: null as unknown, isFetching: false, schemaDrift: false, recent: [] as string[], selectedParcelId: null, cap: 10, minQueryLen: 3 };
+   const cands = (S.ambiguous as { candidates: { parcelId: string; address: string }[] }).candidates;
+-  const lookup = (candidates: { parcelId: string; address: string }[], match: unknown = null) => ({ match, candidates, warnings: [], parcel: null }) as never;
++  // Dated 2026-11-24 (task-450 SEARCHFIX.2, Q19): the payloads carry the server's `resolution`, as the server always sends it (a payload without it reads as no_match).
++  const lookup = (candidates: { parcelId: string; address: string }[], match: unknown = null) =>
++    ({ match, candidates, warnings: [], parcel: null, resolution: match ? 'unique' : candidates.length > 0 ? 'text_candidates' : 'no_match' }) as never;
+ 
+   it('searchQueryArg: "" outside Toronto, the query otherwise (row 11)', () => {
+     expect(M.searchQueryArg('100 City Centre Dr, Mississauga')).toBe('');
+     expect(M.searchQueryArg('26 Hurlingham Cres')).toBe('26 Hurlingham Cres');
+   });
+-  it('classifyParcelSearchError on the real classes (row 12; MF35-DF1 pinned)', () => {
++  it('classifyParcelSearchError on the real classes (row 12; MF35-DF1 closed, task-450 L3: a retry-after of 0 is one message, not two)', () => {
+     expect(M.classifyParcelSearchError(new RateLimitError(7), false)).toEqual({ rateLimited: true, retryAfterSeconds: 7, entitlement: false, unexpected: false, schemaDrift: false });
+-    expect(M.classifyParcelSearchError(new RateLimitError(0), false)).toEqual({ rateLimited: true, retryAfterSeconds: 0, entitlement: false, unexpected: true, schemaDrift: false });
++    expect(M.classifyParcelSearchError(new RateLimitError(0), false)).toEqual({ rateLimited: true, retryAfterSeconds: 0, entitlement: false, unexpected: false, schemaDrift: false });
+     expect(M.classifyParcelSearchError(new ApiError(403, 'x'), false).entitlement).toBe(true);
+     expect(M.classifyParcelSearchError(new ApiError(400, 'x'), false)).toMatchObject({ entitlement: false, unexpected: true });
+     expect(M.classifyParcelSearchError(new Error('drift'), true)).toMatchObject({ unexpected: true, schemaDrift: true });
+@@ -409,23 +407,90 @@ describe('MF-35 situation helpers', () => {
+     expect(M.buildSearchSituation({ ...base, input: 'zzzz qqqq', debounced: 'zzzz qqqq', data: lookup([]) })).toEqual(S.miss);
+     expect(M.buildSearchSituation({ ...base, input: '26 Hurlingham Cres', debounced: '26 Hurlingham Cres', data: lookup([], { parcelId: '100026', matchType: 'exact' }), recent: ['Bathurst St'] })).toEqual(S.redirect);
+   });
+-  it('truth table: error + data lists no candidates; the cap after the slice with the refine line at >= the cap; a miss needs !isFetching and no error', () => {
++  it('truth table: error + data lists no candidates; the cap after the slice with the refine line at >= the cap; a settled miss keeps its line on a re-fetch (task-450 V4) and needs no error', () => {
+     const many = lookup(cands.slice(0, 9));
+     expect(M.buildSearchSituation({ ...base, debounced: 'Bathurst St', data: many, error: new Error('x') }).candidates).toEqual([]);
+-    expect(M.buildSearchSituation({ ...base, debounced: 'Bathurst St', data: many }).overCap).toBe(false);
++    expect(M.buildSearchSituation({ ...base, debounced: '100 Bathurst St', data: many }).overCap).toBe(false);
+     expect(M.buildSearchSituation({ ...base, debounced: 'Bathurst St', data: lookup(cands) }).overCap).toBe(true);
+-    expect(M.buildSearchSituation({ ...base, debounced: 'zzzz qqqq', data: lookup([]), isFetching: true }).showMiss).toBe(false);
++    expect(M.buildSearchSituation({ ...base, debounced: 'zzzz qqqq', data: lookup([]), isFetching: true }).showMiss).toBe(true);
++    expect(M.buildSearchSituation({ ...base, debounced: 'zzzz qqqq', data: lookup([]), error: new Error('x') }).showMiss).toBe(false);
+     expect(M.buildSearchSituation({ ...base, debounced: '26', error: new Error('x') }).showPrompt).toBe(false);
+     expect(M.buildSearchSituation({ ...base, debounced: 'Bathurst St', data: lookup(cands), selectedParcelId: 'gone' }).selectedParcelId).toBeNull();
+   });
++  it('task-450 AC2 (V4): a settled miss fetched again keeps the no-match line (no flicker)', () => {
++    const settled = M.buildSearchSituation({ ...base, input: 'zzzz qqqq', debounced: 'zzzz qqqq', data: lookup([]), isFetching: false });
++    const refetching = M.buildSearchSituation({ ...base, input: 'zzzz qqqq', debounced: 'zzzz qqqq', data: lookup([]), isFetching: true });
++    expect(settled.showMiss).toBe(true);
++    expect(refetching.showMiss).toBe(true);
++  });
+ });
+ 
+-// MF-53 · T5 (Spec 100 §2.6 dated note 2026-11-11; PLAN panel regression MED-4/MED-6): the server's `resolution` wins; a payload without it
+-// keeps the client derivation above (an older server); a server `no_match` still defers to the intersection shape; a server
+-// `text_candidates` now beats the intersection shape. The anti-guess and five-types tests above are unchanged.
++// ── task-450 SEARCHFIX.2 AC1 (fold section 2 line 42, finding 2a phone side; RR-0443 c MD:2284; ruled B, QUESTIONS-RULED.md Q8.1) ─────────────────────
++// A street typed with no house number shows the refine line ("Add a house number to narrow it down.") and keeps the close-address list. Rows are the
++// typed-address seat's real data (seat-reality-check-1.md); "Elm" with one row is synthetic until task-449 (today the server answers unique for it).
++describe('a street with no house number', () => {
++  // eslint-disable-next-line @typescript-eslint/no-require-imports
++  const M = require('@/lib/parcelSearchMatch') as typeof import('@/lib/parcelSearchMatch');
++  const base = { data: undefined, error: null as unknown, isFetching: false, schemaDrift: false, recent: [] as string[], selectedParcelId: null, cap: 10, minQueryLen: 3 };
++  const rows = (...r: [string, string][]) => r.map(([parcelId, address]) => ({ parcelId, address }));
++  const tc = (cands: { parcelId: string; address: string }[]) => withResolution('text_candidates', { candidates: cands });
++  const at = (q: string, data: ConsumerParcelLookupResult | undefined) => M.buildSearchSituation({ ...base, input: q, debounced: q, data });
++  const gerrard = rows(['5440777', '1 Gerrard St W'], ['10640216', '1000 Gerrard St E'], ['5402856', '1001 Gerrard St E']);
++
++  it.each([
++    ['Gerrard St', gerrard],
++    ['Elm', rows(['5379936', '1 Elm Ave'])],
++    ['Gerrard St W', rows(['5440777', '1 Gerrard St W'])],
++    ['Gerrard St, Toronto', gerrard],
++  ])('%s: the refine line shows and the rows are kept (ruled B)', (q, cands) => {
++    const s = at(q, tc(cands));
++    expect(s.outcome).toBe('text_candidates');
++    expect(s.overCap).toBe(true);
++    expect(s.candidates).toEqual(cands);
++    expect(s.route).toBeNull();
++  });
++
++  it('known state: "Highway 27" holds a digit, so it counts as numbered and shows no refine line (as today)', () => {
++    expect(at('Highway 27', tc(rows(['P1', '1 Highway 27']))).overCap).toBe(false);
++  });
++
++  it.each([
++    ['383 El', rows(['5106944', '383 Elm Ave']), 3],
++    ['679 Que', rows(['5476455', '679 Queen St W'], ['5497535', '679 Queen St E']), 2],
++    ['123 Yongee St', rows(['5179889', '123 Yonge St'], ['5464983', '123 Yonge Blvd']), 2],
++    ['Unit 4, 123 Yonge St', rows(['5464983', '123 Yonge St']), 1],
++  ])('%s: a numbered query keeps the list and shows no refine line', (q, cands) => {
++    const s = at(q, tc(cands));
++    expect(s.overCap).toBe(false);
++    expect(s.candidates).toEqual(cands);
++  });
++
++  it('other states: an intersection, a miss, outside Toronto and a short query show no refine line', () => {
++    const inter = at('King and Bay', withResolution('no_match'));
++    expect(inter.outcome).toBe('intersection');
++    expect(inter.overCap).toBe(false);
++    const miss = at('zzzz qqqq', withResolution('no_match'));
++    expect(miss.showMiss).toBe(true);
++    expect(miss.overCap).toBe(false);
++    expect(at('123 Main St, Mississauga', undefined).outcome).toBe('outside_toronto');
++    const short = at('12', undefined);
++    expect(short.showPrompt).toBe(true);
++    expect(short.overCap).toBe(false);
++  });
++
++  it('hasHouseNumber reads the text before the first comma', () => {
++    expect(M.hasHouseNumber('Gerrard St')).toBe(false);
++    expect(M.hasHouseNumber('Gerrard St, M4M 1A1')).toBe(false);
++    expect(M.hasHouseNumber('383 El')).toBe(true);
++    expect(M.hasHouseNumber('Unit 4, 123 Yonge St')).toBe(true);
++  });
++});
++
++// MF-53 · T5 (Spec 100 §2.6 dated note 2026-11-11; PLAN panel regression MED-4/MED-6): the server's `resolution` wins; a server `no_match` still
++// defers to the intersection shape; a server `text_candidates` now beats the intersection shape. Dated 2026-11-24 (task-450 SEARCHFIX.2, Q19;
++// prior text kept): "a payload without it keeps the client derivation above (an older server)" is no longer true: the client derivation is deleted
++// and a payload without `resolution` reads as the server's no_match (or the intersection shape). The server always sends it (lookup-flow.ts).
+ describe('deriveMatchType — the server resolution (MF-53)', () => {
+-  const withResolution = (resolution: NonNullable<ConsumerParcelLookupResult['resolution']>, extra: Partial<ConsumerParcelLookupResult> = {}) =>
+-    ({ ...response(), resolution, map: null, ...extra }) as ConsumerParcelLookupResult;
+   it.each(['unique', 'text_candidates', 'multi_parcel', 'unlinked'] as const)('server %s is the outcome', (r) => {
+     const extra = r === 'unique' ? { match: { parcelId: 'P', matchType: 'exact' as const, address: '12 Main St' } } : {};
+     expect(deriveMatchType('12 Main St', withResolution(r, extra))).toBe(r);
+@@ -437,13 +502,18 @@ describe('deriveMatchType — the server resolution (MF-53)', () => {
+   it('server text_candidates beats the intersection shape (the new order, stated)', () => {
+     expect(deriveMatchType('Queen and Spadina', withResolution('text_candidates', { candidates: [candidate('P', 'Queen St')] }))).toBe('text_candidates');
+   });
+-  it('server unlinked is taken as sent even with zero candidates; without resolution a zero-candidate payload stays no_match', () => {
++  it('server unlinked is taken as sent even with zero candidates; without resolution a payload reads as no_match', () => {
+     expect(deriveMatchType('12 Main St', withResolution('unlinked'))).toBe('unlinked');
+     expect(deriveMatchType('12 Main St', response())).toBe('no_match');
+   });
+-  it('a server unique without a match is not trusted (falls through to the derivation; OUTPUT panel RG-1)', () => {
++  it('a server unique without a match is not trusted (reads as no_match; OUTPUT panel RG-1)', () => {
+     expect(deriveMatchType('12 Main St', withResolution('unique', { match: null }))).toBe('no_match');
+   });
++  it('task-450 Q19: a payload without resolution is no_match even with a match', () => {
++    expect(deriveMatchType('26 Hurlingham Cres', response({ match: { parcelId: 'P', matchType: 'exact', address: '26 Hurlingham Cres' } }))).toBe('no_match');
++    expect(deriveMatchType('10 Elm', response({ candidates: [candidate('P', '10 Elm St')] }))).toBe('no_match');
++    expect(deriveMatchType('Queen & Spadina', response())).toBe('intersection');
++  });
+   it('RED (planted): a client that ignores resolution would guess no_match for a server unlinked', () => {
+     const legacy = ({ resolution: _r, ...rest }: ConsumerParcelLookupResult) => rest as ConsumerParcelLookupResult;
+     expect(deriveMatchType('12 Main St', legacy(withResolution('unlinked')))).toBe('no_match');
+diff --git a/mobile/__tests__/parcelSearchScreen.behaviour.test.tsx b/mobile/__tests__/parcelSearchScreen.behaviour.test.tsx
+index 9b184245dc5336606331d4ebbfd432527bffcd9f..3b93ea6c59f6a20a9bafa70424681dd83e15a8d9 100644
+--- a/mobile/__tests__/parcelSearchScreen.behaviour.test.tsx
++++ b/mobile/__tests__/parcelSearchScreen.behaviour.test.tsx
+@@ -45,8 +45,9 @@ const Screen = require('../app/(app)/parcel-tool/index').default as React.Compon
+ // eslint-disable-next-line @typescript-eslint/no-require-imports
+ const { useRecentSearchesStore } = require('@/store/recentSearchesStore') as typeof import('@/store/recentSearchesStore');
+ 
+-const hit = (parcelId: string) => ({ match: { parcelId, matchType: 'exact' }, candidates: [], warnings: [], parcel: null });
+-const list = { match: null, candidates: [{ parcelId: 'P1', address: '1 Bathurst St' }, { parcelId: 'P2', address: '2 Bathurst St' }], warnings: [], parcel: null };
++// Dated 2026-11-24 (task-450 SEARCHFIX.2, Q19): the payloads carry the server's resolution; a payload without it now reads as no_match.
++const hit = (parcelId: string) => ({ match: { parcelId, matchType: 'exact' }, candidates: [], warnings: [], parcel: null, resolution: 'unique' });
++const list = { match: null, candidates: [{ parcelId: 'P1', address: '1 Bathurst St' }, { parcelId: 'P2', address: '2 Bathurst St' }], warnings: [], parcel: null, resolution: 'text_candidates' };
+ const type = (text: string) => { fireEvent.changeText(screen.getByTestId('parcel-search-input'), text); act(() => { jest.advanceTimersByTime(400); }); };
+ 
+ beforeEach(() => {
+@@ -159,7 +160,25 @@ describe('parcel search screen behaviour (rows 8, 10, 11, 22, 27, 28)', () => {
+     type('Bathurst St');
+     fireEvent.press(screen.getByTestId('parcel-search-report'));
+     expect(mockOpenBrowser).toHaveBeenCalledTimes(1);
+-    expect(mockOpenBrowser).toHaveBeenCalledWith('https://maxbld.ca/help#topic=address_match&q=Bathurst%20St');
++    // task-450 AC6 (B.7, doc-2:49): the link opens the help topic "Wrong address or lot".
++    expect(mockOpenBrowser).toHaveBeenCalledWith('https://maxbld.ca/help#topic=wrong-lot&q=Bathurst%20St');
+     expect(mockPush).not.toHaveBeenCalled();
+   });
++  it('task-450 AC1 (ruled B): a street with no house number shows the refine line and keeps the rows', () => {
++    render(<Screen />);
++    mockHook = { ...mockHook, data: list };
++    type('Bathurst St');
++    expect(screen.getByTestId('parcel-search-refine')).toBeTruthy();
++    expect(screen.getByTestId('parcel-candidate-P1')).toBeTruthy();
++    expect(screen.getByTestId('parcel-candidate-P2')).toBeTruthy();
++    type('2 Bathurst St');
++    expect(screen.queryByTestId('parcel-search-refine')).toBeNull();
++  });
++  it('task-450 AC4 (L5): the prompt carries the minimum length from the setting, not a typed 3', () => {
++    // eslint-disable-next-line @typescript-eslint/no-require-imports
++    const { SEARCH_MIN_QUERY_LEN } = require('@/components/surfaces/SearchBinding') as typeof import('@/components/surfaces/SearchBinding');
++    render(<Screen />);
++    type('12');
++    expect(screen.getByText('Type at least ' + SEARCH_MIN_QUERY_LEN + ' characters to search.')).toBeTruthy();
++  });
+ });
+diff --git a/mobile/__tests__/schemas.test.ts b/mobile/__tests__/schemas.test.ts
+index d2f0923af591465193d459a8669e360b260191ff..a22136f22d7d9394fe3c9ba214cc4872f5f9c066 100644
+--- a/mobile/__tests__/schemas.test.ts
++++ b/mobile/__tests__/schemas.test.ts
+@@ -318,3 +318,24 @@ describe('AuthGate — useRootNavigationState guard (regression)', () => {
+     );
+   });
+ });
++
++// task-450 SEARCHFIX.2 AC3 (fold section 2 line 47, finding L1; GROUNDER-B D1): the lookup's additive rule (schemas.ts "a server-added field never raises
++// ParcelLookupSchemaError on an installed build") now holds for the lot form too: one extra field parses. The closed enum lists stay.
++describe('ParcelLotFormSchema — additive, closed enums', () => {
++  // eslint-disable-next-line @typescript-eslint/no-require-imports
++  const { ParcelLotFormSchema, ConsumerParcelLookupResultSchema } = require('@/lib/schemas') as typeof import('@/lib/schemas');
++  const lotForm = { detected: 'semi_half', basis: 'doubt_multi_parcel_abut', unsure: true, extra: 1 };
++
++  it('a lot form with one extra field parses', () => {
++    expect(ParcelLotFormSchema.parse(lotForm)).toMatchObject({ detected: 'semi_half', basis: 'doubt_multi_parcel_abut', unsure: true });
++  });
++
++  it('a lookup result with that lot form parses', () => {
++    const result = { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match', lotForm };
++    expect(ConsumerParcelLookupResultSchema.parse(result).lotForm).toMatchObject({ detected: 'semi_half', unsure: true });
++  });
++
++  it('the closed enums stay: an unknown detected value still throws', () => {
++    expect(() => ParcelLotFormSchema.parse({ ...lotForm, detected: 'triplex' })).toThrow(ZodError);
++  });
++});
+diff --git a/mobile/__tests__/semiQuestionPage.behaviour.test.tsx b/mobile/__tests__/semiQuestionPage.behaviour.test.tsx
+index 37d49221862c4bde3d83347803e90abeb230811b..33221cf7553527f7b6160d835f857c49d03009c6 100644
+--- a/mobile/__tests__/semiQuestionPage.behaviour.test.tsx
++++ b/mobile/__tests__/semiQuestionPage.behaviour.test.tsx
+@@ -66,7 +66,7 @@ describe('the question page (semi-question.tsx)', () => {
+     render(<Question />);
+     expect(mockCalls.at(-1)).toBe('PCL-S1');
+     expect(screen.getByText('Is this house one half of a semi-detached pair?')).toBeTruthy();
+-    expect(screen.getByText("Yes, it's one half of a semi")).toBeTruthy();
++    expect(screen.getByText('Yes, it’s one half of a semi')).toBeTruthy(); // task-450 Q8: the curly apostrophe
+     expect(screen.getByText("No, it's detached")).toBeTruthy();
+     expect(screen.getByText('Not sure')).toBeTruthy();
+     expect(screen.getAllByRole('radio')).toHaveLength(3);
+@@ -220,6 +220,25 @@ describe('the question page (semi-question.tsx)', () => {
+     fireEvent.press(screen.getByTestId('parcel-semi-back'));
+     expect(mockReplace.mock.calls).toEqual([['/(app)/parcel-tool']]);
+   });
++  it('task-450 AC5 (V5): opened cold and offline (no data, not fetching, no error) the page shows loading and does not redirect', () => {
++    mockHook = { ...mockHook, data: undefined, isFetching: false, error: null };
++    const view = render(<Question />);
++    expect(mockReplace).not.toHaveBeenCalled();
++    expect(screen.getByText('Searching')).toBeTruthy();
++    mockHook = { ...mockHook, isFetching: true };
++    view.rerender(<Question />);
++    expect(mockReplace).not.toHaveBeenCalled();
++    expect(screen.getByText('Searching')).toBeTruthy();
++    mockHook = { ...mockHook, isFetching: false };
++    view.rerender(<Question />);
++    expect(mockReplace).not.toHaveBeenCalled();
++  });
++  it('task-450 AC5 (V5): an empty parcel id with no data still goes to the Lookup route', () => {
++    mockParams = {};
++    mockHook = { ...mockHook, data: undefined, isFetching: false, error: null };
++    render(<Question />);
++    expect(mockReplace.mock.calls).toEqual([['/(app)/parcel-tool']]);
++  });
+   it('an error shows its notice and Retry refetches', () => {
+     mockHook = { ...mockHook, error: new Error('boom') };
+     render(<Question />);
+diff --git a/mobile/__tests__/semiQuestionScreens.golden.test.ts b/mobile/__tests__/semiQuestionScreens.golden.test.ts
+index 7c3e78ea3bafb6669e20b2bce17ec97301949c4f..43301be70709320445a962cf89f256dd75258b09 100644
+--- a/mobile/__tests__/semiQuestionScreens.golden.test.ts
++++ b/mobile/__tests__/semiQuestionScreens.golden.test.ts
+@@ -152,8 +152,13 @@ describe('the page rules (named cases)', () => {
+     expect(String(busy.props.className)).toContain('opacity-[0.85]');
+     expect(semiQuestionProblems(semiQuestionProps(situation('ask_yes_busy')), situation('ask_yes_busy'))).toEqual([]);
+   });
+-  it('no data and not fetching replaces with the Lookup route; a stale pick outside the ask state is dropped', () => {
+-    expect(situation('redirect_no_data').navigate).toBe(PARCEL_TAB_ROUTE.lookup);
++  // Dated 2026-11-24 (task-450 SEARCHFIX.2, V5; prior title kept: "no data and not fetching replaces with the Lookup route"): no data with a parcel id is
++  // loading, never a redirect (a paused offline first fetch reports isFetching false); only an empty parcel id goes to Lookup. The input keeps its name.
++  it('no data with a parcel id is loading, not a redirect; an empty parcel id goes to the Lookup route; a stale pick outside the ask state is dropped', () => {
++    expect(situation('redirect_no_data').state).toBe('loading');
++    expect(situation('redirect_no_data').navigate).toBeNull();
++    const empty = buildSemiQuestionSituation({ parcelId: '', data: undefined, error: null, isFetching: false, schemaDrift: false, selected: null });
++    expect(empty.navigate).toBe(PARCEL_TAB_ROUTE.lookup);
+     const s = situation('stale_pick_outside_ask');
+     expect([s.selected, s.route]).toEqual([null, null]);
+   });
+diff --git a/mobile/__tests__/surfaceRenderer.smoke.test.tsx b/mobile/__tests__/surfaceRenderer.smoke.test.tsx
+index 16cde507742134d2ba4a986796176c16496b1b49..eb66f6a3f36bdfb1d98c6a1466b7ed228257f497 100644
+--- a/mobile/__tests__/surfaceRenderer.smoke.test.tsx
++++ b/mobile/__tests__/surfaceRenderer.smoke.test.tsx
+@@ -38,7 +38,7 @@ describe('MF-46 follow-up: "Report incorrect address match" (OUTPUT regression F
+   it('the address list carries the report link; a press calls open_help with the topic and the typed address', () => {
+     const a = show('ambiguous');
+     fireEvent.press(screen.getByTestId('parcel-search-report'));
+-    expect(a.open_help).toHaveBeenCalledWith('address_match', (S.ambiguous as SearchSituation).input);
++    expect(a.open_help).toHaveBeenCalledWith('wrong-lot', (S.ambiguous as SearchSituation).input); // task-450 AC6 (B.7): the topic "Wrong address or lot"
+   });
+   it('RED: a host that does not pass open_help cannot render the address list (the unknown-action fence)', () => {
+     const { open_help: _unused, ...rest } = actions();
+@@ -73,11 +73,16 @@ describe('mobile render smoke (FE-33 mobile case)', () => {
+     expect(a.set_input).toHaveBeenCalledWith('26 Hurlingham Cres');
+     expect(screen.getByLabelText('Search Bathurst St')).toBeTruthy();
+   });
+-  it('RateLimitError(0): "0s" and the error notice with Retry, both (RG-12, MF35-DF1); Retry is inside the error notice and called with no argument', () => {
+-    const a = show('rate_limited_zero');
++  // Dated 2026-11-24 (task-450 L3; prior title kept: "RateLimitError(0): "0s" and the error notice with Retry, both (RG-12, MF35-DF1)"): MF35-DF1 is closed.
++  it('RateLimitError(0): "0s" only, one message, no error notice and no Retry (MF35-DF1 closed, task-450)', () => {
++    show('rate_limited_zero');
+     expect(within(screen.getByTestId('parcel-search-ratelimit')).getByText('Too many searches. Try again in 0s.')).toBeTruthy();
+-    const retry = within(screen.getByTestId('parcel-search-error')).getByLabelText('Retry the search');
+-    fireEvent.press(retry);
++    expect(screen.queryByTestId('parcel-search-error')).toBeNull();
++    expect(screen.queryByLabelText('Retry the search')).toBeNull();
++  });
++  it('Retry inside the error notice is called with no argument', () => {
++    const a = show('error');
++    fireEvent.press(within(screen.getByTestId('parcel-search-error')).getByLabelText('Retry the search'));
+     expect(a.retry).toHaveBeenCalledWith();
+   });
+   it('schema drift: its own text and no Retry; 403: the entitlement text, never the miss copy', () => {
+diff --git a/mobile/src/components/surfaces/SearchBinding.tsx b/mobile/src/components/surfaces/SearchBinding.tsx
+index 37d1498a64a1fb733fd0f68b453ee17500dc1c40..4c1c8daf7a67f93fd9e6d557597009e337af417e 100644
+--- a/mobile/src/components/surfaces/SearchBinding.tsx
++++ b/mobile/src/components/surfaces/SearchBinding.tsx
+@@ -44,7 +44,7 @@ export type PropsNode = { component: string; props: Record<string, unknown>; chi
+ export type Child = PropsNode | Ref | Template;
+ 
+ /** P35-D14 a: the closed list of derived names (patterns), declared in the descriptor's deviation entry. */
+-export const DERIVED_NAMES = [/^input$/, /^candidate_count$/, /^recent\.(0|[1-9][0-9]*)$/, /^label\.(0|[1-9][0-9]*)$/, /^segments\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.text$/];
++export const DERIVED_NAMES = [/^input$/, /^min_query_len$/, /^candidate_count$/, /^recent\.(0|[1-9][0-9]*)$/, /^label\.(0|[1-9][0-9]*)$/, /^segments\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.text$/];
+ 
+ /** SRCH.DAYLIGHT (task-322): the prop colours are the report's Daylight hexes (reportPage.ts REPORT_HEX, twins of the report-* keys of mobile/tailwind.config.js); the dark PARCEL_SEARCH_HEX stays for the Account screen and the shelf. */
+ const H = { primary: R.amber, onPrimary: R.ink, check: R.ink, textMuted: R.muted, placeholder: R.muted } as const;
+@@ -81,7 +81,7 @@ const pill = (s: SearchSituation): PropsNode =>
+       autoCorrect: false,
+       returnKeyType: 'search',
+       accessibilityLabel: content('search.input.label'),
+-      accessibilityHint: content('search.input.hint'),
++      accessibilityHint: { text: content('search.input.hint'), vars: { min: derived('min_query_len') } }, // task-450 L5: the setting fills {min}
+     }),
+     ...(s.isFetching
+       ? [node('ActivityIndicator', { key: 'spinner', testID: 'parcel-search-spinner', size: 'small', color: H.primary, accessibilityLabel: content('search.searching') })]
+@@ -199,13 +199,14 @@ const addressList = (s: SearchSituation): PropsNode[] => {
+       node('Icon', { key: 'select-icon', icon: 'ArrowRight', size: I.button, color: H.onPrimary }),
+     ]),
+     // MF-46 follow-up (P35-D18 a, dated 2026-11-12): "Report incorrect address match" opens Help & Support with the topic and the query.
++    // Dated 2026-11-24 (task-450 AC6, B.7 doc-2:49; prior topic address_match): the topic is wrong-lot ("Wrong address or lot").
+     node('Button', {
+       key: 'report',
+       testID: 'parcel-search-report',
+       variant: 'link',
+       className: L.report,
+       accessibilityRole: 'link',
+-      onPress: { action: 'open_help', topic: 'address_match', q: derived('input') },
++      onPress: { action: 'open_help', topic: 'wrong-lot', q: derived('input') },
+     }, [node('Text', { key: 'report-text', className: L.reportText }, [content('list.report')])]),
+   ];
+ };
+@@ -218,7 +219,7 @@ const tail = (s: SearchSituation): PropsNode[] => [
+       node('Text', { key: 'miss-text', testID: 'parcel-search-empty', className: L.missText }, [content('search.miss')]),
+     ])]
+     : []),
+-  ...(s.showPrompt ? [node('Text', { key: 'prompt', testID: 'parcel-search-prompt', className: L.prompt }, [content('search.prompt')])] : []),
++  ...(s.showPrompt ? [node('Text', { key: 'prompt', testID: 'parcel-search-prompt', className: L.prompt }, [{ text: content('search.prompt'), vars: { min: derived('min_query_len') } }])] : []),
+ ];
+ 
+ /** The props tree of one render. Block order is the legacy one (must-survive row 17). A navigable outcome adds `navigate` (the effect pushes it). */
+@@ -253,6 +254,7 @@ export function searchData(s: SearchSituation): BindingData {
+     },
+     derived: {
+       input: s.input,
++      min_query_len: SEARCH_MIN_QUERY_LEN, // task-450 L5: the setting (config.min_query_len through sliceNumber), never a typed 3
+       candidate_count: s.candidates.length,
+       recent: s.recent,
+       label: s.candidates.map((c) => c.address || c.parcelId),
+diff --git a/mobile/src/generated/surfaces/mobile_parcel_search.json b/mobile/src/generated/surfaces/mobile_parcel_search.json
+index a9b8c0f1c6bf919c0dff344f9d22c486045200dc..1843bc187b4b984436bc0ecfcfc8e1cf47863614 100644
+--- a/mobile/src/generated/surfaces/mobile_parcel_search.json
++++ b/mobile/src/generated/surfaces/mobile_parcel_search.json
+@@ -1,5 +1,5 @@
+ {
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha ab33596f5ac9847c)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 5ead5340c80ff4c0)",
+   "surface": "mobile_parcel_search",
+   "config": {
+     "debounce_ms": 400,
+@@ -42,20 +42,20 @@
+     "footer.terms": "Terms of Service",
+     "list.badge": "{count} candidates",
+     "list.rail": "Ambiguous address query",
+-    "list.refine": "More than 10 lots match. Add a house number to narrow it down.",
++    "list.refine": "Add a house number to narrow it down.",
+     "list.report": "Report incorrect address match",
+     "list.select": "Select",
+     "list.select.label": "Open the selected lot",
+     "search.chip.label": "Search {query}",
+     "search.entitlement": "Your subscription doesn't include the parcel tool right now. This isn't a missing address — reactivate to search lots again.",
+     "search.error": "Couldn’t reach the lot service. Check your connection and try again.",
+-    "search.input.hint": "Enter at least 3 characters to search for a lot",
++    "search.input.hint": "Enter at least {min} characters to search for a lot",
+     "search.input.label": "Search a Toronto address",
+     "search.input.placeholder": "Enter a Toronto address",
+     "search.legal": "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.",
+     "search.miss": "No parcel found for that address.",
+     "search.outside_toronto": "Lots are only available in Toronto.",
+-    "search.prompt": "Type at least 3 characters to search.",
++    "search.prompt": "Type at least {min} characters to search.",
+     "search.ratelimit": "Too many searches. Try again in {seconds}s.",
+     "search.reports_left": "{left} of {allowance} reports left until {reset}",
+     "search.retry.label": "Retry the search",
+diff --git a/mobile/src/generated/surfaces/mobile_parcel_semi_question.json b/mobile/src/generated/surfaces/mobile_parcel_semi_question.json
+index 15da022215417be7c3357439e78ec9255114bd4b..2a4f8b730416489662511d25a1050914781749a9 100644
+--- a/mobile/src/generated/surfaces/mobile_parcel_semi_question.json
++++ b/mobile/src/generated/surfaces/mobile_parcel_semi_question.json
+@@ -1,5 +1,5 @@
+ {
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha d5ca9629c958b779)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 5cd9194e62939d1a)",
+   "surface": "mobile_parcel_semi_question",
+   "config": {
+     "continue_wait_ms": 60000
+@@ -14,7 +14,7 @@
+   "content": {
+     "back.label": "Back to search",
+     "question.title": "Is this house one half of a semi-detached pair?",
+-    "answer.yes": "Yes, it's one half of a semi",
++    "answer.yes": "Yes, it’s one half of a semi",
+     "answer.no": "No, it's detached",
+     "answer.not_sure": "Not sure",
+     "select.none": "Choose an answer",
+diff --git a/mobile/src/lib/parcelSearchMatch.ts b/mobile/src/lib/parcelSearchMatch.ts
+index 38d2fd989ab6c05e839a4e1f119ae54c7f908d8c..9e7e045a7bef87f523d143d90c60233480fee639 100644
+--- a/mobile/src/lib/parcelSearchMatch.ts
++++ b/mobile/src/lib/parcelSearchMatch.ts
+@@ -22,6 +22,8 @@
+ // `deriveMatchType` obeys it; `no_match` still falls through to the intersection query shape (the server has no intersection parsing), and a
+ // server `text_candidates` now beats the intersection shape. The text below describes the payload BEFORE MF-53 and the client derivation,
+ // which still runs when `resolution` is absent (a payload from an older server). Prior text kept.
++// Dated 2026-11-24 (task-450 SEARCHFIX.2, Q19; GROUNDER-QUESTIONS.md:73; prior text kept): the client derivation is deleted, as its TODO(contract)
++// ordered; a payload without `resolution` reads as the server's no_match (or the intersection shape). The server always sends it (lookup-flow.ts).
+ //
+ // WHAT THE SERVER ACTUALLY SENDS TODAY, measured.
+ // `GET /api/parcels/lookup?q=` returns `{ match, candidates, warnings, parcel }`. `match.matchType`
+@@ -168,6 +170,8 @@ export function isIntersectionQuery(query: string): boolean {
+  *
+  * SERVER VALUE WINS. If the response already names one of the five ruled types, that is the
+  * answer and nothing below runs. Everything after that line is the TODO(contract) shim.
++ * Dated 2026-11-24 (task-450 Q19; prior text kept): the shim is deleted; without a usable `resolution` the outcome is no_match, or intersection
++ * for an intersection-shaped query (the server has no intersection parsing).
+  */
+ export function deriveMatchType(
+   query: string,
+@@ -190,22 +194,19 @@ export function deriveMatchType(
+     return data.resolution;
+   }
+ 
+-  // 1. Forward-compatible path: the contract declares the type, we obey it.
+-  //    `matchType` is currently typed as the narrow 'exact' | 'typeahead' | 'direct' enum, so this
+-  //    never fires today — it fires the day the contract and mobile/src/lib/schemas.ts widen.
+-  const declared: unknown = data.match?.matchType;
+-  if (isParcelMatchType(declared)) return declared;
+-
+-  // 2. TODO(contract): derive the type from the shape of a response that does not declare one.
+-  //    This is the ONLY place a count is read anywhere in the SEARCH surface. Delete this block
+-  //    when `/api/parcels/lookup` returns a resolution type.
+-  if (data.match) return 'unique';
+-  if (isIntersectionQuery(trimmed)) return 'intersection';
+-  if (data.candidates.length > 0) return 'text_candidates';
+-  // NOTE: a zero-candidate response is reported as `no_match`, never as `unlinked`. `unlinked`
+-  // means "the address resolved but no parcel is linked to it", which this payload cannot express.
+-  // Guessing would be exactly the silent fallback the ruling forbids.
+-  return 'no_match';
++  // task-450 Q19: no usable resolution is the server's no_match. Never `unlinked` or a count-derived guess: that would be the silent fallback
++  // the ruling forbids.
++  return isIntersectionQuery(trimmed) ? 'intersection' : 'no_match';
++}
++
++/**
++ * task-450 SEARCHFIX.2 (2a, phone side; RR-0443 c): does the typed text carry a house number? True when the text before the first comma holds a
++ * digit. It copies the server's comma cut (src/lib/admin/parcel-lookup.ts) but not its first-word digit test: any digit counts, so
++ * "Unit 4, 123 Yonge St" is numbered. Known differences fail open to the behaviour before task-450 (no refine line, never a hidden list):
++ * "Highway 27", a bare "Unit 4" and a trailing unit ("King St W Apt 4") count as numbered.
++ */
++export function hasHouseNumber(query: string): boolean {
++  return /\d/.test(query.split(',')[0] ?? '');
+ }
+ 
+ /** True when the candidate list hit the contract cap and the user should be asked to narrow. */
+@@ -273,6 +274,8 @@ export { diffCandidateAddress, type AddressSegment } from './parcelSearchCore';
+ // mobile/app/(app)/parcel-tool/index.tsx verbatim (the must-survive list of ~/Buildo-scratch/mcfrontend/MF-35/plan.v2.md §4, rows 11-17):
+ // the Toronto check before the network, the error classes, `deriveMatchType(debounced, error ? undefined : data)`, the 10-cap after the
+ // slice with the refine line at >= the cap, the miss only when not fetching and no error, the prompt only below the minimum and with no error.
++// Dated 2026-11-24 (task-450 SEARCHFIX.2; prior text kept): the miss shows with no error whether or not a re-fetch runs (V4), the refine line also
++// shows for a candidate list typed with no house number (2a, ruled B), and a retry-after of 0 is one message (L3, MF35-DF1 closed).
+ 
+ /** Row 11: the hook gets '' for an out-of-Toronto query, so a refusal costs nothing against the 60/min bucket. */
+ export function searchQueryArg(debounced: string): string {
+@@ -285,7 +288,7 @@ export type ParcelSearchErrorClass = {
+   retryAfterSeconds: number | null;
+   /** 403: the entitlement refusal, never the miss copy. */
+   entitlement: boolean;
+-  /** Everything else, and a RateLimitError(0) too (legacy `!retryAfter`; DEFECT MF35-DF1, pinned, not fixed). */
++  /** Everything else. MF35-DF1 closed (task-450 L3; prior text kept: "and a RateLimitError(0) too (legacy `!retryAfter`; DEFECT MF35-DF1, pinned, not fixed)"). */
+   unexpected: boolean;
+   /** The parse failure: its own text, no Retry. */
+   schemaDrift: boolean;
+@@ -295,7 +298,7 @@ export type ParcelSearchErrorClass = {
+ export function classifyParcelSearchError(error: unknown, schemaDrift: boolean): ParcelSearchErrorClass {
+   const retryAfterSeconds = error instanceof RateLimitError ? error.retryAfterSeconds : null;
+   const entitlement = error instanceof ApiError && error.status === 403;
+-  const unexpected = error != null && !retryAfterSeconds && !entitlement;
++  const unexpected = error != null && retryAfterSeconds == null && !entitlement;
+   return { rateLimited: retryAfterSeconds != null, retryAfterSeconds, entitlement, unexpected, schemaDrift: unexpected && schemaDrift };
+ }
+ 
+@@ -308,6 +311,7 @@ export type SearchSituation = {
+   errors: ParcelSearchErrorClass;
+   /** Capped at the limit, after the slice. */
+   candidates: ParcelCandidate[];
++  /** Show the refine line: the list hit the cap, or (task-450, ruled B) a candidate list for a query with no house number; the list stays. */
+   overCap: boolean;
+   showMiss: boolean;
+   showPrompt: boolean;
+@@ -339,6 +343,8 @@ export function buildSearchSituation(args: {
+   const { debounced, data, error, isFetching } = args;
+   const outcome = deriveMatchType(debounced, error ? undefined : data);
+   const candidates = outcome === 'text_candidates' && data ? data.candidates.slice(0, args.cap) : [];
++  // task-450 (2a, RR-0443 c; QUESTIONS-RULED.md Q8.1 B): a candidate list for a query with no house number also asks for one; the rows are kept.
++  const noNumber = outcome === 'text_candidates' && !hasHouseNumber(debounced);
+   const selected = candidates.some((c) => c.parcelId === args.selectedParcelId) ? args.selectedParcelId : null;
+   return {
+     input: args.input,
+@@ -347,8 +353,9 @@ export function buildSearchSituation(args: {
+     isFetching,
+     errors: classifyParcelSearchError(error, args.schemaDrift),
+     candidates,
+-    overCap: isOverCandidateCap(candidates, args.cap),
+-    showMiss: outcome === 'no_match' && !isFetching && error == null,
++    overCap: noNumber || isOverCandidateCap(candidates, args.cap),
++    // task-450 V4 (Spec 99 §6.5 :527-530): a settled miss keeps its line on a re-fetch; isFetching is not a render gate here.
++    showMiss: outcome === 'no_match' && error == null,
+     showPrompt: outcome !== 'outside_toronto' && debounced.trim().length < args.minQueryLen && error == null,
+     recent: [...args.recent],
+     selectedParcelId: selected,
+diff --git a/mobile/src/lib/schemas.ts b/mobile/src/lib/schemas.ts
+index 670b101a0bc1ed2c85e92f396117c24cabbdb107..45670d6cfe089fa069493409faae6dc686e2dbfe 100644
+--- a/mobile/src/lib/schemas.ts
++++ b/mobile/src/lib/schemas.ts
+@@ -368,7 +368,8 @@ export const ParcelCandidateSchema = z.object({
+ 
+ // MF-53 (Spec 100 §3.2 dated note 2026-11-11): the outcome name and the map block. Both OPTIONAL, and the map objects are plain (not
+ // .strict()), so a payload from an older server still parses and a server-added field never raises ParcelLookupSchemaError on an installed
+-// build (PLAN panel regression LOW-9). The client derivation in parcelSearchMatch.ts runs only when `resolution` is absent.
++// build (PLAN panel regression LOW-9). The client derivation in parcelSearchMatch.ts runs only when `resolution` is absent. Dated 2026-11-24
++// (task-450 SEARCHFIX.2, Q19; prior text kept): that derivation is deleted; a payload without `resolution` reads as the server's no_match.
+ const LatLngSchema = z.object({ lat: z.number(), lng: z.number() });
+ const RingSchema = z.array(z.tuple([z.number(), z.number()]));
+ export const LotOutlineSchema = z.union([
+@@ -419,13 +420,13 @@ export const ReportPageViewSchema = z.object({
+ 
+ // SEMI-B (Spec 78 O-4 + the doubt rule; operator "semi all y" / "semi ask a", 2026-11-13): mirrors src/app/api/parcels/lookup/types.ts
+ // ConsumerLotFormSchema. Optional and nullable: an older server omits it and the app then never asks.
+-export const ParcelLotFormSchema = z
+-  .object({
+-    detected: z.enum(['semi_half', 'detached']),
+-    basis: z.enum(['o4_two_parcel_abut', 'doubt_multi_parcel_abut', 'o4_not_met']),
+-    unsure: z.boolean(),
+-  })
+-  .strict();
++// Dated 2026-11-24 (task-450 SEARCHFIX.2, L1; GROUNDER-B D1; prior text kept: the object ended in .strict()): plain, the MF-53 form above, so a
++// server-added field never raises ParcelLookupSchemaError on an installed build. The closed enum lists stay.
++export const ParcelLotFormSchema = z.object({
++  detected: z.enum(['semi_half', 'detached']),
++  basis: z.enum(['o4_two_parcel_abut', 'doubt_multi_parcel_abut', 'o4_not_met']),
++  unsure: z.boolean(),
++});
+ export type ParcelLotForm = z.infer<typeof ParcelLotFormSchema>;
+ 
+ export const ConsumerParcelLookupResultSchema = z.object({
+diff --git a/mobile/src/lib/semiQuestion.ts b/mobile/src/lib/semiQuestion.ts
+index 1eba6b691ffd560e151844aa6ce2be6c402f8b9b..3d0bb19b5e44cc2ba3f32e10a54dd1d6d2000c80 100644
+--- a/mobile/src/lib/semiQuestion.ts
++++ b/mobile/src/lib/semiQuestion.ts
+@@ -50,7 +50,7 @@ export type SemiQuestionSituation = {
+   route: string | null;
+   /** Continue's answered lookup is running (SRCH.SEMI-3): true only in the ask state. */
+   busy: boolean;
+-  /** The redirect state's target (the report; the Lookup route with no data), else null. */
++  /** The redirect state's target (the report; the Lookup route for an empty parcel id), else null. task-450 V5: no data with an id is loading. */
+   navigate: string | null;
+ };
+ 
+@@ -58,19 +58,22 @@ export function buildSemiQuestionSituation(args: {
+   parcelId: string;
+   data: ConsumerParcelLookupResult | undefined;
+   error: unknown;
++  /** Kept in the type so callers do not change; not read since task-450 V5 (Spec 99 §6.5: isFetching is not a render gate). */
+   isFetching: boolean;
+   schemaDrift: boolean;
+   selected: SemiAnswer | null;
+   /** Continue's answered lookup is running; optional, false when omitted. */
+   submitting?: boolean;
+ }): SemiQuestionSituation {
+-  const { parcelId, data, error, isFetching } = args;
++  const { parcelId, data, error } = args;
+   const errors = classifyParcelSearchError(error, args.schemaDrift);
+   let state: SemiQuestionState;
+   let navigate: string | null = null;
+   if (error != null) state = 'error';
+   else if (!data) {
+-    if (isFetching) state = 'loading';
++    // task-450 V5 (Spec 99 §6.5 :527-530; QUESTIONS-RULED.md Q8.4 a): a paused offline first fetch reports isFetching false with no data, so no data
++    // with a parcel id is loading until the lookup settles; only an empty parcel id has nothing to wait for and goes to Lookup.
++    if (parcelId) state = 'loading';
+     else { state = 'redirect'; navigate = PARCEL_TAB_ROUTE.lookup; }
+   } else if (data.lotForm?.unsure === true) state = 'ask';
+   else { state = 'redirect'; navigate = parcelSearchRoute('unique', { parcelId, query: '' }); }
+

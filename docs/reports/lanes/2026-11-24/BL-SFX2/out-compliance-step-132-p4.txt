@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-24T16:04:47.114Z file_sha256=327d3575d53db5f9dea0b5b90a41b670ed1403d9c6d539be430cbfd6e03e8808 prompt_sha256=3afe30df961f1066a5e930607374fb5c41fbe14c0116e5f50d51ef08302151ad
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-compliance-step-132-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0392 "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)." — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json "flag": "MAXBLD_WEB_LIVE (web target only)" — the guard declaration moves from `none` to a named flag, and no acceptance criterion, folded finding or dated note in the pasted card names MAXBLD_WEB_LIVE or says what enforces it, while every other edit in the same file carries a "Dated 2026-11-24 (task-450 ...)" attribution — revert to "none", or cite the ruling that names the flag and add an evidence line showing the gate it describes — the change as pasted is an unnamed guard edit.
+
+BUG severity=MED — RR-0392 "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)." — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json "answer.yes": "Yes, it’s one half of a semi" — the straight apostrophe is changed to a curly one on one key only, which no acceptance criterion or folded finding names and which now disagrees with "answer.no": "No, it's detached" in the same file and with the descriptor's own purpose text "Yes, it's one half of a semi" — revert, or cite the typography ruling and apply it to every key and to the descriptor copy together.
+
+BUG severity=MED — RR-0392 "Nothing is added that the plan or a ruling does not name (RR-0392, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1975)." — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json "the page counts nothing; the lookup it calls counts a produced report (F02)" — the metering `why` now asserts the lookup counts a report while the evidence row in the same block still says "the only record of a lookup is a log line; it increments nothing", so the descriptor contradicts itself and no pasted ruling names a metering change — either keep "counts nothing", or add the F02 counter's evidence and drop the contradicting line.
+
+DEFER severity=MED — RR-0392 "Findings folded: 2a (phone side), V4, V5, L1, L3, L5, N4, R2, R4, R5 (golden header), B.7 (topic and the two search-page links), Q4, Q8, Q19 (the shim)." — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json "no track() call in the file (task-450 R2: the file has 128 lines; prior cite :1-312)" — the sole witness for `emits: none` is still parcel-tool/index.tsx, the same file the other R2 re-points say no longer renders the screen, so the binding that does render it is not covered by the grep — add mobile/src/components/surfaces/SearchBinding.tsx to `evidence.emits` with its line range.
+
+DEFER severity=LOW — AC #1 "#1 A query with no house number shows the refine line (worded true at any row count) and keeps the candidate list" — src/components/surfaces/web/SearchBinding.tsx "...(s.overCap ? [node('Text', { key: 'refine', testID: 'parcel-search-refine', className: L.refine }, [content('list.refine')])] : [])" — this chunk changes the refine copy path nowhere and leaves the web refine line gated on `s.overCap`, so the web half of AC #1 ("on the phone and web search pages") rests on a situation input not present in this chunk — cite the line where `overCap` picks up "street typed with no house number" for the web situation, or gate the refine node on that condition directly.
+
+DEFER severity=NIT — AC #1 "#1 A query with no house number shows the refine line (worded true at any row count) and keeps the candidate list" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json "parcel-search-refine (the candidate cap was reached" — the check's `why` still states the cap as the single trigger, with the new trigger only appended in a trailing dated note, so the declared condition of the row reads against AC #1 — rewrite the parenthetical to "shown at the cap or for a street typed with no house number" and keep the dated note for history.
+
+MET — AC #1 (phone side) — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json — the dated note and the legacy-oracle INTENTIONALLY_CHANGED row record the refine line showing next to a shorter list for a street with no house number, with RR-0443 c and Q8.2 quoted as the ruling.
+MET — AC #4 — src/components/surfaces/web/SearchBinding.tsx — "const SEARCH_MIN_QUERY_LEN = sliceNumber(searchSlice, 'min_query_len');" with the prompt and input hint templated on derived('min_query_len'), and the legacy oracle's typed '3' removed from CONFIG.
+MET — AC #6 (web half) — src/components/surfaces/web/SearchBinding.tsx — "onClick: { action: 'open_help', topic: 'wrong-lot', q: derived('input') }" plus the new help.mailto.wrong_lot string and the test that pins the topic to a web_help mailto part.
+MET — R4 (folded finding) — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json — the dated note declares why render.projection stays none beside a populated render.list and why the busy flag is not a state name.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 3
+Rules met: none
+
+---
+⏱  88257ms (88.3s)
+📊 Tokens — total: 49360, input: 33014, output: 16346, reasoning: 14939

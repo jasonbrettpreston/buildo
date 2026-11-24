@@ -157,16 +157,20 @@ describe('mobile_parcel_search goldens (FE-31; plan v3 §7)', () => {
 describe('named cases (plan v3 §7; must-survive rows 7-17)', () => {
   const at = (k: string): PropsNode => searchProps(situations[k] as SearchSituation);
   const ids = (t: PropsNode): string[] => nodes(t).map((n) => n.props.testID).filter((x): x is string => typeof x === 'string');
-  it('RateLimitError(0) renders BOTH the 429 notice ("0s") and the error block with Retry (MF35-DF1, pinned, not fixed)', () => {
+  // Dated 2026-11-24 (task-450 L3, FOLD-PLAN.md:44; prior title kept: "renders BOTH the 429 notice ("0s") and the error block with Retry (MF35-DF1,
+  // pinned, not fixed)"): MF35-DF1 is closed; a retry-after of 0 shows one message, as the 7-second case does.
+  it('RateLimitError(0) renders the 429 notice ("0s") only, no error block and no Retry (MF35-DF1 closed, task-450)', () => {
     const t = at('rate_limited_zero');
-    expect(ids(t)).toEqual(expect.arrayContaining(['parcel-search-ratelimit', 'parcel-search-error', 'parcel-search-retry']));
+    expect(ids(t)).toContain('parcel-search-ratelimit');
+    expect(ids(t)).not.toEqual(expect.arrayContaining(['parcel-search-error']));
+    expect(ids(t)).not.toEqual(expect.arrayContaining(['parcel-search-retry']));
     expect(refs(t, 'contract')).toContain('contract_parcels_lookup.errors.429.retryAfterSeconds');
   });
   it('the spinner shows over still-listed candidates; the block order is notices, list, refine, miss, prompt', () => {
     const t = at('fetching_with_candidates');
     expect(ids(t)).toEqual(expect.arrayContaining(['parcel-search-spinner', 'parcel-candidate-100100']));
     const order = ids(at('rate_limited_zero')).filter((x) => /ratelimit|error|retry|candidate|refine|empty|prompt/.test(x));
-    expect(order).toEqual(['parcel-search-ratelimit', 'parcel-search-error', 'parcel-search-retry']);
+    expect(order).toEqual(['parcel-search-ratelimit']); // task-450 L3: one message for a retry-after of 0
   });
   it('the prompt shows for a short query and not for an idle 3+ query; outside Toronto shows no spinner and no prompt', () => {
     expect(ids(at('prompt_type_more'))).toContain('parcel-search-prompt');
@@ -206,9 +210,11 @@ describe('one home for the config values (row 24, RG-14)', () => {
   });
   it('the slice config equals the constants, and the content strings that state them carry the same numbers', () => {
     expect(SEARCH_SLICE.config).toEqual({ debounce_ms: SEARCH_DEBOUNCE_MS, min_query_len: SEARCH_MIN_QUERY_LEN, entitlement_stale_ms: 0, lookup_retry_max: 3, lookup_stale_ms: 60000 }); // FIX.TUNE (task-378): the phone tunables are declared beside them
-    expect(SEARCH_SLICE.content['search.prompt']).toContain(`at least ${SEARCH_MIN_QUERY_LEN} characters`);
-    expect(SEARCH_SLICE.content['search.input.hint']).toContain(`at least ${SEARCH_MIN_QUERY_LEN} characters`);
-    expect(SEARCH_SLICE.content['list.refine']).toContain(`More than ${SEARCH_CANDIDATE_LIMIT} lots`);
+    // Dated 2026-11-24 (task-450 L5 and Q8.2; prior text kept: the strings held "at least ${SEARCH_MIN_QUERY_LEN} characters" and "More than
+    // ${SEARCH_CANDIDATE_LIMIT} lots"): the minimum length is a {min} template filled from the setting, and the refine line names no count.
+    expect(SEARCH_SLICE.content['search.prompt']).toContain('at least {min} characters');
+    expect(SEARCH_SLICE.content['search.input.hint']).toContain('at least {min} characters');
+    expect(SEARCH_SLICE.content['list.refine']).toBe('Add a house number to narrow it down.');
   });
 });
 

@@ -4,11 +4,11 @@ title: >-
   SEARCHFIX.2 Search page: a street with no number asks for a house number;
   no-match flicker, strict lot-form check, typed "3", double retry message and
   the wrong-lot help topic corrected
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-SFX2'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T15:38:00Z'
+updated_date: '2026-11-24T16:43:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -29,6 +29,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-24/BL-SFX2/REPORT.md
+  - docs/reports/lanes/2026-11-24/BL-SFX2/GROUNDER.md
+  - docs/reports/lanes/2026-11-24/BL-SFX2/TRIAGE.md
 type: fix
 ordinal: 150020
 ---
@@ -46,7 +49,7 @@ RULED at the plan stage by the plan grounder (RR-0443 b; QUESTIONS-RULED.md Q8.1
 
 Dated notes owed: Spec 99 (the redirect-once pattern); task-319.
 
-Files: mobile/src/lib/parcelSearchMatch.ts, mobile/src/lib/semiQuestion.ts, mobile/src/lib/schemas.ts, mobile/src/components/surfaces/SearchBinding.tsx, src/components/surfaces/web/SearchBinding.tsx, scripts/surfaces/_schema/static-page.json, scripts/surfaces/_schema/static-page.schema.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json, mobile/src/generated/surfaces/mobile_parcel_search.json, mobile/src/generated/surfaces/mobile_parcel_semi_question.json, mobile/__tests__/parcelSearchMatch.test.ts, mobile/__tests__/parcelSearchScreen.behaviour.test.tsx, mobile/__tests__/semiQuestionPage.behaviour.test.tsx, mobile/__tests__/schemas.test.ts, mobile/__tests__/daylightSearchPages.golden.test.ts, src/tests/surfaces/search-web-binding.ui.test.tsx, docs/specs/03-mobile/99_mobile_state_architecture.md, src/tests/fixtures/surfaces/, scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json, mobile/__tests__/parcelScreens.golden.test.ts, mobile/__tests__/surfaceRenderer.smoke.test.tsx, mobile/__tests__/semiQuestionScreens.golden.test.ts, mobile/__tests__/fixtures/parcelSearch.situations.json, mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json, mobile/__tests__/fixtures/surfaces/mobile_parcel_semi_question.goldens.json, src/tests/surfaces/static-page.logic.test.ts, src/tests/surfaces/surface-validate.logic.test.ts, src/tests/surfaces/surface-conformance.logic.test.ts, src/tests/surfaces/parcel-legacy-oracle.logic.test.ts
+Files: mobile/src/lib/parcelSearchMatch.ts, mobile/src/lib/semiQuestion.ts, mobile/src/lib/schemas.ts, mobile/src/components/surfaces/SearchBinding.tsx, src/components/surfaces/web/SearchBinding.tsx, scripts/surfaces/_schema/static-page.json, scripts/surfaces/_schema/static-page.schema.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json, mobile/src/generated/surfaces/mobile_parcel_search.json, mobile/src/generated/surfaces/mobile_parcel_semi_question.json, mobile/__tests__/parcelSearchMatch.test.ts, mobile/__tests__/parcelSearchScreen.behaviour.test.tsx, mobile/__tests__/semiQuestionPage.behaviour.test.tsx, mobile/__tests__/schemas.test.ts, mobile/__tests__/daylightSearchPages.golden.test.ts, src/tests/surfaces/search-web-binding.ui.test.tsx, docs/specs/03-mobile/99_mobile_state_architecture.md, src/tests/fixtures/surfaces/, scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json, mobile/__tests__/parcelScreens.golden.test.ts, mobile/__tests__/surfaceRenderer.smoke.test.tsx, mobile/__tests__/semiQuestionScreens.golden.test.ts, mobile/__tests__/fixtures/parcelSearch.situations.json, mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json, mobile/__tests__/fixtures/surfaces/mobile_parcel_semi_question.goldens.json, src/tests/surfaces/static-page.logic.test.ts, src/tests/surfaces/surface-validate.logic.test.ts, src/tests/surfaces/surface-conformance.logic.test.ts, src/tests/surfaces/parcel-legacy-oracle.logic.test.ts, scripts/surfaces/_schema/census/mobile-product.json, docs/reports/generated/127-surface-registry.md, docs/reports/generated/127-surface-review-queue.md, docs/reports/generated/rule-lists-by-kind.md
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -293,4 +296,22 @@ rg#6 MED folded placed in §6.5 after
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-24 taken on the board at lane launch (lane BL-SFX2, worktree /Users/brettpreston_macmini/Buildo-wt-sfx2, branch wf2/inc1b-sfx2), RR-0240
+
+2026-11-24 tests first (lane BL-SFX2): the acceptance tests of plan section 4 written; red attempt is a commit with only the test and task files staged (pre-commit related run), red.out in the lane report.
+
+2026-11-24 red: the commit attempt with only the test, fixture and task files staged was refused by the pre-commit related run: 5 files, 8 tests failed (parcel-legacy-oracle x2, static-page T8, search-web-binding x3, surface-conformance C-1, surface-validate FE-13). The mobile jest tests are not reached by the hook's related run (src/ and scripts/ only), so their red is not proven by the hook (UNVERIFIED until the push station), as the BL-LOTCARD and BL-SEMI lanes recorded. surface-validate --check measured 426 strings before and 427 after. MF35-DF1 closed (L3). Generators: emit-mobile-surfaces --write (7 files), search-golden-capture --write (11), semi-question-golden-capture --write (8), emit --write, buildGoldens one-line caller (70 goldens, 12 rewritten), all --check ok.
+
+2026-11-24 Files line gains scripts/surfaces/_schema/census/mobile-product.json: the first green commit attempt was refused by the pre-commit generate-surface-registry --check (DESCRIPTOR DRIFT: the two descriptors disagree with the census). The census row is the source of each descriptor (generate-surface-registry.mjs --emit-descriptors); the plan's reading 'census files (no reader)' (QUESTIONS-RULED.md, NOT needed list) did not hold. The census rows now equal the edited descriptors (emit-descriptors rewrote them byte for byte unchanged), and the generator's own outputs docs/reports/generated/127-surface-registry.md and 127-surface-review-queue.md were regenerated (docs/reports, exempt).
+
+2026-11-24 Files line also gains the three generated pages the pre-commit checks regenerate from this change (docs/reports/generated/127-surface-registry.md and 127-surface-review-queue.md from the census, rule-lists-by-kind.md from the Spec 99 edit); check-task-files requires them declared. The task-319 dated note lands in its own commit (no code file staged).
+
+2026-11-24 output review round 1 (context-r3.md): 40 lens outputs, 171 findings (CRITICAL 0, HIGH 25, MED 57, LOW 82, NIT 7) in docs/reports/lanes/2026-11-24/BL-SFX2/ with FINDINGS.md. Work commit ee3634771, task-319 note 3f4f616fe. Grounder owed (a seat that is not the lane); task stays RUNNING.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed in ee3634771 (work, through the real hooks): the six search page fixes of task-450: (1) a street typed with no house number shows the refine line 'Add a house number to narrow it down.' and keeps the candidate list (ruled B); (2) a settled miss fetched again keeps the no-match line; (3) the lot form parses one extra field, the closed enums stay; (4) the minimum-length copy is filled from config.min_query_len on phone and web, not a typed 3; (5) the semi page opened cold and offline shows loading and does not redirect before the lookup settles; (6) the help page has the topic wrong-lot ('Wrong address or lot') and both search links point at it. Also L3 (a retry-after of 0 shows one message, MF35-DF1 closed), Q19 (client shim deleted), Q8, R2, R4, R5. The Spec 99 section 6.5 dated note is in ee3634771 and the task-319 dated note in 3f4f616fe. The census scripts/surfaces/_schema/census/mobile-product.json and three generated pages (127-surface-registry.md, 127-surface-review-queue.md, rule-lists-by-kind.md) were added to the Files line because the hooks regenerate them from this change. NOT PROVEN BY THE COMMIT HOOK: the mobile jest tests (red and green for AC1, AC2, AC3, AC4, AC5) are not reached by the pre-commit related run; they are owed at the push station, and the task is not complete until they pass there (operator rule: a task is not complete until it actually works). The push station also owes the full suite and the fold with sfx1 and sfx5 (regenerate the three generated pages, re-run surface-validate --check, re-check the 426 to 427 count locks). One later sweep for the 14 piled LOW ids: out-code-review-p1#1, out-code-review-p1#2, out-code-review-p2#3, out-compliance-inc-S-p1#2, out-compliance-mobile-90-p1#4, out-compliance-mobile-98-p1#3, out-compliance-mobile-99-p3#3, out-compliance-plan-protocol-p1#3, out-compliance-plan-protocol-p1#5, out-compliance-step-132-p2#4, out-compliance-surface-136-p1#1, out-compliance-surface-136-p3#3, out-error-paths-p1#1, out-ux-p1#7 (TRIAGE.md).
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 14 pile; grounder docs/reports/lanes/2026-11-24/BL-SFX2/GROUNDER.md; triage docs/reports/lanes/2026-11-24/BL-SFX2/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->

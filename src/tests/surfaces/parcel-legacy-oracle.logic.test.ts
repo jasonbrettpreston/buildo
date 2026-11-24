@@ -17,7 +17,9 @@ const legacy = rj('docs/reports/red-evidence/MF-35/legacy-props.json');
 const content: Record<string, string> = rj('scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json');
 const GDIR = 'src/tests/fixtures/surfaces/mobile_parcel_search';
 const goldens = fs.readdirSync(path.join(ROOT, GDIR)).filter((f) => f.endsWith('.mobile.json')).map((f) => rj(`${GDIR}/${f}`));
-const CONFIG: Record<string, string> = { SEARCH_MIN_QUERY_LEN: '3', SEARCH_CANDIDATE_LIMIT: '10' };
+// Dated 2026-11-24 (task-450 L5; prior text kept: CONFIG held SEARCH_MIN_QUERY_LEN: '3'): the minimum length is a {min} template filled from the setting,
+// so the legacy hint and prompt match as {} forms; the typed 3 is no longer copied here.
+const CONFIG: Record<string, string> = { SEARCH_CANDIDATE_LIMIT: '10' };
 
 /** Ruled changes (CONTRACT, S6 vocabulary), each with its cite: plan v3 §4 rows 6, 9, 18 and the operator rulings quoted in plan v3 §0.2. */
 export const INTENTIONALLY_CHANGED: Record<string, string> = {
@@ -26,6 +28,7 @@ export const INTENTIONALLY_CHANGED: Record<string, string> = {
   'accessibilityLabel=Search ${s.label}': 'the chips are the recent searches; the label is "Search <query>" (ruling 2026-11-09 item 2, P35-D16 a)',
   'accessibilityLabel=Open lot at ${c.address || c.parcelId}': 'a tap now selects a radio card labelled with the address; SELECT opens the lot (accepted 2026-11-09 item 1, P35-D17 a)',
   'Parcel {c.parcelId}': 'the radio cards carry the address only, as the layout (accepted 2026-11-09 item 1; plan v3 §2.2)',
+  'More than {SEARCH_CANDIDATE_LIMIT} lots match. Add a house number to narrow it down.': 'the refine line becomes "Add a house number to narrow it down." at every row count, because it now also shows for a street with no house number next to a shorter list (RR-0443 c, MORNING-DECISIONS.md:2284 "they need to select from the available addresses that are close"; task-450 QUESTIONS-RULED.md Q8.2)',
 };
 
 const fill = (s: string): string => s.replace(/\$?\{([A-Z_]+)\}/g, (m, k: string) => CONFIG[k] ?? m).replace(/\$?\{[^}]+\}/g, '{}');

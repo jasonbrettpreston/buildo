@@ -1,0 +1,1004 @@
+LIST mobile-99 sha256:73a0158536c3811d668482c23b9737e8309a5b5a396559f2fdda0fe2f7c0f54a material sha256:e62667e5789d987fe638b4a22d1bd125046228c80de502e9ec69ad17c2a8e4ce part 1 of 2 chunk 1 of 4
+RULE LIST mobile-99 (docs/specs/03-mobile/99_mobile_state_architecture.md, whole file), part 1 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/reports/generated/127-surface-registry.md","docs/reports/generated/127-surface-review-queue.md","docs/reports/generated/rule-lists-by-kind.md","docs/specs/03-mobile/99_mobile_state_architecture.md","mobile/__tests__/daylightSearchPages.golden.test.ts","mobile/__tests__/fixtures/parcelSearch.situations.json","mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json"]
+
+# Spec 99 — Mobile State Architecture & Ownership Protocol
+
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 2** of `.cursor/active_task.md`.
+
+> Dated note 2026-11-09 (McFrontend Phase 2, MF-41; M-246, prior text kept; operator, verbatim: "1. confirmed" (Part B incl. D-5), record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: Part B confirmed, Spec 126 standard section, MF-20 D-7"): the MaxBLD app (a separate Expo project, Spec 116 §3 dated note 2026-11-09; MF-49) owns its own state and routing: its own root layout and a `parcel_tool` gate, not `decideAuthGateRoute`. The §5 routing arms govern the Buildo app.
+
+**Status:** ACTIVE
+**Cross-references:** Spec 90 (Engineering Protocol §7), Spec 93 (Auth & AuthGate routing), Spec 94 (Onboarding), Spec 95 (User Profiles — server is canonical), Spec 96 (Subscription gate)
+**As-is audit:** `docs/reports/mobile_state_audit_2026-05-02.md`
+
+> ⚠️ **AMENDMENT 2026-09-15 (WF1 "Spec 126/127/128 surface standard") — max-server-side impact. Additive: no rule below is rewritten, and §3 stays normative.**
+>
+> Spec 126 makes Spec 90 §3's "Dumb Glass" prime directive *enforceable* rather than merely stated: under max-server-side the client renders a **fetched projection** — the server owns section order, labels, formatting decisions and which lines render — and the archetype component set draws it. That moves the Layer-2 / Layer-3 boundary in §2, and it does so in a direction this spec already anticipates.
+>
+> **Sections affected, and how:**
+>
+> | §  | Effect |
+> |---|---|
+> | **§2** (the five layers) | Layer 1 **grows** — canonical for the *projection*, not only the data. Layer 2's role is unchanged, but the cached object becomes a projected screen rather than a raw payload. Layer 3 **shrinks to device + ephemeral state only**. Layers 4a/4b and 5 are untouched, and §2.1's hard rules all still hold. |
+> | **§3** (the field ownership matrix) | Stays **normative**, and becomes **descriptor data**: the `Field / Server Type / Local Mirror / Owner Layer / Canonical Writer / Authorized Readers / Bridge` row is the SURFACE descriptor's `state` category verbatim (Spec 126 §4.1). Rows for fields that are Layer-3 *mirrors* of Layer-1 data retire as those mirrors collapse. Measured: **4 of the 7 stores are MMKV-persisted mirrors of server fields** — `filterStore` (139L) mirrors 6 `user_profiles` columns, `userProfileStore` (156L) mirrors 5 notification-preference columns. |
+> | **§4** (the six bridge patterns) | **B2** (TanStack→Zustand) and **B3** (Zustand→Server) retire *for the mirrored fields only*. B1 is unchanged and its query-key hygiene rule becomes a schema constraint: `inputs.query_key` is single-param on the DETAIL archetype. The six patterns are not reduced to four — they are unused for fields that no longer have a Layer-3 home. |
+> | **§7.7** (funnel ratio invariants) | Unchanged in substance; the per-method attempted/succeeded/failed contract becomes `emits.counters` with the ratio stated as a declared invariant, so the drift it warns about is checked rather than greppped. |
+> | **§8.6** (the schema-vs-matrix drift check) | **The gap is confirmed, not closed, by this amendment.** `mobile/scripts/check-spec99-matrix.mjs` exists and **nothing runs it** — re-verified 2026-09-15: no match in `.husky/`, `.github/`, `mobile/package.json` or `package.json`; `mobile/__tests__/spec99.mandates.lint.test.ts:335-346` only asserts the file *exists*. Wiring it into `mobile-ci.yml` is Spec 126 §12 phase **P0b**. |
+>
+> **What deliberately stays client-side** — these five are the boundary, and each is declared per surface rather than assumed: device state (GPS, push token, permission status) · optimistic UI (Spec 90 §3 encourages it by name) · the 24 h MMKV offline cache · animation/gesture (Layer 5, §2.1's hard rule) · navigation position (`expo-router` owns it). Anything else computed on the client is a Spec 128 rule-2 violation needing a dated `deviations[]` row.
+>
+> **The three auth screens are out of scope entirely** (1,302 lines): they talk to the Supabase Auth SDK, not to our contracts.
+
+
+## 1. Goal & Anti-Patterns This Prevents
+
+**Goal:** A single normative document that, for every piece of mobile state, answers four questions:
+1. **Who owns it?** (single layer)
+2. **Who can write it?** (single function)
+3. **Who can read it?** (typed contract)
+4. **What bridges are allowed?** (enumerated patterns)
+
+**This spec is the gate-keeper.** Adding a new Zustand store, a new MMKV blob, a new hydration bridge, or a new routing `useEffect` requires either matching an existing pattern in §3-§5 or amending this spec.
+
+### 1.1 Three documented incidents this protocol prevents
+
+| Incident | Date | Pattern | Spec rule that would have prevented it |
+|----------|------|---------|----------------------------------------|
+| `currentStep` selector subscription loop | 2026-05-02 (commit `3727ceb` → fixed `6c5d085`) | Routing `useEffect` subscribed to a Zustand field it ALSO mutated via `router.replace`-induced cascade | §6.4 (lazy `getState()` for state read in router effects) |
+| Dual-router (AuthGate ↔ OnboardingLayout) loop | 2026-05-02 (fixed same day, WF3) | Two layout-level `router.replace` effects reading DIFFERENT sources of truth (server profile vs local store) for the same routing decision | §5.1 (one router per gate boundary) + §5.2 (read canonical source) |
+| `isFetching` / Tabs flicker loop | 2026-05-02 (current — fix scheduled as §9.4a P0 BLOCKING) | Render gate condition included an unstable signal (`isFetching` toggles on every refetch); flips AppLayout between `<SubscriptionLoadingGuard/>` and `<Tabs>` ~80×/sec, mounting/unmounting LeadFeedScreen continuously | §6.5 (gate conditions must be stable; never gate on `isFetching`) |
+
+### 1.2 The six user-stated quality goals (verbatim)
+
+1. **Observability (maximum)** — every state mutation, every gate decision, every cache invalidation must leave a trace. Codified in §7.
+2. **Clear ownership** — for every field, exactly ONE store owns the canonical value. Codified in §3.
+3. **Where bridges are allowed** — only the patterns in §4. Anything else is a spec amendment.
+4. **Canonical write path** — for every field, exactly one function writes it. Codified in §3 column "Canonical Writer".
+5. **Clear structure / clear logic / similar approach / one approach** — codified in §2 (layer hierarchy), §6 (selector hygiene), §8 (test mandates).
+
+---
+
+
+## 2. Layer Hierarchy
+
+State flows top-down. A lower layer NEVER initiates a write to an upper layer except via the bridges in §4.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 1 — SERVER (Postgres user_profiles, Firebase Auth)   │  ← canonical for ALL account-scoped data
+└─────────────────────────────────────────────────────────────┘
+                         ↓ (Bridge B1: useQuery)
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 2 — TanStack Query cache (in-memory + MMKV persist)  │  ← canonical for CACHED server state
+└─────────────────────────────────────────────────────────────┘
+                         ↓ (Bridge B2: hydrate effect)
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 3 — Zustand stores (typed, scoped, never reactive    │  ← canonical for LOCAL UX state
+│           to themselves)                                     │
+└─────────────────────────────────────────────────────────────┘
+                         ↓ (Zustand `persist` middleware)
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 4a — MMKV (UNENCRYPTED, plaintext on disk)           │  ← persistence for non-sensitive UX state
+│           Persists Zustand stores + TanStack Query cache.   │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 4b — Expo SecureStore / iOS Keychain / Android       │  ← persistence for sensitive credentials
+│            Keystore (ENCRYPTED, hardware-backed where avail)│
+│            Currently used only by RNFirebase native module  │
+│            for the Firebase auth session — no app code      │
+│            touches it directly today.                        │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 5 — Reanimated SharedValues (UI-only, never gated    │  ← orthogonal to layers 1-4
+│           on for routing or business logic)                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 2.1 Hard rules
+
+- **Layer 4a (MMKV) is NEVER read directly outside Zustand `persist` middleware or TanStack `Persister`.** Direct `createMMKV().getString()` in component / hook code is BANNED. (Closes the `user-profile-cache` duplicate-blob anti-pattern.) The Zustand `persist` middleware's own rehydration read (via the configured `storage.getString`) is the sole exempt pathway — it is the canonical mechanism by which persisted Zustand state hydrates on cold boot. The TanStack `Persister`'s rehydration read is similarly exempt for the same reason.
+- **Layer 4a (MMKV) is UNENCRYPTED.** Anything sensitive — Firebase ID tokens, refresh tokens, API keys, payment credentials, government IDs, photo content — MUST go into Layer 4b (SecureStore/Keychain), NEVER into MMKV. The current allowlist of sensitive-but-OK-in-MMKV items is empty. Adding a new persisted field with credential-like content requires a Spec 99 amendment naming it explicitly.
+- **Layer 4b (SecureStore) is the ONLY place sensitive credentials may live on disk.** RNFirebase handles its own session storage natively (Keychain on iOS, EncryptedSharedPreferences on Android) — app code does NOT manage Firebase tokens directly. Adding any new app-managed credential (e.g., a third-party API key) requires using `expo-secure-store` + a Spec 99 amendment.
+- **The `['user-profile']` TanStack query is excluded from MMKV persistence** via `dehydrateOptions.shouldDehydrateQuery` on the `PersistQueryClientProvider` (`mobile/app/_layout.tsx`). The query payload carries 5 PII identity fields (`full_name`, `phone_number`, `company_name`, `email`, `backup_email`); persisting it to Layer 4a would violate this section. The query stays in-memory normally; cold-boot mobile re-fetches from server (the canonical source) — adds ~50–200 ms to the first profile-dependent render but eliminates the on-disk PII surface. Other queries (`['lead-feed']`, `['flight-board']`, `['notification-prefs']`) carry only public permit data or non-PII toggles and continue to persist normally. The full encryption-at-rest path (passing `encryptionKey` to `createMMKV` in `mmkvPersister.ts`) is a future hardening that would let other PII-adjacent queries persist safely; the dehydrate filter is the immediate fix.
+- **Layer 3 (Zustand) NEVER mirrors a Layer 1 (server) field unless the Field Ownership Matrix §3 explicitly authorizes the mirror, with a declared bridge (§4) as the canonical writer.**
+- **Layer 5 (Reanimated SharedValues) NEVER drives routing, gating, or business logic.** SharedValues exist on the UI thread; reading them on the JS thread is racy.
+
+---
+
+
+## 3. Field Ownership Matrix
+
+This table is **normative**. Adding a field to the mobile app requires adding a row here. Modifying ownership requires a spec amendment.
+
+### 3.1 Server-Authoritative Profile Fields (Spec 95 §6)
+
+| Field | Server Type | Local Mirror | Owner Layer | Canonical Writer | Authorized Readers | Bridge |
+|-------|-------------|--------------|-------------|------------------|---------------------|--------|
+| `user_id` | text PK | — (no mirror; equal to `authStore.user.uid`) | Server | Server insert on first PATCH | apiClient (Bearer routing), AuthGate | — |
+| `trade_slug` | text (immutable post-set) | `filterStore.tradeSlug` | Server | Server PATCH `/api/user-profile` from `profession.tsx` | filterStore consumers (LeadFeedScreen, LeadFilterSheet, settings) | B2 |
+| `default_tab` | enum | `filterStore.defaultTab` | Server | Server PATCH from settings | AppLayout default-route, settings | B2 |
+| `location_mode` | enum | `filterStore.locationMode` | Server | Server PATCH from `address.tsx` or settings | useLocation, LeadFeedScreen | B2 |
+| `home_base_lat` / `home_base_lng` | numeric | `filterStore.homeBaseLocation{lat,lng}` | Server | Server PATCH from `address.tsx` or settings | useLocation (fallback when GPS denied) | B2 |
+| `radius_km` | int | `filterStore.radiusKm` | Server | `usePatchProfile()` mutation hook (Spec 99 §9.16, B3 with rollback) — called from LeadFilterSheet preset buttons, settings slider, `(app)/index.tsx` widen-radius shortcuts | useLeadFeed params, LeadFilterSheet UI | B2 read + B3 write |
+| `supplier_selection` | text | `filterStore.supplierSelection` | Server | Server PATCH from `supplier.tsx` or settings | settings, future supplier-tagged feed | B2 |
+| `full_name` / `company_name` / `phone_number` / `backup_email` | text | `userProfileStore.{fullName,companyName,phoneNumber,backupEmail}` | Server | Server PATCH from settings | settings forms, NotificationToast (display only) | B2 |
+| `new_lead_min_cost_tier` | enum (`low`/`medium`/`high`) | `userProfileStore.newLeadMinCostTier` | Server | Server PATCH from settings notifications | settings cost-tier slider, push-notification dispatch (lifecycle classifier) | B2 |
+| `phase_changed` | bool | `userProfileStore.phaseChanged` | Server | Server PATCH from settings notifications | settings toggle, push-notification dispatch | B2 |
+| `lifecycle_stalled_pref` | bool | `userProfileStore.lifecycleStalled` | Server | Server PATCH from settings notifications | settings toggle, push-notification dispatch (suffix `_pref` on server side avoids collision with `permits.lifecycle_stalled`) | B2 |
+| `start_date_urgent` | bool | `userProfileStore.startDateUrgent` | Server | Server PATCH from settings notifications | settings toggle, push-notification dispatch | B2 |
+| `notification_schedule` | enum (`morning`/`anytime`/`evening`) | `userProfileStore.notificationSchedule` | Server | Server PATCH from settings notifications | settings segmented control, push-notification dispatch | B2 |
+| `onboarding_complete` | bool | **NONE** (was `onboardingStore.isComplete` until 2026-05-02; see §3.5 deprecation) | Server | Server PATCH in `complete.tsx` | AuthGate (Branch 5), `IncompleteBanner` (read server profile directly per §9.2) | B2 |
+| `tos_accepted_at` | timestamptz | — | Server | Server PATCH from `terms.tsx` | AuthGate fallback, audit | — |
+| `account_preset` | enum | — | Server (admin-set) | Admin tool | AuthGate manufacturer branch (Branch 4.5) | — |
+| `account_deleted_at` | timestamptz | — | Server | DELETE intent endpoint | apiClient → AccountDeletedError → AuthGate reactivation modal | — |
+| `subscription_status` | enum | — | Server (Stripe webhook + admin) | Stripe webhook handler | AppLayout subscription gate, PaywallScreen | — |
+| `lead_views_count` | int | — | Server (incremented on lead view API) | Lead view endpoint | PaywallScreen copy | — |
+| `trial_started_at` | timestamptz | — | Server | server / admin | settings, internal logic | — |
+<!-- WF3 2026-05-04 hardening (review_followups.md mobile-PII bundle + Phase 7 amendment): `stripe_customer_id`, `trade_slugs_override`, and `radius_cap_km` removed from this matrix and from `mobile/src/lib/userProfile.schema.ts`. All three are server-only / admin-internal — `stripe_customer_id` is PII (Spec 99 §2.1 violation if persisted to MMKV), the other two are admin-managed fields with no mobile consumer (verified by grep). The corresponding API route's `CLIENT_SAFE_COLUMNS` whitelist (Phase 2, commit 08ff823) excludes all three from GET / PATCH responses to mobile clients. The Phase 7 amendment caught a CRITICAL bug where the mobile schema still declared `trade_slugs_override` and `radius_cap_km` as required-but-nullable — Zod v4's `.nullable()` permits `null` but NOT a missing key, so every API response would have failed schema parse and broken every profile-dependent screen. -->
+
+| `display_name` | text | — | Server | Server insert on first PATCH (typically derived from auth provider) | settings (display only) | — |
+| `email` | text | — | Server (Firebase auth claim) | Server insert on first PATCH | settings (display only), notification dispatch | — |
+| `created_at` / `updated_at` | timestamptz | — | Server (Postgres trigger) | Postgres `NOW()` on insert/update | observability only — never read by client routing | — |
+
+### 3.2 Auth / Identity (Firebase + apiClient)
+
+| Field | Owner Layer | Canonical Writer | Authorized Readers | Persistence |
+|-------|-------------|------------------|---------------------|-------------|
+| `user.uid` | `authStore` (Layer 3) | `authStore.setAuth()` — invoked ONLY from `initFirebaseAuthListener` | AuthGate (gate Branch 1), apiClient (Bearer Authorization), useUserProfile (`enabled` gate), settings/account screens (display) | MMKV `auth-store` (uid only — Spec 93 §3.4 partialize strips PII) |
+| `user.email` | `authStore` | `authStore.setAuth()` | reactivation modal copy, settings | NOT persisted |
+| `user.displayName` | `authStore` | `authStore.setAuth()` | settings | NOT persisted |
+| `idToken` | `authStore` | `authStore.setAuth()` (init + 401 retry) | apiClient `Authorization: Bearer` only | NOT persisted (short-lived) |
+| `isLoading` | `authStore` | `authStore.setAuth()` / `clearAuth()` / `setLoading()` (init defaults to `true`; cleared to `false` on first auth resolve) | AuthGate (initial-load gate before hydrate completes) | NOT persisted (process-local) |
+| `_hasHydrated` | `authStore` | `onRehydrateStorage` callback (sole production writer); `setHasHydrated(true)` permitted ONLY in tests to bypass MMKV | AuthGate (Branch 0 — wait-for-hydrate gate) | NOT persisted (process-local) |
+
+### 3.3 Onboarding-Local State (no server mirror)
+
+After §9.3 deduplication, `onboardingStore` holds ONLY these two genuinely-local fields. `selectedTradeName` (display-only mirror) was removed — display sites derive the trade label from the canonical `filterStore.tradeSlug` via `getTradeLabel(slug)` in `mobile/src/lib/onboarding/tradeData.ts`.
+
+| Field | Owner Layer | Canonical Writer | Authorized Readers |
+|-------|-------------|------------------|---------------------|
+| `currentStep` | `onboardingStore` | each onboarding screen calls `setStep('next')` AFTER its PATCH succeeds (Spec 94 §10 Step 11) | AuthGate `getResumePath()` — **MUST be read via `useOnboardingStore.getState().currentStep` inside the effect closure (NEVER subscribed via `useStore((s) => s.currentStep)` per §6.4)** |
+| `selectedPath` | `onboardingStore` | `setPath()` in `path.tsx` | `address.tsx`, `supplier.tsx` (skip-suppliers branch), `terms.tsx` (Path L vs Path T branch), `complete.tsx` (display) |
+
+### 3.4 Engagement (Zustand, in-memory)
+
+| Field | Owner Layer | Writer | Readers |
+|-------|-------------|--------|---------|
+| `unreadFlightBoard` | `notificationStore` (in-memory) | `incrementUnread()` in `NotificationHandlers` foreground push handler; `clearUnread()` on Flight Board tab focus | AppLayout tab badge |
+| `paywall.visible` | `paywallStore` (in-memory — Spec 96 §9 explicit) | `show()` — called by `InlineBlurBanner.tsx:12` on banner tap (verified 2026-05-03 §9.9 audit). The original §3.4 audit incorrectly flagged this as caller-less; the grep missed `usePaywallStore((s) => s.show)` selector usage. | AppLayout subscription gate, PaywallScreen |
+| `paywall.dismissed` | `paywallStore` (in-memory) | `dismiss()` (PaywallScreen "Maybe later" tap), `reset()` (signOut per §B5; `expired→active` transition in AppLayout — renamed from `clear()` 2026-05-03 for §B5 naming uniformity) | AppLayout subscription gate, InlineBlurBanner |
+
+### 3.4c Engagement (Zustand, MMKV-persisted)
+<!-- Subsection number is `3.4c`, not `3.4b`, because §3.4a (UI-Only SharedValues, below) was already taken by an existing subsection. Document order in this section: §3.4 → §3.4a (existing) → §3.4c (this section). -->
+
+These stores survive app close and are reset on sign-out via §B5. Spec 77 §3.2 prescribes the persistence — same-user re-sign-in re-seeds via the gate (no server source of truth to re-hydrate from, so first-sight semantics protect post-reset UX).
+
+| Field | Owner Layer | Writer | Readers | Persistence | Sign-out reset |
+|-------|-------------|--------|---------|-------------|----------------|
+| `seenMap` (`Record<permitId, ISO8601>`) | `flightBoardSeenStore` (Zustand + persist→MMKV `flight-board-last-seen` blob) | `markSeen(permitId, updatedAt)` from `[flight-job].tsx` on detail-open | `flight-board.tsx` `renderItem` to compute `hasUpdate = updated_at !== seenMap[permitId]` per Spec 77 §3.2 | Layer 4a (MMKV plaintext — non-PII; just permit IDs + ISO timestamps) | Required (§B5) — `clearLocalSessionState` calls `useFlightBoardSeenStore.getState().reset()` |
+| `recent` (`string[]`, newest first, at most `SEARCH_RECENT_MAX` = 3) | `recentSearchesStore` (Zustand + persist→MMKV `parcel-recent-searches` blob) | `add(query)` from `parcel-tool/index.tsx`, only when a search opens a page (the lot report, SELECT on the address list, the map page) | `parcel-tool/index.tsx` recent-search chips | Layer 4a (MMKV plaintext — a searched street address; not in the Layer 4b list above) | Required (§B5) — `clearLocalSessionState` calls `useRecentSearchesStore.getState().reset()` |
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-35 · McFrontend queue · lane MF-35 build; operator, verbatim: "D15 b, D16 a, D17 a D18 a, D-2 a , D-9 a, D-1 a"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-10: MF-35 v3 and MF-51 decisions"; plan `~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md`): the `recentSearchesStore` row above is added by MF-35 (P35-D16 a: the MaxBLD search page's recent searches on the phone, max 3, newest first, duplicates ignoring case removed, saved only when a search opens a page, cleared at sign-out). A searched street address is none of the Layer 4b items (tokens, keys, payment credentials, government IDs, photo content; :97), so Layer 4a applies. `storeReset.coverage.test.ts` finds the new store with no count change (its guard is `>= 6`).
+
+### 3.4a UI-Only SharedValues (Layer 5 — orthogonal to Layers 1-4)
+
+These are NOT Zustand stores. They use `react-native-reanimated`'s `makeMutable()` and live exclusively on the UI thread. They are **never** read by router effects, hydrated from server, persisted to MMKV, or reset in §B5 sign-out — they are process-local UI state for animations.
+
+| Field | File | Writer | Readers | Sign-out reset |
+|-------|------|--------|---------|----------------|
+| `tabBarScrollY` | `tabBarStore.ts` | `onScroll` worklets in `(app)/index.tsx`, `flight-board.tsx`, `map.tsx` | `AnimatedTabBar` `useDerivedValue` | NOT required (process-local, not user-scoped) |
+| `tabBarVisible` | `tabBarStore.ts` | derived from `tabBarScrollY` direction | `AnimatedTabBar` `translateY` | NOT required |
+
+### 3.5 Deprecated mirrors (migration targets per §9)
+
+| Mirror | Replacement | Migration WF |
+|--------|-------------|--------------|
+| `onboardingStore.isComplete` | Read `useUserProfile().data.onboarding_complete` directly | WF2 §9.2a-c |
+| `onboardingStore.locationMode` / `homeBaseLat` / `homeBaseLng` / `supplierSelection` (the duplicates) | Use `filterStore` exclusively (already populated by B2 hydration) | WF2 §9.3 |
+| `onboardingStore.selectedTrade` (duplicate of `filterStore.tradeSlug`) | Use `filterStore.tradeSlug` | WF2 §9.3 |
+| `onboardingStore.selectedTradeName` (display-only mirror of server `display_name` lookup) | Read from server profile or extract from trade catalog at display site | WF2 §9.3 |
+| `useUserProfile.readCachedProfile` MMKV blob (`user-profile-cache`) | Eliminated — TanStack persister covers fast-hydration | WF3 §9.1 (✅ done — see `mobile/src/lib/migrations/userProfileCacheCleanup.ts` for the one-time orphan-file cleanup) |
+| `userProfileStore.hydrate` non-idempotent set | Migrate to deep-equal-before-set per §6.6 | WF2 §9.8 |
+| `filterStore.hydrate` non-idempotent set | Same | WF2 §9.8 |
+| ~~`paywallStore.show()` action with no caller~~ | RESOLVED — §9.9 audit (2026-05-03) confirmed `InlineBlurBanner.tsx:12` calls it. The original audit grep missed the selector form. | WF3 §9.9 ✅ |
+
+---
+
+
+## 4. The Six Bridge Patterns
+
+These are the **only** allowed cross-layer flows. A seventh pattern requires a spec amendment.
+
+### B1 — Server → TanStack Query
+
+**Pattern:**
+```ts
+const query = useQuery({
+  queryKey: ['user-profile'],
+  queryFn: fetchProfile,
+  staleTime: 300_000,
+  enabled: !!user,
+});
+```
+
+**Rules:**
+- Every server fetch MUST go through TanStack Query — never raw `fetch()` in components.
+- `queryKey` MUST be a stable, parameterized array. Object literals with closure refs are BANNED (cache fragmentation).
+- `enabled` gates: use `!!user` for user-scoped queries; never `enabled: someChangingValue` that toggles continuously.
+- **`refetchOnReconnect` defaults to `true` and MUST stay enabled** for `['user-profile']` so a returning-from-offline user gets a fresh profile (Stripe webhook may have flipped `subscription_status` during the offline window). The 2026-05-02 incident #3 root cause is **not** `refetchOnReconnect` — it's that AppLayout's render gate gates on `isFetching` (per §6.5 BANNED). Surgical fix: strip `isFetching` from the gate condition (§9.4); `refetchOnReconnect` stays on.
+- Validation: every response MUST be parsed through a Zod schema before TanStack stores it (Spec 90 §13 Zod Boundary).
+
+**Query-key registry (the stable, parameterized keys in use).** Adding a new server query requires a row here:
+
+| Query key | Owner hook | Notes |
+|-----------|-----------|-------|
+| `['user-profile']` | `useUserProfile` | PII — excluded from MMKV persistence (§2.1) |
+| `['lead-feed', params]` | `useLeadFeed` | public permit data; persists normally |
+| `['flight-board']` | `useFlightBoard` | saved-board rows |
+| `['lead-detail', id]` | `useLeadDetail` | single lead |
+| `['parcel-search', q]` | `useParcelSearch` (Spec 100) | debounced typeahead; public cadastral data; persists normally |
+| `['parcel-lookup', parcelId]` | `useParcelLookup` (Spec 100) | the parcel detail; depends ONLY on `parcelId` (query-key hygiene — never on the search string) |
+| `['parcel-entitlement']` | `useParcelEntitlement` (Spec 100; SRCH.A6, task-320) | the caller's plan and this month's report count ("N of M reports left until <date>"); a display, never a gate; the caller's own, so no parameter; not persisted across a restart (`mobile/src/lib/persistFilter.ts` NOT_PERSISTED) |
+
+### B2 — TanStack → Zustand (server-to-local hydration)
+
+**Pattern:**
+```ts
+useEffect(() => {
+  if (query.data) {
+    hydrateFilter(query.data);
+    hydrateUserProfile(query.data);
+  }
+}, [query.data, hydrateFilter, hydrateUserProfile]);
+```
+
+**Rules:**
+- The hydrate effect MUST live in exactly ONE hook (`useUserProfile` for the profile bridge). Multiple components calling that hook share the same TanStack cache, but each runs the effect once on mount — that's fine; the hydrate functions are idempotent.
+- Hydrate functions MUST be **idempotent** — calling twice with identical data MUST result in zero observable state change. Specifically: object-valued fields MUST use deep-equal-before-set per §6.6.
+- Hydrate MUST NOT call `router.replace` or trigger any navigation. Routing happens in §5 routers, not in hydrate effects.
+- The `markComplete()` bridge call (currently in `useUserProfile.ts:101-103`) is DEPRECATED — see §9.2.
+
+### B3 — Zustand → Server (mutation with optimistic update)
+
+**Pattern:**
+```ts
+const mutation = useMutation({
+  mutationFn: (patch) => fetchWithAuth('/api/user-profile', { method: 'PATCH', body: JSON.stringify(patch) }),
+  onMutate: async (patch) => {
+    // Optimistic update: write to filterStore immediately
+    useFilterStore.getState().setRadiusKm(patch.radius_km);
+    return { previous: prevValue };
+  },
+  onError: (_err, _patch, ctx) => {
+    // Rollback
+    useFilterStore.getState().setRadiusKm(ctx.previous);
+  },
+  onSettled: () => queryClient.invalidateQueries({ queryKey: ['user-profile'] }),
+});
+```
+
+**Rules:**
+- Optimistic local writes MUST go through the field's canonical writer per §3.
+- Rollback MUST be paired with every optimistic write.
+- `onSettled` MUST invalidate the relevant query so the next render reads server truth.
+
+> **Rollback race acknowledgement 2026-05-05 (originally amended to mandate re-read; revised same day to match `usePatchProfile.ts` §9.16 implementation):** the naive rollback pattern above CAN overwrite legitimate concurrent writes when the same field is mutated more than once in flight. Concrete scenario: user adjusts the radius slider (mutation A starts; `onMutate` captures `previous = 10`, applies optimistic = 20). Before A's network call resolves, user adjusts again (mutation B starts; B's `onMutate` reads `useFilterStore.getState().radiusKm` = 20 — A's optimistic value — applies optimistic = 30). Mutation A errors. A's `onError` restores 10. The user's screen flips 30 → 10; B's eventual `onSettled` invalidate refetches and restores 30 from the server (B's PATCH succeeded), so the FINAL state is correct — but the user sees a one-frame flicker during the rollback.
+>
+> **Canonical pattern: naive rollback** (what `usePatchProfile.ts:onError` currently does — restore `previous` unconditionally on error). Acceptable for low-contention fields where the user is unlikely to fire a second mutation before the first resolves.
+>
+> **Recommended for high-contention fields: re-read-before-rollback.** When a field is prone to rapid concurrent user input (slider drags, type-ahead, multi-step forms), augment `onError` to read the current Zustand value first; only restore `previous` if it equals the optimistic value the mutation set:
+> ```ts
+> onError: (_err, patch, ctx) => {
+>   const current = useFilterStore.getState().radiusKm;
+>   if (current === patch.radius_km) {
+>     useFilterStore.getState().setRadiusKm(ctx.previous);
+>   }
+>   // else: a newer write landed — do not clobber (last-write-wins).
+> },
+> ```
+>
+> **Alternative for stricter correctness: per-field version counter.** Each `onMutate` increments a counter; `onError` only restores if the counter at error-time matches. Handles the edge case where a concurrent write happens to set the same value as the optimistic (which the equality check above misses). More elaborate; only justified if the equality-miss case is observed in production.
+>
+> **For deep-equal fields** (e.g., `homeBaseLocation`), the equality check uses `fast-deep-equal/es6` per §6.6.
+>
+> **Per-field decision matrix:** review each existing `useMutation` site for contention. `usePatchProfile.ts` currently mutates `radius_km` only; user-facing surfaces are slider + preset buttons + settings page. Slider drag is a high-contention shape (multiple mutations in flight while the user holds + drags). Decision recorded here: **re-read-before-rollback IS recommended for `radius_km` if the slider's mutation cadence is observed to fire concurrent mutations in production.** Until that observation, the naive pattern is the canonical default — promoting re-read prematurely creates spec-vs-code drift the M1+M2+M3 batch was designed to close.
+
+### B4 — Auth Listener → Cache Invalidation
+
+**Pattern:** (current implementation in `mobile/src/store/authStore.ts`)
+```ts
+auth().onAuthStateChanged((firebaseUser) => {
+  if (firebaseUser) {
+    const expectedUid = firebaseUser.uid;
+    const isUidChange = lastKnownUid !== expectedUid;
+    if (isUidChange) {
+      lastKnownUid = expectedUid;
+    }
+    void firebaseUser.getIdToken().then((idToken) => {
+      if (lastKnownUid !== expectedUid) return; // stale
+      useAuthStore.getState().setAuth({...}, idToken);
+      // Invalidate AFTER setAuth so the refetch uses the NEW bearer token.
+      // Pre-§9.1-amend, invalidate fired synchronously and raced setAuth
+      // (Gemini WF3-§9.1 review F7).
+      if (isUidChange) {
+        void queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      }
+    });
+  }
+});
+```
+
+**Rules:**
+- Triggers: cold-boot first-fire (`lastKnownUid === null`) AND genuine UID change.
+- `lastKnownUid` is NOT reset on sign-out (Spec 93 §3.4 fast-path preservation).
+- Stale-resolution guard: `getIdToken().then()` MUST verify `lastKnownUid === expectedUid` before calling `setAuth` (race-prevention per WF3 review).
+- Telemetry: emit `Sentry.addBreadcrumb({category:'auth', message:'uid_change_cache_invalidated'})` only on genuine UID change (not first-fire) per §7.
+- **HMR caveat (DEV only):** `lastKnownUid` is module-scoped `let`, so Metro Fast Refresh resets it on hot reload of `authStore.ts` while in-flight `getIdToken().then()` closures from the OLD module retain the stale binding. The stale-resolution guard above mitigates the late-write race. The cache-invalidation re-fire is acceptable (extra refetch, not data loss). DO NOT move `lastKnownUid` into Zustand state to "fix" HMR — that would defeat the cold-boot first-fire detection (Zustand persist would rehydrate it from MMKV).
+
+### B5 — Sign-out Reset (the global fan-out)
+
+**Pattern:** (current implementation in `mobile/src/store/authStore.ts:signOut` after the §9.19 unification)
+```ts
+// Module-scope helper — shared between explicit signOut() and the
+// onAuthStateChanged(null) listener branch (forced sign-outs). Both
+// paths invoke this AFTER auth().signOut() resolves (or fails — see
+// the try/finally in signOut below).
+function clearLocalSessionState(): void {
+  usePaywallStore.getState().reset();      // Spec 96 §9 — fast shared-device handoff
+  queryClient.clear();                     // §9.10 — purge ALL TanStack queries
+  mmkvPersister.removeClient();            // §9.18 — purge persister disk blob
+  useFilterStore.getState().reset();
+  useNotificationStore.getState().reset();
+  useOnboardingStore.getState().reset();
+  useUserProfileStore.getState().reset();
+  useAuthStore.setState({ user: null, idToken: null, isLoading: false });
+  resetIdentity();
+}
+
+signOut: async () => {
+  track('signout_initiated');
+  // §9.19 (also DeepSeek WF2 P2 review #11): try/finally guarantees the
+  // PIPEDA-critical local cleanup runs even if Firebase signOut throws
+  // (network blip, expired refresh token, Firebase unreachable). Pre-fix
+  // a thrown signOut() left the user logged in locally with stale
+  // Zustand + TanStack caches.
+  try {
+    await auth().signOut();
+  } catch (err) {
+    Sentry.captureException(err, {
+      extra: { context: 'authStore.signOut: firebase signOut failed; running cleanup anyway' },
+    });
+  } finally {
+    clearLocalSessionState();
+  }
+}
+```
+
+**Rules:**
+- Order WAS normative (paywall reset BEFORE firebase signOut) but the §9.19 unification moved the entire fan-out into `clearLocalSessionState()` which runs in `finally` (i.e., AFTER `auth().signOut()` resolves or throws). This is intentional: the try/finally guarantees cleanup on Firebase failure (the PIPEDA-critical case), and the paywall reset still runs before any subsequent code observes the cleared session because both branches reach `finally` synchronously. The "BEFORE firebase signOut" rule for paywall reset (Spec 96 §9 anti-flicker) is preserved by Spec 96 §9's separate guard, not by the order in `signOut()`.
+- All in-memory Zustand stores MUST be enumerated in `clearLocalSessionState()`. Adding a new store with user-scoped state requires adding a `.reset()` call there. **Enforcement:** §8.5 store-enumeration test grep-asserts that every `create<*Store>(` in `mobile/src/store/*.ts` has a corresponding `.getState().reset()` call in `clearLocalSessionState()` (or in `signOut()` directly for stores explicitly excluded from the helper — currently none).
+- **`queryClient.clear()` MUST fire** as part of `clearLocalSessionState()`. Reason: `enabled: !!user` only stops *new* fetches — in-flight fetches resolve and write to the cache, attributing the previous user's data to the next sign-in. Additionally, the MMKV-persisted TanStack cache (`mmkvPersister`, 24h `maxAge`) survives the sign-out and rehydrates on next mount, leaking previous-user `['user-profile']` to a different user signing in on a shared device — a privacy violation under PIPEDA (the same reason `userProfileStore.partialize` strips PII). The B4 invalidate-on-uid-change is defense-in-depth; this `clear()` call is the primary fix. **§9.10 ✅ DONE** — implementation chose `queryClient.clear()` (broader purge) over the originally-specified scoped `removeQueries({queryKey: ['user-profile']})`; broader purge is defense-in-depth (cancels in-flight refetches across all queries, not just `['user-profile']`) and is stricter than the §B5 PIPEDA letter requires. Spec amended 2026-05-05 to match implementation. The MMKV blob is purged separately via `mmkvPersister.removeClient()` (added §9.18, consolidated into `clearLocalSessionState()` by §9.19) — orthogonal mechanism, both required.
+
+### B6 — API Client → Auth Listener (mid-session token refresh on 401)
+
+Spec 99 amendment 2026-05-05 (resolves WF2 M1+M2+M3 #6, DeepSeek): Firebase ID tokens expire after ~1 hour. `onAuthStateChanged` does NOT fire on token expiry — Firebase only fires it on USER state changes (sign-in / sign-out / forced revocation). Pre-amend, B4 covered cold-boot/UID-change invalidation but the spec said nothing about mid-session refresh; the apiClient's existing 401 interceptor was implicit. A future contributor removing the interceptor "because it's not in the spec" would silently break the app at the 1-hour mark. B6 documents the interceptor as a normative bridge.
+
+**Pattern:** (current implementation in `mobile/src/lib/apiClient.ts:65-84`)
+```ts
+async function fetchWithAuthInternal<T>(path, options, isRetry = false): Promise<T> {
+  const { idToken } = useAuthStore.getState();
+  const headers = { Authorization: `Bearer ${idToken}`, ... };
+  const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
+
+  // 401 intercept: force-refresh idToken and retry once.
+  if (response.status === 401 && !isRetry) {
+    try {
+      const { user } = useAuthStore.getState();
+      const newToken = await auth().currentUser?.getIdToken(true);
+      if (newToken && user) {
+        useAuthStore.getState().setAuth(user, newToken);
+        return fetchWithAuthInternal<T>(path, options, /* isRetry */ true);
+      }
+    } catch {
+      // Token refresh failed (Firebase unreachable, refresh token revoked) —
+      // fall through to throw ApiError(401).
+    }
+    throw new ApiError(401, 'Unauthorized');
+  }
+  // ...
+}
+```
+
+**Rules:**
+- 401 from server MUST trigger `auth().currentUser?.getIdToken(true)` (force-refresh) exactly once. The `isRetry` boolean parameter is the cycle guard — recursive call sets `isRetry: true`, the second 401 propagates `ApiError(401)` instead of looping.
+- Refreshed token MUST be written to `useAuthStore` via `setAuth(user, newToken)` BEFORE the retry. The retry uses the new bearer because `fetchWithAuthInternal` re-reads `idToken` from the store at line 20.
+- Refresh failure (Firebase unreachable, `currentUser` null, `getIdToken` rejection) MUST propagate as `ApiError(401)` — the apiClient does NOT call `clearAuth()` directly. The error propagates to TanStack Query → consumer → AuthGate, which routes via Branch 4 (other profileError) to the retry UI per §5.3. A second 401 after the user-initiated retry would mean the refresh token itself is invalid — at that point the user is effectively signed out, and the next foreground/AppState event would let the listener detect the broken session.
+- This bridge is mid-session ONLY. Cold-boot UID-change invalidation belongs to B4; sign-out cleanup belongs to B5. B6 fires when the app already has a logged-in `user` and just needs a fresh `idToken`.
+- This section is the canonical (and sole) normative source for the 401 interceptor contract; `mobile/src/lib/apiClient.ts:65-84` is the implementation site. Removing the interceptor without a corresponding B6 spec amendment is forbidden.
+- **Known limitation:** concurrent 401s each call `getIdToken(true)` independently. Firebase deduplicates the network refresh internally, but the store receives two `setAuth` writes. Low risk in practice (Zustand `set` is sync; second write is a no-op if newToken is identical). Tracked in `docs/reports/review_followups.md` as "concurrent 401 mutex" for future hardening.
+
+---
+
+
+## 5. Routing Authority Rules
+
+### 5.1 One router per gate boundary
+
+The mobile app has exactly TWO routing boundaries:
+
+| Boundary | Sole Authority | File | Spec |
+|----------|----------------|------|------|
+| `(auth)` ↔ `(onboarding)` ↔ `(app)` | **AuthGate** | `mobile/app/_layout.tsx` AuthGate component | Spec 93 §5 Step 6 + Spec 94 §10 |
+| `(app)` trial / expired / paywall | **AppLayout** | `mobile/app/(app)/_layout.tsx` | Spec 96 §10 Step 2 |
+
+**Other layouts (`(auth)/_layout.tsx`, `(onboarding)/_layout.tsx`, `(app)/[lead]`/`[flight-job]` modals) MUST NOT have routing `useEffect`s.** They render their `<Stack/>` and let AuthGate / AppLayout govern transitions.
+
+### 5.2 Routers MUST read from the canonical source
+
+For each routing decision, the router MUST read from the field's owner per §3:
+
+| Decision | Read from |
+|----------|-----------|
+| Is user authenticated? | `authStore.user` (canonical) |
+| Has onboarding completed? | `useUserProfile().data.onboarding_complete` (canonical = server profile) — NEVER `useOnboardingStore.isComplete` |
+| Which onboarding step to resume? | `useOnboardingStore.getState().currentStep` (lazy read per §6.4) |
+| Account in deletion window? | `profileError instanceof AccountDeletedError` |
+| Subscription status? | `useUserProfile().data.subscription_status` (canonical) — NEVER mirrored locally |
+
+**Stale-profile guard (CRITICAL):** Routers MUST NOT make a routing decision against a `profile` whose `user_id !== authStore.user?.uid`. When the UID changes (B4 cache invalidation in flight), TanStack returns the previous user's `query.data` until the new fetch resolves; using it would route the new user based on the old user's `onboarding_complete` / `subscription_status`. AuthGate's existing `profileLoading && !profile` guard only defends the cold-boot case — it does NOT defend the UID-change-mid-fetch case. Implementation: `if (profile && (!profile.user_id || profile.user_id !== user?.uid)) return;` placed after the `profileLoading` guard.
+
+**Hardening beyond spec letter (Gemini WF2 §9.6 F1 + DeepSeek #2 consensus, landed in `mobile/src/lib/auth/decideAuthGateRoute.ts`):** the falsy-uid pre-check (`!profile.user_id`) is stricter than the §5.2 `!==` letter required and rejects a corrupted/poisoned cache where `user_id` is `null` / `''` / `undefined` while attesting to `onboarding_complete: true`. Without the falsy guard, `null !== 'real-uid'` evaluates `true` so the inequality check ALSO returns `wait` for this case — *but only by accident*: a future cache-shape change that surfaced `user_id: ''` (empty string, not null) coupled with the same falsy assertion would still bypass the inequality (empty string `!== 'real-uid'` is also `true`, so the path appears safe — but a future predicate that read `profile.user_id` for routing would see the empty string and fail open). The explicit `!profile.user_id` falsy guard rejects the entire "corrupted cache" attack class regardless of which falsy value the corruption produces. AuthGate's caller emits a Sentry `stale_profile_missing_user_id` breadcrumb in this branch (caller-side side effect) so cache corruption is observable without routing on it. **§9.11 ✅ DONE.**
+
+### 5.3 The 9 routing arms (AuthGate, Spec 93 §5 Step 6)
+
+This subsection is the canonical AuthGate matrix. Any change to AuthGate's branches requires updating this section. **Counting convention:** 9 distinct routing arms (1, 2, 3, 4, 4.5, 5a, 5b, 5c, 5d). §8.2 test mandate covers all 9. Branch 5 has 4 sub-cases (5a-5d) because the destination depends on which group the user is currently in × `onboarding_complete`; collapsing them in tests would mask sub-case-specific bugs.
+
+```
+1.   !user                                           → /(auth)/sign-in
+2.   AccountDeletedError                             → reactivation modal (no nav)
+3.   ApiError 404                                    → /(onboarding)/profession
+4.   profileError (other)                            → retry UI (no nav)
+4.5. profile.account_preset='manufacturer' && !complete  → /(onboarding)/manufacturer-hold
+5a.  profile && inAuthGroup && !complete             → getResumePath(profile, currentStep)
+5b.  profile && inAuthGroup && complete              → /(app)/ + registerPushToken
+5c.  profile && inOnboardingGroup && complete        → /(app)/
+5d.  profile && !auth && !onboarding && !complete    → getResumePath(profile, currentStep)
+```
+
+### 5.4 Lint rule: router useEffect dependency hygiene
+
+Router `useEffect` dependency arrays MUST NOT contain Zustand fields read inside the effect body. Use lazy `useStore.getState().field` instead. **Exception:** the dep array MUST contain values that — when changed — should cause the routing decision to be re-evaluated (e.g., `segments`, `user`, `profile`). The distinction: `user.uid` is a routing input (in deps); `currentStep` is informational for the destination (lazy read).
+
+---
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/reports/generated/127-surface-registry.md b/docs/reports/generated/127-surface-registry.md
+index 7d4276b858648f76d7081dd3b7051c7875b464cb..2be6d8c6b4777e0b2351ea6a789556816adb6f80 100644
+--- a/docs/reports/generated/127-surface-registry.md
++++ b/docs/reports/generated/127-surface-registry.md
+@@ -569,13 +569,13 @@ Where the **measured** behaviour contradicts what a MaxBLD user would reasonably
+ - **The spec says:** By design, and the design is what makes it the lowest-risk pilot. The question is whether the shipped product should stay that way once the standard is proven.
+ - **Evidence:** `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:14` · `mobile/app/(app)/parcel-tool/[parcelId].tsx:5 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator "Ball y" and "S1 a": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]`
+ 
+-**Q2 — [`S-002`](#s-002) `mobile_parcel_search`.** MaxBLD runs on the lead-gen entitlement. `guards.entitlement.product` is `lead_gen` because `chk_entitlements_product` (migration 228) admits only `lead_gen` and `flight_center` — so a user pays for lead generation and is thereby granted the parcel tool. Under OD5, does MaxBLD get its own `parcel_tool` entitlement product, and when?
++**Q2 — [`S-002`](#s-002) `mobile_parcel_search`.** MaxBLD runs on the lead-gen entitlement. `guards.entitlement.product` is `lead_gen` because `chk_entitlements_product` (migration 228) admits only `lead_gen` and `flight_center` — so a user pays for lead generation and is thereby granted the parcel tool. Under OD5, does MaxBLD get its own `parcel_tool` entitlement product, and when? Dated 2026-11-24 (task-450 SEARCHFIX.2, R2): closed by MF-45 D-4 (a).
+ 
+ - **Measured:** src/app/api/parcels/lookup/route.ts:47-60 gates on the GLOBAL subscription_status; src/lib/entitlements/index.ts:68 joins `entitlements` on product = 'lead_gen'. There is no parcel-product entitlement row anywhere, and the CHECK constraint would reject one.
+ - **The spec says:** Spec 116 OD5 folds the shipped parcel tool into lead_gen. The 2026-09-16 ruling (a) that MaxBLD is its own product puts that fold in direct tension with the live constraint. This is a migration plus a route change in the Backend domain — not fixable from the mobile app.
+ - **Evidence:** `src/app/api/parcels/lookup/route.ts:47-60` · `src/lib/entitlements/index.ts:68` · `migrations/228 — chk_entitlements_product`
+ 
+-**Q3 — [`S-002`](#s-002) `mobile_parcel_search`.** The open SEARCH question — "open the matching lot directly rather than a candidate list" — is RULED and implemented, but two of its five branches are unreachable. Does the API change that makes multi_parcel and unlinked expressible get scheduled now, or does the map surface wait?
++**Q3 — [`S-002`](#s-002) `mobile_parcel_search`.** The open SEARCH question — "open the matching lot directly rather than a candidate list" — is RULED and implemented, but two of its five branches are unreachable. Does the API change that makes multi_parcel and unlinked expressible get scheduled now, or does the map surface wait? Dated 2026-11-24 (task-450 SEARCHFIX.2, R2): closed by MF-53 (the server names the outcome in `resolution`).
+ 
+ - **Measured:** unique, text_candidates and intersection fire today. multi_parcel and unlinked cannot be derived from the current response and are reached only through the server-value-wins path.
+ - **The spec says:** Spec 100 §2 item 6 designs the candidate list; it does not model an address-point fan-out or an unlinked address as distinct outcomes.
+@@ -756,13 +756,13 @@ _No table is reached by this entry — every value it shows arrives through a co
+ 
+ **Programme.** `S-002` · scope `parcel_product` · feature `F01` · build order 1013 · batch `B2` · review `unreviewed` — The parcel tool's entry screen, `mobile/app/(app)/parcel-tool/index.tsx` — the same Spec 100 feature and the same contract, reached by the `q` path.
+ 
+-**❓ Product question(s) (2).** MaxBLD runs on the lead-gen entitlement. `guards.entitlement.product` is `lead_gen` because `chk_entitlements_product` (migration 228) admits only `lead_gen` and `flight_center` — so a user pays for lead generation and is thereby granted the parcel tool. Under OD5, does MaxBLD get its own `parcel_tool` entitlement product, and when? · The open SEARCH question — "open the matching lot directly rather than a candidate list" — is RULED and implemented, but two of its five branches are unreachable. Does the API change that makes multi_parcel and unlinked expressible get scheduled now, or does the map surface wait? — see §2.9.
++**❓ Product question(s) (2).** MaxBLD runs on the lead-gen entitlement. `guards.entitlement.product` is `lead_gen` because `chk_entitlements_product` (migration 228) admits only `lead_gen` and `flight_center` — so a user pays for lead generation and is thereby granted the parcel tool. Under OD5, does MaxBLD get its own `parcel_tool` entitlement product, and when? Dated 2026-11-24 (task-450 SEARCHFIX.2, R2): closed by MF-45 D-4 (a). · The open SEARCH question — "open the matching lot directly rather than a candidate list" — is RULED and implemented, but two of its five branches are unreachable. Does the API change that makes multi_parcel and unlinked expressible get scheduled now, or does the map surface wait? Dated 2026-11-24 (task-450 SEARCHFIX.2, R2): closed by MF-53 (the server names the outcome in `resolution`). — see §2.9.
+ 
+-**What it is.** A search box where someone types a Toronto street address and gets back the lot. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. Lots are only available in Toronto: an address in another municipality is refused on the spot, before any request is sent, and told so plainly. What happens after that is decided by the MATCH TYPE, never by how many rows came back: one lot opens straight away; several text matches show a short list with the differing part of each address highlighted, and past ten it asks for a house number instead; an address linked to several lots, an address with no lot, and an intersection all hand off to the map surface. Being rate-limited, being out of subscription, and finding nothing are three different things on screen, and it says which one happened.
++**What it is.** A search box where someone types a Toronto street address and gets back the lot. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. Lots are only available in Toronto: an address in another municipality is refused on the spot, before any request is sent, and told so plainly. What happens after that is decided by the MATCH TYPE, never by how many rows came back: one lot opens straight away; several text matches show a short list with the differing part of each address highlighted, and past ten it asks for a house number instead; an address linked to several lots, an address with no lot, and an intersection all hand off to the map surface. Being rate-limited, being out of subscription, and finding nothing are three different things on screen, and it says which one happened. Dated 2026-11-24 (task-450 SEARCHFIX.2, RR-0443 c, QUESTIONS-RULED.md Q8.1 B and Q8.2; prior text kept): "past ten it asks for a house number instead" no longer says what the page does: the list stays, and the line "Add a house number to narrow it down." shows below it at the cap and for a street typed with no house number.
+ 
+-**What it reads and writes.** It reads nothing from the database directly. Every value arrives through one contract: `/api/parcels/lookup`. Behind that contract, the data comes from `address_points`, `parcel_address_points` and `parcels` — the lot corpus — plus `entitlements` for the access check. It holds no client store at all: the query text and its debounce live in component state, and the Toronto-only rule is computed from the typed address. It emits **no analytics event**, so nothing it does is currently countable.
++**What it reads and writes.** It reads nothing from the database directly. Every value arrives through one contract: `/api/parcels/lookup`. Behind that contract, the data comes from `address_points`, `parcel_address_points` and `parcels` — the lot corpus — plus `entitlements` for the access check. It holds no client store at all: the query text and its debounce live in component state, and the Toronto-only rule is computed from the typed address. It emits **no analytics event**, so nothing it does is currently countable. Dated 2026-11-24 (task-450 SEARCHFIX.2, R2; prior text kept): "It holds no client store at all" is no longer true: the recent searches are kept on the phone in the Layer 4a store mobile/src/store/recentSearchesStore.ts (MF-35, P35-D16 a).
+ 
+-**Under Spec 126.** **RE-PROJECT** — it no longer holds ANY Layer-3 state: the cross-product filter-store read is deleted (operator ruling 2026-09-16 (b), recorded in notes), so the only client state left is the query text and its debounce, which a server-driven projection absorbs without an argument. That is a downgrade from REBUILD, and it is the direct result of removing that read. It renders through the SEARCH renderer, whose two declared tunables are closed rather than unresearched: `config.debounce_ms` 400 and `config.min_query_len` 3, both externalised in `mobile/src/constants/parcelSearch.ts`. It reads by reference: `/api/parcels/lookup`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down. The branch logic and the Toronto-only rule live in `mobile/src/lib/parcelSearchMatch.ts`, a pure module.
++**Under Spec 126.** **RE-PROJECT** — it no longer holds ANY Layer-3 state: the cross-product filter-store read is deleted (operator ruling 2026-09-16 (b), recorded in notes), so the only client state left is the query text and its debounce, which a server-driven projection absorbs without an argument. That is a downgrade from REBUILD, and it is the direct result of removing that read. It renders through the SEARCH renderer, whose two declared tunables are closed rather than unresearched: `config.debounce_ms` 400 and `config.min_query_len` 3, both externalised in `mobile/src/constants/parcelSearch.ts`. It reads by reference: `/api/parcels/lookup`. It owns no component of its own, so its `owns.components[]` is an empty array — a legal answer, written down. The branch logic and the Toronto-only rule live in `mobile/src/lib/parcelSearchMatch.ts`, a pure module. Dated 2026-11-24 (task-450 SEARCHFIX.2, R2; prior text kept): the page also keeps the recent searches on the phone, in the Layer 4a store mobile/src/store/recentSearchesStore.ts (MF-35, P35-D16 a).
+ 
+ **kind** SURFACE · **archetype** `SEARCH` · **platforms** `mobile` · `web` · **status** generated · **lines** 714 · **shard** `mobile-product` · **researched** ✅ every field
+ 
+@@ -793,7 +793,7 @@ _No table is reached by this entry — every value it shows arrives through a co
+ | `tables` | `src/lib/admin/parcel-lookup.ts:196-199` · `src/lib/admin/parcel-lookup.ts:169` |
+ | `gate` | `src/app/api/parcels/lookup/route.ts:47-60` · `src/app/api/parcels/lookup/route.ts:71-76` · `src/lib/auth/route-guard.ts:120-132` |
+ | `states` | `mobile/app/(app)/parcel-tool/index.tsx:84-92 — const outcome = deriveMatchType(...) / const candidates` · `mobile/app/(app)/parcel-tool/index.tsx:127-134 — retryAfter / isEntitlementRefusal / isSchemaDrift / isUnexpectedError` · `mobile/src/lib/parcelSearchMatch.ts:98 — export function deriveMatchType` |
+-| `emits` | `mobile/app/(app)/parcel-tool/index.tsx:1-312 — no track() call in the file` · `src/app/api/parcels/lookup/route.ts:113-119` |
++| `emits` | `mobile/app/(app)/parcel-tool/index.tsx:1-128 — no track() call in the file (task-450 R2: the file has 128 lines; prior cite :1-312)` · `src/app/api/parcels/lookup/route.ts:113-119` |
+ | `spec_refs` | `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.6` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.8` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.9` |
+ 
+ <details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+@@ -811,10 +811,10 @@ _No table is reached by this entry — every value it shows arrives through a co
+ | 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+ | 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+ | 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+-| 12 | `errors` | `inline` | Every failure class has its OWN rendered line, and none of them borrows the miss copy. The 403 entitlement refusal is no longer presented as "No parcel found for that address." — presenting a subscription refusal as a data miss was this surface’s own recorded limitation, and it is closed. The Toronto-only refusal is likewise its own state and is decided before the network. NOTE: the Toronto-only refusal is NOT in `errors.classes[]` — that vocabulary is closed to HTTP-ish classes (400/401/403/429/500/404/schema_drift/offline) and this refusal never reaches the network. Nor does the closed `states[]` vocabulary have a value for it. It is carried by the blocking `parcelsearch_toronto_only` check and its testID instead. Both gaps are reported to the operator rather than papered over with an invented enum value. — `mobile/app/(app)/parcel-tool/index.tsx:127-134 — the four error classifications`, `mobile/app/(app)/parcel-tool/index.tsx:201 — testID parcel-search-outside-toronto`, `mobile/app/(app)/parcel-tool/index.tsx:214 — testID parcel-search-ratelimit`, `mobile/app/(app)/parcel-tool/index.tsx:222 — testID parcel-search-entitlement`, `mobile/app/(app)/parcel-tool/index.tsx:234 — testID parcel-search-error` |
+-| 13 | `emits` | `none` | The screen emits no PostHog event; the only record of a search is the server-side logInfo line, which deliberately omits the query text. — `mobile/app/(app)/parcel-tool/index.tsx:1-115`, `src/app/api/parcels/lookup/route.ts:113-119` |
++| 12 | `errors` | `inline` | Every failure class has its OWN rendered line, and none of them borrows the miss copy. The 403 entitlement refusal is no longer presented as "No parcel found for that address." — presenting a subscription refusal as a data miss was this surface’s own recorded limitation, and it is closed. The Toronto-only refusal is likewise its own state and is decided before the network. NOTE: the Toronto-only refusal is NOT in `errors.classes[]` — that vocabulary is closed to HTTP-ish classes (400/401/403/429/500/404/schema_drift/offline) and this refusal never reaches the network. Nor does the closed `states[]` vocabulary have a value for it. It is carried by the blocking `parcelsearch_toronto_only` check and its testID instead. Both gaps are reported to the operator rather than papered over with an invented enum value. — `mobile/src/lib/parcelSearchMatch.ts:298 — classifyParcelSearchError, the four error classifications (task-450 R2: re-pointed from mobile/app/(app)/parcel-tool/index.tsx:127-134)`, `mobile/src/components/surfaces/SearchBinding.tsx:128 — testID parcel-search-outside-toronto (task-450 R2: prior cite index.tsx:201)`, `mobile/src/components/surfaces/SearchBinding.tsx:131 — testID parcel-search-ratelimit (task-450 R2: prior cite index.tsx:214)`, `mobile/src/components/surfaces/SearchBinding.tsx:135 — testID parcel-search-entitlement (task-450 R2: prior cite index.tsx:222)`, `mobile/src/components/surfaces/SearchBinding.tsx:138 — testID parcel-search-error (task-450 R2: prior cite index.tsx:234)` |
++| 13 | `emits` | `none` | The screen emits no PostHog event; the only record of a search is the server-side logInfo line, which deliberately omits the query text. — `mobile/app/(app)/parcel-tool/index.tsx:1-128 (task-450 R2: the whole file; prior cite :1-115)`, `src/app/api/parcels/lookup/route.ts:113-119` |
+ | 14 | `offers` | `none` | No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1. [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator "Ball y" B-6: SponsorSlot.tsx is deleted with the old lot screen; no slot component remains in the Expo tree, and the report's ads are the v21 page ad sections (MF-20)] — `mobile/src/components/parcel/SponsorSlot.tsx:16-20 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator "Ball y" B-6: SponsorSlot.tsx is deleted with the old lot screen; no slot component remains in the Expo tree, and the report's ads are the v21 page ad sections (MF-20)]` |
+-| 15 | `metering` | `none` | Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16. — `src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)`, `src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing` |
++| 15 | `metering` | `none` | Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16. Dated 2026-11-24 (task-450 SEARCHFIX.2, R2; prior text kept): the page counts nothing; the lookup it calls counts a produced report (F02). — `src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)`, `src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing` |
+ | 16 | `config` | `logic_variables` | The six page settings of the phone search and semi pages are REGISTERED logic variables (Spec 128 Rule 3; operator, verbatim, 2026-11-20: "yes follow the rules register them.", ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1494): debounce_ms, min_query_len, entitlement_stale_ms, lookup_retry_max and lookup_stale_ms are rows maxbld_page_<key> in scripts/seeds/logic_variables.json (min, max, a stated on_invalid, a why), declared here in config.logic_variables. The generator (scripts/surfaces/emit-mobile-surfaces.mjs) resolves each slice number from its row and refuses a mismatch or an out-of-range value; the phone reads only the generated slice, through the one reader (mobile/src/lib/sliceConfig.ts), which applies the bounds. The values are unchanged: debounce_ms 400, min_query_len 3, entitlement_stale_ms 0, lookup_retry_max 3, lookup_stale_ms 60000. Only the phone applies them at run time; no web binding reads these keys today. — `mobile/src/components/surfaces/SearchBinding.tsx:37-38 — SEARCH_DEBOUNCE_MS and SEARCH_MIN_QUERY_LEN read from the slice through sliceNumber (bounds applied); the debounce is consumed at mobile/app/(app)/parcel-tool/index.tsx:42`, `scripts/seeds/logic_variables.json — the six rows maxbld_page_<key>`, `scripts/surfaces/emit-mobile-surfaces.mjs — PAGE_SETTINGS and pageSettingBounds (the slice number is resolved from the seed row)`, `scripts/surfaces/_schema/surface.schema.json — the per-key config rules that require the config.logic_variables entry`, `src/app/api/parcels/lookup/types.ts:42 — the server range 3 to 120 of min_query_len` |
+ | 17 | `sharing` | `shared` | It is the q-branch of the same GET /api/parcels/lookup route the detail screen calls with ?parcelId=; one contract, two surfaces, two rate buckets. — `mobile/src/hooks/useParcelLookup.ts:59-83`, `src/app/api/parcels/lookup/route.ts:72-74` |
+ | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+@@ -836,7 +836,7 @@ TORONTO-ONLY RULE (operator ruling 2026-09-16 (b)). Lots are only available in T
+ 
+ BRAND. Spec 117 §6.1 is this surface’s brand application. The shades used are surface-scoped deepenings of the §3.2 roles rather than new brand tokens, expressed as NativeWind arbitrary-value classes in `mobile/src/constants/parcelSearch.ts` so §7's both-files-same-commit brand-token rule is not triggered. The amber primary is #f59e0b, unchanged.
+ 
+-MF-35 2026-11-10 (the binding standard, Spec 126 §11b.2 dated note 2026-11-10): CONVERTED (status generated). The page renders through the mobile binding on React Native Reusables to the operator layout (Spec 117 §6.1 dated note 2026-11-10): the wordmark, the tagline, the pill search bar with the account button, the recent-search chips (P35-D16 a), and for text_candidates the inline address list as radio cards with SELECT (P35-D17 a; no area line, P35-D15 b; the "Report incorrect address match" link waits for MF-46, P35-D18 a). States: hit is renamed redirect (the screen navigates, it renders no hit); static is the idle page (nothing typed: the prompt and the chips) so every content key is used by a golden (the prompt and the outside-Toronto notice can never render together); empty is an outside-Toronto address with three recent searches (covers parcelsearch_toronto_only). Device run: OWED, UNVERIFIED on device (operator 2026-11-10: "teh phone check isnt possible - continue with MF-35").
++MF-35 2026-11-10 (the binding standard, Spec 126 §11b.2 dated note 2026-11-10): CONVERTED (status generated). The page renders through the mobile binding on React Native Reusables to the operator layout (Spec 117 §6.1 dated note 2026-11-10): the wordmark, the tagline, the pill search bar with the account button, the recent-search chips (P35-D16 a), and for text_candidates the inline address list as radio cards with SELECT (P35-D17 a; no area line, P35-D15 b; the "Report incorrect address match" link waits for MF-46, P35-D18 a). States: hit is renamed redirect (the screen navigates, it renders no hit); static is the idle page (nothing typed: the prompt and the chips) so every content key is used by a golden (the prompt and the outside-Toronto notice can never render together); empty is an outside-Toronto address with three recent searches (covers parcelsearch_toronto_only). Device run: OWED, UNVERIFIED on device (operator 2026-11-10: "teh phone check isnt possible - continue with MF-35"). Dated 2026-11-24 (task-450 SEARCHFIX.2, R2; prior text kept): the two product_questions below are closed: the entitlement product by MF-45 D-4 (a) (the parcel_tool product, the deviation entry above; removed by MF-50), and the two unreachable branches by MF-53 (the server names multi_parcel and unlinked in `resolution`).
+ 
+ <a id="s-004"></a>
+ 
+@@ -926,7 +926,7 @@ ICONS. The shelf was specified with @expo/vector-icons Ionicons (compass / bookm
+ 
+ **What it reads and writes.** It reads one contract, GET /api/parcels/lookup?parcelId= (C-001), through the same query the report reads (['parcel-lookup', parcelId]), so it makes no extra request. The server names the lot's form from the view parcel_lot_form (migration 320): lotForm.detected, lotForm.basis and lotForm.unsure; the page asks only when unsure is true. The answer is the owner's input lot_form_user_override (Spec 78): yes writes semi_half, no writes detached, not sure writes nothing. It is carried to the report as a route param and applied there through the shared pure function lotFormEffective (O-12: the pipeline never reads it; there is no server store). It emits **no analytics event**.
+ 
+-**Under Spec 126.** **CONVERTED (SEMI-B)** — LIST (three radio cards and a Continue button), rendered by the shared mobile binding (SemiQuestionBinding.tsx props, SurfaceRenderer.tsx parts) from this descriptor and its content file, on the MF-53 pattern. It owns no component.
++**Under Spec 126.** **CONVERTED (SEMI-B)** — LIST (three radio cards and a Continue button), rendered by the shared mobile binding (SemiQuestionBinding.tsx props, SurfaceRenderer.tsx parts) from this descriptor and its content file, on the MF-53 pattern. It owns no component. Dated 2026-11-24 (task-450 SEARCHFIX.2, R4; GROUNDER-H D6; prior text kept): render.projection stays none beside a populated render.list because the repo schema requires render.list.columns for a generated LIST with projection list (surface.schema.json, "/render/list must have required property 'columns'") and three answer cards have no columns; the busy overlay is the busy flag of the ask state (SemiQuestionBinding.tsx SEMI_QUESTION_FLAG_NAMES), not a state name: the closed state list has no busy state.
+ 
+ **kind** SURFACE · **archetype** `LIST` · **platforms** `mobile` · **status** generated · **lines** 0 · **shard** `mobile-product` · **researched** ✅ every field
+ 
+diff --git a/docs/reports/generated/127-surface-review-queue.md b/docs/reports/generated/127-surface-review-queue.md
+index 2b22c6fb20db98c69ff2a13aa70bf8b1884fde30..683bc7515df995168eb45ad50b0ee1b1b646e0f8 100644
+--- a/docs/reports/generated/127-surface-review-queue.md
++++ b/docs/reports/generated/127-surface-review-queue.md
+@@ -249,7 +249,7 @@ Registry detail: [`S-002`](../../../docs/reports/generated/127-surface-registry.
+ 
+ **1. What does it do, and for whom?**
+ 
+-A search box where someone types a Toronto street address and gets back the lot. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. Lots are only available in Toronto: an address in another municipality is refused on the spot, before any request is sent, and told so plainly. What happens after that is decided by the MATCH TYPE, never by how many rows came back: one lot opens straight away; several text matches show a short list with the differing part of each address highlighted, and past ten it asks for a house number instead; an address linked to several lots, an address with no lot, and an intersection all hand off to the map surface. Being rate-limited, being out of subscription, and finding nothing are three different things on screen, and it says which one happened.
++A search box where someone types a Toronto street address and gets back the lot. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. Lots are only available in Toronto: an address in another municipality is refused on the spot, before any request is sent, and told so plainly. What happens after that is decided by the MATCH TYPE, never by how many rows came back: one lot opens straight away; several text matches show a short list with the differing part of each address highlighted, and past ten it asks for a house number instead; an address linked to several lots, an address with no lot, and an intersection all hand off to the map surface. Being rate-limited, being out of subscription, and finding nothing are three different things on screen, and it says which one happened. Dated 2026-11-24 (task-450 SEARCHFIX.2, RR-0443 c, QUESTIONS-RULED.md Q8.1 B and Q8.2; prior text kept): "past ten it asks for a house number instead" no longer says what the page does: the list stays, and the line "Add a house number to narrow it down." shows below it at the cap and for a street typed with no house number.
+ 
+ **2. Which tables and columns, produced by which step?**
+ 
+@@ -279,8 +279,8 @@ Swept; none found.
+ 
+ Spec: [`docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`](../../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md) · anchors: `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.6` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.8` · `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §2.9`
+ 
+-- ❓ MaxBLD runs on the lead-gen entitlement. `guards.entitlement.product` is `lead_gen` because `chk_entitlements_product` (migration 228) admits only `lead_gen` and `flight_center` — so a user pays for lead generation and is thereby granted the parcel tool. Under OD5, does MaxBLD get its own `parcel_tool` entitlement product, and when? **Measured:** src/app/api/parcels/lookup/route.ts:47-60 gates on the GLOBAL subscription_status; src/lib/entitlements/index.ts:68 joins `entitlements` on product = 'lead_gen'. There is no parcel-product entitlement row anywhere, and the CHECK constraint would reject one. **Spec:** Spec 116 OD5 folds the shipped parcel tool into lead_gen. The 2026-09-16 ruling (a) that MaxBLD is its own product puts that fold in direct tension with the live constraint. This is a migration plus a route change in the Backend domain — not fixable from the mobile app.
+-- ❓ The open SEARCH question — "open the matching lot directly rather than a candidate list" — is RULED and implemented, but two of its five branches are unreachable. Does the API change that makes multi_parcel and unlinked expressible get scheduled now, or does the map surface wait? **Measured:** unique, text_candidates and intersection fire today. multi_parcel and unlinked cannot be derived from the current response and are reached only through the server-value-wins path. **Spec:** Spec 100 §2 item 6 designs the candidate list; it does not model an address-point fan-out or an unlinked address as distinct outcomes.
++- ❓ MaxBLD runs on the lead-gen entitlement. `guards.entitlement.product` is `lead_gen` because `chk_entitlements_product` (migration 228) admits only `lead_gen` and `flight_center` — so a user pays for lead generation and is thereby granted the parcel tool. Under OD5, does MaxBLD get its own `parcel_tool` entitlement product, and when? Dated 2026-11-24 (task-450 SEARCHFIX.2, R2): closed by MF-45 D-4 (a). **Measured:** src/app/api/parcels/lookup/route.ts:47-60 gates on the GLOBAL subscription_status; src/lib/entitlements/index.ts:68 joins `entitlements` on product = 'lead_gen'. There is no parcel-product entitlement row anywhere, and the CHECK constraint would reject one. **Spec:** Spec 116 OD5 folds the shipped parcel tool into lead_gen. The 2026-09-16 ruling (a) that MaxBLD is its own product puts that fold in direct tension with the live constraint. This is a migration plus a route change in the Backend domain — not fixable from the mobile app.
++- ❓ The open SEARCH question — "open the matching lot directly rather than a candidate list" — is RULED and implemented, but two of its five branches are unreachable. Does the API change that makes multi_parcel and unlinked expressible get scheduled now, or does the map surface wait? Dated 2026-11-24 (task-450 SEARCHFIX.2, R2): closed by MF-53 (the server names the outcome in `resolution`). **Measured:** unique, text_candidates and intersection fire today. multi_parcel and unlinked cannot be derived from the current response and are reached only through the server-value-wins path. **Spec:** Spec 100 §2 item 6 designs the candidate list; it does not model an address-point fan-out or an unlinked address as distinct outcomes.
+ 
+ **8. What is still unresearched?**
+ 
+diff --git a/docs/reports/generated/rule-lists-by-kind.md b/docs/reports/generated/rule-lists-by-kind.md
+index 40d3e9ef23e216efd269417259241f860dd83950..c345e2ababa32c5371988f6801887acc37fcfc69 100644
+--- a/docs/reports/generated/rule-lists-by-kind.md
++++ b/docs/reports/generated/rule-lists-by-kind.md
+@@ -42,7 +42,7 @@ Example Files line: `mobile/src/app/`; type build; milestone group [S].
+ | --- | --- | --- | ---: | ---: |
+ | mobile-90 | docs/specs/03-mobile/90_mobile_engineering_protocol.md | whole file | 14,097 | 1 |
+ | mobile-98 | docs/specs/03-mobile/98_mobile_testing_protocol.md | whole file | 11,496 | 1 |
+-| mobile-99 | docs/specs/03-mobile/99_mobile_state_architecture.md | whole file | 83,401 | 1 |
++| mobile-99 | docs/specs/03-mobile/99_mobile_state_architecture.md | whole file | 84,452 | 1 |
+ | surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 | 1 |
+ | eng-front | docs/specs/00_engineering_standards.md | 1. Architecture & UI Standards | 3,214 | 1 |
+ | eng-shared | docs/specs/00_engineering_standards.md | 2. Error Handling & Stability; 4. Security & API Contracts; 5. Testing Standards; 6. Centralized Logging; 7. Dual Code Path Safety; 8. Next.js & TypeScript Constraints; 10. Frontend/Backend Boundary; 11. Plan Compliance Checklist; 12. Frontend Foundation Tooling; 13. Observability Standards; 14. The Prevention Loop | 37,472 | 1 |
+@@ -50,7 +50,7 @@ Example Files line: `mobile/src/app/`; type build; milestone group [S].
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 10 lists | | 216,416 | 10 |
++| total | 10 lists | | 217,467 | 10 |
+ 
+ ## storage
+ 
+diff --git a/docs/specs/03-mobile/99_mobile_state_architecture.md b/docs/specs/03-mobile/99_mobile_state_architecture.md
+index a3c026772131e1425c0444f04a6184afba55cd1b..f599c88f48a18be06948d4daad80cb51d64c1163 100644
+--- a/docs/specs/03-mobile/99_mobile_state_architecture.md
++++ b/docs/specs/03-mobile/99_mobile_state_architecture.md
+@@ -551,6 +551,8 @@ if (isLoading || profile == null || profile.subscription_status == null) {
+ >   *Why this carve-out instead of a `useMutation`-backed flag refactor:* A flag refactor narrows the protection to AppState→active-initiated refetches only, leaving `refetchOnReconnect` and other automatic refetch paths exposed to the one-frame flash. The carve-out covers all refetch sources for the same UX cost.
+ >
+ > Adding a new permitted carve-out requires extending this enumeration in the same commit; reviewers MUST reject any unenumerated carve-out.
++>
++> **Dated note 2026-11-24 (M-246, prior text kept; task-450 SEARCHFIX.2; RR-0444 MD:2290 "Now we need to fold the findings"; findings V4, V5, N4; GROUNDER-B D2, D3, D5):** the redirect-once pattern of the MaxBLD parcel-tool pages. (1) A page replaces itself through `useSettledRedirect` (mobile/src/hooks/useParcelPageHooks.ts:16-25): the first time the fetch is not running and a target route exists, and never again; its effect dependencies name the route string (`target`), not an object. (2) The page states are derived from stable signals, not from `isFetching`: the search page keeps its no-match line while a settled miss is fetched again (mobile/src/lib/parcelSearchMatch.ts `buildSearchSituation`, `showMiss`), and the semi question page reads no data with a parcel id as loading, never as a redirect (mobile/src/lib/semiQuestion.ts `buildSemiQuestionSituation`), because a paused offline first fetch reports `isFetching` false with no data; only an empty parcel id goes to the Lookup route. No carve-out is added to the enumeration above.
+ 
+ **Current violations being remediated** (do not soften this rule because the live code violates it — these are tracked):
+ - _Previously-tracked §6.5 violations all resolved_: line 202 broad gate removed by §9.4a (✅ DONE); line 216 narrow `expired` carve-out permitted by 2026-05-05 amendment above (now an enumerated exception).
+diff --git a/mobile/__tests__/daylightSearchPages.golden.test.ts b/mobile/__tests__/daylightSearchPages.golden.test.ts
+index 3a655228142691ded1d92927d5291e6f935bddde..f6a82a0545c9a4da0f6e4361d68533105efda1ad 100644
+--- a/mobile/__tests__/daylightSearchPages.golden.test.ts
++++ b/mobile/__tests__/daylightSearchPages.golden.test.ts
+@@ -4,9 +4,10 @@
+ //
+ // SRCH.DAYLIGHT (task-322) · the search pages (search + candidate list, choose-your-lot map page, semi question page) use only the Daylight
+ // report-* tokens of mobile/tailwind.config.js, and the three elements small pages v8 drops are gone: A.13 (in-bar Account button), B.8 (faint
+-// tappable neighbour outlines), C.9 (lot card frontage and zoning line). Scope of the legacy-class rule: the three layout tables and the render
++// tappable neighbour outlines), C.9 (lot card frontage and zoning line). Scope of the legacy-class rule: the two layout tables and the render
+ // trees; the Account, Tracked Lots and shelf constants (PARCEL_SEARCH_TOKENS, TRACKED_LOTS_HEX, PARCEL_SHELF_HEX, PARCEL_SEARCH_HEX) are named
+-// exemptions because those screens still read them.
++// exemptions because those screens still read them. Dated 2026-11-24 (task-450 R5, GROUNDER-D D7; prior text kept): "three layout tables" read "two": the rule reads
++// PARCEL_SEARCH_LAYOUT and LOT_MAP_LAYOUT.
+ import fs from 'node:fs';
+ import path from 'node:path';
+ import { searchProps, SEARCH_SLICE, type PropsNode } from '@/components/surfaces/SearchBinding';
+@@ -40,7 +41,7 @@ const classTokens = (c: string): string[] => c.split(/\s+/).filter(Boolean);
+ const LEGACY = /(\[#[0-9a-fA-F]{3,8}\]|zinc-\d+|red-\d+|bg-feed|text-primary$)/;
+ 
+ describe('Daylight tokens only (R-D1, small pages v8)', () => {
+-  it('the three layout tables hold no legacy dark class and no raw hex class', () => {
++  it('the two layout tables hold no legacy dark class and no raw hex class', () => {
+     const bad: string[] = [];
+     for (const [table, o] of Object.entries({ PARCEL_SEARCH_LAYOUT, LOT_MAP_LAYOUT }) as Array<[string, Record<string, string>]>) {
+       for (const [k, v] of Object.entries(o)) for (const t of classTokens(v)) if (LEGACY.test(t.replace(/^[a-z-]*:/, ''))) bad.push(`${table}.${k}: ${t}`);
+diff --git a/mobile/__tests__/fixtures/parcelSearch.situations.json b/mobile/__tests__/fixtures/parcelSearch.situations.json
+index 25ddc83ccdaf56bdd7618de40f431cc1bed6acdf..f56f95ac35bdf8a05134bb95538c46e2b84f4a06 100644
+--- a/mobile/__tests__/fixtures/parcelSearch.situations.json
++++ b/mobile/__tests__/fixtures/parcelSearch.situations.json
+@@ -262,7 +262,7 @@
+       "rateLimited": true,
+       "retryAfterSeconds": 0,
+       "entitlement": false,
+-      "unexpected": true,
++      "unexpected": false,
+       "schemaDrift": false
+     },
+     "candidates": [],
+diff --git a/mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json b/mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json
+index 21fb69da70f26b550158801756fce34442d85ab5..d21538c07a85f3fe9be3219317295651fb0b3c5b 100644
+--- a/mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json
++++ b/mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json
+@@ -1,5 +1,5 @@
+ {
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha d41e93f656495d4d)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha e590add93daf00d7)",
+   "surface": "mobile_parcel_search",
+   "goldens": {
+     "ambiguous": {
+@@ -129,7 +129,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -1263,7 +1270,7 @@
+                       "accessibilityRole": "link",
+                       "onPress": {
+                         "action": "open_help",
+-                        "topic": "address_match",
++                        "topic": "wrong-lot",
+                         "q": {
+                           "derived": "input"
+                         }
+@@ -1318,8 +1325,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     },
+@@ -1450,7 +1457,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -1631,8 +1645,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     },
+@@ -1763,7 +1777,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -1855,8 +1876,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     },
+@@ -1987,7 +2008,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -2028,8 +2056,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     },
+@@ -2160,7 +2188,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -2220,8 +2255,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     },
+@@ -2352,7 +2387,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -2411,8 +2453,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     },
+@@ -2544,7 +2586,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -2621,8 +2670,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     },
+@@ -2753,7 +2802,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -2924,7 +2980,14 @@
+                     },
+                     "children": [
+                       {
+-                        "content": "search.prompt"
++                        "text": {
++                          "content": "search.prompt"
++                        },
++                        "vars": {
++                          "min": {
++                            "derived": "min_query_len"
++                          }
++                        }
+                       }
+                     ]
+                   },
+@@ -2949,8 +3012,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     },
+@@ -3081,7 +3144,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -3133,8 +3203,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     },
+@@ -3265,7 +3335,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -3410,7 +3487,14 @@
+                     },
+                     "children": [
+                       {
+-                        "content": "search.prompt"
++                        "text": {
++                          "content": "search.prompt"
++                        },
++                        "vars": {
++                          "min": {
++                            "derived": "min_query_len"
++                          }
++                        }
+                       }
+                     ]
+                   },
+@@ -3435,8 +3519,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     },
+@@ -3567,7 +3651,14 @@
+                             "content": "search.input.label"
+                           },
+                           "accessibilityHint": {
+-                            "content": "search.input.hint"
++                            "text": {
++                              "content": "search.input.hint"
++                            },
++                            "vars": {
++                              "min": {
++                                "derived": "min_query_len"
++                              }
++                            }
+                           }
+                         },
+                         "children": []
+@@ -3619,8 +3710,8 @@
+       },
+       "fingerprint": {
+         "files": {
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "ed09cf879a6c2ba0",
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "897bd2dc7b7322a5"
+         }
+       }
+     }
+

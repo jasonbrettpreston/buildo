@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-24T16:06:36.127Z file_sha256=067209f497446acbac62812e93a7c59755e4740dbab152bd01bc29be6902cc32 prompt_sha256=ebca8de7d79a80fa909ddf1266b66eabefb2fdff0b0b3ced110f04d44725cf7e
+🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX2/in-out-engineering-eng-all-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 10.2 Frontend/Backend Boundary "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json:12 "+  \"help.mailto.wrong_lot\": \"Wrong address or lot\"," (likewise the two F01 parcel_product descriptors and mobile_parcel_semi_question.content.json in this diff) — a frontend search-page task edits six files under `scripts/` and neither the plan Files line nor any note records an exception, so the §11 "No modifications to `scripts/`, `migrations/`, or `scripts/lib/` (§10.2)" boundary check is unmet — fix: add a plan line that surface design-source JSON under `scripts/surfaces/` is outside §10.2's data-entry intent, citing the surface standard, or record the ruling before lock.
+
+DEFER severity=LOW — 2.3 Assumption Documentation "Before accessing nested object properties, explicitly check for `null` or `undefined`." — src/tests/surfaces/search-web-binding.ui.test.tsx "+const MIN = String((JSON.parse(fs.readFileSync(path.join(ROOT, 'mobile/src/generated/surfaces/mobile_parcel_search.json'), 'utf8')) as Json).config.min_query_len);" and "+    const topics = (table.pages.web_help.static.sections as Json[]).flatMap((sec) => (sec.parts ?? []) as Json[])" — nested `config.min_query_len` and `pages.web_help.static.sections` are read off a `JSON.parse` cast with no optional chaining and no assertion that the parents exist — fix: use `?.` plus an explicit presence assertion, or a small typed guard.
+
+MET — 5.3 Red-Green Test Cycle — Implementation Notes "the commit attempt with only the test, fixture and task files staged was refused by the pre-commit related run: 5 files, 8 tests failed" — the five changed `src/tests/surfaces/*` files (parcel-legacy-oracle x2, static-page T8, search-web-binding x3, surface-conformance C-1, surface-validate FE-13) are shown failing before the code change.
+
+MET — 5.2 Test File Pattern — src/tests/surfaces/search-web-binding.ui.test.tsx "it('the mount situations: idle (prompt, no chips), unauthorized (entitlement notice, no prompt), error (notice with Retry)'" — the changed web component is covered by a `*.ui.test.tsx` and the derivation/content pins sit in `*.logic.test.ts`, matching the layer table.
+
+MET — 4.3 Frontend Security — src/tests/surfaces/search-web-binding.ui.test.tsx "+    expect([a.tagName, a.getAttribute('href'), a.textContent]).toEqual(['A', `/help#topic=wrong-lot&q=${encodeURIComponent('Queen & Spadina #2')}`, C['list.report']]);" — the user-typed query placed in the help URL is percent-encoded, so the reflected-XSS rule is satisfied for the changed link.
+
+MET — 12.10 Cross-Layer Contracts — src/components/surfaces/web/SearchBinding.tsx "+const SEARCH_MIN_QUERY_LEN = sliceNumber(searchSlice, 'min_query_len');" — the minimum-length number is read from the one setting (generated slice, bounds-checked by `sliceNumber`) instead of a literal duplicated into the web binding and the prompt copy.
+
+MET — 5.2 parity battery — src/tests/surfaces/surface-validate.logic.test.ts "+    // SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings" — the generated-artifact drift guard (S-sbind string count, goldens unchanged) is updated in the same commit as the content/descriptor edits.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 11   Unmet: 2
+
+---
+⏱  61756ms (61.8s)
+📊 Tokens — total: 41705, input: 30479, output: 11226, reasoning: 10316
