@@ -6,11 +6,17 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-24T18:43:00Z'
-updated_date: '2026-11-25T01:32:00Z'
+updated_date: '2026-11-25T01:44:00Z'
 labels:
   - ProcessImprovement
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/reviews/task-463/GROUNDER-PLAN.md
+  - docs/reports/reviews/task-463/TRIAGE-PLAN.md
+  - docs/reports/reviews/task-463/seat-integration-1.md
+  - docs/reports/reviews/task-463/seat-reality-check-1.md
+  - docs/reports/reviews/task-463/seat-regression-1.md
 type: fix
 ordinal: 157210
 ---
@@ -60,11 +66,11 @@ The change is small. Removing the script breaks nothing that reads it. One rule-
 | The phone app has no eslint | mobile/package.json | grep "eslint" finds only :13. There is no mobile/.eslintrc* or mobile/eslint.config* |
 | Mobile CI never runs lint | .github/workflows/mobile-ci.yml:29-31 | `npm ci --legacy-peer-deps` / `npm run typecheck` / `npm run test:ci` |
 | The pre-push phone steps have no lint | .husky/pre-push-checks.sh:12-13 | `step mobile-typecheck … run typecheck` / `step mobile-tests … run test:ci …` |
-| Every other `npm run lint` hit is the web (root) lint, so none breaks | .husky/pre-commit:55; .github/workflows/test.yml:63 (no working-directory); package.json:15 `verify`; CLAUDE.md:33, :59 | `npm run lint &&` |
+| Every other `npm run lint` hit is the web (root) lint, so none breaks; a repo-wide grep finds no caller of the phone script, only text copies (see D) | .husky/pre-commit:55; .github/workflows/test.yml:63 (no working-directory); package.json:15 `verify`; CLAUDE.md:33, :59 | `npm run lint &&` |
 | A test pins the phone steps but not lint | src/tests/hooks-composition.infra.test.ts:551-552 | `'step mobile-typecheck npm --prefix mobile run typecheck &&'` |
 | No test reads mobile/package.json scripts | grep of src/tests | No hit |
 | The promise to remove | docs/specs/03-mobile/98_mobile_testing_protocol.md:118 | `` - `npm run lint` (ESLint) `` |
-| Text that points at that list | Spec 98:120 | "EAS Build runs the above sequence natively…" (still true once the bullet is gone) |
+| Text that points at that list | Spec 98:121 | "EAS Build runs the above sequence natively…" (still true once the bullet is gone) |
 | Spec 98 has no other lint mention | Spec 98 | grep -i lint finds only :118 |
 | Form of a dated note | Spec 98:125 | `> Dated note 2026-11-24 (task-462, RR-0462, step 4 of the approved quick plan): the phone typecheck and phone tests also run before every push, …` |
 | Spec 98 is a rule list | scripts/analysis/rule-lists.json:44 | `"mobile-98": { … "whole": true, "generated_by": "hand-written" }` |
@@ -83,15 +89,17 @@ The change is small. Removing the script breaks nothing that reads it. One rule-
    it('task-463 (RR-0462) — no phone lint step: mobile/package.json has no lint script; Spec 98 §5 lists no `npm run lint` and carries the dated note', () => {
      const scripts = (JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'mobile/package.json'), 'utf8')) as { scripts: Record<string, string> }).scripts;
      expect(Object.keys(scripts)).not.toContain('lint');
+    expect(Object.keys(scripts)).toEqual(expect.arrayContaining(['typecheck', 'test:ci', 'safe-start']));
      const s5 = fs.readFileSync(path.join(REPO_ROOT, 'docs/specs/03-mobile/98_mobile_testing_protocol.md'), 'utf8').split('## 5. ')[1]!.split('## 6. ')[0]!;
-     expect(s5).not.toContain('`npm run lint`');
-     expect(s5).toContain('> Dated note 2026-11-24 (task-463, RR-0462');
+     expect(s5).not.toContain('npm run lint');
+     expect(s5.split('> Dated note 2026-11-24 (task-463, RR-0462').length - 1).toBe(1);
    });
    ```
-   Run only this file, the usual single-file way, and save the output as red.out. Expected: 1 failed, because the first assertion meets `lint` (today all three assertions would fail).
+   Run only this file, the usual single-file way, and save the output as red.out. Expected: 1 failed, because the first assertion meets `lint` (today the first, third and fourth assertions would fail; the second holds).
 2. **mobile/package.json.** Delete line 13 exactly: `    "lint": "eslint src app --ext .ts,.tsx",`. Line 12 keeps its trailing comma because `safe-start` follows. mobile/package-lock.json has no lint text and does not change.
 3. **Spec 98.** Delete line 118 exactly: `` - `npm run lint` (ESLint) ``. After line 125 (the task-462 note), add a blank line and then:
-   `` > Dated note 2026-11-24 (task-463, RR-0462, step 5 of the approved quick plan): there is no phone lint step; the phone app has no lint tool installed, so the `npm run lint` line above and the dead `lint` script in `mobile/package.json` are removed. ``
+   `` > Dated note 2026-11-24 (task-463, RR-0462, step 5 of the approved quick plan): there is no phone lint step. The phone app has no lint tool installed, so the lint item is removed from this list and the unused `lint` script from `mobile/package.json`.
+   The note must not repeat the command text: the third assertion of step 1 forbids it in section 5. ``
 4. **Regenerate the page.** Run `node scripts/analysis/rule-lists.mjs page --write`, then `--check`. Only the mobile-98 row (:42) and the phone total change.
 5. Run the same test file again (green), and save the output as green.out.
 6. **Commit.** One work commit through the real hooks, nothing bypassed. It holds the test, both card files, the regenerated page, and the task file with status, Files line and evidence. Subject: `fix(98_mobile_testing_protocol): the dead phone lint script is removed and Spec 98 §5 stops promising it`. Trailers: `Task: task-463` and the Co-Authored-By line.
@@ -107,15 +115,24 @@ The change is small. Removing the script breaks nothing that reads it. One rule-
 ### (D) Risks
 
 - Line numbers drift by one after the delete in step 3, so the builder should match the quoted text, not the line numbers.
-- The note is about 260 characters (an estimate). Nothing caps mobile-98, so RR-0429 is met by keeping it short.
+- The note is 250 characters (counted on a copy). Nothing caps mobile-98, so RR-0429 is met by keeping it short.
 - No operator ruling is needed. The two extra files follow from what the card already names: DoD #2 for the test, the pre-commit gate for the page.
+- Piled, not part of this card (the Files line stays at four): the review pack .claude/review-templates/packs/mobile-core.md:241 and the three .cursor spec93 deferred cards (authstate_reset_placement :32, backup_email_persistence :34, sentry_v8_upgrade :33) still say phone lint. The pack is recut at the next handbook recut; each deferred card is fixed when it is un-deferred.
 
 ### (E) Not verified
 
 - That `page --write` is the right command to regenerate the page. I took it from the usage line at rule-lists.mjs:13 and did not run it.
-- The exact count delta on the generated page.
+- Derived on a copy, not by running page --write: Spec 98 grows from 11,801 to 12,027 characters, so the mobile-98 row should read 12,027 and the phone total 216,549.
 - That the new test is red today and green after the edits. I ran no test.
-- That EAS build config (mobile/eas.json) runs nothing named lint. The grep returned no hit, but I did not confirm the file exists.
-- Why `rule-lists.mjs resolve --task task-463` refuses with "no Files: line" even though the task file has one at :22. The plan or close gate may need this looked at; I did not trace it.
-- That nothing outside the paths I grepped (.github, .husky, scripts, src/tests, docs/specs, CLAUDE.md, package.json, mobile config) runs the phone lint script.
+- Settled by the plan grounder: mobile/eas.json exists and holds no lint text.
+- Settled: resolve takes --files (rule-lists.mjs:5), not --task, so the refusal came from the wrong flag; the task file has its Files line at :23 and it reads well. Run resolve with the Files line from the task.
+- Settled by the plan grounder: a git grep over the whole repo outside backlog and reports finds no caller of the phone lint script; the text copies that remain are piled in (D).
+
+Plan review round 1: 11 folded, 0 task, 0 ruling, 0 wontfix, 4 pile; grounder docs/reports/reviews/task-463/GROUNDER-PLAN.md; triage docs/reports/reviews/task-463/TRIAGE-PLAN.md
+plan-plan-review-deepseek#1 HIGH folded a repo-wide grep fin
+plan-ux#1 HIGH folded the lint item is rem
+rc#1 HIGH folded the lint item is rem
+plan-ux#2 MED folded there is no phone li
+plan-error-paths#1 MED folded expect(s5.split('> D
+plan-error-paths#2 MED folded expect.arrayContaini
 <!-- SECTION:PLAN:END -->
