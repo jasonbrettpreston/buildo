@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane-BL-LOAD2'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-25T19:30:00Z'
+updated_date: '2026-11-25T22:42:00Z'
 due_date: '2026-11-26'
 labels:
   - McFixV2
@@ -217,7 +217,7 @@ Head read: 2fd2f6042 (wf2/board). Since v1 (4c22af6e8) only docs and backlog fil
    - Reduce Motion: all lines at once, one announcement of summary (the gate is unchanged, below);
    - no auto-open; no Skip.
    - A late page that lands after the give-up stays in the cache. Try again reads the cache first and shows a page at once with no new compute; otherwise it clears the give-up mark, resets the clock, refetches the report read only (not the fast read), keeps the lines drawn in full and shows holding (spinner, Loading the report) until a page, an ending or a fresh 60 s. Reduce Motion keeps the same gate: the lines show at once, and the View report button still waits for the same min_ms (RR-0176).
-7. mobile/app/(app)/parcel-tool/[parcelId].tsx:23-37: pass the fast read result, the report read's data and isError (no isFetching to the state), answeredThisVisit and the cache skip. The wall reads the report read's error, or the fast read's error only when it is a 403 refusal (a stored lot at the limit); every other fast error is ignored. The wall stays the first branch when there is no view. The host import list is unchanged: no new import in ReportPageHost.tsx (the 60 s and the clock come in as props from the mount and the hook), so surface-conformance.logic.test.ts:857 and the host list in bindings.json do not move.
+7. mobile/app/(app)/parcel-tool/[parcelId].tsx:23-37: pass the fast read result, the report read's data and isError (no isFetching to the state), answeredThisVisit and the cache skip. The wall reads the report read's error, or the fast read's error only when it is a 403 refusal (a stored lot at the limit); every other fast error is ignored. The wall stays the first branch when there is no view. The host import list is unchanged: no new import in ReportPageHost.tsx (the 60 s and the clock come in as props from the mount and the hook), so surface-conformance.logic.test.ts:858 (moved from :857 by the task-465 fold) and the host list in bindings.json do not move.
 8. mobile/src/constants/reportPage.ts: the line, tick, end and centred-hold classes.
 9. The 60 s give-up: O7 is RULED as (a): the existing registered 60 000 (maxbld_page_continue_wait_ms), read through REPORT_GIVE_UP_MS exported from useParcelLookup.ts (which already imports SEMI_CONTINUE_WAIT_MS), not a second reader in the host. No seed row, no database step, no description edit (a seed edit is a database step). The semi wait and the report give-up share one value, said in the census why of the semi row (mobile-product.json, the semi surface row that lists semiQuestion.ts as the sole reader) and in a Spec 128 dated note; an own registered row is a later card by RR-0477.
 10. Content:
@@ -322,7 +322,7 @@ Commit 0, alone: the pre-registration (rules[] = the RR list of section 1 and th
 - task-317: built in lane 267 (RR-0477, RR-0488); its Files line is folded into 267's.
 - task-343: the seam in section 3 (a).
 - task-465: the hand-off removes its O1 risk.
-- doc-16 A-MF62 (35 s, "updating"): a dated note through `backlog doc edit` that it is superseded by RR-0176 and RR-0491.
+- doc-16 A-MF62 (35 s, "updating"): a dated note through `backlog doc edit` that its 35 s maximum is superseded by RR-0176 (no 35 s cap; the button waits for the report) and RR-0491. It does not retire the updating state: that is the existing lifecycle loading (the card planNote, seat K), and the clause: never an old number is kept (O5 is reversed, so the 60 s stale refetch stays).
 - task-452: a dated note that AC#2 changes (the search page no longer gets the limit refusal from a q hit; the report screen shows the wall after the compute).
 - doc-2 G.3 (the report opens by itself) is superseded by RR-0176 and the approved mock (the View report button): a dated note. G.2's lot outline is not drawn (the mock draws lines only; no component exists).
 - the HELD note of 2026-11-20 is superseded: the pilot hold (task-390 still RUNNING) is overtaken by the operator's go of 2026-11-25 (RR-0486, RR-0488), and these are lifecycle states of the report screen, not page-table rows (the 2026-11-20 resolution); a dated note on 267 and 317 says so.
@@ -346,7 +346,7 @@ Commit 0, alone: the pre-registration (rules[] = the RR list of section 1 and th
   - RULED (RR-0493): visible as drawn; Spec 126 and Spec 136 dated notes owed.
 - Settled since v1: O2, O3, O4, O5 (reversed), O6, O7 (a), O8 (visible), O7-batch (task-317 is now in this lane).
 
-What this plan assumes of 465 (final for round 1; lane BL-MCFIX465 is building now):
+What this plan assumes of 465 (task-465 has landed on the board at 88d96104e; these are now facts to re-read at the rebase, and the box-clears-on-return one holds at index.tsx:109):
 - A pick (Enter, a row tap, or a chip tap that submits) pushes /(app)/parcel-tool/<id> through parcelSearchRoute.
 - No search code reads `page`.
 - The web search mirrors the phone and the web report stays off.
@@ -368,7 +368,7 @@ What this plan assumes of 465 (final for round 1; lane BL-MCFIX465 is building n
 - The platform request timeout.
 - Nothing was run; this was read only. The grounder re-read the cited lines at a4a092bad and ran no test runner. The platform request timeout stays UNVERIFIED (launch precondition, section 6).
 
-Plan review round 1: 126 folded, 0 task, 0 ruling, 0 wontfix, 7 pile; grounder docs/reports/reviews/task-267/GROUNDER-PLAN.md; triage docs/reports/reviews/task-267/TRIAGE-PLAN.md
+Plan review round 1: 129 folded, 0 task, 0 ruling, 0 wontfix, 7 pile; grounder docs/reports/reviews/task-267/GROUNDER-PLAN.md; triage docs/reports/reviews/task-267/TRIAGE-PLAN.md
 plan-compliance-inc-S#1 HIGH folded whichever of 267, 34
 plan-compliance-inc-S#2 HIGH folded claim the MF-62 foll
 plan-compliance-inc-S#3 HIGH folded Commit 0, alone: the
@@ -389,10 +389,13 @@ plan-compliance-mobile-98#3 HIGH folded Commit 0, alone: the
 plan-compliance-mobile-98#4 MED folded the HELD note of 202
 plan-compliance-mobile-98#5 MED folded one complete Files l
 plan-compliance-mobile-98#6 MED folded the wire field is wh
-plan-compliance-mobile-99-p1#1 HIGH folded reportScreenState re
-plan-compliance-mobile-99-p1#2 HIGH folded Spec 99 section 4 B1
-plan-compliance-mobile-99-p1#3 HIGH folded table test has a pla
-plan-compliance-mobile-99-p1#4 HIGH folded RR-0493 replaces Spe
+plan-compliance-mobile-99-p1#1 HIGH folded Commit 0, alone: the
+plan-compliance-mobile-99-p1#2 HIGH folded claim the MF-62 foll
+plan-compliance-mobile-99-p1#4 HIGH folded reportScreenState re
+plan-compliance-mobile-99-p1#5 MED folded Spec 99 section 4 B1
+plan-compliance-mobile-99-p1#6 MED folded clause: never an old
+plan-compliance-mobile-99-p1#7 MED folded tracked lots are not
+plan-compliance-mobile-99-p1#8 MED folded checked address, els
 plan-compliance-mobile-99-p2#1 HIGH folded The plan grounder re
 plan-compliance-mobile-99-p2#2 MED folded the key parcel-check
 plan-compliance-mobile-99-p2#3 MED folded claim the MF-62 foll
