@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-25T18:00:50.176Z file_sha256=34eaa5cf7bc133e95feb64a246925518a2559a113efabeacb0f416e006081635 prompt_sha256=fd53a2f63e9181d53437f5a55292ca4aef9488aaaab10c8d00e81468069e218e
+🔍 Lens review of docs/reports/reviews/task-465/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — PLAN-465-v1 §3(b) "outside Toronto: refused before the network, shown in the drop-down (it shows while typing too)" vs AC#1 "Nothing opens while typing; Enter or a tap on a suggestion opens a lot" — the person types the first letters of an out-of-town address and a message panel opens under the box with no Enter pressed, which the accepted criterion forbids — gate the outside-Toronto line on submit the way showMiss and showPrompt are gated (plan §4.1), and make T7 expect the line only after submit.
+
+BUG severity=HIGH — PLAN-465-v1 §9 "iOS firing onSubmitEditing with returnKeyType 'search'." vs card item 2 "No Select button" — the plan removes every control but the return key and the one submit path is unverified, so if iOS does not fire onSubmitEditing a typed address has no way to run and the screen is a dead end — make the on-device return-key check a gate before the commit and stop for the operator if it fails.
+
+BUG severity=MED — PLAN-465-v1 §8 O4 "Rec: the miss line plus the row." vs RR-0483 "if you press enter with an incomplete address - you get the error" — the person presses Enter on a partial address and reads "No lot found" directly above a tappable row for that same lot, two answers at once — settle O4 before lock so one of the two shows, not both.
+
+DEFER severity=MED — PLAN-465-v1 §4.6 "The useFocusEffect also clears input, submitted and navigatedForRef." vs card item 5 "The box is empty when the user comes back from a report." — a person who taps a "78 Robert St" row onto the lot map and comes back finds the typed address gone, though the design rules the empty box only for the report return — clear only when the report route is the one just left, or add the lot-map return to the ruling.
+
+DEFER severity=MED — PLAN-465-v1 §4.2 "Add the box, bar, drop, row, rowText, hint, msg, msgTitle, msgSub and spinnerSlot classes." vs AC#2 "Suggestions, the not-found line and the outside-Toronto line appear under the box below a thin grey line" — no divider class is named, so the ruled thin grey line between the box and the drop may not be built and AC#2 has no class to assert against — name the divider (a border-t on the drop) in the class list.
+
+DEFER severity=MED — PLAN-465-v1 §3(f) "New: ... list.hint \"More than one address matches. Tap the one you mean.\"" — this is new copy and the approved mock's state 3 wording cannot be seen in the pasted text (design silent), so the person may read a sentence the operator never approved — quote mock state 3 line for line in the plan or mark the hint as new copy owed to the operator.
+
+DEFER severity=LOW — PLAN-465-v1 §3(f) "The answer labels stay the real ones, \"Yes, it’s one half of a semi\", \"No, it's detached\" and \"Not sure\"" — one label carries a curly apostrophe and the next a straight one, so the semi page shows two typographic styles side by side — set both labels to the same apostrophe.
+
+DEFER severity=LOW — PLAN-465-v1 §3(f) "search.outside_toronto.title \"Outside Toronto\" (the existing search.outside_toronto becomes its second line)" vs card item 4 "An address outside Toronto shows its message in the same drop-down" — a new headline is added above the existing message that the card and pasted text do not give, so the person sees a line the accepted text does not show — keep the existing message alone, or quote mock state 5 with that title before building it.
+
+VERDICT: FAIL on the person's experience
+States checked: at rest, typing with one suggestion, typing with several rows, typing with a single partial row, typing a street with no number, typing an intersection, typing a multi-parcel address, typing an outside-Toronto address, short query, Enter on one match, Enter on no match, Enter on several matches, searching/limit wall, return from a report, return from the lot map, semi question   Dead ends found: 1
+
+---
+⏱  37712ms (37.7s)
+📊 Tokens — total: 31365, input: 24441, output: 6924, reasoning: 5974
