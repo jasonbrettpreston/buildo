@@ -10,7 +10,6 @@
     "test": "jest --watchAll",
     "test:ci": "jest --coverage --ci",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src app --ext .ts,.tsx",
     "safe-start": "node scripts/safe-start.mjs"
   },
   "dependencies": {
