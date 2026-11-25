@@ -3,10 +3,11 @@ id: TASK-456
 title: >-
   SEARCHFIX.8 Tests: the missing search tests and a real-database test for
   migration 309
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-SFX8'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-25T16:26:00Z'
+updated_date: '2026-11-25T16:29:00Z'
 labels:
   - SEARCHFIX-LATER
 milestone: m-1
@@ -19,6 +20,16 @@ references:
   - docs/reports/reviews/task-456/seat-integration-1.md
   - docs/reports/reviews/task-456/seat-reality-check-1.md
   - docs/reports/reviews/task-456/seat-regression-1.md
+  - compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md
+  - compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md
+  - compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md
+  - compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: fix
 ordinal: 150130
 ---
@@ -203,3 +214,9 @@ rg#2 MED folded dated notes (prior t
 rg#3 MED folded both planted columns
 rg#4 MED folded 454 lands first, the
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-25 taken on the board at lane launch (lane BL-SFX8, worktree /Users/brettpreston_macmini/Buildo-wt-sfx8, branch wf2/sfx8), RR-0240
+<!-- SECTION:NOTES:END -->
