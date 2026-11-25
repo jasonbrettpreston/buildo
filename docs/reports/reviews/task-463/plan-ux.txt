@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-25T01:32:44.774Z file_sha256=089dcf2fd8e4416bdcb41e0e228a09e2f94dfa6c13e1ae67a76dd3a6c847941d prompt_sha256=1845910c9a0b0af444e86f28a821d2a236092e169a78282f9508c60a9cbc75bc
+🔍 Lens review of docs/reports/reviews/task-463/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan step 3 note "so the `npm run lint` line above and the dead `lint` script in `mobile/package.json` are removed" vs plan step 1 "expect(s5).not.toContain('`npm run lint`')" — a reader of Spec 98 §5 still meets the lint command quoted inside the note, and the plan's own test forbids exactly that string, so the approved note and the promised red-then-green proof cannot both hold — fix: reword the note to name the removed step without quoting the command, keeping the test's phrase check.
+
+BUG severity=MED — plan step 3 note "the `npm run lint` line above" vs plan step 3 "Delete line 118 exactly: `- `npm run lint` (ESLint) `" — the line the note points up at is deleted in the same step and the note lands below a different note (Spec 98:125), so a person who looks up from it finds the typecheck bullet and no lint line ever existed above — fix: say the lint step is gone rather than pointing above at it.
+
+DEFER severity=LOW — plan step 3 "After line 125 (the task-462 note), add a blank line and then:" — section 5's step list loses its fourth item at Spec 98:118 with nothing at that spot telling a reader why the sequence now has three steps, the reason sitting down in the trailing notes — rationale: the placement is what the plan gives, so defer, but the reader at the list is left to hunt.
+
+REJECT — plan step 3 "there is no phone lint step; the phone app has no lint tool installed" at about 260 characters vs RR-0429 "Keep notes short." (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2202) — looks long against the ruling named on this card — harmless: it matches the note form and length already standing at Spec 98:125, and no cap applies to mobile-98.
+
+REJECT — pasted card "Text only: delete the script line and correct the spec line with a dated note" — the change draws no phone or web screen, so there is no first view, loading, answered, error, empty, offline or back state for a person to reach or be trapped in — harmless: the approved scope is text only and no user-facing state is touched.
+
+VERDICT: FAIL on the person's experience
+States checked: Spec 98 §5 as first read, Spec 98 §5 after the bullet is removed, the trailing dated note a reader lands on, the developer typing npm run lint under mobile/, phone and web app states (none drawn by this change)   Dead ends found: 0
+
+---
+⏱  31949ms (31.9s)
+📊 Tokens — total: 20837, input: 15412, output: 5425, reasoning: 4827

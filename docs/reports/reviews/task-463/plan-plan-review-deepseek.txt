@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-25T01:32:44.774Z file_sha256=089dcf2fd8e4416bdcb41e0e228a09e2f94dfa6c13e1ae67a76dd3a6c847941d prompt_sha256=981b9bc09757f3f580c817f30e85ad0f4912cdde211e75a30850e887e38ca1c0
+🔍 Lens review of docs/reports/reviews/task-463/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — (A) Facts "Every other `npm run lint` hit is the web (root) lint, so none breaks" + (E) "That nothing outside the paths I grepped … runs the phone lint script" — the plan's opening security claim ("Removing the script breaks nothing that reads it") rests on a *path-limited* grep, so any caller outside .github/.husky/scripts/src/tests/docs/specs (a Makefile, another workflow, a root `lint:*` script doing `--prefix mobile run lint`, another mobile doc) will hard-fail with `npm ERR! Missing script: "lint"` after R2, and no R-step exercises those callers — run `grep -rIn "mobile.*run lint\|run lint.*mobile\|prefix mobile run lint" . --exclude-dir=node_modules --exclude-dir=.git` before R2 and if any hit exists add it to the plan's removal scope.
+
+BUG severity=MED — (B) step 1 test — splitting Spec 98 on the literal `'## 5. '` / `'## 6. '` assumes those exact heading strings; if the real headings are `### 5.` / `## 5 CI` / `## 5. CI pipeline` the split yields `[1]!` = undefined and `.split` on undefined throws, so the test goes red for the wrong reason and never reaches green — open Spec 98 and pin the exact §5/§6 heading text before writing the split.
+
+BUG severity=MED — (B) step 3 — the dated note is appended "after line 125" on the assumption the task-462 note at :125 lives inside §5; if :125 sits below the `## 6.` heading the new note lands in §6 and the step-1 `s5.toContain('> Dated note 2026-11-24 (task-463, RR-0462')` assertion can never pass, stalling the red→green cycle — read Spec 98 around :118–132 and confirm :125 is between the §5 and §6 headings.
+
+DEFER severity=MED — (E) `resolve --task task-463` refuses "no Files: line" though the task file has one at :22 — the standard commit path (B step 6, "through the real hooks, nothing bypassed") may reject if the close gate or resolve step depends on this parser, so trace why the parser misses :22 before R6 rather than hitting it mid-commit.
+
+DEFER severity=MED — (B) step 4 — `page --write` is unrun and its output file set is unverified (E: "did not run it"); if `rule-lists.mjs page --write` writes more than `rule-lists-by-kind.md` (e.g. a by-spec page), the Files line is incomplete and `page --check` blocks the commit or leaves a stray tracked-vs-dirty generated file — dry-run `node scripts/analysis/rule-lists.mjs page --write` on a scratch copy and diff to enumerate every file it rewrites.
+
+DEFER severity=LOW — (A) Facts, pre-push steps — the plan treats `.husky/pre-push-checks.sh:12-13` phone steps as static, but if the script derives its step list from `mobile/package.json` scripts (jq/node read), deleting `lint` silently changes the generated gate and the :551-552 pin would need updating — grep the pre-push script for any package.json scripts read before assuming static.
+
+DEFER severity=LOW — (A) Facts, Spec 98 "grep -i lint finds only :118" — only Spec 98 was searched for the promise; sibling mobile specs (docs/specs/03-mobile/*) or onboarding docs (README/CONTRIBUTING) may also promise a phone lint step and keep the broken promise — `grep -rIn "npm run lint\|phone lint\|mobile.*lint" docs/specs/03-mobile docs README.md CONTRIBUTING.md`.
+
+NIT severity=NIT — (B) step 3 note text — the note says "the `npm run lint` line above … removed" but that bullet is deleted in the same edit, so "above" now points at nothing; reword to "the `npm run lint` bullet formerly here" — cosmetic only.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- The load-bearing "removing the script breaks nothing that reads it" claim is admitted-unverified (E); an out-of-path caller of `mobile run lint` breaks CI/pre-push after merge with no R-step to catch it.
+- The step-1 test hard-codes `## 5. `/`## 6. ` heading literals and will throw (red for the wrong reason) if the real section headings differ — must confirm heading strings first.
+- The step-3 note placement assumes :125 is inside §5; if it is below §6 the test can never reach green.
+
+Top 3 unverified data premises (regardless of verdict):
+- No external caller of the mobile lint script — `grep -rIn "mobile.*run lint\|run lint.*mobile\|prefix mobile run lint" . --exclude-dir=node_modules --exclude-dir=.git`
+- Exact §5/§6 heading text and §-membership of :125 — `grep -n "^## " docs/specs/03-mobile/98_mobile_testing_protocol.md` and `sed -n '115,132p' docs/specs/03-mobile/98_mobile_testing_protocol.md`
+- Which files `page --write` regenerates — `grep -n "generated/\|by-kind\|by-spec\|writeFile" scripts/analysis/rule-lists.mjs` (or a scratch `page --write` + `git status`)
+
+---
+⏱  82603ms (82.6s)
+📊 Tokens — total: 25192, input: 16299, output: 8893, reasoning: 7608

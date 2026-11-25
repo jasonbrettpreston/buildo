@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-25T01:32:44.774Z file_sha256=089dcf2fd8e4416bdcb41e0e228a09e2f94dfa6c13e1ae67a76dd3a6c847941d prompt_sha256=e2599ef61e175bde9207fd9fb42617554543ccf624d0dabab8a209250682b0ef
+🔍 Lens review of docs/reports/reviews/task-463/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=MED — docs/specs/03-mobile/98_mobile_testing_protocol.md note step, plan step 3 "add a blank line and then:" — the dated note write has no key or guard: re-applying step 3 after a partial run inserts a second `> Dated note 2026-11-24 (task-463…)`, the `toContain` check stays green and `page --check` merely recounts the longer file, so a duplicate note lands — assert exactly one occurrence (`s5.split('> Dated note 2026-11-24 (task-463').length - 1 === 1`)
+
+BUG severity=MED — plan step 1 test body "expect(Object.keys(scripts)).not.toContain('lint');" — the assertion is one-sided: risk (D) warns of line drift, so a line-number delete that removes the adjacent `"safe-start"` (or both lines) still passes green and leaves the phone start script gone, and the pin at :551-552 covers only typecheck and test:ci — also assert the expected remaining script keys, or match the exact deleted string
+
+DEFER severity=LOW — plan step 1 test body "const s5 = fs.readFileSync(...).split('## 5. ')[1]!.split('## 6. ')[0]!;" — the `[1]!` non-null assertion turns a renamed or renumbered section 5 heading into a TypeError at the `.split` call, so the failure reads as a parse crash, not "spec section 5 missing"; it does fail closed, so the blast radius is a confusing red — assert the split length before indexing
+
+DEFER severity=LOW — plan step 1 test body "expect(s5).not.toContain('`npm run lint`');" — the negative check matches only the backticked literal, so a leftover promise written as plain `npm run lint` or in a fenced block inside section 5 stays green while the spec still promises the step — match the bare phrase as well, or assert on `lint` case-insensitively within section 5
+
+DEFER severity=LOW — plan step 1 test body "expect(s5).toContain('> Dated note 2026-11-24 (task-463, RR-0462');" — if `## 6. ` is absent the slice runs to end of file, widening the `not.toContain` window over later sections and producing a red that has nothing to do with section 5 — assert both heading markers exist before slicing
+
+REJECT — mobile/package.json:13 "`"lint": "eslint src app --ext .ts,.tsx",`" — deleting the script looks like it breaks any caller — it cannot add a failure: the plan's own fact row records no eslint installed and no eslint config, so every caller already dies today with a missing-binary error; the delete only changes the message to "Missing script: lint", still loud and fail-closed
+
+REJECT — .husky/pre-commit:44 "`node scripts/analysis/rule-lists.mjs page --check`" — a stale or half-written rule-lists page after the Spec 98 edit looks like it can ship a wrong count — the pre-commit check blocks the commit, fail-closed, so a page not regenerated cannot land
+
+VERDICT: PASS on error-path safety
+Paths walked: spec/package.json read failure, missing `scripts` key, missing `## 5. `/`## 6. ` headings, re-applied delete of the lint line, re-applied dated note, page `--write` run twice, external caller of `npm run lint`, stale generated page at commit   Unguarded: 3
+
+---
+⏱  28895ms (28.9s)
+📊 Tokens — total: 20283, input: 15413, output: 4870, reasoning: 4064

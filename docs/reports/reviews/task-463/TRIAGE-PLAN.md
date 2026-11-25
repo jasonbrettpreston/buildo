@@ -1,0 +1,17 @@
+# Plan triage: task-463 (one outcome line per CONFIRMED id; the fold is FOLD-463.json applied to the task; round 1: CRITICAL, HIGH and MED folded, LOW and NIT folded in a few words else piled)
+
+plan-error-paths#1 folded:"expect(s5.split('> Dated note 2026-11-24 (task-463, RR-0462').length - 1).toBe(1);"
+plan-error-paths#2 folded:"expect.arrayContaining(['typecheck', 'test:ci', 'safe-start'])"
+plan-error-paths#3 pile:"a renamed heading fails closed with a TypeError; the heading occurs once at head (:113)"
+plan-error-paths#4 folded:"expect(s5).not.toContain('npm run lint');"
+plan-error-paths#5 pile:"each heading occurs exactly once at head (:113, :127), so the slice cannot run to the end"
+plan-plan-review-deepseek#1 folded:"a repo-wide grep finds no caller of the phone script"
+plan-plan-review-deepseek#7 folded:"the three .cursor spec93 deferred cards"
+plan-ux#1 folded:"the lint item is removed from this list"
+plan-ux#2 folded:"there is no phone lint step. The phone app has no lint tool installed"
+plan-ux#3 pile:"the reason sits in the dated note under the list, as the card and RR-0429 ask for short notes"
+in#1 folded:"resolve takes --files (rule-lists.mjs:5), not --task"
+in#2 pile:"the case sits in the task-424 block next to the phone gate pin; placement is as the plan states"
+rc#1 folded:"the lint item is removed from this list"
+rc#2 folded:"Text that points at that list | Spec 98:121"
+rg#1 folded:"the three .cursor spec93 deferred cards"
