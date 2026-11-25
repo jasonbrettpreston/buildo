@@ -3,11 +3,11 @@ id: TASK-464
 title: >-
   PROC.GENROW The rule-list table covers the top-level generator scripts, so a
   card that names one can launch
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-GENROW'
 created_date: '2026-11-25T12:31:00Z'
-updated_date: '2026-11-25T13:13:00Z'
+updated_date: '2026-11-25T13:17:00Z'
 labels:
   - ProcessImprovement
 milestone: m-1
@@ -25,6 +25,8 @@ references:
   - docs/reports/reviews/task-464/seat-reality-check-1.md
   - docs/reports/reviews/task-464/seat-regression-1.md
   - docs/reports/lanes/2026-11-25/BL-GENROW/REPORT.md
+  - docs/reports/lanes/2026-11-25/BL-GENROW/GROUNDER.md
+  - docs/reports/lanes/2026-11-25/BL-GENROW/TRIAGE.md
 type: fix
 ordinal: 158210
 ---
@@ -39,19 +41,19 @@ Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists.logic.test
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The launch gate resolves a Files line that names scripts/generate-logic-variable-groups.mjs (task-454's line resolves with no unmatched path), a test locks it and was red first, and the rule-lists page is current
+- [x] #1 The launch gate resolves a Files line that names scripts/generate-logic-variable-groups.mjs (task-454's line resolves with no unmatched path), a test locks it and was red first, and the rule-lists page is current
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
-- [ ] #2 The tests were written first and proven red, then green — "Every lock is proven in BOTH directions" (docs/specs/00-architecture/08_agents.md:462)
-- [ ] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
-- [ ] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
-- [ ] #5 Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — "A ruling enters a row as a verbatim dated note." (docs/specs/00-architecture/137_mcqueue.md:109)
+- [x] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
+- [x] #2 The tests were written first and proven red, then green — "Every lock is proven in BOTH directions" (docs/specs/00-architecture/08_agents.md:462)
+- [x] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
+- [x] #5 Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — "A ruling enters a row as a verbatim dated note." (docs/specs/00-architecture/137_mcqueue.md:109)
 - [ ] #6 The task file and its queue row are updated in the same commit as the work — "The status line changes in the same commit as the work." (docs/specs/00-architecture/137_mcqueue.md:84)
-- [ ] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
-- [ ] #8 Nothing was added that the card or ruling did not name — "no change adds a tool, field or rule its card or ruling did not name" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)
+- [x] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
+- [x] #8 Nothing was added that the card or ruling did not name — "no change adds a tool, field or rule its card or ruling did not name" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
@@ -203,3 +205,11 @@ rg#1 MED folded The three by-law gen
 
 2026-11-25 output review round 1: code-review lens on the whole diff 68f1718da..4b47e5119 with context-r3.md; out-code-review.txt findings:2 (1 LOW, 1 NIT); FINDINGS.md in docs/reports/lanes/2026-11-25/BL-GENROW/. Grounder owed (a separate grounder rules every finding; the lane does not).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+What landed (work commit 4b47e5119, station PASS on it): the step-pipeline row of scripts/analysis/rule-lists.json gains the glob scripts/generate-*.mjs and one why sentence (RR-0475 item 1, decision-257), so a Files line naming a top-level generator script resolves; task-454 resolves (check-tasks before: resolve 102 / not yet 205, task-454 matched no row; after: 103 / 204, task-454 resolves; docs/reports/lanes/2026-11-25/BL-GENROW/check-tasks-before.txt, check-tasks-after.txt). Test: the task-464 case in src/tests/backlog/rule-lists.logic.test.ts, red first (docs/reports/lanes/2026-11-25/BL-GENROW/red.out: exit 3, matched by no row), green in the landed commit (docs/reports/lanes/2026-11-25/BL-GENROW/green.out, 108/108). validate ok 58 lists 23 rows; page --check current (the page did not change). No row, list, kind or field added.
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder docs/reports/lanes/2026-11-25/BL-GENROW/GROUNDER.md; triage docs/reports/lanes/2026-11-25/BL-GENROW/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->

@@ -1,0 +1,1 @@
+# TRIAGE BL-GENROW (task-464), ROUND 1 (grounder Cairn-Ground-O464): 0 CONFIRMED, 2 REJECTED, 0 CONFLICT. No CRITICAL, HIGH or MED stands (RR-0385 item 1), and no LOW or NIT stands, so no outcome line is owed; the closing commit must hold the records only.
