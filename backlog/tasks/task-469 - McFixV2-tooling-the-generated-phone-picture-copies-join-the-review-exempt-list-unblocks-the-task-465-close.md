@@ -3,10 +3,11 @@ id: TASK-469
 title: >-
   McFixV2 tooling: the generated phone picture copies join the review exempt
   list (unblocks the task-465 close)
-status: WAITS
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-MCFIX469'
 created_date: '2026-11-25T20:33:00Z'
-updated_date: '2026-11-25T21:02:00Z'
+updated_date: '2026-11-25T21:04:00Z'
 labels:
   - McFixV2
 milestone: m-1
@@ -225,3 +226,9 @@ rg#2 MED folded No test pins an exem
 rg#3 MED folded Extend the rule sent
 rg#4 MED folded Every other lane mus
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-25 taken on the board at lane launch (lane BL-MCFIX469, worktree /Users/brettpreston_macmini/Buildo-wt-mcfix469, branch wf2/mcfix469), RR-0240
+<!-- SECTION:NOTES:END -->
