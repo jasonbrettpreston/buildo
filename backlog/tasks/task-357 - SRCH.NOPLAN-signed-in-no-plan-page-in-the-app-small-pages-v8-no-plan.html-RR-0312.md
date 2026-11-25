@@ -6,9 +6,10 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-19T22:02:00Z'
-updated_date: '2026-11-25T19:40:00Z'
+updated_date: '2026-11-25T19:49:00Z'
 labels:
   - McApp
+  - dead
 milestone: m-1
 dependencies:
   - TASK-320
@@ -121,4 +122,6 @@ Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the
 2026-11-24: split plan of task-452 (docs/reports/reviews/task-452/GROUNDER-PLAN.md, QUESTIONS-RULED.md). 452 builds the surface mobile_parcel_wall (states rate_limited, unauthorized), searchWall, useWallState and the error classes; this card adds states static, loading and error, 8 keys, flags no_plan, checking, none, the recheck, sign_out (schema action and SurfaceActions) and the settle haptics; searchWall gets a no_plan branch for status null and flips 452's null-status lock test. Pins go 443 to 451 strings, 102 to 105 goldens, no new surface. The old mobile_parcel_no_plan surface, no-plan.tsx and noPlanTrigger.test.ts are superseded; the Files line and the size (GUESS 22) are re-derived at planning. Kept: the trigger rule, Log out kept, Account dropped, the grep for http www $ maxbld.ca, search goldens byte-identical, the Spec 126 and MF-49 notes, the sign-up way waits (RR-0454 item 4). HELD note met: the pilot is folded (cf3f0bf5a). Design cite: docs/reports/reviews/task-452/v1/QUESTIONS-RULED.md:15-20. Dependency on TASK-452 added, ordinal moved after 452, the dead label removed (live again, RR-0455 item 2), per the task-452 plan grounder.
 
 Dated note 2026-11-24 (task-452 at land, lane BL-SFX4, commit 4cf68ec45): 452 built the surface S-096 mobile_parcel_wall with states rate_limited and unauthorized (screens row of static-page.json, WallBinding.tsx, useWallState.ts, searchWall, ReportLimitError and SubscriptionRequiredError, content key wall.plan). This card adds the no_plan states to that surface and flips the status-null lock in mobile/__tests__/parcelSearchMatch.test.ts (searchWall) and parcelSearchScreen.behaviour.test.tsx.
+
+2026-11-25 (RR-0501, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2608): absorbed into task-271 (McApp card 2, Account and no-plan); dead as a separate card (RR-0488: an absorbed card is dead; the work is done in the larger card).
 <!-- SECTION:NOTES:END -->

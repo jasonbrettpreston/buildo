@@ -3,16 +3,15 @@ id: TASK-313
 title: >-
   MF-49 MaxBLD mobile app: a separate Expo project in a monorepo (Spec 116
   section 3)
-status: OPERATOR
+status: LATER
 assignee:
   - '@operator'
 created_date: '2026-11-19T13:07:00Z'
-updated_date: '2026-11-25T19:40:00Z'
+updated_date: '2026-11-25T19:49:00Z'
 labels:
   - queue-row
-  - open-decisions
   - McApp
-milestone: m-8
+milestone: m-2
 dependencies: []
 references:
   - .cursor/MCFRONTEND-QUEUE.md#L347 ROW:MF-49
@@ -54,4 +53,6 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0232 · task-313 · Backlog; o
 Dated note 2026-11-19 (M-246, prior text kept; RR-0233 · task-313 · Backlog; operator, verbatim: "I really only have expertise in the front-end, design of the app, how much storage, timeframes, priorities - beyond that my expertise is limited and I need to rely on yo or the panel or the gates to make sure the rules are followed and we are making prudent decisions")
 
 2026-11-25 (RR-0499, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2598, operator '1a'; RR-0496 :2583): the MaxBLD app lives INSIDE the one project for now: sign-in goes straight to search with no lead-app onboarding, the MaxBLD bar is the only bar, the gate checks the MaxBLD plan, and the app gets its own start-up screen; the lead-app screens stay in the code, unreachable, kept for the other app. This departs from Spec 116 section 3 (a separate Expo project); a dated note in Spec 116 is owed by the build. The separate project is a later decision, when the lead app is ready. First card of McApp; planned after the five 1-B cards.
+
+2026-11-25 (RR-0501, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2608): McApp card 1 of 4 (front door), moved into Increment 1-C; built first after the five 1-B cards.
 <!-- SECTION:NOTES:END -->
