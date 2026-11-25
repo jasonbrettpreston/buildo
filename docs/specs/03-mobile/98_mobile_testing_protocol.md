@@ -115,7 +115,6 @@ The boundaries below are illustrative examples within those mandates.
 
 **Pull Request Checks:** On every PR targeting `main`, GitHub Actions runs:
 - `npm run typecheck` (TypeScript compiler)
-- `npm run lint` (ESLint)
 - `npm run test` (Jest unit tests)
 
 **Pre-Build Checks:** EAS Build runs the above sequence natively before attempting an iOS/Android build. If tests fail, the build is aborted to save queue time and credits.
@@ -123,6 +122,8 @@ The boundaries below are illustrative examples within those mandates.
 **E2E Automation (Phase 2):** Maestro tests will be integrated into GitHub Actions via Maestro Cloud to run automatically against staging builds.
 
 > Dated note 2026-11-24 (task-462, RR-0462, step 4 of the approved quick plan): the phone typecheck and phone tests also run before every push, as steps `mobile-typecheck` and `mobile-tests` of `.husky/pre-push-checks.sh` (before the web suite, no coverage written); Mobile CI still runs after the push.
+
+> Dated note 2026-11-24 (task-463, RR-0462, step 5 of the approved quick plan): there is no phone lint step. The phone app has no lint tool installed, so the lint item is removed from this list and the unused `lint` script from `mobile/package.json`.
 
 ## 6. Historical Context & Past Issues
 To prevent future developers from falling into the same local development traps, we document the major environment issues that forced the transition to this protocol.

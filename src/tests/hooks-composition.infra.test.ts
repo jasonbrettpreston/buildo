@@ -609,4 +609,13 @@ describe('task-424 — one list of pre-push checks', () => {
     };
     expect(parseForkCapFromHookText(PRE_PUSH_CHECKS)).toEqual(parseForkCapFromHookText(stripComments(PRE_PUSH_CHECKS)));
   });
+
+  it('task-463 (RR-0462) — no phone lint step: mobile/package.json has no lint script; Spec 98 §5 lists no `npm run lint` and carries the dated note', () => {
+    const scripts = (JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'mobile/package.json'), 'utf8')) as { scripts: Record<string, string> }).scripts;
+    expect(Object.keys(scripts)).not.toContain('lint');
+    expect(Object.keys(scripts)).toEqual(expect.arrayContaining(['typecheck', 'test:ci', 'safe-start']));
+    const s5 = fs.readFileSync(path.join(REPO_ROOT, 'docs/specs/03-mobile/98_mobile_testing_protocol.md'), 'utf8').split('## 5. ')[1]!.split('## 6. ')[0]!;
+    expect(s5).not.toContain('npm run lint');
+    expect(s5.split('> Dated note 2026-11-24 (task-463, RR-0462').length - 1).toBe(1);
+  });
 });
