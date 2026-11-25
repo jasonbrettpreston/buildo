@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SFX8'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-25T16:45:00Z'
+updated_date: '2026-11-25T17:20:00Z'
 labels:
   - SEARCHFIX-LATER
 milestone: m-1
@@ -30,6 +30,7 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-25/BL-SFX8/REPORT.md
 type: fix
 ordinal: 150130
 ---
@@ -229,4 +230,8 @@ rg#4 MED folded 454 lands first, the
 2026-11-25 migration 309 database test written (commit iii, plan step 10): src/tests/db/migration-309-parcel-maxbld-scenarios.db.test.ts; self-skips with no DATABASE_URL and under BUILDO_TEST_DB_EXTERNAL=1; one BEGIN/ROLLBACK, savepoints per case, both directions by DROP CONSTRAINT inside SAVEPOINT d. NOT RUN by the lane (no database connection); the orchestrator runs it in a throwaway container (RR-0475 item 4, MORNING-DECISIONS.md:2481). AC #4 stays open until db-green.out. Migration 309 unchanged.
 
 2026-11-25 work commits 2606cb7ab (web tests, ledger, factories), 5580aaa76 (phone tests), f7498e8c5 (database test); the launch review context context-r2.md committed with the work as the brief asks. Station owed (RR-0467) before the output review.
+
+2026-11-25 STATION PASS on 5e4d68bc1 (~/Buildo-scratch/push-station/pass/5e4d68bc1af5ea71a644e463ea8acffad67199ce.pass; output ~/Buildo-scratch/lanes-20261125/station-5e4d68bc1.out): 28,397 passed, 0 failed; phone tests and both typechecks rc=0, so the two new phone cases are green; their red runs remain unseen. The migration 309 db test is still to be run by the orchestrator in a throwaway container; AC #4 stays open.
+
+2026-11-25 output review round 1: context-r3.md; one code-review lens part (out-code-review-p1.txt) on the whole diff 8abc92777..5e4d68bc1; 7 findings (2 MED, 4 LOW, 1 NIT; no CRITICAL or HIGH), FINDINGS.md in docs/reports/lanes/2026-11-25/BL-SFX8/. Grounder owed; nothing triaged or fixed by the lane.
 <!-- SECTION:NOTES:END -->

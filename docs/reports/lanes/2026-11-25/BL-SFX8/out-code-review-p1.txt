@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-25T17:18:05.007Z file_sha256=4961e6765eedd30f4d2c88738ae5188b4873a7a9f2ce460fcd6e728de83f9615 prompt_sha256=93f5d2843ed27f866675e3db59a882782876a95db071fc92b2d0330896a21696
+🔍 Lens review of docs/reports/lanes/2026-11-25/BL-SFX8/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/factories.ts "import type { StoredRow, LotStamp } from '@/lib/report-projection/project';" — the new import sits after ~810 lines of exports, not in the module's top import block, so it relies on hoisting and will fail an `import/first`-style lint rule that every neighbouring file obeys — move it to the top of factories.ts with the existing imports.
+
+DEFER severity=MED — src/tests/db/migration-309-parcel-maxbld-scenarios.db.test.ts "    if (!pool) return;" — this null guard makes `client` stay null and every test then runs `(client as PoolClient).query`, so a null pool produces a TypeError inside a test rather than a skip, the guard protects nothing — replace with a hard assert or a suite-level skip (`expect(pool).not.toBeNull()` / `describe.skipIf`), or wrap the null case in `it.skip`.
+
+DEFER severity=LOW — src/tests/db/migration-309-parcel-maxbld-scenarios.db.test.ts "    parcelPk = rows[0]!.id; // parcel_maxbld_scenarios.parcel_id is parcels.id (migration 309:22)" — the `!` hides an empty SELECT, so a missing row becomes `Cannot read properties of undefined` far from the insert that failed — assert `expect(rows).toHaveLength(1)` before reading `rows[0].id`.
+
+DEFER severity=LOW — src/tests/db/migration-309-parcel-maxbld-scenarios.db.test.ts "])('refuses: %s (23514, %s)', async (_name, s, name) => {" — with `it.each<[string, Scenario, string]>` the second `%s` binds to the Scenario object, not to `name`, so the report line prints the row and never the constraint — use the third element in the title (`'refuses: %s (23514, %s)'` with args reordered, or `$name`-style object cases).
+
+DEFER severity=LOW — src/tests/db/migration-309-parcel-maxbld-scenarios.db.test.ts "      await client.query('ROLLBACK');\n      client.release();" — a rejected ROLLBACK skips `client.release()`, leaking the connection and then blocking on `pool.end()` — wrap the rollback in try/finally so release always runs.
+
+DEFER severity=LOW — src/tests/parcel-routes.security.test.ts "  vi.mocked(getCurrentUserContext).mockResolvedValue({ uid: UID, subscription_status: 'active' } as never);" — `as never` suppresses the shape check, so if the session context gains a required field the mock keeps compiling while the routes silently read undefined — type the mock with the real return type of `getCurrentUserContext` instead of the cast.
+
+DEFER severity=NIT — src/tests/parcel-routes.security.test.ts "    expect(res.status).not.toBe(500);\n    expect(res.status).toBe(200);" — the not-500 assertion is subsumed by the 200 assertion that follows it, so it is a dead check on every pass — keep only `toBe(200)` (or keep not-500 alone) so a reader is not told two different things are being tested.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  110053ms (110.1s)
+📊 Tokens — total: 43212, input: 19326, output: 23886, reasoning: 23151
