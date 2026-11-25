@@ -1,0 +1,2 @@
+# TRIAGE BL-PLINT (task-463), ROUND 1 (grounder Cairn-Ground-O463): 1 CONFIRMED (1 LOW); no CRITICAL, HIGH or MED stands (RR-0385: round 1 resolves CRITICAL, HIGH and MED, LOW and NIT are recorded)
+out-code-review#1 pile:"bang on the section split fails closed with a TypeError; text folded word for word, plan grounder piled the same matter (plan-error-paths#3 and #5), LOW is recorded (RR-0385 round 1)"

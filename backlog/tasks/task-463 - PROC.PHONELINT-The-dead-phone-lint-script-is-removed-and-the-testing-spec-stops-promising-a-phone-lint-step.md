@@ -3,11 +3,11 @@ id: TASK-463
 title: >-
   PROC.PHONELINT The dead phone lint script is removed and the testing spec
   stops promising a phone lint step
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-PLINT'
 created_date: '2026-11-24T18:43:00Z'
-updated_date: '2026-11-25T02:05:00Z'
+updated_date: '2026-11-25T02:12:00Z'
 labels:
   - ProcessImprovement
 milestone: m-1
@@ -26,6 +26,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-25/BL-PLINT/GROUNDER.md
+  - docs/reports/lanes/2026-11-25/BL-PLINT/TRIAGE.md
+  - docs/reports/lanes/2026-11-25/BL-PLINT/REPORT.md
 type: fix
 ordinal: 157210
 ---
@@ -40,21 +43,21 @@ Files: mobile/package.json, docs/specs/03-mobile/98_mobile_testing_protocol.md, 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 mobile/package.json has no lint script and the phone testing spec section 5 says there is no phone lint step, with a dated note
+- [x] #1 mobile/package.json has no lint script and the phone testing spec section 5 says there is no phone lint step, with a dated note
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
-- [ ] #2 The tests were written first and proven red, then green — "Every lock is proven in BOTH directions" (docs/specs/00-architecture/08_agents.md:462)
-- [ ] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
-- [ ] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
-- [ ] #5 Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — "A ruling enters a row as a verbatim dated note." (docs/specs/00-architecture/137_mcqueue.md:109)
-- [ ] #6 The task file and its queue row are updated in the same commit as the work — "The status line changes in the same commit as the work." (docs/specs/00-architecture/137_mcqueue.md:84)
-- [ ] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
-- [ ] #8 Nothing was added that the card or ruling did not name — "no change adds a tool, field or rule its card or ruling did not name" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)
-- [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
-- [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
+- [x] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
+- [x] #2 The tests were written first and proven red, then green — "Every lock is proven in BOTH directions" (docs/specs/00-architecture/08_agents.md:462)
+- [x] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
+- [x] #5 Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — "A ruling enters a row as a verbatim dated note." (docs/specs/00-architecture/137_mcqueue.md:109)
+- [x] #6 The task file and its queue row are updated in the same commit as the work — "The status line changes in the same commit as the work." (docs/specs/00-architecture/137_mcqueue.md:84)
+- [x] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
+- [x] #8 Nothing was added that the card or ruling did not name — "no change adds a tool, field or rule its card or ruling did not name" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)
+- [x] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
+- [x] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
 ## Implementation Plan
@@ -159,3 +162,11 @@ plan-error-paths#2 MED folded expect.arrayContaini
 
 2026-11-25 output review round 1: one code-review lens (task-460 shape) over a6a3fcb6d..74b06e6be with context-r3.md; out-code-review.txt: 2 MED, 2 LOW DEFER, 2 REJECT, VERDICT PASS; records in docs/reports/lanes/2026-11-25/BL-PLINT/; grounder owed (the lane does not rule its own findings).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed in work commit 74b06e6be (wf2/plint, through the real hooks): mobile/package.json loses the unused lint script; Spec 98 section 5 loses the npm run lint bullet and carries the task-463 dated note (RR-0462 step 5); docs/reports/generated/rule-lists-by-kind.md regenerated (mobile-98 12,027; total 216,549; page --check current); src/tests/hooks-composition.infra.test.ts pins it. Red: refused commit attempt, 1 failed | 54 passed (red.out). Green: work commit hook tail, 55 passed, GATE OK (green.out). Push station PASS on 74b06e6be (all eight steps rc=0; pass file ~/Buildo-scratch/push-station/pass/74b06e6be59e5351d24750d7e2cf72c8b178b7b1.pass), run before the review by RR-0467. Output review: one code-review lens over a6a3fcb6d..74b06e6be, records commit 73b58586c; validating grounder Cairn-Ground-O463: 1 CONFIRMED (LOW, piled), 3 REJECTED. Acceptance #1 evidence: mobile/package.json has no lint key; Spec 98:126 dated note; test task-463 green. Rule: RR-0462 (MORNING-DECISIONS.md:2390-2393). No operator ruling was needed beyond RR-0462. Principles served: accuracy (the spec states what CI really runs), understandability and simplicity (one dead script removed, no new tool).
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 1 pile; grounder docs/reports/lanes/2026-11-25/BL-PLINT/GROUNDER.md; triage docs/reports/lanes/2026-11-25/BL-PLINT/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->
