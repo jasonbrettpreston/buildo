@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-SFX6B'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-25T15:00:00Z'
+updated_date: '2026-11-25T17:18:00Z'
 labels:
   - SEARCHFIX-LATER
 milestone: m-1
@@ -291,6 +291,8 @@ rg#3 MED folded the phone takes a ch
 2026-11-25 close of stage (i), BUILT: the separate output grounder Cairn-Ground-O454 ruled round 1 (17 ids: 8 CONFIRMED, 4 LOW and 4 NIT, all pile; 9 REJECTED; no CRITICAL, HIGH or MED). Still open, not this lane: stage (ii) the test-stack rehearsal, stage (iii) the dev apply on the operator's typed GO, stage (iv) the push; the push is held until the six rows are on dev (RR-0475 item 2).
 
 Implementation Note (3) of the work commit (the admin contract names no logic_variables table in inputs.tables) is superseded by the plan grounder's ruling 2 (pg-ruling2/RULING-FILES-LINE.md): the diff does name it (contract_admin_parcels_lookup inputs.tables, 6 tables, census mirror byte-equal).
+
+2026-11-25 landing: fold 908b0252e on wf2/board (station PASS ~/Buildo-scratch/push-station/pass/908b0252ea1001cb547ef7a77680f9af60726ae2.pass); six rows applied to the local test stack (teststack-seed-454-20261125.out); dev rows applied by the operator (RR-0484, MORNING-DECISIONS.md:2529; operator 'I ran it', :2533); pushed by the operator, origin wf1/mb-rulings = 908b0252e; Mobile CI run 45663102940 result as printed by gh run view on this date.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
