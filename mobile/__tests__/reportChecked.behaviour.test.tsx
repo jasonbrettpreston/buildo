@@ -65,12 +65,25 @@ const never = (): Promise<never> => new Promise(() => undefined);
 
 let client: QueryClient;
 const mount = () => render(<QueryClientProvider client={client}><Screen /></QueryClientProvider>);
-const tick = async (ms: number): Promise<void> => { await act(async () => { jest.advanceTimersByTime(ms); }); };
+// Station fix (2026-11-25, 41fe484d3 C1-C11 red): one synchronous advance inside one act ran every timer before any promise settled and before React
+// rendered, so the fast read's answer (a promise, then the library's notify timer, then a render, then the report read's start) never reached the screen
+// inside a tick. The clock now advances in steps of the screen's redraw tick, each its own act with the microtasks flushed between timers
+// (advanceTimersByTimeAsync), then three empty steps flush the last notify and render. A step is the hook's redraw tick (TICK_MS, 250 ms).
+const STEP = 250;
+const tick = async (ms: number): Promise<void> => {
+  let left = ms;
+  do {
+    const s = Math.min(STEP, left);
+    await act(async () => { await jest.advanceTimersByTimeAsync(s); });
+    left -= s;
+  } while (left > 0);
+  for (let i = 0; i < 3; i += 1) await act(async () => { await jest.advanceTimersByTimeAsync(0); });
+};
 
 beforeEach(() => {
   jest.useFakeTimers();
   reportClock.reset();
-  client = new QueryClient();
+  client = new QueryClient({ defaultOptions: { queries: { gcTime: Infinity } } }); // no garbage-collection timer left behind a test
   mockBack.mockClear(); mockReplace.mockClear();
   calls.fast = 0; calls.report = 0;
   fast = () => Promise.resolve(FAST);
@@ -95,7 +108,7 @@ describe('C1 the lines play from the pick', () => {
     expect(screen.getByText(line(0, 0).verb)).toBeTruthy();
     expect(screen.queryByText(line(0, 0).text)).toBeNull();
     expect(screen.queryByTestId(`report-line-${CHECKED.groups[0]!.key}-${line(0, 1).key}`)).toBeNull();
-    await tick(line(0, 0).done_ms);
+    await tick(line(0, 0).done_ms + STEP); // the screen redraws on its tick: a line turns within one tick of its time
     expect(screen.getByText(line(0, 0).text)).toBeTruthy();
     expect(screen.getByText(line(0, 1).verb)).toBeTruthy();
     expect(calls).toEqual({ fast: 1, report: 1 }); // the report read is sent once the fast read settles with no page
@@ -148,7 +161,7 @@ describe('C5 a failure shows right away (RR-0492 item 3; RR-0497 Q-a A)', () => 
   it('a 500 with the three retries spent shows the failure at once, the lines as far as they got', async () => {
     report = () => Promise.reject(new ApiError(500, 'boom'));
     mount();
-    await tick(7500); // attempts at 0, 1, 3 and 7 s (the library delays 1, 2 and 4 s)
+    await tick(8000); // attempts at about 0, 1, 3 and 7 s (the library delays 1, 2 and 4 s)
     expect(calls.report).toBe(4);
     expect(screen.getByText(LIFE.error!)).toBeTruthy();
     const { g, l } = last();
@@ -172,7 +185,7 @@ describe('C6 no report for this lot (RR-0490 4 B, RR-0494)', () => {
   it('a miss at 0.1 s shows No report for this lot yet. and Back to search at once; one press goes back, a second does not', async () => {
     report = () => after(100, MISS);
     mount();
-    await tick(150);
+    await tick(500); // the fast read, then the report read answering at 0.1 s, then the render: well under a second (RR-0494)
     expect(screen.getByText(LIFE.miss!)).toBeTruthy();
     expect(screen.getByText(OWN['back_to_search.text']!)).toBeTruthy();
     fireEvent.press(screen.getByTestId('report-back-to-search'));
