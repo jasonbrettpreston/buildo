@@ -1,0 +1,311 @@
+check-tasks: open 307: resolve 103, not yet resolvable 204
+not yet resolvable, a Files path matches no row (a governance gap: add a row or fix the Files line): 2
+  task-395: a Files path matches no row: docs/reports/red-evidence/task-395/
+  task-411: a Files path matches no row: docs/reports/red-evidence/task-411/
+not yet resolvable, other reason: 3
+  task-377: the Files line of a build task resolves to no rule list (only exempt paths: docs/reports/lanes/2026-11-20/BL-VERIFYC/VERIFY.md); a build or fix task must touch at least one governed path
+  task-405: the Files line of a build task resolves to no rule list (only exempt paths: docs/reports/lanes/2026-11-20/BL-LEGAL/GROUNDER.md); a build or fix task must touch at least one governed path
+  task-409: the task has no milestone (a build or fix task needs one: its milestone objectives are attached to every review; set the milestone with the backlog CLI)
+not yet resolvable, no Files line (the author adds one before launch): 199
+  task-1: no Files line
+  task-14: no Files line
+  task-15: no Files line
+  task-16: no Files line
+  task-17: no Files line
+  task-18: no Files line
+  task-26: no Files line
+  task-27: no Files line
+  task-28: no Files line
+  task-29: no Files line
+  task-30: no Files line
+  task-31: no Files line
+  task-32: no Files line
+  task-34: no Files line
+  task-59: no Files line
+  task-61: no Files line
+  task-63: no Files line
+  task-67: no Files line
+  task-70: no Files line
+  task-71: no Files line
+  task-72: no Files line
+  task-73: no Files line
+  task-74: no Files line
+  task-75: no Files line
+  task-76: no Files line
+  task-77: no Files line
+  task-78: no Files line
+  task-79: no Files line
+  task-80: no Files line
+  task-81: no Files line
+  task-82: no Files line
+  task-84: no Files line
+  task-85: no Files line
+  task-86: no Files line
+  task-87: no Files line
+  task-88: no Files line
+  task-89: no Files line
+  task-90: no Files line
+  task-91: no Files line
+  task-93: no Files line
+  task-94: no Files line
+  task-95: no Files line
+  task-97: no Files line
+  task-98: no Files line
+  task-99: no Files line
+  task-100: no Files line
+  task-124: no Files line
+  task-125: no Files line
+  task-126: no Files line
+  task-127: no Files line
+  task-128: no Files line
+  task-129: no Files line
+  task-130: no Files line
+  task-131: no Files line
+  task-132: no Files line
+  task-133: no Files line
+  task-134: no Files line
+  task-135: no Files line
+  task-136: no Files line
+  task-137: no Files line
+  task-138: no Files line
+  task-139: no Files line
+  task-140: no Files line
+  task-141: no Files line
+  task-142: no Files line
+  task-143: no Files line
+  task-147: no Files line
+  task-150: no Files line
+  task-152: no Files line
+  task-154: no Files line
+  task-160: no Files line
+  task-161: no Files line
+  task-162: no Files line
+  task-163: no Files line
+  task-164: no Files line
+  task-167: no Files line
+  task-175: no Files line
+  task-176: no Files line
+  task-177: no Files line
+  task-178: no Files line
+  task-179: no Files line
+  task-180: no Files line
+  task-181: no Files line
+  task-182: no Files line
+  task-183: no Files line
+  task-185: no Files line
+  task-186: no Files line
+  task-187: no Files line
+  task-188: no Files line
+  task-189: no Files line
+  task-190: no Files line
+  task-191: no Files line
+  task-192: no Files line
+  task-193: no Files line
+  task-194: no Files line
+  task-195: no Files line
+  task-196: no Files line
+  task-197: no Files line
+  task-198: no Files line
+  task-199: no Files line
+  task-201: no Files line
+  task-202: no Files line
+  task-203: no Files line
+  task-204: no Files line
+  task-205: no Files line
+  task-207: no Files line
+  task-208: no Files line
+  task-209: no Files line
+  task-210: no Files line
+  task-211: no Files line
+  task-212: no Files line
+  task-213: no Files line
+  task-214: no Files line
+  task-215: no Files line
+  task-216: no Files line
+  task-218: no Files line
+  task-219: no Files line
+  task-220: no Files line
+  task-221: no Files line
+  task-222: no Files line
+  task-223: no Files line
+  task-224: no Files line
+  task-228: no Files line
+  task-229: no Files line
+  task-230: no Files line
+  task-232: no Files line
+  task-233: no Files line
+  task-234: no Files line
+  task-235: no Files line
+  task-237: no Files line
+  task-239: no Files line
+  task-240: no Files line
+  task-241: no Files line
+  task-243: no Files line
+  task-244: no Files line
+  task-246: no Files line
+  task-247: no Files line
+  task-248: no Files line
+  task-249: no Files line
+  task-250: no Files line
+  task-251: no Files line
+  task-253: no Files line
+  task-254: no Files line
+  task-255: no Files line
+  task-256: no Files line
+  task-257: no Files line
+  task-258: no Files line
+  task-259: no Files line
+  task-260: no Files line
+  task-262: no Files line
+  task-263: no Files line
+  task-264: no Files line
+  task-265: no Files line
+  task-268: no Files line
+  task-269: no Files line
+  task-270: no Files line
+  task-271: no Files line
+  task-272: no Files line
+  task-273: no Files line
+  task-274: no Files line
+  task-275: no Files line
+  task-276: no Files line
+  task-277: no Files line
+  task-278: no Files line
+  task-279: no Files line
+  task-280: no Files line
+  task-281: no Files line
+  task-282: no Files line
+  task-283: no Files line
+  task-284: no Files line
+  task-285: no Files line
+  task-286: no Files line
+  task-287: no Files line
+  task-288: no Files line
+  task-289: no Files line
+  task-290: no Files line
+  task-291: no Files line
+  task-292: no Files line
+  task-293: no Files line
+  task-294: no Files line
+  task-295: no Files line
+  task-296: no Files line
+  task-297: no Files line
+  task-298: no Files line
+  task-299: no Files line
+  task-300: no Files line
+  task-301: no Files line
+  task-304: no Files line
+  task-311: no Files line
+  task-312: no Files line
+  task-313: no Files line
+  task-337: no Files line
+  task-349: no Files line
+  task-368: no Files line
+  task-434: no Files line
+  task-443: no Files line
+  task-447: no Files line
+  task-458: no Files line
+  task-459: no Files line
+compliance references out of step with the resolved lists: 102 task(s); run each printed command (exit stays 0)
+  backlog task edit task-101 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6c backlog/docs/increments/doc-9 - Increment-6c-requirements.md' --add-ref 'compliance:ms-6c backlog/milestones/m-8 - increment-6c-owner-inputs-[6c].md'
+  backlog task edit task-102 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6c backlog/docs/increments/doc-9 - Increment-6c-requirements.md' --add-ref 'compliance:ms-6c backlog/milestones/m-8 - increment-6c-owner-inputs-[6c].md'
+  backlog task edit task-104 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6c backlog/docs/increments/doc-9 - Increment-6c-requirements.md' --add-ref 'compliance:ms-6c backlog/milestones/m-8 - increment-6c-owner-inputs-[6c].md'
+  backlog task edit task-115 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6c backlog/docs/increments/doc-9 - Increment-6c-requirements.md' --add-ref 'compliance:ms-6c backlog/milestones/m-8 - increment-6c-owner-inputs-[6c].md'
+  backlog task edit task-116 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6c backlog/docs/increments/doc-9 - Increment-6c-requirements.md' --add-ref 'compliance:ms-6c backlog/milestones/m-8 - increment-6c-owner-inputs-[6c].md'
+  backlog task edit task-117 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6c backlog/docs/increments/doc-9 - Increment-6c-requirements.md' --add-ref 'compliance:ms-6c backlog/milestones/m-8 - increment-6c-owner-inputs-[6c].md'
+  backlog task edit task-118 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6c backlog/docs/increments/doc-9 - Increment-6c-requirements.md' --add-ref 'compliance:ms-6c backlog/milestones/m-8 - increment-6c-owner-inputs-[6c].md'
+  backlog task edit task-119 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6c backlog/docs/increments/doc-9 - Increment-6c-requirements.md' --add-ref 'compliance:ms-6c backlog/milestones/m-8 - increment-6c-owner-inputs-[6c].md'
+  backlog task edit task-120 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6c backlog/docs/increments/doc-9 - Increment-6c-requirements.md' --add-ref 'compliance:ms-6c backlog/milestones/m-8 - increment-6c-owner-inputs-[6c].md'
+  backlog task edit task-146 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-7 backlog/docs/increments/doc-10 - Increment-7-requirements.md' --add-ref 'compliance:ms-7 backlog/milestones/m-9 - increment-7-semi-detached-(renovation-only)-[7].md'
+  backlog task edit task-151 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-7 backlog/docs/increments/doc-10 - Increment-7-requirements.md' --add-ref 'compliance:ms-7 backlog/milestones/m-9 - increment-7-semi-detached-(renovation-only)-[7].md'
+  backlog task edit task-153 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-7 backlog/docs/increments/doc-10 - Increment-7-requirements.md' --add-ref 'compliance:ms-7 backlog/milestones/m-9 - increment-7-semi-detached-(renovation-only)-[7].md'
+  backlog task edit task-155 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-7 backlog/docs/increments/doc-10 - Increment-7-requirements.md' --add-ref 'compliance:ms-7 backlog/milestones/m-9 - increment-7-semi-detached-(renovation-only)-[7].md'
+  backlog task edit task-156 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-7 backlog/docs/increments/doc-10 - Increment-7-requirements.md' --add-ref 'compliance:ms-7 backlog/milestones/m-9 - increment-7-semi-detached-(renovation-only)-[7].md'
+  backlog task edit task-157 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-7 backlog/docs/increments/doc-10 - Increment-7-requirements.md' --add-ref 'compliance:ms-7 backlog/milestones/m-9 - increment-7-semi-detached-(renovation-only)-[7].md'
+  backlog task edit task-168 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-8 backlog/docs/increments/doc-11 - Increment-8-requirements.md' --add-ref 'compliance:ms-8 backlog/milestones/m-10 - increment-8-sixplex-(houseplex-5-6-units)-[8].md'
+  backlog task edit task-170 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-8 backlog/docs/increments/doc-11 - Increment-8-requirements.md' --add-ref 'compliance:ms-8 backlog/milestones/m-10 - increment-8-sixplex-(houseplex-5-6-units)-[8].md'
+  backlog task edit task-172 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-8 backlog/docs/increments/doc-11 - Increment-8-requirements.md' --add-ref 'compliance:ms-8 backlog/milestones/m-10 - increment-8-sixplex-(houseplex-5-6-units)-[8].md'
+  backlog task edit task-173 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-8 backlog/docs/increments/doc-11 - Increment-8-requirements.md' --add-ref 'compliance:ms-8 backlog/milestones/m-10 - increment-8-sixplex-(houseplex-5-6-units)-[8].md'
+  backlog task edit task-174 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-8 backlog/docs/increments/doc-11 - Increment-8-requirements.md' --add-ref 'compliance:ms-8 backlog/milestones/m-10 - increment-8-sixplex-(houseplex-5-6-units)-[8].md'
+  backlog task edit task-184 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-8 backlog/docs/increments/doc-11 - Increment-8-requirements.md' --add-ref 'compliance:ms-8 backlog/milestones/m-10 - increment-8-sixplex-(houseplex-5-6-units)-[8].md'
+  backlog task edit task-200 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-8 backlog/docs/increments/doc-11 - Increment-8-requirements.md' --add-ref 'compliance:ms-8 backlog/milestones/m-10 - increment-8-sixplex-(houseplex-5-6-units)-[8].md'
+  backlog task edit task-217 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-8 backlog/docs/increments/doc-11 - Increment-8-requirements.md' --add-ref 'compliance:ms-8 backlog/milestones/m-10 - increment-8-sixplex-(houseplex-5-6-units)-[8].md'
+  backlog task edit task-225 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-9 backlog/docs/increments/doc-12 - Increment-9-requirements.md' --add-ref 'compliance:ms-9'
+  backlog task edit task-226 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-9 backlog/docs/increments/doc-12 - Increment-9-requirements.md' --add-ref 'compliance:ms-9'
+  backlog task edit task-227 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-9 backlog/docs/increments/doc-12 - Increment-9-requirements.md' --add-ref 'compliance:ms-9'
+  backlog task edit task-236 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-9 backlog/docs/increments/doc-12 - Increment-9-requirements.md' --add-ref 'compliance:ms-9'
+  backlog task edit task-238 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-10 backlog/docs/increments/doc-13 - Increment-10-requirements.md' --add-ref 'compliance:ms-10 backlog/milestones/m-12 - increment-10-mcproof-proof-set-[10].md'
+  backlog task edit task-242 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-10 backlog/docs/increments/doc-13 - Increment-10-requirements.md' --add-ref 'compliance:ms-10 backlog/milestones/m-12 - increment-10-mcproof-proof-set-[10].md'
+  backlog task edit task-252 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-10 backlog/docs/increments/doc-13 - Increment-10-requirements.md' --add-ref 'compliance:ms-10 backlog/milestones/m-12 - increment-10-mcproof-proof-set-[10].md'
+  backlog task edit task-267 --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md' --add-ref 'compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md' --add-ref 'compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-302 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-AL backlog/docs/increments/doc-15 - Increment-AL-requirements.md' --add-ref 'compliance:ms-AL backlog/milestones/m-14 - after-launch-[al].md'
+  backlog task edit task-303 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-AL backlog/docs/increments/doc-15 - Increment-AL-requirements.md' --add-ref 'compliance:ms-AL backlog/milestones/m-14 - after-launch-[al].md'
+  backlog task edit task-317 --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md' --add-ref 'compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md' --add-ref 'compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md' --add-ref 'compliance:step-132 docs/specs/01-pipeline/132_step_standard_handbook.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-33 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-343 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-345 --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-F backlog/docs/increments/doc-1 - Increment-F-requirements.md' --add-ref 'compliance:ms-F backlog/milestones/m-0 - increment-1·a-foundations-[f].md'
+  backlog task edit task-35 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-354 --add-ref 'compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md' --add-ref 'compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md' --add-ref 'compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md' --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:step-132 docs/specs/01-pipeline/132_step_standard_handbook.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-357 --add-ref 'compliance:step-132 docs/specs/01-pipeline/132_step_standard_handbook.md' --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md' --add-ref 'compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md' --add-ref 'compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-36 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-366 --add-ref 'compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-37 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-372 --add-ref 'compliance:eng-back docs/specs/00_engineering_standards.md' --add-ref 'compliance:eng-shared docs/specs/00_engineering_standards.md' --add-ref 'compliance:step-132 docs/specs/01-pipeline/132_step_standard_handbook.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-373 --add-ref 'compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md' --add-ref 'compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md' --add-ref 'compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md' --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-374 --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-375 --add-ref 'compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-376 --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md' --add-ref 'compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md' --add-ref 'compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md' --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:step-132 docs/specs/01-pipeline/132_step_standard_handbook.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-378 --add-ref 'compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md' --add-ref 'compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md' --add-ref 'compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md' --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:step-132 docs/specs/01-pipeline/132_step_standard_handbook.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:bylaw-133 docs/specs/01-pipeline/133_bylaw_handbook.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-379 --add-ref 'compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:step-132 docs/specs/01-pipeline/132_step_standard_handbook.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-38 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-380 --add-ref 'compliance:eng-back docs/specs/00_engineering_standards.md' --add-ref 'compliance:eng-shared docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-381 --add-ref 'compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md' --add-ref 'compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md' --add-ref 'compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md' --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-382 --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md' --add-ref 'compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md' --add-ref 'compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-383 --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:step-132 docs/specs/01-pipeline/132_step_standard_handbook.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-384 --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:step-132 docs/specs/01-pipeline/132_step_standard_handbook.md' --add-ref 'compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-385 --add-ref 'compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-387 --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md' --add-ref 'compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md' --add-ref 'compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md' --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-388 --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-389 --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md' --add-ref 'compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md' --add-ref 'compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-39 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-390 --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:step-132 docs/specs/01-pipeline/132_step_standard_handbook.md' --add-ref 'compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md' --add-ref 'compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md' --add-ref 'compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-391 --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md' --add-ref 'compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md' --add-ref 'compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-392 --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md' --add-ref 'compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md' --add-ref 'compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-393 --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-394 --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-396 --add-ref 'compliance:step-132 docs/specs/01-pipeline/132_step_standard_handbook.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-40 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-401 --add-ref 'compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-403 --add-ref 'compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-404 --add-ref 'compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-406 --add-ref 'compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:step-132 docs/specs/01-pipeline/132_step_standard_handbook.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-407 --add-ref 'compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-41 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-413 --add-ref 'compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-414 --add-ref 'compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-415 --add-ref 'compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-417 --add-ref 'compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-42 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-420 --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-426 --add-ref 'compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-428 --add-ref 'compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-429 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-43 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-44 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-454 --add-ref 'compliance:step-132 docs/specs/01-pipeline/132_step_standard_handbook.md' --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md' --add-ref 'compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md' --add-ref 'compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-455 --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-1 backlog/docs/increments/doc-4 - Increment-1-requirements.md' --add-ref 'compliance:ms-1 backlog/milestones/m-3 - increment-1·d-detached-house-+-shared-report-page-.md'
+  backlog task edit task-456 --add-ref 'compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md' --add-ref 'compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md' --add-ref 'compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md' --add-ref 'compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md' --add-ref 'compliance:eng-all docs/specs/00_engineering_standards.md' --add-ref 'compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md' --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md' --add-ref 'compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md'
+  backlog task edit task-47 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-48 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-49 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-50 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-51 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-52 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-53 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-54 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-55 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-56 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-57 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-58 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-60 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'
+  backlog task edit task-83 --add-ref 'compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md' --add-ref 'compliance:inc-6 backlog/docs/increments/doc-8 - Increment-6-requirements.md' --add-ref 'compliance:ms-6 backlog/milestones/m-7 - increment-6-renovations-finish-[6].md'

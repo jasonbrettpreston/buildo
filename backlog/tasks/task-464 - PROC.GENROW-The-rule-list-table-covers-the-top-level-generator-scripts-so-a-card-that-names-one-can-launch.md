@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GENROW'
 created_date: '2026-11-25T12:31:00Z'
-updated_date: '2026-11-25T12:56:00Z'
+updated_date: '2026-11-25T13:13:00Z'
 labels:
   - ProcessImprovement
 milestone: m-1
@@ -24,6 +24,7 @@ references:
   - docs/reports/reviews/task-464/seat-integration-1.md
   - docs/reports/reviews/task-464/seat-reality-check-1.md
   - docs/reports/reviews/task-464/seat-regression-1.md
+  - docs/reports/lanes/2026-11-25/BL-GENROW/REPORT.md
 type: fix
 ordinal: 158210
 ---
@@ -197,4 +198,8 @@ rg#1 MED folded The three by-law gen
 2026-11-25 build started (lane BL-GENROW) on PLAN-464-v1 as ruled (C1 a scripts/generate-*.mjs, C2 a step-pipeline, C3 a check-tasks line in the report). Red test first: the task-464 case in src/tests/backlog/rule-lists.logic.test.ts written before the table edit.
 
 2026-11-25 red: the commit attempt with only the test and task files staged was refused by the pre-commit related run (task-464 case: exit 3, refused: Files path(s) matched by no row ... scripts/generate-logic-variable-groups.mjs; 1 failed, 107 passed). Edit (b) as planned: step-pipeline gains the glob scripts/generate-*.mjs and one why sentence; no row, list, kind or field added. validate: ok 58 lists, 23 rows; page --check: current (the page does not change). check-tasks: before resolve 102, not yet 205 (task-454: a Files path matches no row: scripts/generate-logic-variable-groups.mjs); after resolve 103, not yet 204, task-454 resolves. Work commit only: status stays RUNNING (rule-lists.json is a protected path); the close is a later records-only commit.
+
+2026-11-25 station PASS on work commit 4b47e5119 (pass file ~/Buildo-scratch/push-station/pass/4b47e51196435f81b9d3251c7f9a7b684f379f4c.pass; output ~/Buildo-scratch/lanes-20261125/station-4b47e5119.out), run by the orchestrator per RR-0467.
+
+2026-11-25 output review round 1: code-review lens on the whole diff 68f1718da..4b47e5119 with context-r3.md; out-code-review.txt findings:2 (1 LOW, 1 NIT); FINDINGS.md in docs/reports/lanes/2026-11-25/BL-GENROW/. Grounder owed (a separate grounder rules every finding; the lane does not).
 <!-- SECTION:NOTES:END -->

@@ -1,0 +1,45 @@
+diff --git a/scripts/analysis/rule-lists.json b/scripts/analysis/rule-lists.json
+index 6ffd2df2a8ebfdd2ec200d5aaa3029760c4677ab..01999e5d037e2f1c131339ecde8d976bc84a6405 100644
+--- a/scripts/analysis/rule-lists.json
++++ b/scripts/analysis/rule-lists.json
+@@ -84,10 +84,10 @@
+   "rows": [
+     {
+       "id": "step-pipeline",
+-      "globs": ["scripts/*.js", "scripts/**/*.descriptor.json", "scripts/lib/compute/**", "scripts/lib/step/**", "scripts/quality/**", "migrations/**", "scripts/steps/**", "scripts/lib/**", "scripts/seeds/**", "scripts/ast-grep-rules/**"],
++      "globs": ["scripts/*.js", "scripts/generate-*.mjs", "scripts/**/*.descriptor.json", "scripts/lib/compute/**", "scripts/lib/step/**", "scripts/quality/**", "migrations/**", "scripts/steps/**", "scripts/lib/**", "scripts/seeds/**", "scripts/ast-grep-rules/**"],
+       "not": ["scripts/deepseek-review.js", "scripts/gemini-review.js", "scripts/lib/review-template.js", "scripts/lib/review-template.js/**"],
+       "lists": ["step-132", "eng-back", "eng-shared"],
+-      "why": "pipeline step shells, descriptors, compute, step library, quality and migrations (not the review tool CLIs scripts/deepseek-review.js and scripts/gemini-review.js, which are lane tools, see lane-tools) are governed by the step handbook (Spec 132) and engineering standards sections 3 and 9; until task-448 (RR-0421 item 3 a, decision-205) they were also governed by the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27), which are off (every Airtight rule id has a line in Spec 132, at the id level only). V2.LIST (task-406, coverage review 2026-11-20): also scripts/steps, scripts/lib (the lane review helper scripts/lib/review-template.js excepted: lane-tools), scripts/seeds and scripts/ast-grep-rules, which the step handbook governs, and until task-448 the Airtight sources did (the paths RUNNING tasks 376, 378, 384 and tasks 345, 372, 379, 401, 408 named and no row matched); sections 3 and 9 and the shared sections (eng-back, eng-shared). task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the engineering standards are sent by side: the back-end lists eng-back and eng-shared replace eng-all on this row"
++      "why": "pipeline step shells, descriptors, compute, step library, quality and migrations (not the review tool CLIs scripts/deepseek-review.js and scripts/gemini-review.js, which are lane tools, see lane-tools) are governed by the step handbook (Spec 132) and engineering standards sections 3 and 9; until task-448 (RR-0421 item 3 a, decision-205) they were also governed by the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27), which are off (every Airtight rule id has a line in Spec 132, at the id level only). V2.LIST (task-406, coverage review 2026-11-20): also scripts/steps, scripts/lib (the lane review helper scripts/lib/review-template.js excepted: lane-tools), scripts/seeds and scripts/ast-grep-rules, which the step handbook governs, and until task-448 the Airtight sources did (the paths RUNNING tasks 376, 378, 384 and tasks 345, 372, 379, 401, 408 named and no row matched); sections 3 and 9 and the shared sections (eng-back, eng-shared). task-431 (RR-0385 item 7, decision-170; RR-0380 Q1, decision-165): the engineering standards are sent by side: the back-end lists eng-back and eng-shared replace eng-all on this row. task-464 (PROC.GENROW; RR-0475 item 1, decision-257): also the top-level generator scripts scripts/generate-*.mjs, added by that ruling so that a Files line naming one resolves (the .js generators were already matched by scripts/*.js); the rule that bears on a generator is the generator drift guard of engineering standards section 5 (generated doc and its generator)"
+     },
+     {
+       "id": "bylaw",
+diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
+index 3e17328eb79dc826fa428658b77a6ab3a6c91702..8d5ac07fc08807ffedd3372756c8e3ce593624ab 100644
+--- a/src/tests/backlog/rule-lists.logic.test.ts
++++ b/src/tests/backlog/rule-lists.logic.test.ts
+@@ -384,6 +384,23 @@ describe('V2.LIST: every task gets the five words, the plan protocol and its mil
+       expect(r.status, `${p}: ${r.stderr}`).toBe(0);
+     }
+   });
++  it('task-464 (RR-0475 item 1): a Files line naming a top-level generator script resolves (step-pipeline); a non-generator top-level .mjs is still refused', () => {
++    const main = script(CLI, ['resolve', '--files', 'scripts/generate-logic-variable-groups.mjs', '--type', 'fix', '--letter', 'S']);
++    expect(main.status, main.stderr).toBe(0);
++    expect(ids(JSON.parse(main.stdout) as Res)).toEqual(expect.arrayContaining(['step-132', 'eng-back', 'eng-shared', 'plan-protocol', 'inc-S', 'ms-S']));
++    const generators = ['bylaw-handbook', 'bylaw-layer2-input', 'bylaw-provisions', 'db-docs', 'lineage-docs', 'logic-variable-effect', 'logic-variable-groups', 'logic-vars-docs', 'script', 'step-handbook', 'system-map'];
++    for (const g of generators) {
++      const p = `scripts/generate-${g}.mjs`;
++      const r = script(CLI, ['resolve', '--files', p, '--type', 'fix', '--letter', 'S']);
++      expect(r.status, `${p}: ${r.stderr}`).toBe(0);
++      expect(ids(JSON.parse(r.stdout) as Res), p).toContain('step-132');
++    }
++    // survive-the-fix control: the glob stays narrow (a widening to scripts/*.mjs would resolve this lane tool)
++    const ctl = script(CLI, ['resolve', '--files', 'scripts/ai-env-check.mjs', '--type', 'fix', '--letter', 'S']);
++    expect(ctl.status, ctl.stdout + ctl.stderr).toBe(3);
++    expect(ctl.stderr).toContain('matched by no row of scripts/analysis/rule-lists.json');
++    expect(ctl.stderr).toContain('scripts/ai-env-check.mjs');
++  });
+   it('verifyResolved (what validate and check-tasks run): a resolved set that lacks an every_task list or the milestone list is named; the real resolution passes', async () => {
+     const { verifyResolved } = await mod();
+     const t = real();
