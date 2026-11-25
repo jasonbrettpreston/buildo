@@ -3,10 +3,11 @@ id: TASK-464
 title: >-
   PROC.GENROW The rule-list table covers the top-level generator scripts, so a
   card that names one can launch
-status: WAITS
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-GENROW'
 created_date: '2026-11-25T12:31:00Z'
-updated_date: '2026-11-25T12:52:00Z'
+updated_date: '2026-11-25T12:53:00Z'
 labels:
   - ProcessImprovement
 milestone: m-1
@@ -190,4 +191,6 @@ rg#1 MED folded The three by-law gen
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-25 (orchestrator): opened from RR-0475 item 1. Operator, verbatim (MORNING-DECISIONS.md:2481): "1. y 2.y 3. y but which increment 4. y 5. please explain 6. y"; item 1 answers the question at :2473 (may one small card add top-level generator scripts to the rule-list table so 454 can launch). Plan PLAN-464-v1 by Cairn-Plan-464 written on the card; type set to fix as task-463.
+
+2026-11-25 taken on the board at lane launch (lane BL-GENROW, worktree /Users/brettpreston_macmini/Buildo-wt-genrow, branch wf2/genrow), RR-0240
 <!-- SECTION:NOTES:END -->
