@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-25T20:02:40.558Z file_sha256=926a96afdf0029fec8bb5d2aa320d7f0f576785182c9eff53119a65cc26c7c5a prompt_sha256=e7369c8a63ddbbc60205c22a867203b1e763c41cc2ba393176b35cfe19d95310
+🔍 Lens review of docs/reports/reviews/task-313/in-plan-compliance-inc-1-2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-313 Description "next 'G1 #11 Plan when MF-47 and MF-51 settle'" and "the row expired 2026-11-16 and waits on the operator's renew, drop or answer word" — plan "MF-47 is WAITS, expires 2026-11-24 (:334); MF-51 is WAITS 'expires when MF-49 ships ... waits: MF-49 app' (:375): the two rows wait on each other" and "The MF-49 queue row in the same commit (DoD #6)." — the row's own planning condition is unmet and its expired state unresolved, no step renews it or records the operator's word — add a step renewing MF-49 with the named event (expires when MF-47 is DONE) and recording the operator's renew, drop or answer in the same commit, or state the RR-0501 word that overrides the row.
+DEFER severity=MED — RR-0232 "recommendation approved - however the open decisions need to provide whether it has been grounded (the issue) and the recommendation (verified)." — plan "8. OPEN CHOICES (each with a default)" and "Default: A." — Q1, Q2 and Q3 give options and a default but no grounded (issue) line and no verified recommendation — add a grounded line and a verified recommendation to each of Q1, Q2, Q3.
+DEFER severity=MED — RR-0417 "FE-51 tab switch may read RULED with its two named owned exceptions (names MF-49)" — plan "Q2. The three navigation exceptions owed to MF-49 (#15, #16, #22)" — a third exception (#22 sign-up) and its T9 nav-by-route row removals are fixed under a ruling that names two — scope Q2 A to the two named exceptions, or obtain the operator word for #22.
+DEFER severity=MED — RR-0417 "yes. worktrees removed" — plan "board checkout ~/Buildo-wt-board at 4b0cf7ab1" — every file:line in the plan is grounded in a worktree the same ruling records as removed — re-ground the citations in the checkout the ruling leaves, or record why that worktree still exists.
+DEFER severity=MED — RR-0499 "10. upgrade" — plan "CUT TO LATER CARDS: ... a splash PNG and the app icon (467 or brand); any web page." — the Expo upgrade the ruling names appears in no step and in no cut line — add the upgrade step or name the card that carries it.
+DEFER severity=LOW — RR-0485 "loading animation always" — plan "status when 'connecting'" is the only 'connecting' row and no animation row is written — no step draws a loading animation for loading, offline or error — add the animation to those states, or list it as a fourth departure in Q3 with the ruling that accepts it.
+DEFER severity=LOW — pasted task "status: LATER · milestone: m-2" and "McApp card 1 of 4 (front door), moved into Increment 1-C" — plan "The task-313 card: a plan note, acceptance criteria, and the Files line via `backlog task edit`." — no step moves the milestone or status the note says moved — add the milestone and status edit to section 7.
+
+MET — pasted note 2026-11-25 "sign-in goes straight to search with no lead-app onboarding" — plan M2 "user in (auth), (onboarding) or root → navigate MAXBLD_LOOKUP_ROUTE with no registerPushToken" — satisfies
+MET — pasted note 2026-11-25 "the gate checks the MaxBLD plan" — plan M5 "It calls useParcelEntitlement and decideMaxbldGate" — satisfies
+MET — pasted note 2026-11-25 "the app gets its own start-up screen" — plan M6 "The Opening page, built the wall way (fe.31)" — satisfies
+MET — pasted note 2026-11-25 "the lead-app screens stay in the code, unreachable, kept for the other app" — plan M5 "'redirect' returns expo-router <Redirect href={MAXBLD_LOOKUP_ROUTE}/>" with T4 reading every lead route from disk — satisfies
+MET — pasted note 2026-11-25 "a dated note in Spec 116 is owed by the build" — plan section 7 "Spec 116 §3: a dated note 2026-11-25 quoting RR-0499" — satisfies
+MET — RR-0501 "So we have four mega tasks for McApp - that looks good and three for McWeb." — plan "McApp card 1 of 4 (the front door)" — satisfies
+MET — RR-0477 "batch items that touch the same files or the same kind of file and need no database step." — plan Q2 A "fix them here: same files, RR-0477 batching" with F4a "No database step is needed" — satisfies
+MET — RR-0499 "search page not converted to table rows" — plan section 3 "ParcelShelf and the parcel-tool Stack, unchanged" — satisfies
+
+REJECT — doc-3 Built state and counts — the change is accused of moving the increment 1-2 counts — doc-3 "counts: {"BUILT":0,"BUILT-NO-DATA":0,"NOT BUILT":0}" covers increment 1-2, and the pasted note places this card in Increment 1-C, so those counts do not move
+REJECT — RR-0392 "I  don't think we need any other infastrcuture beyond this" — the change is accused of adding infrastructure the ruling forbids — the pasted note names "the app gets its own start-up screen" and RR-0445 says "We follow the same process with all the development", so the surface is named and built by the existing process
+REJECT — RR-0445 "we are mobie first ... it works onthe web" — the change is accused of cutting the web counterpart — the ruling's subject is the limit and reactivate screens and no pasted clause names a web version of the MaxBLD front door
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 31   Unmet: 7
+Rules met: none
+
+---
+⏱  104540ms (104.5s)
+📊 Tokens — total: 32748, input: 10606, output: 22142, reasoning: 20735

@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-25T20:02:40.556Z file_sha256=54296bce48bd129a01bd2372a544081f3c27b7582405f2cc108060c8828b642a prompt_sha256=407295a26bb23174828d3ccfda2cb847d837c129440a53eb4beb80b68426b246
+🔍 Lens review of docs/reports/reviews/task-313/in-plan-compliance-surface-136.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — fe.28 "the tree carries lifecycle, closed loading | miss | error" — plan M6 "descriptor with states loading, offline and error from the closed list" — 'offline' is not in the pasted closed list, and plan section 9 lists the offline state name as unverified while M6 asserts it is from the closed list, so the descriptor is declared on a vocabulary the spec does not carry — map the third state onto the closed lifecycle (miss) or obtain an operator ruling before declaring it, and add a golden for the mapped state.
+
+BUG severity=MED — RR-0499 "RR-0499 the MaxBLD app lives inside the one project (A); search page not converted to table rows; Expo upgrade yes (names MF-49)" — plan section 9 "That expo-router <Redirect>/<Slot> in (app)/_layout behave as planned on Expo 54." — "Expo upgrade yes" is an operator word naming this task and appears nowhere in the build order, Files line or cut list, while the plan assumes Expo 54 — add the upgrade step (or the note naming the card that carries it) so the ruling is discharged.
+
+BUG severity=MED — pasted Implementation Notes 2026-11-25 "the gate checks the MaxBLD plan" — plan M1 "A pure `decideMaxbldGate({hydrated, user, ent, segment})` returning ... 'enter' otherwise" — the gate never branches on an active parcel_tool plan, so under Q1 A a user with no plan enters and only the server 403 (F7) stops the search — add a plan-active branch, or record the operator's word that Q1 A is the ruling for this card.
+
+BUG severity=MED — fe.15 "the McFront proof canaries a-f, EXECUTABLE (planted defect in a temp copy: non-zero exit; clean copy: zero), are in the plan's acceptance criteria" — pasted card "## Acceptance criteria" (empty) and plan section 7 "the task-313 card: a plan note, acceptance criteria" — no canary a-f appears anywhere in the plan and the acceptance criteria are deferred to the card — put canaries a-f with their planted-defect and clean-copy exit codes into the plan's acceptance criteria.
+
+BUG severity=MED — fe.33 "One render smoke per archetype per platform: each binding renders its archetype's goldens on each platform" — plan M6 "New files: content json; descriptor ...; OpeningBinding.tsx; ... one golden test" — the new binding gets a golden test but no mobile render smoke, and render-smoke.logic.test.ts is not named in the test list — add OpeningBinding to the mobile render smoke in render-smoke.logic.test.ts.
+
+BUG severity=MED — fe.57 "the 44 px floor is also stated at docs/specs/00_engineering_standards.md:14" and "checked on converted web goldens (C-9) and mobile (C-9m) under FE-31" — plan T6 "one golden per state; every content key appears in a golden" — the new mobile goldens assert states and content keys only, with no 44x44 touch-target or accessible-name check for the Try again button — add the 44 px floor and the name check to the Opening goldens.
+
+BUG severity=MED — fe.56 "Prove each lock RED on a fixture that declares a column or a policy that does not exist" — plan section 5 "each is red on the tip, then green" with planting named only at T7 "Plants for both." — T1 to T6 and T8 are red only because the code is absent, never against a planted defect — add a planted-defect fixture per new lock (T1, T3, T4, T5, T6, T8).
+
+DEFER severity=LOW — fe.48 "Anything in a Stitch export with no source (a ruling, a spec, a setting or a DB field) is left out and is not raised as a decision" — plan Q3 "B: add them: a new row part role, a new open_help action in the closed list (126:75 says that needs an operator ruling), and a registered 2 s setting" — a mock-only element with no source is raised as an open decision instead of being left out — drop Q3 and record the three mock departures as left out.
+
+MET — fe.31 — plan M6 "converted-surfaces.json (expected_count +1); a census entry ... the goldens" — the new surface is descriptor plus content plus the reused wall pattern, entered in the converted manifest and census, so two-direction totality and one golden per state are planned.
+
+MET — fe.36 — plan M5 "'redirect' returns expo-router <Redirect href={MAXBLD_LOOKUP_ROUTE}/>" and M8 "Back becomes `canGoBack() ? back() : replace` with role and label" — movement is by the platform router, not a local-state view swap, and the pressable carries role and name.
+
+MET — fe.47 — plan section 6 "a 2 s threshold would be a registered setting, which is a database step (fe.47)" — no debounce, stale time or threshold is typed into src/ by this plan.
+
+MET — fe.54 — plan M5 "error gives Try again = refetch" and M6 "notice when 'unreachable'" — every gate failure (loading, unreachable, error) has a declared visible state, not a blank screen.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 58   Unmet: 8
+Rules met: fe.01, fe.02, fe.03, fe.04, fe.05, fe.06, fe.07, fe.08, fe.09, fe.10, fe.11, fe.12, fe.13, fe.14, fe.16, fe.17, fe.18, fe.19, fe.20, fe.21, fe.22, fe.23, fe.24, fe.25, fe.26, fe.27, fe.29, fe.30, fe.31, fe.32, fe.34, fe.35, fe.36, fe.37, fe.38, fe.39, fe.40, fe.41, fe.42, fe.43, fe.44, fe.45, fe.46, fe.47, fe.49, fe.50, fe.51, fe.52, fe.53, fe.54, fe.55, fe.58
+
+---
+⏱  110338ms (110.3s)
+📊 Tokens — total: 41460, input: 18302, output: 23158, reasoning: 21728

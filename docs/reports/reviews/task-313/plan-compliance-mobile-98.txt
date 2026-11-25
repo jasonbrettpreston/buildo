@@ -1,0 +1,43 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-25T20:02:40.584Z file_sha256=efbdd30d8560139f2e97d8ebdb78f0d547af9cc60bfd7348bf87abe09865c887 prompt_sha256=04d9a3620701918071de79ff1fb02e549fb772d8eddedad29462876c5e60bf51
+🔍 Lens review of docs/reports/reviews/task-313/in-plan-compliance-mobile-98.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 98 §3.2 "The following YAML flows must pass cleanly before any production release:" ("**`auth.yaml`**: `clearState: true`. Validates sign-in (email/password), sign-out reset behavior, and account linking UI.") — plan §6 "No sign-out in MaxBLD until card 2. Maestro auth.yaml:28-36 taps \"Settings\" after sign-in and will fail until then (WF7, not in the suite)." — the plan knowingly ships a state where the auth launch-blocker flow fails and no step edits auth.yaml or adds a MaxBLD flow — fix: update mobile/maestro/auth.yaml for the new front door (clearState: true, no Settings tap) or add mobile/maestro/maxbld-auth.yaml to Files and to a test step in this card.
+
+BUG severity=HIGH — Spec 98 §3.2 "**`scroll-feed.yaml`**: `clearState: false`. Validates infinite scrolling, empty states (NO LEADS IN RANGE), and tap-to-save interactions." (with onboarding-leads.yaml, onboarding-tracking.yaml, subscription-paywall.yaml) — plan M5 "'redirect' returns expo-router <Redirect href={MAXBLD_LOOKUP_ROUTE}/>, so the lead feed, map, settings and detail routes are unreachable." — four of the five launch-blocker flows become unrunnable in the single app and no plan step or test names them — fix: run the lead suites against a lead-product build (APP_PRODUCT set at test time) or update each flow in this card and record the change in section 7.
+
+BUG severity=HIGH — RR-0232 "the open decisions need to provide whether it has been grounded (the issue) and the recommendation (verified)" — plan §8 "Q1. A user with no plan, in card 1." through "Default: A." — no option states grounded or verified — fix: add a grounded line and a verified line to each of Q1, Q2 and Q3.
+
+DEFER severity=MED — Implementation note 2026-11-25 (RR-0499) "the MaxBLD bar is the only bar" — plan M4 "In MaxBLD mode the five-tab bar is never drawn." and M6 rows list text, status, notice and button only — no step draws or names the substitute MaxBLD bar — fix: name the bar (the parcel-tool Stack header or a bar row in mobile_parcel_opening) and pin it in T5.
+
+DEFER severity=MED — RR-0485 "loading animation always" — plan §6 "\"Connecting…\" shows on the first failed try, not after 2 s" — the Opening draws a text status and no animation anywhere — fix: state how the status row meets the ruling, or add the animated state and record the departure.
+
+DEFER severity=MED — Spec 98 §6.3 "There were native build failures related to missing or improperly configured Expo plugins in `app.json`, specifically `@sentry/react-native/app-plugin`, which aborted the native compile step." — plan §9 "That `splash` with no image is accepted by Expo 54 prebuild." — an unverified app.json edit sits on the `npx expo run:android` boot path, the one boot the spec mandates — fix: verify prebuild with the image key removed before plan-lock, or keep the key and change backgroundColor only.
+
+DEFER severity=LOW — pasted Description "Recommendation: renew with a named event, `expires when MF-47 is DONE`" — plan Docs "the MF-49 row in .cursor/MCFRONTEND-QUEUE.md." and §7 "The MF-49 queue row in the same commit (DoD #6)." — the row edit names no status word and no expiry text — fix: state the row's new status and expiry wording in the Docs step, or say the card closes the row instead.
+
+DEFER severity=LOW — Spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)." — plan T6 "one golden per state; every content key appears in a golden." — per-state golden UI captures are added with no statement that they are not component snapshots — fix: state that the goldens assert content-key presence only, or fold T6 into the T5 behaviour test.
+
+MET — RR-0499 "the MaxBLD app lives INSIDE the one project for now" — plan M1 "APP_PRODUCT: 'parcel_tool' | 'lead_gen' = 'parcel_tool': the one switch that keeps the lead path compiled for the other app." — one project, one switch.
+
+MET — RR-0499 "sign-in goes straight to search with no lead-app onboarding" — plan M2 "user in (auth), (onboarding) or root → navigate MAXBLD_LOOKUP_ROUTE with no registerPushToken" — no onboarding arm for parcel_tool.
+
+MET — RR-0499 "the gate checks the MaxBLD plan" — plan M5 "It calls useParcelEntitlement and decideMaxbldGate." — the gate reads the parcel_tool plan, and S2 leaves the 403 gate unchanged.
+
+MET — RR-0499 "the lead-app screens stay in the code, unreachable" — plan M4 "The current body becomes `function LeadAppLayout()` with not one line of it changed." — lead screens kept and made unreachable.
+
+MET — Implementation note 2026-11-25 "a dated note in Spec 116 is owed by the build" — plan §7 "Spec 116 §3: a dated note 2026-11-25 quoting RR-0499" — the owed note is listed.
+
+MET — Spec 98 §4.1 "§8.3 — gate-stability tests (no `isFetching` in render gates per §6.5)" — plan M1 "Once data exists it never flips back" — stable gate, pinned by T4.
+
+MET — RR-0477 "Keep anything with a database step or its own operator question on its own card." — plan F4a "No database step is needed." — the card carries no database step and the 2 s setting is cut to its own card.
+
+MET — RR-0482 "Remember our new policy on tasks - ie larger tasks and using existing components as well." — plan "3. WHAT THE PLAN REUSES" — the change is built from existing components and the wall pattern.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 36   Unmet: 3
+Rules met: none
+
+---
+⏱  116057ms (116.1s)
+📊 Tokens — total: 38541, input: 13364, output: 25177, reasoning: 23746

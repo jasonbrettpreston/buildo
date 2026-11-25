@@ -1,0 +1,42 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-25T20:02:40.585Z file_sha256=78a16eff5b53c260e2e57440a74f10be22bf56a877d24a4d20eecaa890552f25 prompt_sha256=6da092b7a41cef1cfff8252c492412e91b2536c0e9399af81bd55c28e975acf1
+🔍 Lens review of docs/reports/reviews/task-313/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — M5/T5 + §9 ("That expo-router <Redirect>/<Slot> in (app)/_layout behave as planned on Expo 54") — the lead-screen fence (scope item 7) is proven only by a structural test (T7) and a test that *mocks* expo-router (T5); the real `<Redirect>`/`<Slot>` behaviour that actually makes lead screens unreachable is unverified, so a regression here silently re-exposes Lead Feed/Map/Settings — add a one-line acceptance/phone-walk step: cold deep-link to `/(app)/settings`, `/(app)/map`, `/(app)/[lead]/1` on the Expo-54 build and confirm they land on `/(app)/parcel-tool`.
+
+BUG severity=HIGH — M7 (app.json:11-15) — dropping the splash `image` entry is unverified on Expo 54 ("accepted by Expo 54 prebuild" is listed UNVERIFIED in §9); a rejected prebuild blocks the entire card at build time with no recovery but reverting app.json — verify `npx expo prebuild` (Android+iOS) on 54 before landing, or keep a 1px transparent image as the safe default.
+
+BUG severity=HIGH — S2 ("Nothing else changes") — the `{uid, subscription_status}` overload only compiles if none of the three parcel routes touches `.trade`; the plan asserts "nothing else changes" without checking, so if `lookup/entitlement/lot-size` read `ctx.trade` the build breaks inside an otherwise-minor edit — grep `\.trade` in the three routes now and add a T1/T2 assertion that the routes consume only `uid`/`subscription_status`.
+
+BUG severity=MED — F6/M8 ("Likely cause: the open keyboard covered the error line. This inferred") — the finding-7 fix is aimed at an *inferred* visual cause and T8 (mocked, asserts `Keyboard.dismiss` is called and the string is in the tree) cannot prove the occlusion bug is gone; the fix is only provable on a device — add "phone walk: `Incorrect email or password.` visible with keyboard up" to acceptance per RR-0488.
+
+BUG severity=MED — M1 ("'offline' while ... the read is not yet in error"; §6 punts the 2 s timer to a DB step) — there is no client-side give-up; on a black-holed network (packets dropped, not "no connectivity") `fetch` waits for the OS TCP timeout (~15–75 s+ iOS) before `isError` flips and Try again appears, against the RR-0341 60 s norm — add a hardcoded 60 s ceiling that forces the `error` state (a fixed constant is not the `fe.47` logic-variable DB step the plan is avoiding).
+
+BUG severity=MED — M6/§6 (offline + no sign-out) — in `loading`/`offline`/`error` the Opening page replaces all navigation and offers only Try again, and sign-out is deferred to card 2, so an offline user is fully bricked with no way to switch account or reach anything — ensure card 2's sign-out is reachable from the `unreachable` state, or add a minimal sign-out escape now.
+
+DEFER severity=MED — F8 (`useParcelEntitlement` key `['parcel-entitlement']`, not persisted) — the query key carries no user id, so the moment sign-out lands (card 2) a user switch on one device will serve the previous user's cached entitlement — fix the key to include `uid` before card 2, not as part of it.
+
+DEFER severity=MED — F3/M3 — the claim "the app no longer creates a lead_gen trial row (F3a)" rests on the inferred, DB-unread mechanism that the profile read is what inserts mctest-paid's trial row — verify on the test stack (`SELECT product_key,status,created_at FROM entitlements WHERE user_id=<uid> ORDER BY created_at`) after build; if wrong, M3 has no observable side effect and the F3a rationale is void.
+
+DEFER severity=LOW — M2 ("no registerPushToken") — the MaxBLD build silently never registers a push token; alerts/alert-delivery (MF-59) then have no owner in the McApp cards — name the push-registration seam in card 2 or a later card so it isn't lost.
+
+DEFER severity=LOW — M1 (`APP_PRODUCT ... = 'parcel_tool'` default) — the single switch has no defined selection mechanism for the future lead build off this repo, so a lead build ships MaxBLD by default with no build-time guard — add a build assert / document the env selection that flips it to `lead_gen`.
+
+DEFER severity=LOW — M8 (`canGoBack() ? back() : replace`) — the `replace` branch target on a cold deep-link to `sign-in?method=email` (empty back stack) is unspecified; if undefined the Back button can throw — test the `canGoBack()===false` branch with a concrete target.
+
+DEFER severity=NIT — T9 (screens 2→3, "2 of 2"→"3 of 3", converted 18→19, +3 goldens) — these are absolute counts against the current tip while `static-page.json`/`static-page.logic.test.ts` are shared with task-392/357; any of those landing first shifts the deltas — re-derive the numbers at rebase rather than treating them as fixed.
+
+VERDICT: FAIL on plan-readiness for implementation
+Top 3 operational blockers (if FAIL):
+- The lead-screen fence is asserted, not proven: only mocked-router + structural tests, with real Expo-54 `<Redirect>/<Slot>` behaviour UNVERIFIED — a deep-link walk on the 54 build must gate plan-lock.
+- Removing the splash `image` is UNVERIFIED on Expo 54 and a rejected prebuild blocks the entire card — verify prebuild before landing app.json.
+- S2 "nothing else changes" is unchecked against `.trade`; if any parcel route reads it the overloaded signature breaks the build inside a low-risk edit — grep and pin it now.
+
+Top 3 unverified data premises (regardless of verdict):
+- "No database step needed" (F4a) reads only three migration files; confirm no later migration re-added a `user_profiles` FK — `SELECT conrelid::regclass AS tbl, confrelid::regclass AS ref FROM pg_constraint WHERE contype='f' AND conrelid::regclass::text IN ('entitlements','usage_events','parcel_user_inputs');`
+- "A paying MaxBLD customer gets 401 today" (F4) assumes no-trade rows with a parcel_tool plan exist — `SELECT up.id, up.trade, e.product_key FROM user_profiles up JOIN entitlements e ON e.user_id=up.id WHERE e.product_key='parcel_tool' AND up.trade IS NULL;` (empty on prod ⇒ severity drops)
+- mctest-paid's trial row was created by `applyFallbackTrialInitIfNeeded` via the profile read (F3, "I did not read the database") — `SELECT product_key,status,created_at FROM entitlements WHERE user_id='<mctest-paid uid>' ORDER BY created_at;` plus `SELECT onboarding_complete FROM user_profiles WHERE id='<mctest-paid uid>';`
+
+---
+⏱  75905ms (75.9s)
+📊 Tokens — total: 39968, input: 25856, output: 14112, reasoning: 12470

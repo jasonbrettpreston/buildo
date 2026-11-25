@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-25T20:02:40.576Z file_sha256=78a16eff5b53c260e2e57440a74f10be22bf56a877d24a4d20eecaa890552f25 prompt_sha256=99600d94bc7a6ac34f5e28568532a9a804f64017a859a5733aad267caf653c6c
+🔍 Lens review of docs/reports/reviews/task-313/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — PLAN-313 Q1 "A: they go in to Lookup, and today's refusal notice shows when they search (F7)" vs design "No plan: an error page with a way to sign up (RR-0312, task-352 question 2)" — a person who signs in with no plan lands on the search page, is refused by a notice whose words are not in this plan, and has no control anywhere to subscribe — add a subscribe action at the gate branch or bring task-357 into card 1 before plan-lock
+BUG severity=HIGH — PLAN-313 M1 "'enter' otherwise" vs design "the gate checks the MaxBLD plan" (2026-11-25 note, RR-0499 '1a') — F8 says the entitlement route answers 200 with every field null when the person has no plan, so the gate gets data and enters, meaning no plan is ever checked and a non-paying person is treated as entitled — make 'enter' require an active parcel_tool plan and send the no-plan case to the RR-0312 page
+DEFER severity=MED — PLAN-313 6 "No sign-out in MaxBLD until card 2." — the person at "Can't reach MaxBLD", or finished with search, has no settings or sign-out control in the app until card 2, so the wrong account cannot be left — accepted only because RR-0328 says the app is not in use, in development; record it so card 2 cannot slip past launch
+DEFER severity=MED — PLAN-313 M1 "'loading' until there is a user and a first answer" vs design "Loading screen gives up after 60 seconds" (RR-0341) — a read that neither answers nor errors leaves the person on "Connecting…" with no Try again and no exit from the Opening — route the give-up time through the read's existing error so the 'error' page with Try again appears
+DEFER severity=MED — PLAN-313 M8 "Back becomes `canGoBack() ? back() : replace` with role and label" — on a first open there is no history, and the plan never names what replace goes to, so a person tapping Back can see nothing happen — name the fallback destination in the plan
+DEFER severity=MED — PLAN-313 M7 "The \"image\" entry is removed, which drops the Expo grid." with 9 UNVERIFIED "That `splash` with no image is accepted by Expo 54 prebuild." — the cold start shows a bare colour with no wordmark until JS boots, and if prebuild rejects the imageless splash the person gets no app at all — verify prebuild before lock, or draw the wordmark in the splash asset
+DEFER severity=MED — PLAN-313 6 "The sign-in tagline \"Leads for the trades.\" (sign-in.tsx:463) is left as is: the card does not name it." — the front door of the MaxBLD app carries the lead product's line, so a person signing in is told this is the leads app (design silent, so defer) — change the one line, or record it as an owned exception on the card
+DEFER severity=MED — PLAN-313 M6 "status when 'connecting': \"Connecting…\"" vs M1 "'loading' until there is a user and a first answer" — the row is keyed to a state name the gate never returns (loading, offline, error), so on a slow first read the person may get the Opening with no status line at all (see 9 UNVERIFIED "Whether the \"offline\" state name is accepted for \"Connecting…\"") — key the status row to the 'loading' state and pin it in T6
+
+VERDICT: FAIL on the person's experience
+States checked: cold start and splash, first open and sign-in, loading, offline, error with Try again, no-plan, answered (search), refocus and repeat visit, redirect from a lead route, Back from sign-in, account and sign-out, home-screen icon   Dead ends found: 3
+
+---
+⏱  58385ms (58.4s)
+📊 Tokens — total: 36183, input: 24969, output: 11214, reasoning: 10335

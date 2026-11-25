@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-25T20:02:40.566Z file_sha256=da9e96d2912345b106f847bc2c99fb227bcc3470251e3f472644989c55070677 prompt_sha256=2d0d207ccba55d193b40a842425c8ca212f29044fce38ca8623bdace5deb1660
+🔍 Lens review of docs/reports/reviews/task-313/in-plan-engineering-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §10.2 Frontend/Backend Boundary "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — Files line "scripts/surfaces/_schema/static-page.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_opening.descriptor.json" — this frontend card edits eight paths under `scripts/` with no recorded exception, and §11 Frontend Boundary Check repeats the same NO-GO — record a dated exception ruling naming `scripts/surfaces/` as the sanctioned surface source, or move the schema/binding/census edits to the owning surface card, before lock.
+
+BUG severity=HIGH — §2.1 "Force errors in the deepest layer of the call stack ... and explicitly assert that the top layer recovers gracefully or returns a safe HTTP 500 without leaking the raw `.message`." — S1 "it reads the lead_gen status with getEntitlementStatus(pool, uid, 'lead_gen')" and T2 "Add a mock-argument assertion `toHaveBeenCalledWith(anything, anything, {needsTrade:false})`" — S1 adds a new DB read inside the auth resolution of three routes, and no test forces that read to throw nor states what the route returns when it does — add an `.infra` case where getEntitlementStatus rejects, asserting the safe status code and that no raw `.message` reaches the client (§2.2).
+
+BUG severity=HIGH — §5.2 "`*.security.test.ts` | Negative/abuse — blocks malicious payloads and unauthorized users | Auth-guarded / externally-reachable surfaces" — "Re-run, expected unchanged: ... parcel-routes.security.test.ts" against F4 "a paying MaxBLD customer gets 401 from search, the reports-left line and lot size, today" — the plan moves the 401/200 boundary on three auth-guarded routes, adds no negative case for the new boundary, and expects the security suite to be unchanged — add `needsTrade:false` negative cases (no plan, no user, wrong user) to `parcel-routes.security.test.ts` and remove the expected-unchanged claim.
+
+BUG severity=HIGH — §11 "375px viewport test in test plan" and "Touch targets ≥ 44px (§1.1)" — T6 "NEW mobile/__tests__/openingScreens.golden.test.ts with the goldens (the wallScreens pattern): one golden per state" — the new Opening surface and its "button when 'unreachable': Try again, action retry." carry no 375px viewport case and no 44px hit-area assertion anywhere in T5 or T6 — add both items to the plan's test list.
+
+DEFER severity=MED — §1.3 "Primary interactive cards and buttons must use Reanimated `withSpring` for press-state feedback (scale or opacity)." — M6 "button when 'unreachable': Try again, action retry." — no press feedback or haptic is named for the one new interactive control — state that the reused wall button renderer supplies withSpring, or add it.
+
+DEFER severity=LOW — §5.1 "You MUST always import typed factories from `src/tests/factories.ts`." — T1 "src/tests/get-user-context.logic.test.ts, new cases" — the plan does not say the new profile/context fixtures come from factories.ts, leaving room for inline literal rows — name the factory imports in T1.
+
+REJECT — §12.7 Toast Notifications "Never: Build custom alert banners." — building a "Can't reach MaxBLD" notice row in M6 — the row is a page state from the schema's `notice` kind drawn by the surface renderer, not a transient toast, so §12.7 (Sonner) does not reach it.
+
+REJECT — §4.1 Route Guarding "the authoritative gate for every `/api/admin/**` route is `verifyAdminAuth(request)`" — the three parcel routes are changed without a verifyAdminAuth first statement — the amended clause names `/api/admin/**` only; these are user-facing routes still gated server-side by `parcelToolAccess` (tool-gate.ts:12-17).
+
+MET — §5.3 — "TESTS FIRST (each is red on the tip, then green)" — every step S1, S2 and M1 to M8 carries a named test (T1 to T9) declared red on the tip first.
+
+MET — §12.2 — M3 "calls useUserProfile with `enabled: !!user && APP_PRODUCT === 'lead_gen'`" — fetching stays on TanStack Query, and no `useEffect` data fetch is introduced in MaxbldAppGate.
+
+MET — §11 Database/Migration Check — "F4a. No database step is needed." — no migration is written, so §3.1, §3.2, §12.8 and §12.10 do not bind.
+
+MET — §14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — section 7 files dated notes in Spec 116 §3, Spec 99 §5.1-5.3, Spec 100 §4 and the MF-49 queue row in the same commit.
+
+MET — §8.1 — S2 "The three parcel routes ... pass `{ needsTrade: false }`. Nothing else changes" — no new non-handler export is added to any `route.ts`.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 15   Unmet: 6
+
+---
+⏱  57806ms (57.8s)
+📊 Tokens — total: 33784, input: 22143, output: 11641, reasoning: 10427
