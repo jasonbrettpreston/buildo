@@ -1,0 +1,733 @@
+GATE OK
+[step-churn-complexity] clean — no drift at window_end=b87f62d
+[generate-template-freeze] clean — no drift, R-E consistent, FREEZE-1 honest
+src-sql-ledger: fresh, 94 file(s) (62 static, 30 interpolated, 2 not_postgres), closed set holds, every column is in the catalog (uncatalogued, skipped: mv_monthly_permit_stats, parcel_lot_view)
+STANDARDIZED: PASS (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13)
+OBSERVABLE: PASS (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13; snapshot_age_days 48)
+ACCURATE: FAIL (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13; findings 135 (ii 0 · iv unmapped 135); eval_mismatches_adjudicated 0; expert_rulings_against 0; agreement_rate n/a agreement≠correctness; code_linkage=declared-only)
+UNDERSTANDABLE: FAIL (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13)
+SCALABLE: PASS (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13)
+PHASE 1: NOT_DONE
+  report-only docs/reference/bylaw-code-findings.md STALE (never a blocker; --write refreshes it)
+  report-only twins: groups 106 · differ 52 (value 1 · label 51; 191 units) — never a blocker
+render docs/reference/bylaw-provisions.json sha256 34cc3f789d202679287ae84989dedbf8801d5add1a16f32921ed5b49cf05ec57
+render docs/reference/bylaw-provisions.md sha256 0dc9cf5a2674d9db69335cf883adf4b0b6434898b4388382a22922fccaa50178
+generate-ingest-batch: 11 ingestor batch values, 0 drifted
+generate-sharing-phase: 40 phase maps, 0 drifted
+✔ src/features/admin-controls/generated/logic-variable-groups.json is up to date
+✔ docs/reference/logic-variables-registry.md is up to date
+[generate-assert-schema-probe-lists] clean — no drift (337 declared names)
+[generate-assert-parcel-sanity-descriptor] clean — no drift (46 checks, 1 invariants, 8 plausibility, 38 logic_variables)
+[generate-assert-global-coverage-descriptor] clean — no drift (305 checks, 25 logic_variables, 25 read tables)
+[generate-assert-data-bounds-descriptor] clean — no drift (52 checks, 33 logic_variables, 16 read tables)
+[generate-last-measured] CHECK: 18 descriptor(s); changed 0, unsourced 0, skipped 0, missing 0
+[generate-last-measured] baseline (R-GQ): 0 listed stale entries (REFREEZE-BUNDLE-1), 0 problem(s)
+report-fields current (1 rendered fields); gates FAIL (report-only): RF-2, RF-4, RF-6, RF-7, RF-9
+[generate-conversion-roadmap] clean — no drift
+[generate-programme-backlog] clean — no drift
+[surface-registry] clean — no drift (173 rows, 173 descriptors)
+[step-handbook] docs/specs/01-pipeline/132_step_standard_handbook.md is up to date
+[bylaw-handbook] docs/specs/01-pipeline/133_bylaw_handbook.md is up to date (546 rules)
+[decision-log] clean — 137 log(s), 860 decision(s), 443 register row(s), 1446 citation(s), 0 owed by another lane, 16 no_ruling resting on an existing row; every approved decision has a register row or is owed, and every log matches its raw record
+report-schema current; RS-0 PASS · RS-1 PASS · RS-2 PASS · RS-3 PASS · RS-4 PASS · RS-5 PASS · RS-6 PASS · RS-7 PASS · RS-8 PASS · RS-9 PASS · RS-11 PASS
+[bylaw-layer2-input] clean — docs/reference/bylaw-layer2-input.json current (table_version 70bcf4259d2d, 1937 input files)
+rule-lists: docs/reports/generated/rule-lists-by-kind.md is current
+[spec-split-check] clean — 43 move(s) verified, 11558 citations checked, 0 dangling, budgets held, 0 reader breaks, totality holds, every spec has a role.
+SELF-TEST PASSED — 7 known-bad fixtures fired, 1 negative control clean, 4 marker assertions.
+No drift — 533 field rows across 20 categories.
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-sfx8
+
+ ✓ src/tests/system-map.infra.test.ts (13 tests) 264ms
+
+ Test Files  1 passed (1)
+      Tests  13 passed (13)
+   Start at  11:45:52
+   Duration  426ms (transform 30ms, setup 6ms, collect 8ms, tests 264ms, environment 0ms, prepare 26ms)
+
+PASS — 14 live doc(s)
+[step-validate] programme: blocks batching: 0 (scripts/steps/_schema/programme-items.json; npm run programme-backlog for the full table)
+[step-validate] #43 (commit) PASS OWNER-SPEC-DIFF: 0 file(s) appended to converted[] (index vs HEAD) — nothing to check
+[step-validate] --staged: no converted/pending step touched by this commit — nothing to validate, exiting clean.
+→ lint-staged could not find any staged files matching configured tasks.
+footgun[multi-transaction] (info): scripts/backfill-realtor-permit-trades.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/classify-lifecycle-phase.js has 6 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/classify-permits.js has 5 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/classify-scope.js has 3 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/close-stale-permits.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-cost-estimates.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-opportunity-scores.js has 9 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-phase-calibration.js has 3 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-storey-norms.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-timing-calibration-v2.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-trade-forecasts.js has 3 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/dispatch-notifications.js has 6 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/enrich-wsib.js has 3 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/link-coa.js has 7 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/load-permits.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/migrate-to-lead-id.js has 3 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/update-tracked-projects.js has 5 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+note: compute-purity: no declared set for scripts/lib/address-normalizers.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/address-points-csv-drift.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/address.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/archetypes.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/assert-data-bounds-fields.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/assert-global-coverage-fields.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/assert-parcel-sanity-fields.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/build-norms.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/bylaw-lot-row.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/bylaw-materialize.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/bylaw-resolution.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-cost-model.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-link-sql.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-notices/aic-values.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-notices/parse-values.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-scope-classifier.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-trade-classifier.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/assert-schema.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/catalogue.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/disclosures.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/layer2-cells.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/neighbour-facts.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/renovation.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/rows.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/split.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/two-structure.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/dead-tuple-ratio.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/lifecycle-phase.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/max-build.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/optimal-config-cols.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/optimal-config.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/parcel-cost-cols.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/parcel-cost.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/parcels-csv-drift.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/safe-math.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/tag-product-matrix.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/units.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/vocab-coverage.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/zoning-attr-drift.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/zoning-precedence.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for src/features/leads/lib/archetype-cost-map.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for src/features/leads/lib/cost-model-shared.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+footgun[step-shape] (info): 29/37 unconverted manifest step files violate the frozen shape (Spec 122 §5.1). This is the expected pre-conversion state and does NOT gate — see scripts/steps/_schema/converted.json.
+footgun[step-shape] (info): scripts/load-coa.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/quality/assert-coa-freshness.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/link-coa-to-parcels.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/enrich-coa-zoning.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/classify-coa-scope.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/classify-coa-trades.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/compute-coa-cost-estimates.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/load-coa-notices.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+✅ Step-shape gate clean (29 converted step file(s) enforced; 42 compute module(s) enforced against scripts/ast-grep-rules/compute-shape.yml; 1 compute-purity site(s), all ledger-allowed).
+✅ Footgun gate clean (silent-catch-fallback, env-default-in-lib, comment-rot, silent-row-drop, pool-boundary, direct-advisory-lock, bare-mutation, multi-transaction, sql-now, loop-query, unbounded-push-in-stream, step-shape)
+
+> buildo@0.1.0 typecheck
+> tsc --noEmit
+
+
+> buildo@0.1.0 lint
+> next lint
+
+`next lint` is deprecated and will be removed in Next.js 16.
+For new projects, use create-next-app to choose your preferred linter.
+For existing projects, migrate to the ESLint CLI:
+npx @next/codemod@canary next-lint-to-eslint-cli .
+
+
+./src/components/FreshnessTimeline.tsx
+493:42  Warning: The ref value 'optimisticTimerRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'optimisticTimerRef.current' to a variable inside the effect, and use that variable in the cleanup function.  react-hooks/exhaustive-deps
+
+./src/components/search/FilterPanel.tsx
+114:6  Warning: React Hook useEffect has a missing dependency: 'updateFilter'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/features/admin-controls/components/ControlPanelShell.tsx
+44:52  Warning: React Hook useMemo has unnecessary dependencies: 'draftConfig' and 'productionConfig'. Either exclude them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/features/leads/api/envelope.ts
+33:6  Warning: 'SuccessStatus' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/features/leads/api/types.ts
+8:15  Warning: 'LeadFeedQuery' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/builders/extract-contacts.ts
+49:7  Warning: 'PHONE_REJECT' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/classification/rules.ts
+53:7  Warning: 'TIER_2_RULES' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+80:7  Warning: 'STRUCTURE_TYPE_RULES' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+131:7  Warning: 'TIER_3_RULES' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/db/generated/schema.ts
+714:5  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+1986:5  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+2051:5  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+2183:5  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+2270:5  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+2947:5  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/lib/db/ssl-config.ts
+79:5  Warning: Unused eslint-disable directive (no problems were reported from 'no-new').
+
+./src/lib/export/csv.ts
+5:10  Warning: 'getClient' is defined but never used.  @typescript-eslint/no-unused-vars
+6:10  Warning: 'logError' is defined but never used.  @typescript-eslint/no-unused-vars
+14:7  Warning: 'UTF8_BOM' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+80:10  Warning: 'buildFilterClauses' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/parcels/lot-size-entry.ts
+246:7  Warning: 'PAGE_FLAGS' is assigned a value but only used as a type.  @typescript-eslint/no-unused-vars
+
+./src/tests/aeh-write-plan.logic.test.ts
+44:7  Warning: 'CLOCK_MS' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/api-leads-view.infra.test.ts
+266:27  Warning: '_r' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/assert-parcel-sanity.infra.test.ts
+25:7  Warning: 'audit' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/assert-schema-ledger-locks.logic.test.ts
+19:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+20:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+40:63  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+48:149  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/backlog/lane-claims.logic.test.ts
+23:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+54:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+62:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+87:62  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+90:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/coa-cumulative.logic.test.ts
+37:20  Warning: '_b' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+39:21  Warning: '_p' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/coa-key.logic.test.ts
+39:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+43:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+44:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+49:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+56:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/coa-round.logic.test.ts
+135:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+146:92  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+149:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+152:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+155:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+230:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+249:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+257:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/coa-scorecard.logic.test.ts
+40:11  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+41:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+48:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+65:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+78:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+86:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+105:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+108:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+120:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+125:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+126:38  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+128:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+131:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+140:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+142:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+151:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+177:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+178:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+180:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+181:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+181:84  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+185:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+189:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+193:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+194:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+198:53  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+201:81  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/compute-opportunity-scores.infra.test.ts
+572:11  Warning: 'matches' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/config-meta.logic.test.ts
+96:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+133:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/db/backfill-smeared-enriched-status.db.test.ts
+34:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+42:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+83:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/db/enrich-permits-centreline.db.test.ts
+72:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/db/enrich-permits-heritage.db.test.ts
+67:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/db/enrich-ravines.db.test.ts
+26:15  Warning: '__filename' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/db/flight-board-roundtrip.db.test.ts
+54:7  Warning: 'COLON_FORM_ARCHIVE_ID' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+57:7  Warning: 'CANONICAL_LEAD_KEY' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/db/refresh-snapshot-consolidation.db.test.ts
+31:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/diff-narrator.logic.test.ts
+16:21  Warning: 'beforeEach' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/fixtures/mcbylaws-gate/red-literals.mjs
+2:7  Warning: 'SIDE' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/gate-logic-version.infra.test.ts
+27:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/gate-mode-emits-type.infra.test.ts
+24:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+34:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+253:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+270:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/gate-registries.infra.test.ts
+37:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/gate-terminals-records-meta.infra.test.ts
+25:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+31:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+39:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/geocode-permits.infra.test.ts
+42:1  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-require-imports').
+
+./src/tests/ingest-ckan-primary.logic.test.ts
+106:82  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-derived-target.logic.test.ts
+65:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+204:53  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-on-error-warn-row.logic.test.ts
+67:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+68:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-prereq-0x-counters.logic.test.ts
+172:60  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+208:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+252:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+263:58  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+264:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-prereq-0x-idempotency.logic.test.ts
+218:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+243:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+254:75  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+308:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+311:56  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+424:38  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-prereq-0x-runner.logic.test.ts
+206:92  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+239:64  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+267:38  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+287:13  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+288:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+311:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+312:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+366:11  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+482:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+483:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+484:11  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+484:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+553:38  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+555:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-prereq-0y-fullrun.logic.test.ts
+56:7  Warning: 'noopLog' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+170:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+186:62  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+429:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+430:15  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-prereq-0y-gate.logic.test.ts
+166:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+182:62  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+368:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+763:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+910:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+911:64  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1007:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1052:107  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1057:126  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1070:55  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1129:73  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-prereq-0y-schema.logic.test.ts
+325:70  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+326:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+329:65  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+332:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+437:61  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+449:62  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+463:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+484:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+555:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+556:108  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+570:86  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+591:86  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+602:84  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-prereq-0z1-schema.logic.test.ts
+102:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+103:55  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+129:53  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+130:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+134:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+171:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+182:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+195:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+206:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+263:76  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+273:97  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+289:79  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+312:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+318:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/ingest-seen-touch.logic.test.ts
+130:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/inspections.logic.test.ts
+574:20  Warning: '_yearSeq' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+596:20  Warning: '_yearSeq' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+703:13  Warning: 'badUrl' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+816:9  Warning: 'routeSource' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/load-address-points.infra.test.ts
+169:5  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-floating-promises').
+
+./src/tests/materialize-rows.logic.test.ts
+31:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+257:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/mcbylaws-citeparse.logic.test.ts
+19:54  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+27:20  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/mcbylaws-gate.logic.test.ts
+502:11  Warning: 'root' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcbylaws-loop-gate-context.logic.test.ts
+123:7  Warning: 'clone' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+249:7  Warning: 'PROMOTE_110' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+250:7  Warning: 'PROMOTE_110_113' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+264:7  Warning: 'ROUND_IDS_A' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+269:10  Warning: 'groupOf' is defined but never used.  @typescript-eslint/no-unused-vars
+426:16  Warning: 'boundPathsInRange' is defined but never used.  @typescript-eslint/no-unused-vars
+438:10  Warning: 'boundBlobsInRange' is defined but never used.  @typescript-eslint/no-unused-vars
+458:10  Warning: 'stageRound' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcbylaws-loop-gate-eval.logic.test.ts
+136:7  Warning: 'runCase' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcbylaws-loop-inc7-score-buildings.logic.test.ts
+21:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+22:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+70:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+105:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+105:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+105:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+106:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+106:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+106:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+108:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+108:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+108:63  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+113:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+113:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/mcbylaws-loop-inc7-score-panel.logic.test.ts
+22:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+23:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+70:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+70:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+72:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+72:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+72:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+73:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+73:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+73:63  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+74:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+112:7  Warning: 'CASE' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcbylaws-loop-inc7-score.logic.test.ts
+19:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+20:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+62:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+73:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+73:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+73:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+77:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+79:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+79:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+79:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+80:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+80:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+80:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+83:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+83:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+83:63  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+86:60  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+87:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+677:62  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+678:69  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+679:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+702:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/mcbylaws-loop-regression.logic.test.ts
+63:7  Warning: 'nx' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcbylaws-summarycollect.logic.test.ts
+69:19  Warning: 'a' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcproof-approval.logic.test.ts
+22:6  Warning: 'Vocab' is defined but never used.  @typescript-eslint/no-unused-vars
+136:10  Warning: 'assertSortedUnique' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcproof-prompts.logic.test.ts
+30:7  Warning: 'tmpDir' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/mcproof-records.logic.test.ts
+77:7  Warning: 'tmpDir' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+250:21  Warning: '_dropped' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+397:23  Warning: '_dropped' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/parcel-checkout.infra.test.ts
+95:78  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/pipeline-sdk.logic.test.ts
+2526:54  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2526:64  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2535:54  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2535:64  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2546:56  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2546:66  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/producer-ratio-pin.logic.test.ts
+235:17  Warning: '_of' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/sql-witness-harness.logic.test.ts
+24:1  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-require-imports').
+435:12  Warning: 'forbiddenPool' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/sql-witness-trace.logic.test.ts
+118:5  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-require-imports').
+374:5  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-require-imports').
+389:5  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-require-imports').
+
+./src/tests/step-library.logic.test.ts
+2983:9  Warning: 'os' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+6979:61  Warning: 'ctx' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./src/tests/step-registry.logic.test.ts
+161:25  Warning: 'downstream' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/address_points/violations.test.ts
+39:7  Warning: 'NORMALIZER_REL' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+40:7  Warning: 'WRITE_REL' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/classify_coa_scope/ledger-locks.logic.test.ts
+10:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+12:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+14:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+17:104  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/classify_coa_trades/ledger-locks.logic.test.ts
+17:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+17:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+19:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+21:109  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+24:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+27:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+30:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+30:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+37:121  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+43:56  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/coa/dispatch.logic.test.ts
+239:60  Warning: '_drop' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+311:60  Warning: '_drop' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/coa/ledger-locks.logic.test.ts
+16:20  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+16:203  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+17:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+24:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+36:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+43:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/compute_coa_cost_estimates/ledger-locks.logic.test.ts
+12:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+15:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/compute_maxbld_scenarios/determinism.logic.test.ts
+35:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/compute_maxbld_scenarios/golden-25.logic.test.ts
+51:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+51:88  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/compute_maxbld_scenarios/increment2-worked-examples.logic.test.ts
+34:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+42:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/compute_maxbld_scenarios/increment3-worked-examples.logic.test.ts
+29:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+37:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/enrich_parcels/major-street.logic.test.ts
+16:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+18:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+20:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+80:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+81:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+83:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+93:64  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+110:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+124:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/enrich_parcels/sixplex.logic.test.ts
+12:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+15:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+23:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+23:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+36:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+39:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+53:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+61:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+61:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+62:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+67:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+86:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+89:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+89:83  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+90:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+90:80  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+103:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+130:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+136:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+145:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+152:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+152:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+230:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+231:58  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+255:15  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+257:51  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+259:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+263:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+323:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+329:71  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+369:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+370:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+371:48  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+375:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+380:71  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+386:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+388:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/enrich_parcels/violations.test.ts
+217:10  Warning: 'stepSource' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/link_coa_to_parcels/ledger-locks.logic.test.ts
+13:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+18:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+22:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+22:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/link_parcel_addresses/violations.test.ts
+119:7  Warning: 'FORCE_FULL_ENV' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+153:7  Warning: 'WARN_FAIL_CHECK_IDS' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+158:7  Warning: 'INFO_CHECK_IDS' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+203:7  Warning: 'T6_DEFAULT' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+204:7  Warning: 'T7_DEFAULT' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+447:10  Warning: 'manifest' is defined but only used as a type.  @typescript-eslint/no-unused-vars
+1379:11  Warning: 'd' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/link_wsib/violations.test.ts
+100:7  Warning: 'WSIB_WRITE_COLUMNS' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+101:7  Warning: 'ENTITIES_WRITE_COLUMNS' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+108:7  Warning: 'FORCE_FULL_ENV' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+120:7  Warning: 'WARN_CHECK_IDS' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+121:7  Warning: 'INFO_CHECK_IDS' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+151:7  Warning: 'T2_DEFAULT' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+152:7  Warning: 'T6_DEFAULT' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+168:7  Warning: 'currentWrite' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+365:10  Warning: 'checkById' is defined but never used.  @typescript-eslint/no-unused-vars
+401:10  Warning: 'manifest' is defined but only used as a type.  @typescript-eslint/no-unused-vars
+405:10  Warning: 'strings' is defined but never used.  @typescript-eslint/no-unused-vars
+544:86  Warning: 'v' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+1240:11  Warning: 'd' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/load_bylaw_map_areas/violations.test.ts
+25:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+114:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+123:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+128:21  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+146:11  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+152:49  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+159:5  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-require-imports').
+162:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+166:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+191:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+193:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+197:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+204:22  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+212:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+223:10  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+224:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+225:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+227:1  Warning: Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-require-imports').
+228:15  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+230:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+231:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+235:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+333:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+373:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+426:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+435:70  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+541:51  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/load_centreline/violations.test.ts
+374:24  Warning: '_dropped' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/load_zoning/violations.test.ts
+1145:10  Warning: 'writeByTable' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/refresh_snapshot/violations.test.ts
+172:10  Warning: 'git' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/surfaces/report-generator-fields.logic.test.ts
+219:189  Warning: '_note' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+221:84  Warning: '_note' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/update-tracked-projects.infra.test.ts
+348:11  Warning: 'txEnd' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/write-class-disposition.infra.test.ts
+88:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+331:78  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/write-set-null-unless.logic.test.ts
+68:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+pre-commit: no staged src/ or scripts/ source files — skipping the related-tests run
+GATE OK
+WAITS CHK.5 chk5_tables is empty: no record table is named yet (owner: the McStorage opened-lot record table, which replaces the all-lot headline fill; ruling MORNING-DECISIONS.md:704 "no all-lot headline fill"); CHK.5 enforces writes, stamp and the stale test once a table entry is verified
+POLICY CHECKS OK (commit-msg): 0 file(s)
+[wf2/sfx8 5e4d68bc1] docs(08_agents): task-456 launch review context committed with the work; station owed before the output review
+ 2 files changed, 649 insertions(+)
+ create mode 100644 docs/reports/reviews/task-456/context-r2.md

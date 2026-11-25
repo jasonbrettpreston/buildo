@@ -1,0 +1,768 @@
+LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:a230f3568d81a859a32c0f9dd1ffc4511588bdbd532f728540c2a8c28bd4d195 part 1 of 1 chunk 1 of 1
+NO RULE LIST: the lens template alone judges the material under review. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx","mobile/__tests__/surfaceRenderer.smoke.test.tsx","scripts/analysis/src-sql-ledger.mjs","src/tests/customer-report-read.logic.test.ts","src/tests/db/migration-309-parcel-maxbld-scenarios.db.test.ts","src/tests/factories.ts","src/tests/parcel-routes.security.test.ts","src/tests/property/massing.property.test.ts","src/tests/property/slice-number.property.test.ts","src/tests/src-sql-ledger.logic.test.ts","src/tests/surfaces/nav-by-route.logic.test.ts","src/tests/surfaces/search-follow-ups.logic.test.ts"]
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx b/mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx
+index e6041bfe4d11505826fc613ced3f65a7aa5ad7ef..de023c4e85543300579b63eb6ee4b6333d7c8915 100644
+--- a/mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx
++++ b/mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx
+@@ -36,6 +36,8 @@ describe('Spec 99 §8.3: toggling isFetching does not flip the report route gate
+     ['the served page', hit(VIEW), false],
+     ['the error text (error, nothing cached)', undefined, true],
+     ['the served page while a refetch runs after an error (offline cache)', hit(VIEW), true],
++    // task-456 X5 (mcfixreborn-g3 GROUNDER-B.md:89, D4): the held unsure lot (SRCH.METER-2: `data && !ask`); basis as reportScreen.mount.behaviour.test.tsx:108.
++    ['the held unsure lot (semi question owed)', { ...hit(null), lotForm: { detected: 'semi_half', basis: 'o4_two_parcel_abut', unsure: true } }, false],
+   ])('%s: the same tree with isFetching true and false', (_name, data, isError) => {
+     mockHook = { data, isError, isFetching: true, refetch: jest.fn() };
+     const fetching = render(<Screen />);
+diff --git a/mobile/__tests__/surfaceRenderer.smoke.test.tsx b/mobile/__tests__/surfaceRenderer.smoke.test.tsx
+index eb66f6a3f36bdfb1d98c6a1466b7ed228257f497..fee1055e59e73455b7f6c901a77ba2be0bcab5d8 100644
+--- a/mobile/__tests__/surfaceRenderer.smoke.test.tsx
++++ b/mobile/__tests__/surfaceRenderer.smoke.test.tsx
+@@ -32,7 +32,8 @@ const show = (k: string, a = actions()) => {
+   render(<SurfaceRenderer tree={searchProps(s) as SurfaceTree} content={SEARCH_SLICE.content} data={searchData(s)} actions={a} />);
+   return a;
+ };
+-const GOLDEN_SITUATIONS = ['static', 'loading', 'redirect', 'ambiguous', 'miss', 'empty', 'schema_drift', 'rate_limited', 'unauthorized', 'error'];
++// task-456 X2 (mcfixreborn-g3 GROUNDER-A.md:102): reports_left joins the rendered situations (the A.6 line was a props golden only).
++const GOLDEN_SITUATIONS = ['static', 'loading', 'redirect', 'ambiguous', 'miss', 'empty', 'schema_drift', 'rate_limited', 'unauthorized', 'error', 'reports_left'];
+ 
+ describe('MF-46 follow-up: "Report incorrect address match" (OUTPUT regression F1)', () => {
+   it('the address list carries the report link; a press calls open_help with the topic and the typed address', () => {
+@@ -55,6 +56,10 @@ describe('mobile render smoke (FE-33 mobile case)', () => {
+     expect(screen.queryByLabelText('Account')).toBeNull();
+     expect(screen.queryByTestId('parcel-search-account')).toBeNull();
+   });
++  it('reports_left: the line renders "6 of 10 reports left until 9 Dec 2026"', () => {
++    show('reports_left');
++    expect(within(screen.getByTestId('parcel-search-reports-left')).getByText('6 of 10 reports left until 9 Dec 2026')).toBeTruthy();
++  });
+   it('host props: keyboardShouldPersistTaps, the shelf padding, the top safe-area edge, the 448 column (rows 1-4)', () => {
+     show('static');
+     const root = screen.getByTestId('parcel-search-screen');
+diff --git a/scripts/analysis/src-sql-ledger.mjs b/scripts/analysis/src-sql-ledger.mjs
+index a1c35a4a4a7181c746e604a330b004004a3031c7..ab5950004534c1d856c3a0ca0b454e5a939db985 100644
+--- a/scripts/analysis/src-sql-ledger.mjs
++++ b/scripts/analysis/src-sql-ledger.mjs
+@@ -807,7 +807,13 @@ export async function main(argv) {
+       return 1;
+     }
+     const ledger = await readSrcSqlLedger(REPO_ROOT);
+-    const r = confirmRecorded(ledger, readRecordedStatements(dir));
++    // task-456 D2 (mcfixreborn-g2 GROUNDER-B.md:67): a missing or empty trace folder confirms nothing, so it is a failure, never exit 0.
++    const stmts = readRecordedStatements(dir);
++    if (stmts.length === 0) {
++      process.stderr.write(`no recorded statements in ${dir}\n`);
++      return 1;
++    }
++    const r = confirmRecorded(ledger, stmts);
+     process.stdout.write(
+       `src-sql-ledger confirm (PARTIAL — 34 mocked test files and getClient() callers are not seen): `
+       + `${r.confirmed} confirmed, ${r.dynamic} dynamic (closed interpolated set), ${r.untagged} untagged\n`,
+diff --git a/src/tests/customer-report-read.logic.test.ts b/src/tests/customer-report-read.logic.test.ts
+index b6e0a14b73ea11d9972ee5546d52f14a1b6b35d3..3996cf865dba1a8889123f562ebdf0dbe67709d3 100644
+--- a/src/tests/customer-report-read.logic.test.ts
++++ b/src/tests/customer-report-read.logic.test.ts
+@@ -65,6 +65,8 @@ import { CURRENT_SEED_SHAS } from '@/lib/report-projection/seed-shas';
+ import { buildPage } from '@/lib/surfaces/report/core';
+ import { reportCtx } from '@/lib/surfaces/report/data';
+ import { GET } from '@/app/api/parcels/lookup/route';
++import type { StoredRow, LotStamp } from '@/lib/report-projection/project';
++import { makeStoredScenarioRow, makeLotStamp, makeStoredParcelRow, type StoredParcelRow } from './factories';
+ 
+ type Json = Record<string, unknown>;
+ const ROOT = path.resolve(__dirname, '..', '..');
+@@ -73,20 +75,18 @@ const read = (p: string): string => fs.readFileSync(path.join(ROOT, p), 'utf8');
+ // ---- a scripted lot: the four stored reads W makes, answered by SQL text (no database) ----
+ const UID = '00000000-0000-0000-0000-000000000123';
+ const REF = 'P-123';
+-interface Lot { parcel: Json | null; stamp: Json | null; present: boolean; rows: Json[] }
+-const PARCEL_ROW = { id: 7, parcel_id: REF, zoning_zn_string: 'R', address: '1 Test St', lot_size_sqm: '395.6', is_corner_lot: false, is_heritage_designated: null, is_in_ravine_protection_area: null };
+-const STAMP = { lot_gate: null, table_version: 'T1', evaluator_version: 'E1' };
++// task-456 D4 (Std §5.1, 00_engineering_standards.md:100): the lot's rows come from the typed builders in factories.ts.
++interface Lot { parcel: StoredParcelRow | null; stamp: LotStamp | null; present: boolean; rows: StoredRow[] }
++const PARCEL_ROW = makeStoredParcelRow({ parcel_id: REF });
++const STAMP = makeLotStamp();
+ /** One stored scenario row, current by default (the shas the page core is checked against). */
+-const row = (field_id: string, status: string, value: string | null, extra: Json = {}): Json => ({
+-  building_type: 'detached_house', field_id, increment: '1', status, value, unit: null, reason: null, flags: [], content_sha: 'c',
+-  ...CURRENT_SEED_SHAS, settings_sha: 's', layer2_table_version: 'T1', switches: [], ...extra,
+-});
+-const ROWS = (extra: Json = {}): Json[] => [
++const row = (field_id: string, status: string, value: string | null, extra: Partial<StoredRow> = {}): StoredRow => makeStoredScenarioRow({ field_id, status, value, ...CURRENT_SEED_SHAS, ...extra });
++const ROWS = (extra: Partial<StoredRow> = {}): StoredRow[] => [
+   row('permitted', 'permitted', null, extra), row('gfa_pitched_m2', 'computed', '248.05', extra), row('gfa_flat_m2', 'computed', '120', extra),
+   row('storeys_max', 'computed', '3', extra), row('footprint_max_m2', 'computed', '120', extra), row('units_max', 'computed', '1', extra),
+ ];
+ const CURRENT_LOT: Lot = { parcel: PARCEL_ROW, stamp: STAMP, present: true, rows: ROWS() };
+-const GATED_LOT: Lot = { ...CURRENT_LOT, stamp: { ...STAMP, lot_gate: 'under_min_area' }, rows: [] };
++const GATED_LOT: Lot = { ...CURRENT_LOT, stamp: makeLotStamp({ lot_gate: 'under_min_area' }), rows: [] };
+ /** task-454 SEARCHFIX.6: the lookup route reads its search settings rows first (readSearchSettings, the shared ANY read, told apart by its bound keys); the seed defaults. */
+ const SEARCH_SETTINGS = { rows: Object.entries({ parcel_lookup_search_per_min: '60', parcel_lookup_detail_per_min: '30', parcel_entitlement_read_per_min: '30', parcel_lookup_slow_query_ms: '500', maxbld_page_candidate_cap: '10' }).map(([variable_key, variable_value]) => ({ variable_key, variable_value })) };
+ const isSearchSettings = (text: string, params: unknown): boolean =>
+@@ -198,7 +198,7 @@ describe('T3 stale: a record computed against an older catalogue, switchboard or
+   });
+   it('one stale row among current rows is enough: null', async () => {
+     const rows = ROWS();
+-    rows[2] = { ...(rows[2] as Json), catalogue_sha: OLD_SHA };
++    rows[2] = { ...(rows[2] as StoredRow), catalogue_sha: OLD_SHA };
+     use({ ...CURRENT_LOT, rows });
+     expect(await readCustomerPageResponse(REF)).toBeNull();
+   });
+@@ -375,7 +375,7 @@ describe('T8 no legacy value anywhere: FE-38 and FE-39 (Spec 135)', () => {
+   });
+   it('no key at any depth is a legacy column name (the consumer withheld set), and no legacy column rides on the parcels row into the page', async () => {
+     // a parcels row that carries legacy columns (a SELECT * leak) must not reach the page: the read selects declared columns only
+-    use({ ...CURRENT_LOT, parcel: { ...PARCEL_ROW, estimated_cost_max: 999999, variance_prediction: 1.7 } });
++    use({ ...CURRENT_LOT, parcel: makeStoredParcelRow({ parcel_id: REF, estimated_cost_max: 999999, variance_prediction: 1.7 }) });
+     const r = await readCustomerPageResponse(REF);
+     const found = keysDeep(r).filter((k) => CONSUMER_WITHHELD_LEGACY_COLS.has(k) || /variance|estimated_cost|legacy/i.test(k));
+     expect(found).toEqual([]);
+diff --git a/src/tests/db/migration-309-parcel-maxbld-scenarios.db.test.ts b/src/tests/db/migration-309-parcel-maxbld-scenarios.db.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..df2b5df00bff8db0d192d9883cf3199e967cb97d
+--- /dev/null
++++ b/src/tests/db/migration-309-parcel-maxbld-scenarios.db.test.ts
+@@ -0,0 +1,129 @@
++// 🔗 SPEC LINK: docs/specs/00_engineering_standards.md §12.10 (a migration that adds a CHECK constraint MUST land with a `*.db.test.ts` file under
++//              src/tests/db/); docs/specs/01-pipeline/69a_mcbylaw_register.md (M-61, M-72, M-377, M-378, M-384: migration 309).
++//
++// task-456 D5 (mcfixreborn-g2 GROUNDER-B.md:79; fold plan FIX.MIG309-DBTEST). Real-database test for the two named CHECK constraints of
++// migrations/309_parcel_maxbld_scenarios.sql (never edited here):
++//   parcel_maxbld_scenarios_value_iff_computed    a value exactly when the status is computed (gain_reasons may be computed with no value);
++//   parcel_maxbld_scenarios_reason_iff_undecided  a reason exactly when the status is not_evaluated, not_modelled or not_permitted.
++// Accepted rows: computed with a value; gain_reasons computed with a null value; not_evaluated with a reason. Refused, SQLSTATE 23514 naming the
++// constraint: computed with a null value and not_buildable with a value (value_iff_computed); not_evaluated and not_permitted with a null reason
++// (reason_iff_undecided). Both directions inside the database: with the constraint dropped the refused row is accepted; after the rollback to the
++// savepoint it is refused again and pg_constraint lists the name again (the drop did not persist).
++//
++// Where it runs: a throwaway container only (setup-testcontainer.ts). It never runs against an existing database: BUILDO_TEST_DB_EXTERNAL=1 points
++// the harness at one (the shared test stack), where DROP CONSTRAINT takes an ACCESS EXCLUSIVE lock, so the file skips itself there. One client,
++// one BEGIN in beforeAll and one ROLLBACK in afterAll: no row and no DDL is ever committed, a crash leaves nothing behind, and there is no delete step.
++// A refused insert aborts the transaction, so each refused case runs between SAVEPOINT s and ROLLBACK TO SAVEPOINT s.
++// Pattern: migration-070-xor.db.test.ts; the parcel seed follows enrich-parcels-scenarios.db.test.ts (feature_type 'TEST'; the 997_000_000 range,
++// used by no other file under src/tests).
++
++import type { DatabaseError, Pool, PoolClient } from 'pg';
++import { afterAll, beforeAll, describe, expect, it } from 'vitest';
++import { dbAvailable, getTestPool } from './setup-testcontainer';
++
++const TEST_PARCEL = '997000001';
++const VALUE_IFF = 'parcel_maxbld_scenarios_value_iff_computed';
++const REASON_IFF = 'parcel_maxbld_scenarios_reason_iff_undecided';
++
++interface Scenario { field_id: string; status: string; value: number | null; reason: string | null }
++
++function poly(x0: number, y0: number, x1: number, y1: number): string {
++  return JSON.stringify({ type: 'Polygon', coordinates: [[[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]]] });
++}
++
++describe.skipIf(!dbAvailable() || process.env.BUILDO_TEST_DB_EXTERNAL === '1')('migration 309 — parcel_maxbld_scenarios CHECK constraints (real database)', () => {
++  let pool: Pool | null = null;
++  let client: PoolClient | null = null;
++  let parcelPk = 0;
++
++  beforeAll(async () => {
++    pool = getTestPool();
++    if (!pool) return;
++    client = await pool.connect();
++    await client.query('BEGIN');
++    await client.query(
++      `INSERT INTO parcels (parcel_id, feature_type, geometry, geom, lot_size_sqm)
++       VALUES ($1, 'TEST', $2::jsonb, ST_SetSRID(ST_GeomFromGeoJSON($2::text), 4326), 400)`,
++      [TEST_PARCEL, poly(0, 0, 0.0002, 0.0002)],
++    );
++    const { rows } = await client.query<{ id: number }>('SELECT id FROM parcels WHERE parcel_id = $1', [TEST_PARCEL]);
++    parcelPk = rows[0]!.id; // parcel_maxbld_scenarios.parcel_id is parcels.id (migration 309:22)
++  });
++
++  afterAll(async () => {
++    if (client) {
++      await client.query('ROLLBACK');
++      client.release();
++    }
++    if (pool) await pool.end();
++  });
++
++  /** One scenario row naming every NOT NULL column of migration 309:21-39. */
++  const insert = (s: Scenario) => (client as PoolClient).query(
++    `INSERT INTO parcel_maxbld_scenarios (parcel_id, building_type, field_id, increment, status, value, reason, trace, content_sha, switches,
++                                          catalogue_sha, switchboard_sha, settings_sha, layer2_table_version, computed_at)
++     VALUES ($1, 'detached_house', $2, '1', $3, $4, $5, '{}'::jsonb, 'c', '[]'::jsonb, 'cat', 'sw', 's', 'T1', now())`,
++    [parcelPk, s.field_id, s.status, s.value, s.reason],
++  );
++
++  /** The insert inside SAVEPOINT s; the error it raised (null when accepted), with the transaction restored either way. */
++  const tryInsert = async (s: Scenario): Promise<DatabaseError | null> => {
++    const c = client as PoolClient;
++    await c.query('SAVEPOINT s');
++    try {
++      await insert(s);
++      await c.query('RELEASE SAVEPOINT s');
++      return null;
++    } catch (err) {
++      await c.query('ROLLBACK TO SAVEPOINT s');
++      return err as DatabaseError;
++    }
++  };
++
++  const constraintNames = async (): Promise<string[]> => (await (client as PoolClient).query<{ conname: string }>(
++    `SELECT conname FROM pg_constraint WHERE conrelid = 'parcel_maxbld_scenarios'::regclass AND contype = 'c' AND conname = ANY($1::text[]) ORDER BY conname`,
++    [[VALUE_IFF, REASON_IFF]],
++  )).rows.map((r) => r.conname);
++
++  it('pg_constraint lists both named CHECK constraints', async () => {
++    expect(await constraintNames()).toEqual([REASON_IFF, VALUE_IFF].sort());
++  });
++
++  it.each<[string, Scenario]>([
++    ['computed with a value', { field_id: 'gfa_max_m2', status: 'computed', value: 248.05, reason: null }],
++    ['gain_reasons computed with a null value', { field_id: 'gain_reasons', status: 'computed', value: null, reason: null }],
++    ['not_evaluated with a reason', { field_id: 'storeys_max', status: 'not_evaluated', value: null, reason: 'under_min_area' }],
++  ])('accepts: %s', async (_name, s) => {
++    expect(await tryInsert(s)).toBeNull();
++  });
++
++  it.each<[string, Scenario, string]>([
++    ['computed with a null value', { field_id: 'refused_a', status: 'computed', value: null, reason: null }, VALUE_IFF],
++    ['not_buildable with a value', { field_id: 'refused_b', status: 'not_buildable', value: 1, reason: null }, VALUE_IFF],
++    ['not_evaluated with a null reason', { field_id: 'refused_c', status: 'not_evaluated', value: null, reason: null }, REASON_IFF],
++    ['not_permitted with a null reason', { field_id: 'refused_d', status: 'not_permitted', value: null, reason: null }, REASON_IFF],
++  ])('refuses: %s (23514, %s)', async (_name, s, name) => {
++    const err = await tryInsert(s);
++    expect(err?.code).toBe('23514');
++    expect(err?.constraint).toBe(name);
++  });
++
++  // Last case of the file: inside SAVEPOINT d the constraint is gone, so the order matters and the rollback to d restores it.
++  it.each<[string, Scenario]>([
++    [VALUE_IFF, { field_id: 'both_ways_a', status: 'computed', value: null, reason: null }],
++    [REASON_IFF, { field_id: 'both_ways_b', status: 'not_evaluated', value: null, reason: null }],
++  ])('both directions: with %s dropped the refused row is accepted; after the rollback it is refused again', async (name, s) => {
++    const c = client as PoolClient;
++    await c.query('SAVEPOINT d');
++    try {
++      await c.query(`ALTER TABLE parcel_maxbld_scenarios DROP CONSTRAINT ${name}`);
++      expect(await tryInsert(s)).toBeNull();
++    } finally {
++      await c.query('ROLLBACK TO SAVEPOINT d');
++    }
++    const err = await tryInsert(s);
++    expect(err?.code).toBe('23514');
++    expect(err?.constraint).toBe(name);
++    expect(await constraintNames()).toContain(name);
++  });
++});
+diff --git a/src/tests/factories.ts b/src/tests/factories.ts
+index 8cec1481ab81da98f13e82323443058d5174aa5e..d3c816d330c2267de37a5a05bb9930261b05bc71 100644
+--- a/src/tests/factories.ts
++++ b/src/tests/factories.ts
+@@ -816,3 +816,70 @@ export function makeCoaNoticeVariance(overrides: Partial<CoaNoticeVarianceRow> =
+   }
+   return base;
+ }
++
++// ─── Stored report reads (task-456 D4, Std §5.1: typed test data through factories) ───
++
++import type { StoredRow, LotStamp } from '@/lib/report-projection/project';
++
++/** One stored parcel_maxbld_scenarios row; the defaults are a current-looking `permitted` row (shas are placeholders: a test that needs the seed shas passes them). */
++export function makeStoredScenarioRow(o: Partial<StoredRow> = {}): StoredRow {
++  return {
++    building_type: 'detached_house',
++    field_id: 'permitted',
++    increment: '1',
++    status: 'permitted',
++    value: null,
++    unit: null,
++    reason: null,
++    flags: [],
++    content_sha: 'c',
++    catalogue_sha: 'cat',
++    switchboard_sha: 'sw',
++    settings_sha: 's',
++    layer2_table_version: 'T1',
++    switches: [],
++    ...o,
++  };
++}
++
++/** The lot's Layer 2 stamp row (bylaw_resolution_lot_stamps); ungated by default. */
++export function makeLotStamp(o: Partial<LotStamp> = {}): LotStamp {
++  return { lot_gate: null, table_version: 'T1', evaluator_version: 'E1', ...o };
++}
++
++/**
++ * The parcels row the stored read selects (the select list of PARCEL_SQL, src/lib/report-projection/read-stored.ts).
++ * No shared type exists for it, so the test builder declares one.
++ */
++export interface StoredParcelRow {
++  id: number;
++  parcel_id: string;
++  zoning_zn_string: string | null;
++  address: string | null;
++  lot_size_sqm: string | number | null;
++  is_corner_lot: boolean | null;
++  is_heritage_designated: boolean | null;
++  is_in_ravine_protection_area: boolean | null;
++}
++
++/** A stored parcels row; extra planted columns (a leak test) are allowed through the Record part. */
++export function makeStoredParcelRow(
++  o: Partial<StoredParcelRow> & Record<string, unknown> = {},
++): StoredParcelRow & Record<string, unknown> {
++  return {
++    id: 7,
++    parcel_id: 'P-123',
++    zoning_zn_string: 'R',
++    address: '1 Test St',
++    lot_size_sqm: '395.6',
++    is_corner_lot: false,
++    is_heritage_designated: null,
++    is_in_ravine_protection_area: null,
++    ...o,
++  };
++}
++
++/** A witness column catalog (table → columns) for the src SQL ledger tests. */
++export function makeSqlCatalog(o: Record<string, string[]> = {}): Record<string, string[]> {
++  return { permits: ['id', 'status', 'name'], entities: ['id', 'name'], ...o };
++}
+diff --git a/src/tests/parcel-routes.security.test.ts b/src/tests/parcel-routes.security.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..061482218ce8c16922355b05f92e813d5b0f1c41
+--- /dev/null
++++ b/src/tests/parcel-routes.security.test.ts
+@@ -0,0 +1,152 @@
++// 🔗 SPEC LINK: docs/specs/00_engineering_standards.md §5.2 (`*.security.test.ts`, mandated for auth-guarded and externally reachable surfaces);
++//              docs/specs/03-mobile/90_mobile_engineering_protocol.md §11 (the auth call is the first call of a route).
++//
++// task-456 N3 (mcfixreborn-g3 GROUNDER-E.md:95; fold plan FIX.SEARCH-TESTS): the three customer parcel routes under src/app/api/parcels, as an attacker
++// reaches them:
++//   - no session: 401 UNAUTHORIZED, no pool query, no rate-limit call (the auth call comes first);
++//   - a ?uid=<OTHER> parameter is ignored: every read, the rate-limit key and the lot-size insert carry the session uid only.
++// Mocked-route harness, the mocks of parcels-entitlement.infra.test.ts, parcel-lookup-gate.infra.test.ts and parcels-lot-size-route.infra.test.ts.
++// task-454: the lookup and entitlement routes read their limits through readSearchSettings (one shared ANY read on logic_variables, told from
++// the other reads by its bound keys) and answer 500 when a row is missing, so the pool answers that read with the seed defaults, and every served
++// case also asserts the status is not 500 (a missing settings answer cannot pass as a handled request). No database, no network.
++import { describe, it, expect, beforeEach, vi } from 'vitest';
++import type { NextRequest } from 'next/server';
++
++const seed = vi.hoisted(() => ({ enabledMax: 1 }));
++const poolQuery = vi.fn();
++const txQuery = vi.fn();
++vi.mock('@/lib/db/client', () => ({
++  pool: { query: (...a: unknown[]) => poolQuery(...a) },
++  withTransaction: vi.fn(async (fn: (client: unknown) => Promise<unknown>) => fn({ query: (...a: unknown[]) => txQuery(...a) })),
++}));
++vi.mock('@/lib/auth/get-user-context', () => ({ getCurrentUserContext: vi.fn() }));
++vi.mock('@/lib/auth/rate-limit', () => ({ withRateLimit: vi.fn(async () => ({ allowed: true, remaining: 10 })) }));
++vi.mock('@/lib/logger', () => ({ logInfo: vi.fn(), logWarn: vi.fn(), logError: vi.fn() }));
++vi.mock('@sentry/nextjs', () => ({ addBreadcrumb: vi.fn(), captureException: vi.fn() }));
++vi.mock('@/lib/admin/parcel-lookup', async (orig) => ({
++  ...(await orig<typeof import('@/lib/admin/parcel-lookup')>()),
++  resolveAddress: vi.fn(),
++  fetchParcelById: vi.fn(async () => null),
++  fetchCoaProjects: vi.fn(async () => []),
++}));
++vi.mock('@/lib/parcels/lot-map', async (orig) => ({ ...(await orig<typeof import('@/lib/parcels/lot-map')>()), resolveLotMap: vi.fn() }));
++vi.mock('@/lib/parcels/lot-form', async (orig) => ({
++  ...(await orig<typeof import('@/lib/parcels/lot-form')>()),
++  readLotForm: vi.fn(async () => ({ detected: 'detached', basis: 'o4_not_met', unsure: false })),
++}));
++vi.mock('@/lib/parcels/report-page', async (orig) => ({
++  ...(await orig<typeof import('@/lib/parcels/report-page')>()),
++  readCustomerPageResponse: vi.fn(async () => null),
++}));
++vi.mock('@/lib/parcels/report-compute', () => ({ computeCustomerPageResponse: vi.fn(async () => null) }));
++// The lot-size switch is 0-0 in the committed seed; the route test lifts the bound the same way (parcels-lot-size-route.infra.test.ts).
++vi.mock('../../scripts/seeds/logic_variables.json', async (orig) => {
++  const real = ((await orig()) as { default: Record<string, Record<string, unknown>> }).default;
++  return { default: new Proxy(real, { get: (t, k: string) => (k === 'user_lot_size_entry_enabled' ? { ...t[k], max: seed.enabledMax } : t[k]) }) };
++});
++
++import { getCurrentUserContext } from '@/lib/auth/get-user-context';
++import { withRateLimit } from '@/lib/auth/rate-limit';
++import { REPORT_LIMIT_KEYS } from '@/lib/entitlements';
++import { LOT_SIZE_SETTING_KEYS } from '@/lib/parcels/lot-size-entry';
++import { GET as lookupGET } from '@/app/api/parcels/lookup/route';
++import { GET as entitlementGET } from '@/app/api/parcels/entitlement/route';
++import { POST as lotSizePOST } from '@/app/api/parcels/lot-size/route';
++
++const UID = '00000000-0000-0000-0000-0000000456a1';
++const OTHER = '00000000-0000-0000-0000-0000000456ff';
++
++/** The seed defaults of the search settings (copied from parcels-entitlement.infra.test.ts SEARCH_DEFAULTS). */
++const SEARCH_DEFAULTS: Record<string, string> = { parcel_lookup_search_per_min: '60', parcel_lookup_detail_per_min: '30', parcel_entitlement_read_per_min: '30', parcel_lookup_slow_query_ms: '500', maxbld_page_candidate_cap: '10' };
++const isSearchSettings = (text: string, params: unknown): boolean =>
++  /FROM logic_variables WHERE variable_key = ANY/.test(text) && Array.isArray(params) && Array.isArray(params[0]) && (params[0] as unknown[]).includes('parcel_lookup_search_per_min');
++const LOT_SIZE_SETTINGS = [
++  { variable_key: LOT_SIZE_SETTING_KEYS.enabled, variable_value: '1' },
++  { variable_key: LOT_SIZE_SETTING_KEYS.min_sqm, variable_value: '46.45' },
++  { variable_key: LOT_SIZE_SETTING_KEYS.max_sqm, variable_value: '4645.15' },
++  { variable_key: LOT_SIZE_SETTING_KEYS.ratio_max, variable_value: '3' },
++  { variable_key: LOT_SIZE_SETTING_KEYS.per_day, variable_value: '5' },
++  { variable_key: LOT_SIZE_SETTING_KEYS.side_min_m, variable_value: '2' },
++  { variable_key: LOT_SIZE_SETTING_KEYS.side_max_m, variable_value: '450' },
++];
++
++function db(): void {
++  poolQuery.mockImplementation(async (text: string, params?: unknown) => {
++    if (isSearchSettings(text, params)) {
++      const rows = Object.entries(SEARCH_DEFAULTS).map(([variable_key, variable_value]) => ({ variable_key, variable_value }));
++      return { rows, rowCount: rows.length };
++    }
++    if (/FROM logic_variables WHERE variable_key = ANY/.test(text) && Array.isArray(params) && Array.isArray(params[0]) && (params[0] as unknown[]).includes(LOT_SIZE_SETTING_KEYS.enabled)) {
++      return { rows: LOT_SIZE_SETTINGS, rowCount: LOT_SIZE_SETTINGS.length };
++    }
++    if (/FROM entitlements/.test(text)) {
++      const row = { status: 'active', trial_started_at: null, plan_key: 'basic', current_period_end: '2026-12-05T10:00:00.000Z', created_at: '2026-01-01T00:00:00.000Z', now: '2026-11-20T12:00:00.000Z' };
++      return { rows: [row], rowCount: 1 };
++    }
++    if (/FROM logic_variables/.test(text)) {
++      return { rows: [{ variable_key: REPORT_LIMIT_KEYS.plan, variable_value: '20' }, { variable_key: REPORT_LIMIT_KEYS.trial, variable_value: '20' }, { variable_key: REPORT_LIMIT_KEYS.pro, variable_value: '25' }, ...LOT_SIZE_SETTINGS] };
++    }
++    if (/FROM usage_events/.test(text)) return { rows: [{ used: 0, already: false }], rowCount: 1 };
++    throw new Error(`unexpected pool query: ${text}`);
++  });
++  txQuery.mockImplementation(async (text: string, params?: unknown[]) => {
++    if (/FROM parcels p/.test(text)) return { rows: [{ parcel_pk: 77, city_sqm: '400', city_source: 'stated', entry_id: null, value_sqm: null, entered_at: null }] };
++    if (/INSERT INTO parcel_user_inputs/.test(text)) return { rows: [{ value_sqm: String(params?.[1]), entered_at: '2026-11-10T19:00:00.000Z' }] };
++    throw new Error(`unexpected tx query: ${text}`);
++  });
++}
++
++const req = (pathname: string, qs: string, method: string, body?: unknown): NextRequest => ({
++  url: `https://x.test${pathname}${qs ? `?${qs}` : ''}`, method, nextUrl: { pathname }, headers: { get: () => null },
++  json: async () => body,
++} as unknown as NextRequest);
++
++const ROUTES: Array<[string, () => Promise<Response>, (qs: string) => Promise<Response>]> = [
++  ['GET /api/parcels/lookup', () => lookupGET(req('/api/parcels/lookup', 'parcelId=GONE', 'GET')), (qs) => lookupGET(req('/api/parcels/lookup', `parcelId=GONE&${qs}`, 'GET'))],
++  ['GET /api/parcels/entitlement', () => entitlementGET(req('/api/parcels/entitlement', '', 'GET')), (qs) => entitlementGET(req('/api/parcels/entitlement', qs, 'GET'))],
++  ['POST /api/parcels/lot-size', () => lotSizePOST(req('/api/parcels/lot-size', '', 'POST', { parcel_id: 'P-1', lot_area_value: 3120, lot_area_unit: 'sqft' })),
++    (qs) => lotSizePOST(req('/api/parcels/lot-size', qs, 'POST', { parcel_id: 'P-1', lot_area_value: 3120, lot_area_unit: 'sqft' }))],
++];
++
++beforeEach(() => {
++  vi.clearAllMocks();
++  poolQuery.mockReset();
++  txQuery.mockReset();
++  seed.enabledMax = 1;
++  vi.mocked(getCurrentUserContext).mockResolvedValue({ uid: UID, subscription_status: 'active' } as never);
++  db();
++});
++
++describe('parcel routes: no session', () => {
++  it.each(ROUTES)('%s: no session → 401, no pool query, no rate-limit call', async (_name, call) => {
++    vi.mocked(getCurrentUserContext).mockResolvedValue(null);
++    const res = await call();
++    expect(res.status).toBe(401);
++    expect(((await res.json()) as { error: { code: string } | null }).error?.code).toBe('UNAUTHORIZED');
++    expect(poolQuery).not.toHaveBeenCalled();
++    expect(txQuery).not.toHaveBeenCalled();
++    expect(vi.mocked(withRateLimit)).not.toHaveBeenCalled();
++  });
++});
++
++describe('parcel routes: a uid parameter is ignored', () => {
++  it.each(ROUTES)('%s: a ?uid=<OTHER> parameter is ignored', async (_name, _call, withQs) => {
++    const res = await withQs(`uid=${OTHER}`);
++    expect(res.status).not.toBe(500);
++    expect(res.status).toBe(200);
++    const keys = vi.mocked(withRateLimit).mock.calls.map((c) => (c[1] as { key: string }).key);
++    expect(keys).toHaveLength(1);
++    expect(keys[0]).toContain(UID);
++    expect(keys[0]).not.toContain(OTHER);
++    expect(JSON.stringify(poolQuery.mock.calls)).not.toContain(OTHER);
++    expect(JSON.stringify(txQuery.mock.calls)).not.toContain(OTHER);
++  });
++  it('POST /api/parcels/lot-size: the insert carries the session uid', async () => {
++    const res = await ROUTES[2]![2](`uid=${OTHER}`);
++    expect(res.status).toBe(200);
++    const insert = txQuery.mock.calls.find((c) => /INSERT INTO parcel_user_inputs/.test(String(c[0])));
++    expect(insert).toBeDefined();
++    expect(JSON.stringify(insert)).toContain(UID);
++    expect(JSON.stringify(insert)).not.toContain(OTHER);
++  });
++});
+diff --git a/src/tests/property/massing.property.test.ts b/src/tests/property/massing.property.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..92ef853d06a729263e815356b48c6e59da184ca2
+--- /dev/null
++++ b/src/tests/property/massing.property.test.ts
+@@ -0,0 +1,35 @@
++// 🔗 SPEC LINK: docs/specs/00_engineering_standards.md §12.12 Property-based tests ("distance/unit conversions ... MUST have at least one fast-check property test")
++//
++// task-456 X4 (mcfixreborn-g3 GROUNDER-E.md:91): the massing numbers had example tests only (massing.logic.test.ts).
++// Invariants:
++//   - computeBuildingCoverage (src/lib/massing/geometry.ts) is at most 100 for any positive, finite building and lot areas (the cap);
++//   - formatHeight's ft figure is within 0.05 ft of m x 3.28084 (the registered pinned parcels_m_to_ft, typed here as the independent
++//     reference so a drifting factor fails; M_TO_FT is what the formatter is given), for every m from 0 to 1,000,000.
++// The tolerance carries the sibling's slack (report-sqft-rounding.property.test.ts): an exact rounding tie is off by 0.05 plus float noise.
++import { describe, it } from 'vitest';
++import * as fc from 'fast-check';
++import { computeBuildingCoverage, formatHeight } from '@/lib/massing/geometry';
++import { M_TO_FT } from '@/lib/parcels/geometry';
++
++const FACTOR = 3.28084;
++// NaN and Infinity give NaN in the coverage division, so the areas are positive and finite.
++const area = fc.double({ min: 1e-6, max: 1_000_000, noNaN: true, noDefaultInfinity: true });
++const metres = fc.double({ min: 0, max: 1_000_000, noNaN: true, noDefaultInfinity: true });
++
++const ftOf = (s: string): number => {
++  const m = /^-?\d+(?:\.\d+)? m \((-?\d+(?:\.\d+)?) ft\)$/.exec(s);
++  if (!m) throw new Error(`not a height string: ${s}`);
++  return Number(m[1]);
++};
++
++describe('massing numbers (property)', () => {
++  it('coverage is at most 100 for positive areas', () => {
++    fc.assert(fc.property(area, area, (building, lot) => {
++      const c = computeBuildingCoverage(building, lot);
++      return c !== null && c <= 100;
++    }));
++  });
++  it('the ft figure is within 0.05 of m × 3.28084', () => {
++    fc.assert(fc.property(metres, (m) => Math.abs(ftOf(formatHeight(m, M_TO_FT)) - m * FACTOR) <= 0.05 + 1e-6));
++  });
++});
+diff --git a/src/tests/property/slice-number.property.test.ts b/src/tests/property/slice-number.property.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..bc0be0c49a1714758c05c6a3474a653dbe82166c
+--- /dev/null
++++ b/src/tests/property/slice-number.property.test.ts
+@@ -0,0 +1,56 @@
++// 🔗 SPEC LINK: docs/specs/02-web-admin/128_surface_standard_policy.md Rule 3 (every page setting has bounds and an on_invalid posture);
++//              docs/specs/00_engineering_standards.md §12.12 Property-based tests.
++//
++// task-456 X4 (mcfixreborn-g3 GROUNDER-F.md:109): sliceNumber (mobile/src/lib/sliceConfig.ts, no imports, so the relative import works) had
++// example tests only. For any min <= max and any finite v:
++//   - under clamp the result is in [min, max]: v itself when v is in range, else the nearer bound;
++//   - under fail the result is v when in range, and it throws exactly when v is outside.
++// A value that is not a finite number (NaN, Infinity, -Infinity, undefined, a string) always throws, before any bound is read.
++import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
++import * as fc from 'fast-check';
++import { sliceNumber } from '../../../mobile/src/lib/sliceConfig';
++
++const bound = fc.double({ min: -1_000_000, max: 1_000_000, noNaN: true, noDefaultInfinity: true });
++// min equal to max is drawn sometimes; otherwise the pair is sorted so min <= max.
++const bounds = fc.oneof(
++  bound.map((x) => [x, x] as const),
++  fc.tuple(bound, bound).map(([a, b]) => (a <= b ? [a, b] as const : [b, a] as const)),
++);
++const wide = fc.double({ min: -1e9, max: 1e9, noNaN: true, noDefaultInfinity: true });
++// v from a range wider than the bounds, mixed with the endpoints and zero.
++const caseOf = bounds.chain(([min, max]) => fc.record({
++  min: fc.constant(min),
++  max: fc.constant(max),
++  on_invalid: fc.constantFrom('clamp', 'fail'),
++  v: fc.oneof(wide, fc.constantFrom(min, max, 0)),
++}));
++
++let warn: { mockRestore: () => void };
++beforeEach(() => { warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined); });
++afterEach(() => { warn.mockRestore(); });
++
++describe('sliceNumber (property)', () => {
++  it('for any min ≤ max and finite v: the result is in [min,max] (and v itself when in range), or it throws only under fail', () => {
++    fc.assert(fc.property(caseOf, ({ min, max, on_invalid, v }) => {
++      const slice = { config: { k: v }, bounds: { k: { min, max, on_invalid } } };
++      const inRange = v >= min && v <= max;
++      let out: number;
++      try {
++        out = sliceNumber(slice, 'k');
++      } catch {
++        return on_invalid === 'fail' && !inRange;
++      }
++      if (on_invalid === 'fail' && !inRange) return false;
++      if (out < min || out > max) return false;
++      if (inRange) return out === v;
++      return out === (v < min ? min : max);
++    }));
++  });
++  it('NaN, Infinity, -Infinity, undefined and a string always throw', () => {
++    for (const v of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, undefined, '5']) {
++      for (const on_invalid of ['clamp', 'fail']) {
++        expect(() => sliceNumber({ config: { k: v }, bounds: { k: { min: 0, max: 10, on_invalid } } }, 'k')).toThrow(/missing or not a finite number/);
++      }
++    }
++  });
++});
+diff --git a/src/tests/src-sql-ledger.logic.test.ts b/src/tests/src-sql-ledger.logic.test.ts
+index 7e2902290d406229174c9876870006cf7e2d67d5..dfe904f3098a7dc68160ec2e385653306fad1ca7 100644
+--- a/src/tests/src-sql-ledger.logic.test.ts
++++ b/src/tests/src-sql-ledger.logic.test.ts
+@@ -10,7 +10,7 @@
+ // only once the orchestrator has written `scripts/steps/_schema/src-sql-ledger.json`
+ // and filled `CLOSED_INTERPOLATED_SET`; they are red on a fresh worktree by design.
+ 
+-import { describe, it, expect, beforeAll } from 'vitest';
++import { describe, it, expect, beforeAll, vi } from 'vitest';
+ 
+ import fs from 'node:fs';
+ import os from 'node:os';
+@@ -18,6 +18,7 @@ import path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+ 
+ import * as ssl from '../../scripts/analysis/src-sql-ledger.mjs';
++import { makeSqlCatalog } from './factories';
+ 
+ const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url)).replace(/[/\\]$/, '');
+ 
+@@ -48,7 +49,8 @@ const FIXTURE = [
+ 
+ const FIXTURE_REL = 'src/app/api/x/route.ts';
+ 
+-const CATALOG = { permits: ['id', 'status', 'name'], entities: ['id', 'name'] };
++// task-456 D4 (Std §5.1): the catalog comes from the typed builder in factories.ts.
++const CATALOG = makeSqlCatalog();
+ 
+ describe('src-sql-ledger — extractSql (pure AST extraction)', () => {
+   beforeAll(async () => {
+@@ -310,6 +312,34 @@ describe('runtime confirmation comparator (P1-C-src (c), PARTIAL until a live te
+       fs.rmSync(dir, { recursive: true, force: true });
+     }
+   });
++
++  // task-456 D2 (mcfixreborn-g2 GROUNDER-B.md:67): --confirm with no recorded statements is a failure that names the folder, never a silent exit 0.
++  it('--confirm on a missing folder exits 1 and names it', async () => {
++    const dir = path.join(os.tmpdir(), `src-sql-ledger-missing-${process.pid}-${Date.now()}`);
++    const err = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
++    const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
++    try {
++      expect(await ssl.main(['--confirm', dir])).toBe(1);
++      expect(err.mock.calls.map((c) => String(c[0])).join('')).toContain(`no recorded statements in ${dir}`);
++    } finally {
++      err.mockRestore();
++      out.mockRestore();
++    }
++  });
++
++  it('--confirm on an empty folder exits 1', async () => {
++    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'src-sql-ledger-empty-'));
++    const err = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
++    const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
++    try {
++      expect(await ssl.main(['--confirm', dir])).toBe(1);
++      expect(err.mock.calls.map((c) => String(c[0])).join('')).toContain(`no recorded statements in ${dir}`);
++    } finally {
++      err.mockRestore();
++      out.mockRestore();
++      fs.rmSync(dir, { recursive: true, force: true });
++    }
++  });
+ });
+ 
+ describe('src-sql-ledger — committed ledger (live)', () => {
+diff --git a/src/tests/surfaces/nav-by-route.logic.test.ts b/src/tests/surfaces/nav-by-route.logic.test.ts
+index 188142c3f9a6fa273681e14535767eaf6e23aa3a..480f6138d57c1de2224122d347ee06cfac536e8f 100644
+--- a/src/tests/surfaces/nav-by-route.logic.test.ts
++++ b/src/tests/surfaces/nav-by-route.logic.test.ts
+@@ -1,10 +1,13 @@
+ // SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §0b dated note 2026-11-11 "Navigation is a route" and §5.3 item 5
+ //            ("Navigation position — expo-router owns which route is mounted"); the Spec 135 row for this lock is owed as FE-36 (reserved;
+ //            its text is in the §0b note until FE-35 is in the register, because the Spec 136 generator refuses a gap in the FE numbering).
++//            Dated note 2026-11-25 (task-456 R5; mcfixreborn-g3 GROUNDER-D.md:124): FE-36 is no longer reserved; it is in the register
++//            (docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:58). The prior text above is kept.
+ //
+ // MF-75 · McFrontend queue · lane G. The navigation lock. Operator, verbatim (2026-11-11): "with impeccable review - can we ensuring all
+ // novaigation buttons use actual components or router pushes rather than local state toggles", then "yes" to landing it now with the six
+ // known violations as NAMED EXCEPTIONS, each tied to the task that will fix it (MF-46, MF-48/MF-74, MF-49). Record
++// [Dated note 2026-11-25 (task-456 R5; GROUNDER-D.md:124): five exceptions remain, not six: #3 was fixed by MF-48 Stage B (EXCEPTION_AUDIT_ROWS below).]
+ // ~/Buildo-scratch/mcfrontend/phase1/open-questions.md (the two 2026-11-11 entries); audit ~/Buildo-scratch/mcfrontend/NAV-AUDIT-20261111.md.
+ //
+ // The FE-05 lock's form (report-no-maths.logic.test.ts): the TypeScript compiler API over EVERY .ts/.tsx file found by directory walk under
+@@ -20,6 +23,9 @@
+ //   NAV-1 state-as-route   In an onClick/onPress handler, a useState/useReducer setter is called with a string literal AND that state is a
+ //                          JSX branch discriminant in the same file (`x === 'lit' && <jsx>`, a ternary with JSX, or `switch (x)` returning
+ //                          JSX). Boolean toggles never match, so disclosure stays legal by construction.
++//                          Dated note 2026-11-25 (task-456 X6; mcfixreborn-g3 GROUNDER-F.md:107): a comparison that is an operand of a
++//                          `&&` or `||` chain counts too (`if (ready && x === 'lit') return <jsx>`, `{ready && x === 'lit' && <jsx>}`,
++//                          `x === 'a' || x === 'b' ? <jsx> : null`): the lock climbs through the chain to the branch that picks the JSX.
+ //   NAV-2 non-semantic     A div/span/section/article/li/p (web) or View/Text/Image (mobile) with onClick/onPress/onKeyDown and no role.
+ //   NAV-3 unnamed nav      A Pressable/Touchable* whose handler calls router.push/replace/back/navigate with no accessibilityRole or no
+ //                          name (accessibilityLabel or text inside), or a mobile binding-tree node('Button'|'Pressable', {...}) whose
+@@ -44,6 +50,8 @@ const DIRS = [
+ ];
+ // Named, not yet created: `/signup` is public in src/lib/auth/route-guard.ts with no page until MF-46 (Spec 126 §11b.7 W2). While a path is
+ // here it must NOT exist; the day MF-46 creates it this test fails until the path moves into DIRS (so the new page is scanned).
++// Dated note 2026-11-25 (task-456 R5; mcfixreborn-g3 GROUNDER-H.md:96): MF-46 built the MaxBLD sign-up page under
++// src/app/(maxbld)/parcel-tool/signup (inside DIRS through src/app/(maxbld)); the Buildo path src/app/signup still does not exist, so it stays here.
+ const NOT_YET = ['src/app/signup'];
+ 
+ const HANDLER_ATTRS = new Set(['onClick', 'onPress']);
+@@ -151,10 +159,15 @@ const scanSource = (text: string, file: string): Finding[] => {
+     if (ts.isFunctionDeclaration(n) && n.name) localFns.set(n.name.text, n);
+     if (ts.isBinaryExpression(n) && [ts.SyntaxKind.EqualsEqualsEqualsToken, ts.SyntaxKind.ExclamationEqualsEqualsToken, ts.SyntaxKind.EqualsEqualsToken].includes(n.operatorToken.kind)) {
+       const id = ts.isIdentifier(n.left) && ts.isStringLiteralLike(n.right) ? n.left : ts.isIdentifier(n.right) && ts.isStringLiteralLike(n.left) ? n.right : null;
+-      const p = unparen(n);
+-      const jsxBranch = (ts.isBinaryExpression(p) && p.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken && hasJsx(p.right))
++      const picksJsx = (p: ts.Node): boolean => (ts.isBinaryExpression(p) && p.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken && hasJsx(p.right))
+         || (ts.isConditionalExpression(p) && (hasJsx(p.whenTrue) || hasJsx(p.whenFalse)))
+         || (ts.isIfStatement(p) && hasJsx(p.thenStatement)); // `if (x === 'lit') return <jsx>` (panel fold, code-reviewer MED 1)
++      const isChain = (p: ts.Node): boolean => ts.isBinaryExpression(p)
++        && (p.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken || p.operatorToken.kind === ts.SyntaxKind.BarBarToken);
++      // task-456 X6: a comparison that is an operand of an && / || chain counts; climb the chain (parentheses skipped) and test each level.
++      let p = unparen(n);
++      let jsxBranch = picksJsx(p);
++      while (!jsxBranch && p && isChain(p)) { p = unparen(p); jsxBranch = picksJsx(p); }
+       if (id && jsxBranch) discriminants.add(id.text);
+     }
+     if (ts.isSwitchStatement(n) && ts.isIdentifier(n.expression) && n.caseBlock.clauses.some((c) => c.statements.some((s) => ts.isReturnStatement(s) && hasJsx(s)))) {
+@@ -319,6 +332,9 @@ const ALLOW: Allow[] = [
+     why: 'the code stage inside the same phone sheet, after the send (a stage of the sheet, not a screen)' },
+   { file: SIGN_UP, rule: 'NAV-1', component: 'Pressable#signup-send-code', handler: "setPhoneStage('otp')", count: 1, kind: 'disclosure', audit: 21,
+     why: 'the code stage inside the sign-up phone sheet, gated off by PHONE_AUTH_ENABLED' },
++  // task-456 X6 (operator RR-0478, MORNING-DECISIONS.md:2502): found once the lock reads && chains (`method === 'email' && …` in sign-up.tsx).
++  { file: SIGN_UP, rule: 'NAV-1', component: 'Pressable', handler: "setMethod('phone')", count: 1, kind: 'disclosure', audit: 21,
++    why: 'opens the sign-up phone bottom sheet (a sheet is a self-contained task, ios.md:14), gated off by PHONE_AUTH_ENABLED; the same control as the sign-in phone button (audit 17)' },
+   // --- Audited FLAGs the rules reach: a real router call missing a guard; not navigation by state. Owed by the named row. ---
+   { file: WEB_SEARCH, rule: 'NAV-6', component: 'node:Button#select', handler: 'action:push', count: 1, kind: 'flag', audit: 46,
+     why: 'owed: MF-44 (Button component={Link} href={route}, disabled while route is null; unwired while MAXBLD_WEB_LIVE=false)' },
+@@ -413,6 +429,10 @@ describe('NAV lock RED: one planted source per rule, with a passing sibling', ()
+     ['NAV-6 div with a role that pushes (panel fold)', "export const P = () => <div role=\"button\" onClick={() => router.push('/x')}>Go</div>;", 'src/app/(maxbld)/p.tsx', 'NAV-6'],
+     ['NAV-6 anchor with no href that pushes (panel fold)', "export const P = () => <a onClick={() => router.push('/x')}>Go</a>;", 'src/app/(maxbld)/p.tsx', 'NAV-6'],
+     ['NAV-6 web binding Button with a push action', "export const t = node('Button', { key: 'go', onClick: route === null ? null : { action: 'push', route } }, []);", 'src/components/surfaces/web/p.tsx', 'NAV-6'],
++    // task-456 X6 (GROUNDER-F.md:107): a comparison inside an && / || chain still names a discriminant.
++    ['NAV-1 if with && picks the JSX', `export function P() { const [ready] = useState(true); ${STATE} if (ready && view === 'b') return <p/>; return <button onClick={() => setView('b')}>Go</button>; }`, 'src/app/(maxbld)/p.tsx', 'NAV-1'],
++    ['NAV-1 && chain picks the JSX', `export function P() { const [ready] = useState(true); ${STATE} return <div>{ready && view === 'b' && <p/>}<button onClick={() => setView('b')}>Go</button></div>; }`, 'src/app/(maxbld)/p.tsx', 'NAV-1'],
++    ['NAV-1 || in a ternary', `export function P() { ${STATE} return <div>{view === 'a' || view === 'c' ? <p/> : null}<button onClick={() => setView('b')}>Go</button></div>; }`, 'src/app/(maxbld)/p.tsx', 'NAV-1'],
+   ];
+   it.each(planted)('%s', (_n, src, file, rule) => { expect(rulesOf(src, file)).toContain(rule); });
+ 
+@@ -427,6 +447,9 @@ describe('NAV lock RED: one planted source per rule, with a passing sibling', ()
+     ['web binding Button with href', "export const t = node('Button', { key: 'go', href: route, onClick: { action: 'push', route } }, []);", 'src/components/surfaces/web/p.tsx'],
+     ['binding disclosure action', "export const t = node('Button', { key: 'how', onPress: { action: 'toggle_how' } }, []);", 'mobile/src/components/surfaces/p.tsx'],
+     ['router.back on web is not NAV-5', "export const go = () => router.back();", 'src/app/(maxbld)/p.tsx'],
++    // task-456 X6: the chain climb stops at the chain; no JSX branch, no discriminant.
++    ['&& with no JSX', `export function P() { const [ready] = useState(true); ${STATE} const ok = ready && view === 'b'; return <div>{String(ok)}<button onClick={() => setView('b')}>Go</button></div>; }`, 'src/app/(maxbld)/p.tsx'],
++    ['boolean && chain', 'export function P() { const [open, setOpen] = useState(false); const [ready] = useState(true); return <div>{open && ready && <p>x</p>}<button onClick={() => setOpen(!open)}>How?</button></div>; }', 'src/app/(maxbld)/p.tsx'],
+   ];
+   it.each(passing)('passes: %s', (_n, src, file) => { expect(rulesOf(src, file)).toEqual([]); });
+ });
+diff --git a/src/tests/surfaces/search-follow-ups.logic.test.ts b/src/tests/surfaces/search-follow-ups.logic.test.ts
+index 9bf4cdca0c1fa03af00d50dd7a9470721d9a7d6f..09750975d2f5294e74becb15ee29551195c9a438 100644
+--- a/src/tests/surfaces/search-follow-ups.logic.test.ts
++++ b/src/tests/surfaces/search-follow-ups.logic.test.ts
+@@ -9,6 +9,8 @@
+ // Not built here, by ruling or by missing data (see task-12): A.11 (web twin needed by the FE-07 parity lock), C.5 and C.7 (footprint presence and the
+ // primary frontage street name are not in the map field whitelist, pinned below so a field cannot arrive without a ruling), C.6 (RR-0172: the map's own
+ // road labels), C.10 (tap selects, already built). Root test: reads committed files as text, no DB, no network, no mobile import.
++// Dated note 2026-11-25 (task-456 R5; mcfixreborn-g3 GROUNDER-C.md:123, GROUNDER-D.md:124): C.5 and C.7 have since landed under task-336
++// (SRCH.LOTCARD, RR-0284): frontageStreet and hasFootprint are in the map field whitelist (14 -> 16 entries), pinned below. The prior text is kept.
+ import { describe, expect, it } from 'vitest';
+ import fs from 'node:fs';
+ import path from 'node:path';
+@@ -95,7 +97,8 @@ describe('GAP.13 C.1: the choose-your-lot heading (choose-lot.html:265)', () =>
+   });
+ });
+ 
+-describe('GAP.13: fingerprints follow the content files, and no field was added', () => {
++// Dated 2026-11-25 (task-456 R5; prior title kept: "GAP.13: fingerprints follow the content files, and no field was added"): the second case pins the two ruled fields that were added (RR-0284).
++describe('GAP.13: fingerprints follow the content files', () => {
+   it.each([SEARCH, MAP])('%s: every committed golden fingerprint equals the current sha16 of its content and descriptor files', (id) => {
+     for (const f of goldenFiles(id)) {
+       const files = rj(f).fingerprint.files as Record<string, string>;
+

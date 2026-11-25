@@ -1,10 +1,13 @@
 // SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §0b dated note 2026-11-11 "Navigation is a route" and §5.3 item 5
 //            ("Navigation position — expo-router owns which route is mounted"); the Spec 135 row for this lock is owed as FE-36 (reserved;
 //            its text is in the §0b note until FE-35 is in the register, because the Spec 136 generator refuses a gap in the FE numbering).
+//            Dated note 2026-11-25 (task-456 R5; mcfixreborn-g3 GROUNDER-D.md:124): FE-36 is no longer reserved; it is in the register
+//            (docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:58). The prior text above is kept.
 //
 // MF-75 · McFrontend queue · lane G. The navigation lock. Operator, verbatim (2026-11-11): "with impeccable review - can we ensuring all
 // novaigation buttons use actual components or router pushes rather than local state toggles", then "yes" to landing it now with the six
 // known violations as NAMED EXCEPTIONS, each tied to the task that will fix it (MF-46, MF-48/MF-74, MF-49). Record
+// [Dated note 2026-11-25 (task-456 R5; GROUNDER-D.md:124): five exceptions remain, not six: #3 was fixed by MF-48 Stage B (EXCEPTION_AUDIT_ROWS below).]
 // ~/Buildo-scratch/mcfrontend/phase1/open-questions.md (the two 2026-11-11 entries); audit ~/Buildo-scratch/mcfrontend/NAV-AUDIT-20261111.md.
 //
 // The FE-05 lock's form (report-no-maths.logic.test.ts): the TypeScript compiler API over EVERY .ts/.tsx file found by directory walk under
@@ -20,6 +23,9 @@
 //   NAV-1 state-as-route   In an onClick/onPress handler, a useState/useReducer setter is called with a string literal AND that state is a
 //                          JSX branch discriminant in the same file (`x === 'lit' && <jsx>`, a ternary with JSX, or `switch (x)` returning
 //                          JSX). Boolean toggles never match, so disclosure stays legal by construction.
+//                          Dated note 2026-11-25 (task-456 X6; mcfixreborn-g3 GROUNDER-F.md:107): a comparison that is an operand of a
+//                          `&&` or `||` chain counts too (`if (ready && x === 'lit') return <jsx>`, `{ready && x === 'lit' && <jsx>}`,
+//                          `x === 'a' || x === 'b' ? <jsx> : null`): the lock climbs through the chain to the branch that picks the JSX.
 //   NAV-2 non-semantic     A div/span/section/article/li/p (web) or View/Text/Image (mobile) with onClick/onPress/onKeyDown and no role.
 //   NAV-3 unnamed nav      A Pressable/Touchable* whose handler calls router.push/replace/back/navigate with no accessibilityRole or no
 //                          name (accessibilityLabel or text inside), or a mobile binding-tree node('Button'|'Pressable', {...}) whose
@@ -44,6 +50,8 @@ const DIRS = [
 ];
 // Named, not yet created: `/signup` is public in src/lib/auth/route-guard.ts with no page until MF-46 (Spec 126 §11b.7 W2). While a path is
 // here it must NOT exist; the day MF-46 creates it this test fails until the path moves into DIRS (so the new page is scanned).
+// Dated note 2026-11-25 (task-456 R5; mcfixreborn-g3 GROUNDER-H.md:96): MF-46 built the MaxBLD sign-up page under
+// src/app/(maxbld)/parcel-tool/signup (inside DIRS through src/app/(maxbld)); the Buildo path src/app/signup still does not exist, so it stays here.
 const NOT_YET = ['src/app/signup'];
 
 const HANDLER_ATTRS = new Set(['onClick', 'onPress']);
@@ -151,10 +159,15 @@ const scanSource = (text: string, file: string): Finding[] => {
     if (ts.isFunctionDeclaration(n) && n.name) localFns.set(n.name.text, n);
     if (ts.isBinaryExpression(n) && [ts.SyntaxKind.EqualsEqualsEqualsToken, ts.SyntaxKind.ExclamationEqualsEqualsToken, ts.SyntaxKind.EqualsEqualsToken].includes(n.operatorToken.kind)) {
       const id = ts.isIdentifier(n.left) && ts.isStringLiteralLike(n.right) ? n.left : ts.isIdentifier(n.right) && ts.isStringLiteralLike(n.left) ? n.right : null;
-      const p = unparen(n);
-      const jsxBranch = (ts.isBinaryExpression(p) && p.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken && hasJsx(p.right))
+      const picksJsx = (p: ts.Node): boolean => (ts.isBinaryExpression(p) && p.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken && hasJsx(p.right))
         || (ts.isConditionalExpression(p) && (hasJsx(p.whenTrue) || hasJsx(p.whenFalse)))
         || (ts.isIfStatement(p) && hasJsx(p.thenStatement)); // `if (x === 'lit') return <jsx>` (panel fold, code-reviewer MED 1)
+      const isChain = (p: ts.Node): boolean => ts.isBinaryExpression(p)
+        && (p.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken || p.operatorToken.kind === ts.SyntaxKind.BarBarToken);
+      // task-456 X6: a comparison that is an operand of an && / || chain counts; climb the chain (parentheses skipped) and test each level.
+      let p = unparen(n);
+      let jsxBranch = picksJsx(p);
+      while (!jsxBranch && p && isChain(p)) { p = unparen(p); jsxBranch = picksJsx(p); }
       if (id && jsxBranch) discriminants.add(id.text);
     }
     if (ts.isSwitchStatement(n) && ts.isIdentifier(n.expression) && n.caseBlock.clauses.some((c) => c.statements.some((s) => ts.isReturnStatement(s) && hasJsx(s)))) {
@@ -319,6 +332,9 @@ const ALLOW: Allow[] = [
     why: 'the code stage inside the same phone sheet, after the send (a stage of the sheet, not a screen)' },
   { file: SIGN_UP, rule: 'NAV-1', component: 'Pressable#signup-send-code', handler: "setPhoneStage('otp')", count: 1, kind: 'disclosure', audit: 21,
     why: 'the code stage inside the sign-up phone sheet, gated off by PHONE_AUTH_ENABLED' },
+  // task-456 X6 (operator RR-0478, MORNING-DECISIONS.md:2502): found once the lock reads && chains (`method === 'email' && …` in sign-up.tsx).
+  { file: SIGN_UP, rule: 'NAV-1', component: 'Pressable', handler: "setMethod('phone')", count: 1, kind: 'disclosure', audit: 21,
+    why: 'opens the sign-up phone bottom sheet (a sheet is a self-contained task, ios.md:14), gated off by PHONE_AUTH_ENABLED; the same control as the sign-in phone button (audit 17)' },
   // --- Audited FLAGs the rules reach: a real router call missing a guard; not navigation by state. Owed by the named row. ---
   { file: WEB_SEARCH, rule: 'NAV-6', component: 'node:Button#select', handler: 'action:push', count: 1, kind: 'flag', audit: 46,
     why: 'owed: MF-44 (Button component={Link} href={route}, disabled while route is null; unwired while MAXBLD_WEB_LIVE=false)' },
@@ -413,6 +429,10 @@ describe('NAV lock RED: one planted source per rule, with a passing sibling', ()
     ['NAV-6 div with a role that pushes (panel fold)', "export const P = () => <div role=\"button\" onClick={() => router.push('/x')}>Go</div>;", 'src/app/(maxbld)/p.tsx', 'NAV-6'],
     ['NAV-6 anchor with no href that pushes (panel fold)', "export const P = () => <a onClick={() => router.push('/x')}>Go</a>;", 'src/app/(maxbld)/p.tsx', 'NAV-6'],
     ['NAV-6 web binding Button with a push action', "export const t = node('Button', { key: 'go', onClick: route === null ? null : { action: 'push', route } }, []);", 'src/components/surfaces/web/p.tsx', 'NAV-6'],
+    // task-456 X6 (GROUNDER-F.md:107): a comparison inside an && / || chain still names a discriminant.
+    ['NAV-1 if with && picks the JSX', `export function P() { const [ready] = useState(true); ${STATE} if (ready && view === 'b') return <p/>; return <button onClick={() => setView('b')}>Go</button>; }`, 'src/app/(maxbld)/p.tsx', 'NAV-1'],
+    ['NAV-1 && chain picks the JSX', `export function P() { const [ready] = useState(true); ${STATE} return <div>{ready && view === 'b' && <p/>}<button onClick={() => setView('b')}>Go</button></div>; }`, 'src/app/(maxbld)/p.tsx', 'NAV-1'],
+    ['NAV-1 || in a ternary', `export function P() { ${STATE} return <div>{view === 'a' || view === 'c' ? <p/> : null}<button onClick={() => setView('b')}>Go</button></div>; }`, 'src/app/(maxbld)/p.tsx', 'NAV-1'],
   ];
   it.each(planted)('%s', (_n, src, file, rule) => { expect(rulesOf(src, file)).toContain(rule); });
 
@@ -427,6 +447,9 @@ describe('NAV lock RED: one planted source per rule, with a passing sibling', ()
     ['web binding Button with href', "export const t = node('Button', { key: 'go', href: route, onClick: { action: 'push', route } }, []);", 'src/components/surfaces/web/p.tsx'],
     ['binding disclosure action', "export const t = node('Button', { key: 'how', onPress: { action: 'toggle_how' } }, []);", 'mobile/src/components/surfaces/p.tsx'],
     ['router.back on web is not NAV-5', "export const go = () => router.back();", 'src/app/(maxbld)/p.tsx'],
+    // task-456 X6: the chain climb stops at the chain; no JSX branch, no discriminant.
+    ['&& with no JSX', `export function P() { const [ready] = useState(true); ${STATE} const ok = ready && view === 'b'; return <div>{String(ok)}<button onClick={() => setView('b')}>Go</button></div>; }`, 'src/app/(maxbld)/p.tsx'],
+    ['boolean && chain', 'export function P() { const [open, setOpen] = useState(false); const [ready] = useState(true); return <div>{open && ready && <p>x</p>}<button onClick={() => setOpen(!open)}>How?</button></div>; }', 'src/app/(maxbld)/p.tsx'],
   ];
   it.each(passing)('passes: %s', (_n, src, file) => { expect(rulesOf(src, file)).toEqual([]); });
 });

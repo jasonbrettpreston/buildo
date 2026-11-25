@@ -36,6 +36,8 @@ describe('Spec 99 §8.3: toggling isFetching does not flip the report route gate
     ['the served page', hit(VIEW), false],
     ['the error text (error, nothing cached)', undefined, true],
     ['the served page while a refetch runs after an error (offline cache)', hit(VIEW), true],
+    // task-456 X5 (mcfixreborn-g3 GROUNDER-B.md:89, D4): the held unsure lot (SRCH.METER-2: `data && !ask`); basis as reportScreen.mount.behaviour.test.tsx:108.
+    ['the held unsure lot (semi question owed)', { ...hit(null), lotForm: { detected: 'semi_half', basis: 'o4_two_parcel_abut', unsure: true } }, false],
   ])('%s: the same tree with isFetching true and false', (_name, data, isError) => {
     mockHook = { data, isError, isFetching: true, refetch: jest.fn() };
     const fetching = render(<Screen />);

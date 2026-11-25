@@ -65,6 +65,8 @@ import { CURRENT_SEED_SHAS } from '@/lib/report-projection/seed-shas';
 import { buildPage } from '@/lib/surfaces/report/core';
 import { reportCtx } from '@/lib/surfaces/report/data';
 import { GET } from '@/app/api/parcels/lookup/route';
+import type { StoredRow, LotStamp } from '@/lib/report-projection/project';
+import { makeStoredScenarioRow, makeLotStamp, makeStoredParcelRow, type StoredParcelRow } from './factories';
 
 type Json = Record<string, unknown>;
 const ROOT = path.resolve(__dirname, '..', '..');
@@ -73,20 +75,18 @@ const read = (p: string): string => fs.readFileSync(path.join(ROOT, p), 'utf8');
 // ---- a scripted lot: the four stored reads W makes, answered by SQL text (no database) ----
 const UID = '00000000-0000-0000-0000-000000000123';
 const REF = 'P-123';
-interface Lot { parcel: Json | null; stamp: Json | null; present: boolean; rows: Json[] }
-const PARCEL_ROW = { id: 7, parcel_id: REF, zoning_zn_string: 'R', address: '1 Test St', lot_size_sqm: '395.6', is_corner_lot: false, is_heritage_designated: null, is_in_ravine_protection_area: null };
-const STAMP = { lot_gate: null, table_version: 'T1', evaluator_version: 'E1' };
+// task-456 D4 (Std §5.1, 00_engineering_standards.md:100): the lot's rows come from the typed builders in factories.ts.
+interface Lot { parcel: StoredParcelRow | null; stamp: LotStamp | null; present: boolean; rows: StoredRow[] }
+const PARCEL_ROW = makeStoredParcelRow({ parcel_id: REF });
+const STAMP = makeLotStamp();
 /** One stored scenario row, current by default (the shas the page core is checked against). */
-const row = (field_id: string, status: string, value: string | null, extra: Json = {}): Json => ({
-  building_type: 'detached_house', field_id, increment: '1', status, value, unit: null, reason: null, flags: [], content_sha: 'c',
-  ...CURRENT_SEED_SHAS, settings_sha: 's', layer2_table_version: 'T1', switches: [], ...extra,
-});
-const ROWS = (extra: Json = {}): Json[] => [
+const row = (field_id: string, status: string, value: string | null, extra: Partial<StoredRow> = {}): StoredRow => makeStoredScenarioRow({ field_id, status, value, ...CURRENT_SEED_SHAS, ...extra });
+const ROWS = (extra: Partial<StoredRow> = {}): StoredRow[] => [
   row('permitted', 'permitted', null, extra), row('gfa_pitched_m2', 'computed', '248.05', extra), row('gfa_flat_m2', 'computed', '120', extra),
   row('storeys_max', 'computed', '3', extra), row('footprint_max_m2', 'computed', '120', extra), row('units_max', 'computed', '1', extra),
 ];
 const CURRENT_LOT: Lot = { parcel: PARCEL_ROW, stamp: STAMP, present: true, rows: ROWS() };
-const GATED_LOT: Lot = { ...CURRENT_LOT, stamp: { ...STAMP, lot_gate: 'under_min_area' }, rows: [] };
+const GATED_LOT: Lot = { ...CURRENT_LOT, stamp: makeLotStamp({ lot_gate: 'under_min_area' }), rows: [] };
 /** task-454 SEARCHFIX.6: the lookup route reads its search settings rows first (readSearchSettings, the shared ANY read, told apart by its bound keys); the seed defaults. */
 const SEARCH_SETTINGS = { rows: Object.entries({ parcel_lookup_search_per_min: '60', parcel_lookup_detail_per_min: '30', parcel_entitlement_read_per_min: '30', parcel_lookup_slow_query_ms: '500', maxbld_page_candidate_cap: '10' }).map(([variable_key, variable_value]) => ({ variable_key, variable_value })) };
 const isSearchSettings = (text: string, params: unknown): boolean =>
@@ -198,7 +198,7 @@ describe('T3 stale: a record computed against an older catalogue, switchboard or
   });
   it('one stale row among current rows is enough: null', async () => {
     const rows = ROWS();
-    rows[2] = { ...(rows[2] as Json), catalogue_sha: OLD_SHA };
+    rows[2] = { ...(rows[2] as StoredRow), catalogue_sha: OLD_SHA };
     use({ ...CURRENT_LOT, rows });
     expect(await readCustomerPageResponse(REF)).toBeNull();
   });
@@ -375,7 +375,7 @@ describe('T8 no legacy value anywhere: FE-38 and FE-39 (Spec 135)', () => {
   });
   it('no key at any depth is a legacy column name (the consumer withheld set), and no legacy column rides on the parcels row into the page', async () => {
     // a parcels row that carries legacy columns (a SELECT * leak) must not reach the page: the read selects declared columns only
-    use({ ...CURRENT_LOT, parcel: { ...PARCEL_ROW, estimated_cost_max: 999999, variance_prediction: 1.7 } });
+    use({ ...CURRENT_LOT, parcel: makeStoredParcelRow({ parcel_id: REF, estimated_cost_max: 999999, variance_prediction: 1.7 }) });
     const r = await readCustomerPageResponse(REF);
     const found = keysDeep(r).filter((k) => CONSUMER_WITHHELD_LEGACY_COLS.has(k) || /variance|estimated_cost|legacy/i.test(k));
     expect(found).toEqual([]);

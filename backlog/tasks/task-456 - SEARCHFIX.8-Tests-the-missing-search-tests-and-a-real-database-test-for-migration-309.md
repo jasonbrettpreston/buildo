@@ -3,11 +3,11 @@ id: TASK-456
 title: >-
   SEARCHFIX.8 Tests: the missing search tests and a real-database test for
   migration 309
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-SFX8'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-25T16:29:00Z'
+updated_date: '2026-11-25T17:26:00Z'
 labels:
   - SEARCHFIX-LATER
 milestone: m-1
@@ -30,6 +30,10 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-25/BL-SFX8/REPORT.md
+  - docs/reports/lanes/2026-11-25/BL-SFX8/GROUNDER.md
+  - docs/reports/lanes/2026-11-25/BL-SFX8/TRIAGE.md
+  - docs/reports/lanes/2026-11-25/BL-SFX8/db-green.out
 type: fix
 ordinal: 150130
 ---
@@ -52,22 +56,22 @@ Files: mobile/__tests__/surfaceRenderer.smoke.test.tsx, mobile/__tests__/reportS
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The reports-left state renders in a test
-- [ ] #2 Property tests hold coverage at or under 100 and the slice number in bounds
-- [ ] #3 The parcel routes answer 401 with no session and ignore a uid parameter
-- [ ] #4 Both CHECK constraints of migration 309 are refused in a real database
+- [x] #1 The reports-left state renders in a test
+- [x] #2 Property tests hold coverage at or under 100 and the slice number in bounds
+- [x] #3 The parcel routes answer 401 with no session and ignore a uid parameter
+- [x] #4 Both CHECK constraints of migration 309 are refused in a real database
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
+- [x] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
 - [ ] #2 The tests were written first and proven red, then green — "Every lock is proven in BOTH directions" (docs/specs/00-architecture/08_agents.md:462)
-- [ ] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
-- [ ] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
+- [x] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
 - [ ] #5 Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — "A ruling enters a row as a verbatim dated note." (docs/specs/00-architecture/137_mcqueue.md:109)
 - [ ] #6 The task file and its queue row are updated in the same commit as the work — "The status line changes in the same commit as the work." (docs/specs/00-architecture/137_mcqueue.md:84)
-- [ ] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
-- [ ] #8 Nothing was added that the card or ruling did not name — "no change adds a tool, field or rule its card or ruling did not name" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)
+- [x] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
+- [x] #8 Nothing was added that the card or ruling did not name — "no change adds a tool, field or rule its card or ruling did not name" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
@@ -219,4 +223,27 @@ rg#4 MED folded 454 lands first, the
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-25 taken on the board at lane launch (lane BL-SFX8, worktree /Users/brettpreston_macmini/Buildo-wt-sfx8, branch wf2/sfx8), RR-0240
+
+2026-11-25 red attempt (commit i): web tests of plan steps 3-9 staged with temporary unstaged source edits (geometry.ts cap and ft rounding, sliceConfig.ts clamp, entitlement route session bypass and uid parameter); D2 and X6 red with no edit; saved as red-web.out in the lane folder.
+
+2026-11-25 red proven (red-web.out, lane folder): 10 named cases failed, nothing else (1101 passed); sources restored, git diff --exit-code 0 on geometry.ts, sliceConfig.ts, entitlement/route.ts. The entitlement session-bypass red was a typed fallback context instead of deleting the 401 line, which would not typecheck. Green: src-sql-ledger.mjs --confirm refuses no recorded statements; the NAV-1 lock climbs && / || chains; one sign-up disclosure entry (RR-0478).
+
+2026-11-25 phone tests (commit ii, plan steps 1-2): smoke renders reports_left with its line text; gateStability adds the held unsure lot row. Phone typecheck passes. Red and green of these two are UNVERIFIED until the push station (the phone tests are outside the pre-commit related run and the lane runs no test runner, rule 18; precedent BL-SFX2 REPORT.md:21, BL-SFX3 REPORT.md:16). Red edits for the station: remove ...reportsLeft(s), at SearchBinding.tsx:238; change !ask to !(ask && isFetching) at [parcelId].tsx:34.
+
+2026-11-25 migration 309 database test written (commit iii, plan step 10): src/tests/db/migration-309-parcel-maxbld-scenarios.db.test.ts; self-skips with no DATABASE_URL and under BUILDO_TEST_DB_EXTERNAL=1; one BEGIN/ROLLBACK, savepoints per case, both directions by DROP CONSTRAINT inside SAVEPOINT d. NOT RUN by the lane (no database connection); the orchestrator runs it in a throwaway container (RR-0475 item 4, MORNING-DECISIONS.md:2481). AC #4 stays open until db-green.out. Migration 309 unchanged.
+
+2026-11-25 work commits 2606cb7ab (web tests, ledger, factories), 5580aaa76 (phone tests), f7498e8c5 (database test); the launch review context context-r2.md committed with the work as the brief asks. Station owed (RR-0467) before the output review.
+
+2026-11-25 STATION PASS on 5e4d68bc1 (~/Buildo-scratch/push-station/pass/5e4d68bc1af5ea71a644e463ea8acffad67199ce.pass; output ~/Buildo-scratch/lanes-20261125/station-5e4d68bc1.out): 28,397 passed, 0 failed; phone tests and both typechecks rc=0, so the two new phone cases are green; their red runs remain unseen. The migration 309 db test is still to be run by the orchestrator in a throwaway container; AC #4 stays open.
+
+2026-11-25 output review round 1: context-r3.md; one code-review lens part (out-code-review-p1.txt) on the whole diff 8abc92777..5e4d68bc1; 7 findings (2 MED, 4 LOW, 1 NIT; no CRITICAL or HIGH), FINDINGS.md in docs/reports/lanes/2026-11-25/BL-SFX8/. Grounder owed; nothing triaged or fixed by the lane.
+
+2026-11-25 close (records only): the output grounder Cairn-Ground-O456 ruled round 1 (7 ids: 1 CONFIRMED LOW pile, 6 REJECTED; no CRITICAL, HIGH or MED); GROUNDER.md and TRIAGE.md copied byte for byte. The orchestrator ran the migration 309 db test in a throwaway container (RR-0475 item 4): 10 of 10 passed (db-green.out line 1748); the same run's 8 failures in 5 other files are outside this diff. UNVERIFIED: the red runs of the two phone cases (plan steps 1-2) were never seen. The McFrontend-Task: MF-53 trailer on 2606cb7ab was ruled correct by the grounder.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+SEARCHFIX.8 landed as tests only plus one tool fix: the reports-left line renders in the phone smoke; the held unsure lot has a gate-stability row; the NAV-1 lock reads && / || chains (one sign-up disclosure entry, RR-0478); property tests for the massing numbers and sliceNumber; parcel-routes.security.test.ts (401 with no session, a uid parameter ignored); typed builders in factories.ts; src-sql-ledger.mjs --confirm fails on a missing or empty trace folder; the migration 309 db test refuses both CHECK constraints in a real database (10 of 10 in a throwaway container). Work commits 2606cb7ab, 5580aaa76, f7498e8c5, 5e4d68bc1; station PASS on 5e4d68bc1 (28,397 passed). Trailer choice: McFrontend-Task: MF-53 on 2606cb7ab (the two surface test files; ruled correct by the grounder). Migration 309 unchanged. UNVERIFIED: the phone cases' red runs.
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 1 pile; grounder docs/reports/lanes/2026-11-25/BL-SFX8/GROUNDER.md; triage docs/reports/lanes/2026-11-25/BL-SFX8/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->
