@@ -3,11 +3,11 @@ id: TASK-454
 title: >-
   SEARCHFIX.6 Search settings: the typed-in limits become registered settings;
   emitter, log and test fixes (needs the operator's typed GO to apply on dev)
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-SFX6B'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-25T14:48:00Z'
+updated_date: '2026-11-25T15:00:00Z'
 labels:
   - SEARCHFIX-LATER
 milestone: m-1
@@ -31,6 +31,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-25/BL-SFX6B/GROUNDER.md
+  - docs/reports/lanes/2026-11-25/BL-SFX6B/TRIAGE.md
+  - docs/reports/lanes/2026-11-25/BL-SFX6B/REPORT.md
 type: fix
 ordinal: 150110
 ---
@@ -53,10 +56,10 @@ Files: scripts/seeds/logic_variables.json, src/app/api/parcels/lookup/route.ts, 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The six limits are seed rows with bounds, the code reads them, and a test fails when the code types the number
-- [ ] #2 A setting of 0 that the schema allows is emitted
-- [ ] #3 The entitlement route logs success with uid and duration
-- [ ] #4 The 500 bodies contain no database text
+- [x] #1 The six limits are seed rows with bounds, the code reads them, and a test fails when the code types the number
+- [x] #2 A setting of 0 that the schema allows is emitted
+- [x] #3 The entitlement route logs success with uid and duration
+- [x] #4 The 500 bodies contain no database text
 <!-- AC:END -->
 
 ## Definition of Done
@@ -284,4 +287,16 @@ rg#3 MED folded the phone takes a ch
 2026-11-25 push station: FAIL on e8043789e (~/Buildo-scratch/push-station/fail/e8043789edb81e3e3e85cadef2dd00dcc4afe6a6.fail; one failing assertion, step-conformance §1.2a P4, fixed in a6315e3d8); PASS on a6315e3d8 (~/Buildo-scratch/push-station/pass/a6315e3d82cc688ec09df5f9b20af161919364be.pass; output ~/Buildo-scratch/lanes-20261125/station-a6315e3d8.out; 28,379 passed, 0 failed; phone tests, phone typecheck and web typecheck rc=0). The phone jest red/green previously UNVERIFIED is now green at the station.
 
 2026-11-25 output review round 1 (the one code-review lens, DeepSeek, on the whole change 1faff1554..a6315e3d8, split by lens-input into 4 parts; context docs/reports/reviews/task-454/context-r3.md): 17 lines listed in docs/reports/lanes/2026-11-25/BL-SFX6B/FINDINGS.md (as the lens rated them: 1 MED, 11 LOW, 4 NIT, and one line, out-code-review-p1#1, that rates nothing and says the chunk is documentation only). The lane rules none of them: grounder owed.
+
+2026-11-25 close of stage (i), BUILT: the separate output grounder Cairn-Ground-O454 ruled round 1 (17 ids: 8 CONFIRMED, 4 LOW and 4 NIT, all pile; 9 REJECTED; no CRITICAL, HIGH or MED). Still open, not this lane: stage (ii) the test-stack rehearsal, stage (iii) the dev apply on the operator's typed GO, stage (iv) the push; the push is held until the six rows are on dev (RR-0475 item 2).
+
+Implementation Note (3) of the work commit (the admin contract names no logic_variables table in inputs.tables) is superseded by the plan grounder's ruling 2 (pg-ruling2/RULING-FILES-LINE.md): the diff does name it (contract_admin_parcels_lookup inputs.tables, 6 tables, census mirror byte-equal).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Stage (i) landed on wf2/sfx6b: work commit 42b4b7932 (73 files; pre-commit related run 474 passed), the task-372 dated note e8043789e, the station fix a6315e3d8 (the consumer clause of four seed descriptions names the route in words). What landed: six seed rows with bounds (parcel_lookup_search_per_min 60, parcel_lookup_detail_per_min 30, parcel_entitlement_read_per_min 30, parcel_lookup_slow_query_ms 500, maxbld_page_candidate_cap 10, maxbld_page_recent_max 3; values unchanged); one server reader readSearchSettings (src/lib/admin/parcel-lookup.ts) read once per request by the lookup, entitlement and admin routes, failing closed with the generic 500; resolveAddress takes the cap as bound parameters; the phone slice keys candidate_cap and recent_max (SearchBinding.tsx, recentSearchesStore.ts through sliceNumber); the generator emits a schema-allowed 0 and --write removes stray files; the entitlement route logs success with uid and duration; the 500 bodies are tested free of database text. Push station PASS on a6315e3d8: 28,379 passed, 0 failed (phone tests and both typechecks rc 0). Evidence: docs/reports/lanes/2026-11-25/BL-SFX6B/ (red.out, red-x3-plant.out, restamp-fingerprint-only.txt, green.out). Open: stages (ii) rehearsal, (iii) dev apply on the operator typed GO, (iv) push, held until the rows are on dev (RR-0475 item 2).
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 8 pile; grounder docs/reports/lanes/2026-11-25/BL-SFX6B/GROUNDER.md; triage docs/reports/lanes/2026-11-25/BL-SFX6B/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->

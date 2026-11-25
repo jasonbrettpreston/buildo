@@ -1,6 +1,6 @@
 # BL-SFX6B · task-454 SEARCHFIX.6 · stage 1 report
 
-STATUS: RUNNING, grounder owed. Output review round 1 is done and the lane rules none of its own findings. No database connection of any kind. Nothing pushed.
+STATUS: BUILT for stage (i), closed after output review round 1. A separate grounder, Cairn-Ground-O454, ruled the 17 ids: 8 CONFIRMED (4 LOW and 4 NIT, all piled), 9 REJECTED, and no CRITICAL, HIGH or MED standing (GROUNDER.md, TRIAGE.md). No code changed at the close. Stages (ii) test-stack rehearsal, (iii) dev apply on the operator typed GO and (iv) push are still open; the push is held until the rows are on dev (RR-0475 item 2). No database connection of any kind. Nothing pushed.
 
 ## What landed (branch wf2/sfx6b, worktree /Users/brettpreston_macmini/Buildo-wt-sfx6b; launch commit 1faff1554)
 - 42b4b7932 fix(100_mobile_parcel_cost_tool): the work, 73 files. The pre-commit related run passed: "Test Files 13 passed | 2 skipped (15) Tests 474 passed | 14 skipped (488)". It also printed GATE OK and POLICY CHECKS OK. Trailers: Task: task-454, McFrontend-Task: MF-35.
@@ -23,7 +23,7 @@ STATUS: RUNNING, grounder owed. Output review round 1 is done and the lane rules
 - The lens ran once on the whole change, 1faff1554..a6315e3d8, which lens-input split at file boundaries into 4 parts: in-out-code-review-p1..p4.txt and out-code-review-p1..p4.txt.
 - Context: docs/reports/reviews/task-454/context-r3.md (written by backlog-brief.mjs before the round).
 - FINDINGS.md lists 17 lines. As the lens rated them: 1 MED (p2#1), 11 LOW, 4 NIT, and p1#1, which rates nothing ("none applicable, this chunk is documentation only").
-- Ruled: none. A separate grounder is owed (GROUNDER.md in this folder).
+- Ruled by the separate grounder Cairn-Ground-O454 (GROUNDER.md, TRIAGE.md): 8 CONFIRMED (4 LOW, 4 NIT, all piled), 9 REJECTED. Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 8 pile.
 
 ## Evidence (this folder)
 - red.out: the tests-only red attempt.
@@ -39,4 +39,4 @@ STATUS: RUNNING, grounder owed. Output review round 1 is done and the lane rules
 - The db tests under src/tests/db: they are not run in a lane, and the station suite excludes them.
 - Stages (ii) to (iv), which are not this lane's: the test-stack rehearsal, the dev apply on the operator's typed GO, and the push. The push is held until the rows are on dev (RR-0475 item 2).
 
-STATUS: RUNNING, grounder owed
+STATUS: ready
