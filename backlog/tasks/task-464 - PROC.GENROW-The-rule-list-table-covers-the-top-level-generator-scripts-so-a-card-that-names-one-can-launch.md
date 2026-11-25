@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GENROW'
 created_date: '2026-11-25T12:31:00Z'
-updated_date: '2026-11-25T12:53:00Z'
+updated_date: '2026-11-25T12:56:00Z'
 labels:
   - ProcessImprovement
 milestone: m-1
@@ -193,4 +193,8 @@ rg#1 MED folded The three by-law gen
 2026-11-25 (orchestrator): opened from RR-0475 item 1. Operator, verbatim (MORNING-DECISIONS.md:2481): "1. y 2.y 3. y but which increment 4. y 5. please explain 6. y"; item 1 answers the question at :2473 (may one small card add top-level generator scripts to the rule-list table so 454 can launch). Plan PLAN-464-v1 by Cairn-Plan-464 written on the card; type set to fix as task-463.
 
 2026-11-25 taken on the board at lane launch (lane BL-GENROW, worktree /Users/brettpreston_macmini/Buildo-wt-genrow, branch wf2/genrow), RR-0240
+
+2026-11-25 build started (lane BL-GENROW) on PLAN-464-v1 as ruled (C1 a scripts/generate-*.mjs, C2 a step-pipeline, C3 a check-tasks line in the report). Red test first: the task-464 case in src/tests/backlog/rule-lists.logic.test.ts written before the table edit.
+
+2026-11-25 red: the commit attempt with only the test and task files staged was refused by the pre-commit related run (task-464 case: exit 3, refused: Files path(s) matched by no row ... scripts/generate-logic-variable-groups.mjs; 1 failed, 107 passed). Edit (b) as planned: step-pipeline gains the glob scripts/generate-*.mjs and one why sentence; no row, list, kind or field added. validate: ok 58 lists, 23 rows; page --check: current (the page does not change). check-tasks: before resolve 102, not yet 205 (task-454: a Files path matches no row: scripts/generate-logic-variable-groups.mjs); after resolve 103, not yet 204, task-454 resolves. Work commit only: status stays RUNNING (rule-lists.json is a protected path); the close is a later records-only commit.
 <!-- SECTION:NOTES:END -->
