@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-SFX7'
 created_date: '2026-11-24T17:29:00Z'
-updated_date: '2026-11-24T19:58:00Z'
+updated_date: '2026-11-25T01:21:00Z'
 labels:
   - SEARCHFIX-LATER
 milestone: m-1
@@ -252,6 +252,8 @@ rg#1 MED folded useParcelSearch serv
 2026-11-24 built per PLAN-457-v1 steps 1-4 (no deviation in code). Tests written first: T1, T2 (semiQuestionPage.behaviour), T3, T4 (useParcelLookup.test), T5-T7 (useAnswerParcelLookup.hook.test). Red (lane file red.out, npx jest on the three files from mobile/, RR-0460 local phone run; the pre-commit related run does not reach phone tests): 5 failed, 40 passed of 45; T5 red on error not null, T6 red on 1 fetch not 2, T3 red on the missing export, T1 and T2 red on no notice after the limit. Deviation in test only: T2 also asserts the notice after the limit before data lands, so it is red before the change, not green before and after as the plan said. Green (green.out): 3 suites, 45 of 45. Mobile typecheck (tsc --noEmit in mobile/) exit 0. Full local phone run owed before the push (RR-0460).
 
 2026-11-24 work commit db2c04efe (hooks: typecheck, lint, GATE OK, POLICY CHECKS OK; related run skipped, no src/ or scripts/ staged). Output review round 1: context-r3.md, 11 DeepSeek lens outputs in docs/reports/lanes/2026-11-24/BL-SFX7 (code-review, ux, error-paths; compliance mobile-90, mobile-98, mobile-99, surface-136, inc-S, ms-S; engineering eng-front, eng-shared); 33 findings (0 CRITICAL, 0 HIGH, 4 MED, 25 LOW, 4 NIT) in FINDINGS.md. Grounder owed: the lane does not rule its own findings.
+
+2026-11-24 (orchestrator): pushed to origin wf1/mb-rulings at 9fedd48cb by the operator (push.log 2026-11-25T01:18:38Z rc=0). Proof per RR-0460: full local phone run on that tip before the push, 59 of 59 suites, 908 of 908 tests (~/Buildo-scratch/lanes-20261124/gate-phone-9fedd48cb.out); push station on that tip, every step rc=0 including mobile-typecheck and mobile-tests, STATION PASS 9fedd48cb (~/Buildo-scratch/push-station/pass/9fedd48cb323eb72cb3c46d816382169b9867e44.pass; ~/Buildo-scratch/lanes-20261124/station-9fedd48cb.out), worktree clean after; Mobile CI run 45524945847 on 9fedd48cb: conclusion success, job Jest + TypeCheck success, Maestro and EAS jobs skipped as configured.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

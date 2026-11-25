@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-SFX4'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-25T00:27:00Z'
+updated_date: '2026-11-25T01:21:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -424,6 +424,8 @@ Round 2 (lane BL-SFX4, plan sha256:7c9748df170f, section 14): the six station fa
 Dated note 2026-11-24: the push station PASSED on the round-2 fix commit 7d4410db0 (typecheck, mobile-typecheck, mobile-tests, full web suite; pass file ~/Buildo-scratch/push-station/pass/7d4410db0cb931e9918306acc73718c4940ef444.pass), run before the output review by RR-0467 (MORNING-DECISIONS.md:2421-2425). No code or test changes after it.
 
 Output review round 2 (task-460 shape): one code-review lens over the whole task range 1ce2f774c..7d4410db0, 4 chunks re-made under the round-1 names (out-code-review-p1..p4.txt), 16 findings (HIGH 3, MED 2, LOW 8, NIT 3), FINDINGS.md. Grounder owed; the task stays RUNNING.
+
+2026-11-24 (orchestrator): pushed to origin wf1/mb-rulings at 9fedd48cb by the operator (push.log 2026-11-25T01:18:38Z rc=0). Proof per RR-0460: full local phone run on that tip before the push, 59 of 59 suites, 908 of 908 tests (~/Buildo-scratch/lanes-20261124/gate-phone-9fedd48cb.out); push station on that tip, every step rc=0 including mobile-typecheck and mobile-tests, STATION PASS 9fedd48cb (~/Buildo-scratch/push-station/pass/9fedd48cb323eb72cb3c46d816382169b9867e44.pass; ~/Buildo-scratch/lanes-20261124/station-9fedd48cb.out), worktree clean after; Mobile CI run 45524945847 on 9fedd48cb: conclusion success, job Jest + TypeCheck success, Maestro and EAS jobs skipped as configured.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

@@ -5,7 +5,7 @@ status: BUILT
 assignee:
   - '@lane-BL-PROC462'
 created_date: '2026-11-24T18:43:00Z'
-updated_date: '2026-11-24T19:34:00Z'
+updated_date: '2026-11-25T01:21:00Z'
 labels:
   - ProcessImprovement
 milestone: m-1
@@ -47,7 +47,7 @@ Files: .husky/pre-push-checks.sh, src/tests/hooks-composition.infra.test.ts, CLA
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A push station run shows the two new steps and then PASS, and the worktree is clean afterwards (no coverage folder)
+- [x] #1 A push station run shows the two new steps and then PASS, and the worktree is clean afterwards (no coverage folder)
 - [x] #2 The gate-list test names the two new lines and step names and passes; it fails on the old six-step list
 - [x] #3 A phone test made to fail stops the run before the web suite starts
 - [x] #4 CLAUDE.md and the phone testing spec section 5 each carry one dated line naming the new steps
@@ -214,6 +214,8 @@ rg#2 MED folded (the station refuses
 2026-11-24 commit 1 (docs) 06811e273 landed through the real hooks. Commit 2 (code): the two step lines in .husky/pre-push-checks.sh and the eight-step pin in hooks-composition.infra.test.ts; green = this commit's pre-commit related run.
 
 2026-11-24 output review round 1 run (context-r3.md, diff base 4c79afacf head 5cccba960): 12 DeepSeek outputs, 43 findings (1 HIGH, rest MED/LOW/NIT) in docs/reports/lanes/2026-11-24/BL-PROC462/FINDINGS.md. Grounder owed: the lane does not rule its own findings. AC #1 station run owed by the orchestrator (plan section 5 R3).
+
+2026-11-24 (orchestrator): pushed to origin wf1/mb-rulings at 9fedd48cb by the operator (push.log 2026-11-25T01:18:38Z rc=0). Proof per RR-0460: full local phone run on that tip before the push, 59 of 59 suites, 908 of 908 tests (~/Buildo-scratch/lanes-20261124/gate-phone-9fedd48cb.out); push station on that tip, every step rc=0 including mobile-typecheck and mobile-tests, STATION PASS 9fedd48cb (~/Buildo-scratch/push-station/pass/9fedd48cb323eb72cb3c46d816382169b9867e44.pass; ~/Buildo-scratch/lanes-20261124/station-9fedd48cb.out), worktree clean after; Mobile CI run 45524945847 on 9fedd48cb: conclusion success, job Jest + TypeCheck success, Maestro and EAS jobs skipped as configured. Acceptance line 1: the station run shows == mobile-typecheck rc=0 and == mobile-tests rc=0, then == suite rc=0 and STATION PASS, with an empty porcelain afterwards.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
