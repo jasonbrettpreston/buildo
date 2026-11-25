@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane-BL-LOAD2'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-25T19:20:00Z'
+updated_date: '2026-11-25T19:30:00Z'
 due_date: '2026-11-26'
 labels:
   - McFixV2
@@ -167,7 +167,7 @@ Head read: 2fd2f6042 (wf2/board). Since v1 (4c22af6e8) only docs and backlog fil
   - tracked lot (a stub today, useTrackedLots.ts:52): same as the two rows above;
   - at-limit new lot: 0, but the 403 wall moves from the search page to the report screen, and the at-limit wall shows after the compute (default, section 8 Q-g; today the q hit computes before it refuses too, so the wait is not new). This changes task-452 AC#2 (the search page no longer gets the limit refusal from a q hit): the Spec 100 note and a note on task-452 say so. While it waits the person sees the lines, then the holding spinner, then the wall.
   - The seam with 343 is route.ts:114-123 and consumer-lookup.ts:66 (343's) against lookup-flow.ts:79-90 (267's). 465 lands first (its card); then whichever of 267, 343 and 465 lands second re-reads route.ts:106-123 on the other's tip and reruns G1 and G3 (no order is assumed). 343's rule that no report is sent without pricing (RR-0485 item 4) makes `page` null for an unpriced lot, which this screen already shows as the no-report screen; 267 changes no meter rule.
-- O4 is RULED by RR-0492 item 3 (RR-0492 reverses RR-0490 item 3 b) and RR-0494. With a report the animation still runs to completion (RR-0176). The rule: a failure shows at once, after the ruled retries or at 60 s (the default; the operator's A/B Q-a in section 8 is open): screen 4 comes as soon as the report read has given up, without waiting for the lines. Also the no-report screen shows at once (RR-0494, under a second): screen 5 comes as soon as the report read answers with no page. On both the check lines stay as far as they got (RR-0492 item 2): the reveal stops at the count shown and adds nothing; with no fast read answer there are no lines.
+- O4 is RULED by RR-0492 item 3 (RR-0492 reverses RR-0490 item 3 b) and RR-0494. With a report the animation still runs to completion (RR-0176). The rule: a failure shows at once, after the ruled retries or at 60 s (the default, ruled A by RR-0497: after the 3 ruled retries or at 60 s): screen 4 comes as soon as the report read has given up, without waiting for the lines. Also the no-report screen shows at once (RR-0494, under a second): screen 5 comes as soon as the report read answers with no page. On both the check lines stay as far as they got (RR-0492 item 2): the reveal stops at the count shown and adds nothing; with no fast read answer there are no lines.
 - Give-up is RULED: 60 s from the pick (RR-0491, LD-2 A; on his word in RR-0493). 60 s is a failure bound, not an animation length: measured computes (BL-LOAD1 PLAN.md:31) were min 0.12 s, median 10.9 s, p90 27.2 s, max 33.6 s, so a lot reaches 60 s only on a failing, retrying or queued compute.
   - How it meets RR-0176: RR-0176 removed the 35 s cap on a report that is still arriving. Between 23 and 60 s that still holds: screen 3, and the button appears the moment the page lands.
   - RR-0491 with RR-0493 adds a failure bound at 60 s; that bound is new, not the 35 s cap coming back.
@@ -186,7 +186,7 @@ Head read: 2fd2f6042 (wf2/board). Since v1 (4c22af6e8) only docs and backlog fil
 - (b) When the lines show (RR-0485 item 5 and the mock's table). They are skipped when:
   - the persisted cache holds a page (opened on this phone); or
   - the parcelId answer brings a page with no checked view (a stored lot, or already counted: showsWhatWeChecked); or
-  - the checked view is null for an unknown lot or unusable pace (the producer's promise).
+  - the checked view is null for an unknown lot or unusable pace (the producer's promise). This third arm is not one of RR-0485 item 5's two ruled cases: the null arm is a fallback, not a ruled skip. A page in with no checked view (a failed or null fast read) opens at once, since there is nothing to animate; lines are never skipped for a lot that has a checked view. The Spec 100 note says so.
   - Tracked lots: tracked lots are not built (useTrackedLots.ts:52 is a stub). A tracked lot is stored (MD:699), so the stored rule covers it once task-269 and task-265 land. No field now.
   - Not built now, and said so in the Spec 100 note: a lot already counted this month but off this phone's cache and with no stored page. Its lines play while it computes. The server-side skip needs an entitlements read on the fast read (usageFor export); that export is cut and is its own later card.
 - (d) The wait today: 11-23 s per compute, and M1 computed the same lot twice (21.7 s plus 21.0 s). After this plan: one compute behind the lines; screen 3 from 23 to 60 s; screen 4 on a failure or at 60 s; screen 5 at once. What a tester sees today (the web live switch is off, maxbld-web.ts:19, so the compute answers null before any read): every lot ends on screen 5 within about 0.2 s, showing only the first verb; with the switch on locally a stored lot opens with no lines, a computed lot plays the lines and ends on screen 2, and a lot like 683 Danforth ends on screen 5 at once.
@@ -197,7 +197,7 @@ Head read: 2fd2f6042 (wf2/board). Since v1 (4c22af6e8) only docs and backlog fil
 1. src/lib/parcels/lookup-flow.ts:79-90: `findOnly = parcelId === undefined`. The stored read and the compute are skipped when held or findOnly. The fast read is a second exported function in lookup-flow.ts (it takes the db handle for readWhatWeChecked; the route stays thin, Standard 10.3); the route passes it nothing about the meter. Header note :5-9 (it says the module imports no meter code and writes nothing; that stays true).
 2. src/app/api/parcels/lookup/route.ts:
    - comments :13-19, :26-27;
-   - O1-A2 (default; the operator's word is Q-e): parse the fast flag like semi (:78-84), in the route's parse list and in ConsumerParcelLookupQuerySchema (types.ts:40-54) with a refine that it belongs to parcelId and not with semi. The flag is fast=1. The fast read adds fast to the log record (route.ts:128-145);
+   - O1-A2 (default, ruled A by RR-0497; it was the operator's word Q-e): parse the fast flag like semi (:78-84), in the route's parse list and in ConsumerParcelLookupQuerySchema (types.ts:40-54) with a refine that it belongs to parcelId and not with semi. The flag is fast=1. The fast read adds fast to the log record (route.ts:128-145);
    - on the fast read, return the stored page if present; else, unless held, the checked view: buildTree({lifecycle:'loading', what_we_checked}) then viewOf on target mobile with no href. The fast read does not skip the lines for an already-counted lot (the usageFor export is cut, its own later card). The meter code is unchanged.
    - the wire field is whatWeChecked (X-4 a, operator "x-4 a" 2026-11-11, .cursor/MCFRONTEND-QUEUE.md:367; the plan's `checked`): it carries view.checked only (ViewChecked, core.ts:399-403: the checked tree plus paced and href, href null here), not the whole view, under a strict CheckedViewSchema mirroring the core's checked tree in types.ts (a field of the existing `data` envelope), nullable with default null, with a refine that it is present only with a parcel and a null page. Fast read answers: a stored page when there is one (it goes through the same gate, rate bucket and meter code, so a served page counts as any page does), else whatWeChecked for a lot that is not held, else null. The fast read passes the same gate, rate bucket and meter code as the report read, and the meter code is unchanged: a facts-only answer has no page, so it is not_produced and counts nothing (RR-0278). The usageFor export is cut: src/lib/entitlements/index.ts is not touched.
 3. mobile/src/lib/schemas.ts:432-441: whatWeChecked nullable and optional (the core's checked view shape, href nullable). This is the phone's Zod mirror of the strict server schema (Spec 90 section 13); an older server that sends no whatWeChecked parses to undefined, and the screen then shows no lines and today's spinner and Loading the report text.
@@ -222,7 +222,7 @@ Head read: 2fd2f6042 (wf2/board). Since v1 (4c22af6e8) only docs and backlog fil
 9. The 60 s give-up: O7 is RULED as (a): the existing registered 60 000 (maxbld_page_continue_wait_ms), read through REPORT_GIVE_UP_MS exported from useParcelLookup.ts (which already imports SEMI_CONTINUE_WAIT_MS), not a second reader in the host. No seed row, no database step, no description edit (a seed edit is a database step). The semi wait and the report give-up share one value, said in the census why of the semi row (mobile-product.json, the semi surface row that lists semiQuestion.ts as the sole reader) and in a Spec 128 dated note; an own registered row is a later card by RR-0477.
 10. Content:
     - mobile_parcel_detail.content.json gains back_to_search.text and checks.label (RR-0493);
-    - report-presentation.json is unchanged.
+    - report-presentation.json is unchanged: the placement of the three states checking, ready and holding is the census row and the state function, not new report-presentation.json rows. They carry no new words (their words are the existing states.lifecycle and states.checked rows), LifecycleState stays loading, miss and error, and the two new words (back_to_search.text, checks.label) sit in the screen's own content file beside retry.text and back.text (ReportBinding.tsx:394). The 2026-11-20 resolution keeps lifecycle rows in report-presentation.json for lifecycle states only.
     - scripts/surfaces/emit-mobile-surfaces.mjs is not edited (O7 (a)); the emit run only rewrites the generated slice.
 11. Census first, then emit, then registry. OUTSIDE FILES LINE for each:
     1. scripts/surfaces/_schema/census/mobile-product.json, row mobile_parcel_detail (identity.id mobile_parcel_detail; :6151 at this head): states :299-325 gain checking, ready, holding; dated notes; the evidence cites move (gate route.ts, states [parcelId].tsx); and the semi surface row (about :7398-7405) gains the report give-up as a second reader of the value, in its why.
@@ -329,7 +329,7 @@ Commit 0, alone: the pre-registration (rules[] = the RR list of section 1 and th
 - task-317: its LD-3 B (animation finishes, then the failure) is superseded by RR-0492; its Files line is folded into 267's one Files line.
 - Spec dated notes and the queue row as in step 12.
 
-## 8. Choices (round 1 fold: O5, O7, O8 are settled; the operator's open ones are Q-a, Q-e and Q-g below)
+## 8. Choices (round 1 fold: O5, O7, O8 are settled; Q-a, Q-e and Q-g are ruled by RR-0497, all A)
 - O1, the source of the lines (L2-1, MD:1276):
   - A1: the lines arrive with the page, so the lines start after the compute. This breaks "always to the end" timing and the 23 s overlap.
   - A2: a fast parcelId read with one optional flag, the semi=answered precedent. It returns the stored page or the checked view and runs no compute. The flag and the response field `checked` (X-4 a, ruled) need his word under RR-0392.
@@ -339,7 +339,7 @@ Commit 0, alone: the pre-registration (rules[] = the RR list of section 1 and th
   - (a) Read the existing registered 60 000 (maxbld_page_continue_wait_ms, via the semi slice). No database step; one value serves both waits; dated note.
   - (b) A new seed row and config.give_up_ms. That is a database step, so its own card by RR-0477.
   - (c) A typed number. Breaks Spec 128 Rule 3.
-  - RULED (a): read REPORT_GIVE_UP_MS; (b), an own row, is a later card (RR-0477). Q-a, Q-e and Q-g are the operator's: (a) right away for a real failure is after the 3 ruled retries or 60 s (default) versus on the first failed try; (e) the fast flag and field (default A2); (g) the at-limit wall after the compute (default) versus a read-only limit check before it.
+  - RULED (a): read REPORT_GIVE_UP_MS; (b), an own row, is a later card (RR-0477). Q-a, Q-e and Q-g are RULED by RR-0497 (MD:2588, operator verbatim: "As per the 3 questions 2. A - whatever the existing animation does - I assume this is the checklines 3. a 1 a"): the defaults stand: (a) A, after the 3 ruled retries or 60 s; (e) A, the fast flag and field, so the check lines start at the pick; (g) A, the at-limit wall after the compute.
 - O8, the "Checks for this lot" label:
   - visible as drawn: a new key checks.label, plus a Spec 126 note that RR-0491 replaces :869 for this one label;
   - or a screen-reader label only (the v8 aria-label, build.mjs:801).
@@ -368,7 +368,7 @@ What this plan assumes of 465 (final for round 1; lane BL-MCFIX465 is building n
 - The platform request timeout.
 - Nothing was run; this was read only. The grounder re-read the cited lines at a4a092bad and ran no test runner. The platform request timeout stays UNVERIFIED (launch precondition, section 6).
 
-Plan review round 1: 118 folded, 0 task, 0 ruling, 0 wontfix, 7 pile; grounder docs/reports/reviews/task-267/GROUNDER-PLAN.md; triage docs/reports/reviews/task-267/TRIAGE-PLAN.md
+Plan review round 1: 126 folded, 0 task, 0 ruling, 0 wontfix, 7 pile; grounder docs/reports/reviews/task-267/GROUNDER-PLAN.md; triage docs/reports/reviews/task-267/TRIAGE-PLAN.md
 plan-compliance-inc-S#1 HIGH folded whichever of 267, 34
 plan-compliance-inc-S#2 HIGH folded claim the MF-62 foll
 plan-compliance-inc-S#3 HIGH folded Commit 0, alone: the
@@ -476,6 +476,14 @@ rg#6 HIGH folded the INSERT shape, th
 rg#7 MED folded the at-limit wall sh
 rg#8 MED folded RR-0493 replaces Spe
 rg#9 MED folded doc-2 G.3 (the repor
+plan-compliance-step-132#1 HIGH folded one complete Files l
+plan-compliance-step-132#2 HIGH folded Commit 0, alone: the
+plan-compliance-step-132#3 HIGH folded The plan grounder re
+plan-compliance-step-132#4 MED folded placement of the thr
+plan-compliance-step-132#5 MED folded the mobile-tests ste
+plan-compliance-step-132#6 MED folded the HELD note of 202
+plan-compliance-step-132#7 MED folded the null arm is a fa
+plan-compliance-step-132#8 MED folded RR-0493 replaces Spe
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
