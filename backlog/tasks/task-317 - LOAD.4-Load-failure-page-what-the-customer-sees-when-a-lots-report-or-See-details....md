@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane-BL-LOAD4'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-25T18:36:00Z'
+updated_date: '2026-11-25T18:45:00Z'
 labels:
   - McFixV2
 milestone: m-1
@@ -114,4 +114,6 @@ McFixV2 addition 2026-11-25 (operator phone walk; rulings RR-0483, RR-0485, RR-0
 2026-11-25 (RR-0490, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2559, operator verbatim on that line): LD-1 A keep the built sentence; LD-3 B the animation finishes, then the failure shows, same screen as the give-up failure; LD-5 B a no-report screen (the frame with the address, no Try again). LD-2 give-up time: 60 seconds named, pending the mock he asked for (waiting state, then an error that fits the animation).
 
 2026-11-25 (RR-0491, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2563, operator verbatim on that line): the loading endings mock is APPROVED with one change made (the still-building spinner and words centred). Approved mock: ~/Buildo-scratch/lanes-20261125/mcfixv2-267/MOCK-LOADING-ENDINGS-approved.html sha256 f8e9c7da68f9 (https://claude.ai/artifact/575VKBneBnsMszXVvRkTVm version 2). As drawn: lines play to the end; View report button only when the lines are done and the report is in; still building keeps the lines with a centred spinner and Loading the report…; failure (build failed or 60 seconds from the pick) keeps the lines and shows the built sentence with Try again; no report keeps the lines and shows No report for this lot yet. with Back to search (new words). Orchestrator reading: Approved answers the 60 seconds, lines-stay and play-to-the-end points as drawn. LD-2 is therefore A (60 seconds, from the pick). All four LD questions are now answered (RR-0490, RR-0491).
+
+2026-11-25: planned and built with task-267 in one lane (PLAN-267-v2 on task-267; RR-0477 batching, all four LD questions answered by RR-0490 and RR-0491).
 <!-- SECTION:NOTES:END -->
