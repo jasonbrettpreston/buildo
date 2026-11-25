@@ -153,4 +153,4 @@ rg#8 CONFIRMED src/tests/surfaces/nav-by-route.logic.test.ts:316 "owed: MF-49 (A
 rg#9 CONFIRMED mobile/app/(auth)/sign-in.tsx:456 "SafeAreaView className=" LOW: true that the plan called the colour Daylight; it is dark #0e0e10 so there is no flash. Folded in FP15.
 rg#10 CONFIRMED mobile/app/_layout.tsx:197 "void registerPushToken().catch((err) => {" LOW: push is card 270 and a stale lead push tap lands on Lookup. Folded in FP33b.
 
-Plan: task-313 sha256:9b04500143c4
+Plan: task-313 sha256:6b1f19ade2c2
