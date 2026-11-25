@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MCFIX465'
 created_date: '2026-11-25T17:05:00Z'
-updated_date: '2026-11-25T22:07:00Z'
+updated_date: '2026-11-25T22:14:00Z'
 labels:
   - McFixV2
 milestone: m-1
@@ -363,3 +363,13 @@ Round 1 fix (2026-11-25, lane BL-MCFIX465; output grounder Cairn-Ground-O465 CON
 
 Output review round 2 (2026-11-25, lane BL-MCFIX465): code-review lens over 2fd2f6042..HEAD (fix ab8c2911e, station PASS) in 4 chunks, context-r4.md; outputs re-made under the same names in docs/reports/lanes/2026-11-25/BL-MCFIX465/: CRITICAL 0, HIGH 0, MED 2, LOW 12, NIT 7. Round-2 grounder owed; round-1 GROUNDER.md and TRIAGE.md stay outside the repo.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+task-465 McFixV2.1 Search box the Google way landed: Enter runs the search (submit action) and nothing opens while typing; suggestions drop under the box as tappable rows, with the several-matches line, the refine line, "No lot found for <text>" with its hint (also a too-short Enter, RR-0495) and the outside-Toronto line inside the drop-down; no radio cards, SELECT, list title, count badge or prompt line on phone or web; the list clears on the first delete and the box empties on return from a page; chips, count and legal line smaller and quieter; the semi page reads "Is this a semi?" with Yes, No, Not sure, the question larger than the answers. Commits: b3791a88c (work), 0aa1b011e (station fixes), 2af96802f (board merge), ab8c2911e (round 1 fix). Red in the lane: red.out, red2.out; green: green.out, green2.out, green3.out. The phone jest red is UNVERIFIED (the hook runs only the web tests); the station PASS on ab8c2911e (covering 2af96802f and 0aa1b011e) is the evidence.
+
+Review round 1: 1 fixed, 0 task, 0 ruling, 0 wontfix, 15 pile; grounder /Users/brettpreston_macmini/Buildo-scratch/lanes-20261125/BL-MCFIX465/og-r1/GROUNDER.md (round 1 as ruled, outputs at 20c686665); triage /Users/brettpreston_macmini/Buildo-scratch/lanes-20261125/BL-MCFIX465/og-r1/TRIAGE.md
+
+out-code-review-p4#1 MED fixed ab8c2911e
+<!-- SECTION:FINAL_SUMMARY:END -->
