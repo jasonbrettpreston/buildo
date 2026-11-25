@@ -1,0 +1,33 @@
+{
+  "task": "MF-99",
+  "item": "LOAD.2 (task-267) with LOAD.4 (task-317), one lane by RR-0477 and RR-0488: the search only finds the lot and the report is computed once on the pick; a fast read (fast=1) sends the stored page or the What we checked view (whatWeChecked); the phone report screen plays the check lines to the end and shows View report only when the report is in (RR-0176), still building with the centred spinner (RR-0491), the failure at once after the ruled retries or at 60 s from the pick (RR-0492, RR-0493, RR-0497), the no-report screen at once with Back to search (RR-0490 4 B, RR-0494), the label Checks for this lot (RR-0493).",
+  "class": "E",
+  "stage": 8,
+  "date": "2026-11-25",
+  "head": "prereg 1 (round 204); commits 0, work",
+  "cards": [
+    "Operator, verbatim (RR-0176, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785): \"yes that is correct\".",
+    "Operator, verbatim (RR-0491, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2563): \"Teh mock looks great! 1 Change (1) Still building - Loading the report shuld be centered horizontally as opposed to left justified. Approved\".",
+    "Operator, verbatim (RR-0492, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2567): \"3. If there is a report - the animation needs to complete but if the it fails then the user should know right away\".",
+    "Operator, verbatim (RR-0493, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2571): \"approved\".",
+    "Operator, verbatim (RR-0494, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2575): \"A\".",
+    "Operator, verbatim (RR-0497, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2588): \"We will not move the database to the cloud until the increments are complete.\" (the three plan questions answered A)."
+  ],
+  "plan": "PLAN-267-v2 on the task-267 card (Implementation Plan), reviewed by the repo review tool on docs/reports/reviews/task-267/context-r1.md (plan lens set and three seats); every finding ruled by the separate plan grounder in docs/reports/reviews/task-267/GROUNDER-PLAN.md and TRIAGE-PLAN.md. Tests first: section 5 of the plan governs.",
+  "output": "OUTPUT review owed at the lane output stage, after the station suite on the work commit (RR-0467): the code-review lens on the whole task diff, filed in docs/reports/lanes/2026-11-25/BL-MCFIX267/ with FINDINGS.md untriaged; a separate grounder rules every finding in GROUNDER.md before the task is set BUILT (RR-0359).",
+  "seats": [
+    "DeepSeek plan lens set, round 1 (grounded)",
+    "integration, reality-check and regression seats (plan)",
+    "separate plan grounder Cairn-Ground-P267",
+    "DeepSeek output lens set (owed at output)"
+  ],
+  "verdict": "PLAN RULED; OUTPUT owed",
+  "blockers": [],
+  "followups": [
+    "an own registered row for the report give-up (the 60 s is the shared maxbld_page_continue_wait_ms today): a later card by RR-0477",
+    "the server-side skip of the lines for a lot already counted this month but off this phone's cache (the usageFor export): a later card",
+    "the platform request timeout stays UNVERIFIED: a launch precondition"
+  ],
+  "evidence": "docs/reports/lanes/2026-11-25/BL-MCFIX267/",
+  "notes": []
+}
