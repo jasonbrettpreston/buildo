@@ -3,10 +3,11 @@ id: TASK-454
 title: >-
   SEARCHFIX.6 Search settings: the typed-in limits become registered settings;
   emitter, log and test fixes (needs the operator's typed GO to apply on dev)
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-SFX6B'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-25T13:19:00Z'
+updated_date: '2026-11-25T13:20:00Z'
 labels:
   - SEARCHFIX-LATER
 milestone: m-1
@@ -264,3 +265,9 @@ rg#1 HIGH folded keeps the two bucket
 rg#2 MED folded Value tests with non
 rg#3 MED folded the phone takes a ch
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-25 taken on the board at lane launch (lane BL-SFX6B, worktree /Users/brettpreston_macmini/Buildo-wt-sfx6b, branch wf2/sfx6b), RR-0240
+<!-- SECTION:NOTES:END -->
