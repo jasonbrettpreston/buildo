@@ -5,7 +5,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-25T17:03:00Z'
+updated_date: '2026-11-25T17:05:00Z'
 due_date: '2026-11-26'
 labels:
   - McFixV2
@@ -99,4 +99,6 @@ Operator 2026-11-20, verbatim: "Task 370 yes . approved" (~/Buildo-scratch/queue
 2026-11-24: ordered after the SEARCHFIX-PRIORITY cards (RR-0447, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2308). The 29 typed-address cases of docs/reports/reviews/mcfixreborn-g3/SEAT-typed-addresses.md join this proof's checklist (orchestrator reading; not yet ruled).
 
 2026-11-24 (task-453 SEARCHFIX.5 ST5, GROUNDER-SEATS J): the CHK.3 proof row chk3-nothing-new in scripts/analysis/proof-slices.json is now notbuilt, reason "CHK.3 reads the staged diff; --all gives it no input". Commit 4c5bfa249.
+
+McFixV2 addition 2026-11-25 (operator phone walk; rulings RR-0483, RR-0485, RR-0486 in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2523, :2533, :2538). Not yet planned. Tests the operator asked for in the proof (finding 37): one address with two lots where the user must pick one; running out of reports (the at-limit persona); no connection (finding 33, not yet tested on the phone).
 <!-- SECTION:NOTES:END -->

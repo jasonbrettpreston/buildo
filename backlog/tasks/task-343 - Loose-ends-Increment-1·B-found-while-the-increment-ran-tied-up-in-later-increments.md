@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane-BL-LOOSE'
 created_date: '2026-11-19T20:30:00Z'
-updated_date: '2026-11-25T17:03:00Z'
+updated_date: '2026-11-25T17:05:00Z'
 labels:
   - McFixV2
 milestone: m-1
@@ -157,4 +157,6 @@ task-360 (BL-METER2) loose ends: (1) race UNVERIFIED: a no-flag lookup in flight
 Operator 2026-11-20, verbatim: "Task 370 yes . approved" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1427; the table put to him is quoted in that entry). Leftovers added from McFix (2026-11-20): (1) the proof runner typed timeout DEFAULT_TIMEOUT_MS = 120000 (scripts/analysis/proof-slice.mjs) needs a registered setting: migration number from the ID ledger, operator typed GO (task-375 partial); (2) the security lens terms for admin and personal data at scripts/analysis/rule-lists.mjs:128 (task-375 D11b); (3) the entitlement contract cite useParcelLookup.ts:96 should be :134, locked by search-reports-left.logic.test.ts:132 (D15; with task-378); (4) no rule-list row for docs/reports/generated/** (a lane that regenerates one cannot resolve it); (5) no regression lens template exists in .claude/review-templates; (6) the DB mirror migration for the two lot-size settings from task-372.
 
 2026-11-24: ordered last in the search milestone, after TASK-268 (RR-0447, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2308).
+
+McFixV2 addition 2026-11-25 (operator phone walk; rulings RR-0483, RR-0485, RR-0486 in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2523, :2533, :2538). Not yet planned. Two loose ends placed here by the operator ("4. agreed - we should ensure a card for add to loose ends", :2523). (a) Report counter: operator, "I opend maybe 10 reports checking all the addresses and the counter didnt move ... its definitely not working" (:2518). (b) Operator ruling: "4. We should not send a report without pricing - the report needs to be complete." (:2533). Today the lookup route serves a report with no priced option and does not count it (src/lib/parcels/consumer-lookup.ts:66; Spec 100 dated note 2026-11-12); the ruling replaces that: no priced option, no report sent; every report sent counts. (c) Control-panel range check for settings goes to Increment 1.C (operator "2. 1C", :2533; RR-0475 item 3).
 <!-- SECTION:NOTES:END -->

@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane-BL-LOAD4'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-25T17:03:00Z'
+updated_date: '2026-11-25T17:05:00Z'
 labels:
   - McFixV2
 milestone: m-1
@@ -108,4 +108,6 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0301 · task-317 · Backlog; o
 HELD (operator 2026-11-20 "4. Hold the three unbuilt pages until the pilot result"): build as rows of the page table once the PAGE.TABLE pilot passes, not by extending lifecycleProps.
 
 Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder, 2026-11-20 (the lane verifies each cited fact before building): these are lifecycle states of the report screen: rows in the existing report lifecycle data (report-presentation.json) drawn by the existing ReportBinding; no new builder function and no move into the page-table builder (approved item 3 "Leave the reports as components"). Still required for 1·B (RR-0176 MD:785; RR-0179 MD:789). After the pilot folds; 317 after 267 stage 2 and LD-1, 2, 3, 5.
+
+McFixV2 addition 2026-11-25 (operator phone walk; rulings RR-0483, RR-0485, RR-0486 in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2523, :2533, :2538). Not yet planned. From the walk (finding 31): 683 Danforth Ave answered no page in 108 ms and the phone showed the plain no-report text; this card owns what the customer sees for a lot that cannot have a report.
 <!-- SECTION:NOTES:END -->
