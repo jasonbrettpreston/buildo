@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-25T20:02:40.557Z file_sha256=b7527ffa5bde8ccb984a6f9baf57678d185359e2bf4cb209d4dd8a2379f7e483 prompt_sha256=bacd3dff01a2c9b9a05f1d6c99ec62f06ef36c71e167ccd7999fcd2460e8e71a
+🔍 Lens review of docs/reports/reviews/task-313/in-plan-compliance-mobile-90.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 90 §2 "The app must natively support System Dark Mode. NativeWind `dark:` variants are required for all UI components." — mobile/app.json:11-15, plan M7 "Splash backgroundColor becomes the Daylight screen colour (PARCEL_SHELF_HEX.screen)" and M6 rows with no dark variant named — the new Opening surface and the splash carry one Daylight colour and no `dark:` variant, so the theme constraint is unmet for every component this card ships — name the dark screen colour and give the Opening descriptor and MaxbldAppGate their dark: values before plan-lock
+
+BUG severity=HIGH — Spec 90 §10 "Offline Resilience Test: Maestro flows MUST include a step that executes `toggleAirplaneMode` to verify the MMKV offline cache and empty states render without crashing." — plan §6 "With no network the app cannot open: the plan read is not persisted, so the user gets "Can't reach MaxBLD" and the stored reports are not reachable offline." and §9 "The Maestro flows, which are not run in the suite." — no Maestro flow is added for the new front door, so the mandatory airplane-mode step and cache check are not delivered — add the YAML flow with toggleAirplaneMode against MaxbldAppGate and persist the entitlement read
+
+BUG severity=HIGH — RR-0485 "RR-0485 phone walk rulings: semi inside the search card, range check 1.C, no onboarding question, no report without pricing, loading animation always, Enter opens the lot" — plan M6 "status when 'connecting': "Connecting…"" — the start-up screen the ruling names shows static text and nothing animates, and Spec 90 §4 "react-native-reanimated v3 and `react-native-gesture-handler` (required for 60fps animations…)" is not used anywhere in the plan — render the connecting state with a reanimated loading indicator
+
+BUG severity=HIGH — pasted card "next: G1 #11 · Plan when MF-47 and MF-51 settle" and "MF-51 is WAITS 'expires when MF-49 ships ... waits: MF-49 app'" — plan "ORDER AND SHARED FILES. Build order: task-465 → tasks 267 and 317 → 343 and 268 → 313." — card 1 plan-locks and builds while MF-47 is still WAITS to 2026-11-24 and MF-51 waits on MF-49, and no operator renew, drop or answer word is recorded — record the operator word (or the named settling event) on the MF-49 row before plan-lock
+
+DEFER severity=MED — Spec 90 §14 "On cold boot, the app must paint page 1 from cache instantly, then fetch fresh data in the background silently." — plan F8 "key ['parcel-entitlement'], not persisted (persistFilter.ts:28)" — the MaxBLD first screen is the gate read and it is not persisted, so a cold boot with no network paints no page at all — persist the entitlement, or a last-good gate state, so the Opening paints from cache
+
+DEFER severity=MED — Spec 90 §13 "Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema before hitting the UI" — plan M5 "It calls useParcelEntitlement and decideMaxbldGate" — the plan names no Zod parse of contract_parcels_entitlement between the hook and the new gate, and §4's own amendment records the mobile mirror as looser ("`mobile/src/lib/schemas.ts` uses `.passthrough()`/`z.record` five times") — name the parse site and add a drifted-payload case
+
+DEFER severity=MED — RR-0232 "the open decisions need to provide whether it has been grounded (the issue) and the recommendation (verified)" — plan §8 "OPEN CHOICES (each with a default)" ending "Default: A." — Q1, Q2 and Q3 give options, costs and a default but none states grounded or verified — add a grounded (issue) and a verified (recommendation) line to each of Q1, Q2, Q3
+
+DEFER severity=MED — RR-0477 "Keep anything with a database step or its own operator question on its own card." — plan Q3 "B: add them: a new row part role, a new open_help action in the closed list (126:75 says that needs an operator ruling), and a registered 2 s setting (a database step, on its own card)" — three operator questions (Q1 "it reorders RR-0501", Q2 needs the operator word under RR-0392, Q3 needs a ruling and a database step) sit on card 1 instead of their own card — move Q1 to Q3 to their own card or get the answers before plan-lock
+
+MET — RR-0499 "sign-in goes straight to search with no lead-app onboarding" — plan M2 "user in (auth), (onboarding) or root → navigate MAXBLD_LOOKUP_ROUTE with no registerPushToken" — the front door lands on the Lookup
+MET — RR-0499 "the MaxBLD bar is the only bar" — plan M4 "In MaxBLD mode the five-tab bar is never drawn." — the lead tab bar is not drawn
+MET — RR-0499 "the gate checks the MaxBLD plan" — plan M5 "It calls useParcelEntitlement and decideMaxbldGate." — the gate reads parcel_tool, not lead_gen
+MET — RR-0499 "the app gets its own start-up screen" — plan M6 "The Opening page, built the wall way (fe.31)" — a dedicated start-up surface is specified
+MET — RR-0499 "the lead-app screens stay in the code, unreachable, kept for the other app" — plan T4 "Every route file under mobile/app/(app) other than parcel-tool, read from disk … gives 'redirect'." — the lock is proven per route
+MET — RR-0482 "Remember our new policy on tasks - ie larger tasks and using existing components as well." — plan §3 "WHAT THE PLAN REUSES" lists useParcelEntitlement, ParcelShelf, the wall pattern, resolveSignUpMethod — existing components are reused rather than new ones built
+MET — Spec 90 §7 "Adding a new field, store, or bridge requires either matching an existing pattern in Spec 99 §3-§5 or a Spec 99 amendment." — plan §7 "Spec 99 §5.1-5.3: the MaxBLD arm; §5.2 now reads the parcel_tool plan for this app." — the new appShell module is paired with the required amendment in the same commit
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 30   Unmet: 8
+Rules met: none
+
+---
+⏱  75075ms (75.1s)
+📊 Tokens — total: 29917, input: 13886, output: 16031, reasoning: 14523

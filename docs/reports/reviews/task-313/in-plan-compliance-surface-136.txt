@@ -1,0 +1,366 @@
+LIST surface-136 sha256:c4de01897b08522808dcb713db60aa5dc9bea0ee04c4ad647f3571c2cda379e5 material sha256:24433b38f334ea312164edd073e7e181048866f75dc7d0ccfb9aff1c89d7eaa3 part 1 of 1
+RULE LIST surface-136 (docs/specs/02-web-admin/136_mcfrontend_handbook.md, sections 2. Rules), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+## 2. Rules
+
+- **fe.01** McFrontend is documents only now; the build starts after McBylaws increment 2 closes, with the 2026-11-02 infra freeze lifted for it by name; scope mobile, web, admin and PDF. Surface paths are held (pending globs) until Phase 1 opens. Current reading (lane text, notes 2026-11-06, 2026-11-09): Phase 1 (the report page) is open since 2026-11-06 and Phase 2 (every MaxBLD page, Spec 126 §11b) since 2026-11-09; the 2026-11-02 infra freeze is lifted by name for both. The lock asserts that the Spec 126 status line names Phase 1 and Phase 2, not Phase 1 only.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-status.infra.test.ts · +5 dated notes
+
+- **fe.02** P1 Declared, not coded: a screen is a descriptor; the only code is the shared archetype components. Current reading (lane text, notes 2026-11-11): The standard is confirmed for the web pages as well as the report, and the working standard is written down in Spec 126 §0b.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-generated-only.infra.test.ts · +3 dated notes
+
+- **fe.03** P2 Proven, not reviewed: declarations checked against live contracts and the catalogue; golden states; both-directions locks; observability inside.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/surface-validate.infra.test.ts · +1 dated note
+
+- **fe.04** P3 Fast: a REPORT performance budget (load, payload); a new field ships in hours. Payload is mechanical; load time and "hours" are PROSE-ONLY. Numbers are measured first, then ruled (Q-MF5).
+  Status: OWED · lock owed: src/tests/surfaces/budget.infra.test.ts
+
+- **fe.05** P4 Single source: the front end may show more, never derive differently; every number from McBylaws; no maths in the UI.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-no-maths.logic.test.ts · +1 dated note
+
+- **fe.06** P5 Honest display: disclosures, confidence, "at least", not_evaluated, not_modelled always shown; closed status list; oracle = catalogue flags.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts · +2 dated notes
+
+- **fe.07** P6 Same everywhere: mobile, web, admin and PDF render the same declaration; parity compares each target's real output. Current reading (lane text, notes 2026-11-09): The parity rule applies to every MaxBLD page with more than one declared target (Spec 126 §11b.2), keyed by surface; for non-REPORT surfaces it is checked inside the conformance lock (FE-31). This lock, its REPORT scope and its status are unchanged.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/parity.golden.test.ts · +3 dated notes
+
+- **fe.08** Doc set: specs in docs/specs/02-web-admin; 135 = decisions register; 136 = generated handbook.
+  Status: RULED 2026-11-04
+
+- **fe.09** A separate decisions spec, 124a/69a form, with a Lock column that resolves.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/register-locks-resolve.infra.test.ts · +1 dated note
+
+- **fe.10** The generator lives in the spec: the REPORT section of Spec 126.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/handbook-rule-map.logic.test.ts · +1 dated note
+
+- **fe.11** The product (report page) goes first; the admin converts on touch, with no fixed admin pilot; /admin/surfaces is built when the admin next needs that view. Current reading (lane text, notes 2026-11-09): Admin tasks only as listed for Phase 2 (MF-30, MF-37, MF-40); no MF task outside Phase 0-2 or convert-on-touch.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +3 dated notes
+
+- **fe.12** Admin market-metrics is DASHBOARD (126:207, :717); its descriptor's REPORT is an error fixed at conversion.
+  Status: OWED · lock owed: src/tests/surfaces/dashboard-not-report.logic.test.ts
+
+- **fe.13** surface-validate.mjs (MF-15) is the first gate McFrontend builds, part of the build after increment 2. Focus stays on McBylaws.
+  Status: RULED 2026-11-04 · Enforced by: src/tests/surfaces/surface-validate.logic.test.ts · +3 dated notes
+
+- **fe.14** LEAN: the report page converts first (generator, one REPORT renderer, goldens, locks); reuse the back-end machinery; other screens convert on touch. Current reading (lane text, notes 2026-11-09): LEAN now covers McFrontend Phase 2 as ruled: no MF task outside Phase 0-2 or convert-on-touch.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +3 dated notes
+
+- **fe.15** "How we know it works": the McFront proof canaries a-f, EXECUTABLE (planted defect in a temp copy: non-zero exit; clean copy: zero), are in the plan's acceptance criteria.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfront-proof.infra.test.ts · +2 dated notes
+
+- **fe.16** Q-MF1: all McFrontend specs in docs/specs/02-web-admin; 135 = register; 136 = handbook. No tooling change.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/spec-paths.infra.test.ts · +1 dated note
+
+- **fe.17** Q-MF2: one card per building type, variants[] inside (roof form flat/pitched A/pitched B; unit class houseplex 2-4 at 4, 6 not_modelled), generated from the catalogue; headline flag emitted by the generator; ad slots outside the card list.
+  Status: OWED · lock owed: src/tests/surfaces/report-variants.logic.test.ts
+
+- **fe.18** Q-MF3 binding rule (core premise): every displayed field binds to a source in the closed set catalogue / content / user_input / ad_slot (and external_embed, the fifth source, by FE-21); the schema references the field only (no old engine names, no older-rule text, no code). Labels, help text and legal copy are content fields, not an exception. The set is in a protected file. Current reading (lane text, notes 2026-11-06): The closed set has six sources: catalogue, content, user_input, ad_slot, external_embed and parcels (FE-27); it lives in scripts/surfaces/_schema/binding-sources.json.
+  Status: RULED 2026-11-06 · Enforced by: src/tests/surfaces/report-binding.logic.test.ts · +3 dated notes
+
+- **fe.19** User inputs are shared, not private: an entered fact updates the shared database, raises that lot's confidence for every viewer, and keeps provenance (source user, entered_at). Confidence by source: estimated low, user medium, verified high. McBylaws re-evaluates (increment 6); McFrontend declares the form and renders results. Current reading (lane text, notes 2026-11-11, 2026-11-15): Confidence for a user lot-size entry reads high, not medium; the re-evaluation is McBylaws MB-89, not increment 6; the entry is width and depth, with the area form as the link's alternative.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/user-input-provenance.logic.test.ts · +3 dated notes
+
+- **fe.20** Conflict rule for user entries: verified permit/plan facts outrank user entries; the newest user entry is shown; earlier entries are kept in history so a bad entry can be reverted. Current reading (lane text, notes 2026-11-11, 2026-11-15): One active entry per lot, whichever form made it; "the newest user entry is shown" reads as the active entry; history is kept; a width entry then an area attempt is a 409.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/user-entry-precedence.logic.test.ts · +3 dated notes
+
+- **fe.21** external_embed (map tiles, payment checkout, analytics) is the fifth binding source: each embed declared, never coded.
+  Status: OWED · lock owed: src/tests/surfaces/report-binding-embed.logic.test.ts
+
+- **fe.22** Ad targeting only on declared database keys; never on user-entered facts without consent.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/ad-targeting-keys.logic.test.ts · +1 dated note
+
+- **fe.23** Ad slots: own source (ad_slot) and disclosure (R-17), never inside a card (R-34), outside variants[] and the card list.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/ad-slot.golden.test.ts · +1 dated note
+
+- **fe.24** A new catalogue row reaches mobile, web, admin and PDF with zero front-end code; the renderer throws on an unknown field or status.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/new-row-zero-code.golden.test.ts · +4 dated notes
+
+- **fe.25** The 25 golden lots render end to end the McBylaws answer-key numbers on every target. Runs as a db-type test in a named CI step.
+  Status: OWED · lock owed: src/tests/surfaces/answer-key-e2e.db.test.ts
+
+- **fe.26** In-product error count and budget breach are shown on admin, through the real writer and reader. The on-screen part is a manual operator check (PROSE-ONLY).
+  Status: OWED · lock owed: src/tests/surfaces/error-count.db.test.ts
+
+- **fe.27** parcels is a source in the closed binding set: a field bound to a column of the parcels table (a DB field the consumer payload reads, Spec 100 §3.2 whitelist). A column that is not in the migrations, or a path not on the whitelist, fails.
+  Status: RULED 2026-11-06 · Enforced by: src/tests/surfaces/report-binding.logic.test.ts
+
+- **fe.28** none is a closed status value, "no reading on this node", valid only on the message node of a lifecycle tree (loading / miss / error); the tree carries lifecycle, closed loading | miss | error. Omission of status stays a build failure; every node carries one.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts
+
+- **fe.29** The report node contract has ONE home, scripts/surfaces/_schema/report-tree.schema.json (draft 2020-12, additionalProperties false): a tree is lifecycle? (loading | miss | error) plus nodes[]; each node requires field, source, label, value (string or null), status (the 11a.3 forms plus none), confidence (high | medium | medium-low | low | none), provenance (estimated | permit | plan | user | none) and disclosures (array, empty allowed). The honest lock reads it and holds no copy; the renderer and validator (MF-14, MF-15) read the same file. Current reading (lane text, notes 2026-11-11): One closed image node kind exists (field, source, kind image, label, images); it carries no value, status, confidence, provenance or disclosures, because an image is not a reading; every other node is unchanged.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts · +2 dated notes
+
+- **fe.30** Report fields are generated from the catalogue, one home per fact. (1) Every effective-ON catalogue row (its switch ON and its building type ON) is a report field, automatically; off yields none; retirement is the switchboard row OFF, never a retired-rows list. (2) scripts/surfaces/_schema/report-v2-seed/row-presentation.json holds one ORDERED headline list per scenario (building_type plus design_option); a row not listed is detail, in catalogue order; the lists ship empty and are authored with MF-14. (3) One check, fail closed: a listed row that does not exist in that scenario, a scenario no catalogue row carries, a row listed twice in one list, a listed row that is switched off. (4) Only a HEADLINE row with no authored label fails (GEN-ROW-NO-LABEL); a detail row shows its row id and the generator lists the labels owed. A row may lead more than one scenario. Which variant wins on a lot stays McBylaws' rule (126:749).
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-generator-fields.logic.test.ts · +1 dated note
+
+- **fe.31** Every MaxBLD page (a converted non-REPORT surface) is descriptor + content + standard library components configured by schema: descriptor valid with no UNRESEARCHED and no golden: "none"; in the converted manifest (two-direction totality); one props golden per reachable state per declared target, each covers a state or check, every state covered; one render smoke per archetype per platform; every string from content (listed exempt files only); every value through a binding kind; library imports only in binding modules; generated and vendored files pass --check/manifest. Current reading (lane text, notes 2026-11-09, 2026-11-11, 2026-11-20): The render-smoke clause is its own row, FE-33, and this row's lock does not check it. The mount-file import rule governs UI page, screen and mount files only. Every build reuses existing components, bindings and patterns; a new library, component kind or binding is an operator ruling first; an element in a Stitch export or scratch mock with no source is left out. The web footer is one shared component, footerNode.ts.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/surface-conformance.logic.test.ts · +7 dated notes
+
+- **fe.32** contract is a binding kind: a displayed value may bind to a field of a declared CONTRACT descriptor's response projection; the member must exist in that descriptor; any other value fails.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/contract-binding.logic.test.ts · +2 dated notes
+
+- **fe.33** One render smoke per archetype per platform: each binding renders its archetype's goldens on each platform (web renderToStaticMarkup in the root suite; mobile jest-expo), and every displayed string, library default strings and form error messages included, comes from content.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/render-smoke.logic.test.ts · +2 dated notes
+
+- **fe.34** The v21 report PAGE tree has ONE contract, scripts/surfaces/_schema/report-page.schema.json, beside the node contract (FE-29; an ad section reuses its $defs/slot): the sections of the page table scripts/surfaces/_schema/report-page.json in screen order; each part is one shown text bound to a declared field (the server-formatted string as sent; a number throws), a content:page text, or a ruled pending text (Q-G4 a, never a value). A tile area value is two server-formatted parts, the number and its unit (D-J). A page-table section that names details is drawn only on layout rows with that details value (D-K: the lot-size box and the Add lot size sheet on collapsed rows only).
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.35** The REPORT loading state "What we checked" (MF-62): a lifecycle: loading tree may carry ONE root-only checked object (never a node, never on miss, error or a reading tree; the one-message-node rule unchanged): the title, the citywide and per-lot groups and the data dates, each line a content template (report-presentation.json states.checked, no digits) filled with a server-formatted value (FE-05), plus the pace the server computed from two admin logic_variables. The citywide counts are a stored, dated row written by the existing refresh_snapshot step, never a live count per request. Per lot: the evaluated by-law limit count (never the 270 rows); "exception noted, not yet modelled" on an exception_not_authored lot and "By-law limits not yet evaluated" on any other gate or no result, never "checked"; heritage reads "designated"; decisions are decided CoA applications in the lot's neighbourhood. No satellite or aerial wording, no "updated" or "latest", no live-progress word, no chatbot or AI comparison, the by-law rules count never beside "checked".
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/report-checked.logic.test.ts
+
+- **fe.36** Navigation is a route: a control that moves the user uses the platform router (web <Link>, redirect(), router.push/replace after an action; mobile expo-router with canGoBack() before back()); a view is never swapped by local state; local state is disclosure only; a navigating pressable has a role and a name; leaving the origin uses window.location.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/nav-by-route.logic.test.ts
+
+- **fe.37** A STATIC page may read declared stored values on the server: its values are content templates with one {value} slot filled on the server with a server-formatted string, each from a read declared in the page table and the page's server module; a failed read leaves its part out (never a 500, never a partial group), and the binding never skips a part silently.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/web-landing.logic.test.ts
+
+- **fe.38** Legacy values are neither sent nor shown on the live app (EI-D1). /api/parcels/lookup sends the legacy Spec 88 cost menu and the 12 cost scalars as null. It sends the legacy size headlines as null (keys kept for installed apps and declarations; CONSUMER_WITHHELD_LEGACY_COLS): opt_aor_*, opt_coa_*, max_buildable_gfa_sqm, max_build_fsi, max_build_stories, coa_fsi, max_newbuild_coa_gfa_sqm. The server goes first, so installed apps stop receiving them. The mobile parcel screen and the tracked-lots list then show none of them; a slot that must stay reads "Not yet evaluated" (FE-06, 126 §11a.3), never a number or $0. This is a stopgap: it does not discharge MB-37 or M-367. Current reading (lane text, notes 2026-11-12): The scope is wider: a hit with no evaluated option is not counted against the monthly allowance; max_buildable_footprint_sqm, envelope_constrained, envelope_constraint_reason and compStats.neighbourhoodCostPremium are also sent as null, and the screen shows no Envelope constrained note. Same lock, extended.
+  Status: RULED 2026-11-12 · Enforced by: src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts · +2 dated notes
+
+- **fe.39** Engine inputs bind (EI-D2..EI-D8). The report and its producer bind the final engine fields: one stored headline per lot and option. Size, status, reason and the CoA size come from Layer 3; cost comes from the Spec 88 scenario lines, joined by the producer (M-67 kept, EI-D8). The detail is computed on demand. An empty field shows "Not yet evaluated", never 0 (a new reason, not_in_engine_population). Engine values show before MB-38 only in the admin preview and in a tester-only preview: golden 25 + the MB-35 cohort, a "Preview" banner, no charge (EI-D2). The customer cost is base rate x escalation, with no income-based neighbourhood premium (EI-D3). "Can you build bigger?" stays "Not yet evaluated" until MB-38/MB-44 (EI-D4). Per-scenario neighbour reach is an admin setting: detached house 400 m, secondary suite 400 m, garden/laneway suite 750 m, houseplex 1,000 m; all years; the reach is always printed (EI-D5). Testing uses the cohort + 25, with a coverage check before payment (EI-D6). Copy: neighbours "approved", "at least", "records we could classify"; build-bigger is not a promise of approval; the cost-scope line stays in See details and goes to the lawyer list (EI-D7). Current reading (lane text, notes 2026-11-20): One record per lot and option, computed on first open (or track, or owner input) and stored with its stamp; a record whose stamp differs is never served and is recomputed (ST-5 as amended; the two sentences it replaces are SUPERSEDED). The cost sentence is not amended; it waits for open point 3 of doc-16 section 7. When the web live switch flips, engine numbers go to every paying user at once, not testers only (operator "4 a"). The amendment text is policy text of doc-16, not operator words.
+  Status: OWED · lock owed: src/tests/surfaces/engine-inputs-bind.logic.test.ts · +3 dated notes
+
+- **fe.40** McTest: the real app is proven wired by layers run against a separate local test stack, never the dev DB (API journeys, a dead-wire crawler, a lot sweep, stress, failure drills, phone runs). The cases are rows of one catalogue, tests/e2e/scenarios.json (data; no test code names a case). Every row names its owning task and a status; a row or journey step whose task is not built is WAITS, never PASS or FAIL; a page behind an off switch is "gate-only". A failure becomes one card for the owning task. Limits and budgets are read from DB fields or admin settings, never typed.
+  Status: RULED 2026-11-12 · Enforced by: src/tests/mctest/catalogue.infra.test.ts
+
+- **fe.41** The REPORT page table gains the section kind summary (options at a glance, Daylight B): no data of its own; every item is a reference (ref, FE-18, FE-32 part kind) to a part of the option's BUILT section, never a copied value. A hidden option is in neither the list nor the count; a not-evaluated option is listed with the existing not-evaluated text and no size (FE-06); the heading is a content template filled with the count of items (a derived value, server-built). It shows at the top on every target; the wide-web rail is NOT in this row.
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.42** The REPORT page table gains the part kind drawing (lot views, From above): the server sends the drawing already built in a fixed 0..1000 frame (state, outline, one class per edge as explicit lines, envelope and footprints when it has them); the client only draws it (inline SVG on web, react-native-svg on mobile) with no geometry maths (Spec 128 Rule 16). The state is closed: drawn, outline_shape, outline_edges, outline_unevaluated; the three outline states show the ruled fallback line. One caption for every state: "Not from a survey. Illustrative.". FAIL CLOSED: a part that needs a drawing is left out when the response has none, or its state or geometry is not valid; nothing is drawn, nothing faked. The envelope polygon and the buildable width are DECLARED DERIVED values (server-computed, derived ref kind), never typed numbers; the callout and dimension labels wait for by-law row parts that carry a field. The eligibility rule, its ten admin settings (including the convexity tolerance 0.995 and rectangularity 0.80, provisional) and the stored per-lot read are a separate gated McBylaws DB job (group 3), not this row.
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.43** See details opens as its own sheet on web and mobile, by a second CLOSED layout key details_view (inline or sheet) in report-layout.json: web and mobile sheet, admin and pdf inline. No existing details value changes: the six readers of details: collapsed (report-page.logic.test.ts, report-checked.logic.test.ts, ReportView.tsx, core.ts, report-page.ui.test.tsx, report-view.ui.test.tsx) keep their meaning. Web: each panel is a dialog with its own address (#<option>/size|cost|how), Back closes, focus returns to the opener; mobile: the existing @gorhom/bottom-sheet held by the screen host. This amends the v22 in-place ruling.
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.44** Units across the whole report: store METRIC only. The page producer sends each number pre-formatted in both units; the client only switches which is shown, with no maths (Spec 128 Rule 16, FE-18); the conversion factor is content/settings, never code; one toggle covers every area and length and is remembered per user; the default is imperial; by-law quotes keep their metric wording with the converted figure in brackets. Builds ui.format.area_unit (report schema, "proposed"), extended to lengths.
+  Status: OWED · lock owed: src/tests/surfaces/report-units.logic.test.ts
+
+- **fe.45** The client is just glass. "Five things may stay client-side (device state · optimistic UI · offline cache · animation · nav position); everything else is server-projected." (Spec 128 Rule 2, 128:29). "Anything else computed client-side is a Rule 2 violation and needs a deviations[] row with an adjudicator and a date." (128:55).
+  Status: OWED · lock owed: src/tests/surfaces/client-glass-boundary.logic.test.ts
+
+- **fe.46** Libraries. "the web library is Mantine 8.3" with @rjsf/mantine and mantine-datatable (126:1005, dated note 2026-11-09); mobile is "React Native Reusables per Spec 90 §6", vendored unmodified (126:1006). "No hand-built standard component." (126:925). "a new library, a new component kind or a new binding outside §11b.5 is an operator ruling before it is built" (126:75). This row says nothing on the toast library: RR-0384 did not rule it.
+  Status: OWED · lock owed: src/tests/surfaces/ui-library-set.logic.test.ts
+
+- **fe.47** Tunables are data. "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" (128:30, Rule 3). "All tunables are data; zero thresholds in src/." (126:189, admin principle P4, 126:180).
+  Status: OWED · lock owed: src/tests/surfaces/tunables-are-data.logic.test.ts
+
+- **fe.48** Scratch mocks are design inputs only. "Mocks, briefs, Stitch exports and research in ~/Buildo-scratch/ are references, never copied into the repo" (126:79, §0b item 8). "Anything in a Stitch export with no source (a ruling, a spec, a setting or a DB field) is left out and is not raised as a decision" (126:79); the dated note 2026-11-11 of FE-31 carries this second sentence.
+  Status: OWED · lock owed: src/tests/surfaces/scratch-mocks-not-in-repo.logic.test.ts
+
+- **fe.49** The scope fence. "Spec 100 stays fenced. No linkage to LeadDetail, the flight board, or the lead feed. lead_parcels is read by no surface." (128:205, R-03). "Scope D is fenced, and the fence is Spec 128 R-03." (126:140). "A scope-C change is a two-product change. Its plan says so, and its review panel is sized for it." (126:147).
+  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/scope-fence.logic.test.ts · +1 dated note
+
+- **fe.50** Auth and checkout. "Auth and checkout are existing or hosted, not converted. Sign-in is the existing Buildo sign-in (web and mobile), shared and declared" and "Checkout and billing are Stripe-hosted (Checkout, Customer Portal)." (126:928). Amended by the dated note of 2026-11-11 at 126:1120: "The monthly plan is also offered as an Apple in-app purchase beside web checkout, on one account and the same parcel_tool entitlement" (queued as MF-70); "the later operator ruling governs".
+  Status: OWED · lock owed: src/tests/surfaces/auth-checkout-hosted.logic.test.ts
+
+- **fe.51** Navigation extras that FE-36 does not state. "A tab switch uses navigate, not push." (126:82, §0b item 11). The navigation rule reaches "every MaxBLD screen, web and mobile" (126:82). Spec 126 calls the tab sentence "convention, not checked by the lock" (126:82), so it is PROSE-ONLY until the lock below exists.
+  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/nav-tab-switch.logic.test.ts · +1 dated note
+
+- **fe.52** The two parcel ids have two names. "parcel_ref = parcels.parcel_id VARCHAR(20) (municipal); parcel_pk = parcels.id SERIAL." and "usage_events.subject_kind is required and closed so a ledger row can never blend them." (Spec 128 R-04, 128:206, ACCEPTED). The id-translation seam: "the consumer API's parcelId = parcels.parcel_id = parcel_ref" (126:1238, §14).
+  Status: OWED · lock owed: src/tests/surfaces/parcel-id-names.logic.test.ts
+
+- **fe.53** POINTER, not a copy: before changing a MaxBLD page, read its row in Spec 126 §11b.3 (126:963) and the rules and amendments in §11b.7 (126:1032): routes, what is special, the ruled rules with the operator's words. Where a later dated note amends a rule above it, "the later operator ruling governs" (126:1120). The tables are not copied here. PROSE-ONLY: the lock below checks only that the two cited headings exist; it checks no page ruling.
+  Status: OWED · lock owed: src/tests/surfaces/page-set-pointer.logic.test.ts
+
+- **fe.54** A visible state for every failure. "a surface declares what the user sees when it fails" and "An unhandled state is a FAIL, not a blank screen." (Spec 128 Rule 12, 128:39).
+  Status: RULED 2026-11-23 · Enforced by: src/tests/surfaces/failure-state-declared.logic.test.ts · +1 dated note
+
+- **fe.55** The admin is a projection. "The admin is a projection, not a product. An admin page is the same SURFACE/CONTRACT descriptor with an admin audience — never a parallel data path." (126:186, admin principle P1).
+  Status: OWED · lock owed: src/tests/surfaces/admin-same-descriptor.logic.test.ts
+
+- **fe.56** Locks are proven red. "A rule without a lock is not yet a rule" (128:127, rule 4; Spec 135 rule 2). "Prove each lock RED on a fixture that declares a column or a policy that does not exist" and "a lock never red against the defect it names is not a lock" (127:59, the row numbered 6).
+  Status: OWED · lock owed: src/tests/surfaces/lock-planted-defect.logic.test.ts
+
+- **fe.57** Accessibility. The a11y check category is "touch-target floor (44×44) · labels · dark-mode tokens · safe-area · reduced-motion" (126:351, a row of the check vocabulary, not a mandate). The 44 px floor is also stated at docs/specs/00_engineering_standards.md:14: "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of" 44px x 44px. It is checked on converted web goldens (C-9) and mobile (C-9m) under FE-31; the rest is PROSE-ONLY until the lock below exists.
+  Status: OWED · lock owed: src/tests/surfaces/a11y-category.logic.test.ts
+
+- **fe.58** No Server Components on mobile. "React Native has no Server Components. Web is RSC on Vercel (max server side); mobile is a fetched projection plus build-time generation. Any Spec 125 mechanism assuming SSR must be re-specified for mobile before it is planned." (Spec 128 R-22, 128:224, ACCEPTED).
+  Status: OWED · lock owed: src/tests/surfaces/mobile-no-rsc.logic.test.ts
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Full title: MF-49 MaxBLD mobile app: a separate Expo project in a monorepo (Spec 116 section 3)
+
+queue row: MF-49 (lane E; row status LATER · since 2026-11-09 · expires 2026-11-16 · next: G1 #11 · Plan when MF-47 and MF-51 settle); the row stays the record (Spec 137 rule 2) and a lane edits the row and this task in the same commit (rule 3). Mirrored by task-306 (R8a, RR-0232) because the row expired 2026-11-16 and waits on the operator's renew, drop or answer word.
+
+Grounded: yes. Row MF-49 'MaxBLD mobile app: a separate Expo project in a monorepo (Spec 116 section 3)', Status: LATER since 2026-11-09, expires 2026-11-16, next 'G1 #11 Plan when MF-47 and MF-51 settle' (.cursor/MCFRONTEND-QUEUE.md:347-348). Expired under Spec 137 rule 7 (137_mcqueue.md:112). MF-47 is WAITS, expires 2026-11-24 (:334); MF-51 is WAITS 'expires when MF-49 ships ... waits: MF-49 app' (:375): the two rows wait on each other. Milestone m-8 (Increment 6c) is placed by the plan items 6c.24 and 6c.26 (task-110, task-112, milestone m-8) that carry the refresh of these expired rows (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:21), not by the row itself: UNVERIFIED as increment ownership. The mirror shows the row as waiting on the operator's renew, drop or answer word (Spec 137 rule 7), not the row's own status word.
+Recommendation: renew with a named event, `expires when MF-47 is DONE` (Spec 137 rule 12, 137_mcqueue.md:129). Proposed follow-up, not part of R8a: MF-51 itself waits on MF-49 (.cursor/MCFRONTEND-QUEUE.md:375), so the row's wait on MF-51 is circular. UNVERIFIED: review r1 of task-306 (r1-plan.txt) tested the routing of this item, not the answer.
+
+
+## Acceptance criteria
+
+
+## Implementation Plan
+Planner: Cairn-Plan-313
+Plan id: PLAN-313-v1
+
+Card task-313, McApp card 1 of 4 (the front door), board checkout ~/Buildo-wt-board at 4b0cf7ab1. Read-only: I wrote no file, ran nothing that changes state, and opened no database or dotenv file. The python call was blocked by the hook and I redid it in node.
+
+1. RULES QUOTED (MD = ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md)
+- RR-0496 MD:2583: "Let's organize the App itself tasks (group them together where the build will be optimized)... These grouped tasks are McApp."
+- RR-0499 MD:2598: "1a". The question put to him at MD:2599 was "A inside the one project (sign-in straight to search, the MaxBLD bar the only bar, the gate checks the MaxBLD plan, own start-up screen, lead-app screens kept in the code unreachable for the other app; departs from Spec 116 section 3...)".
+- RR-0501 MD:2608: "So we have four mega tasks for McApp - that looks good ... Let's do the McApp first". Card 1 is the front door (313).
+- RR-0485 MD:2533, item 3: "3. Nope" (no onboarding question).
+- RR-0482 MD:2518: "Remember our new policy on tasks - ie larger tasks and using existing components as well."
+- RR-0477 MD:2496: "batch items that touch the same files or the same kind of file and need no database step. Keep anything with a database step or its own operator question on its own card."
+- RR-0392 MD:1975: "I don't think we need any other infastrcuture beyond this."
+- RR-0445 MD:2296: "we are mobie first - we always take that approach but it works onthe web ... look back and follow".
+- From chat, not in MD: "The MAxbLD app should go from sign-in direclty to the search screen"; "Removing the current onboarding - save it for the other app?"; "Where is the app loading screen?"
+- Spec 116 :106: "moving `parcel-tool` out of the `(app)` gate without a per-product gate in the new place is a security regression". The same fence is quoted in mobile/app/(app)/parcel-tool/_layout.tsx:16-28.
+- Spec 136 fe.31: "Every MaxBLD page ... is descriptor + content + standard library components". fe.47: "every debounce ... is a registered logic variable".
+- Spec 99 §5.3: "Any change to AuthGate's branches requires updating this section."
+
+2. FACTS FOUND
+F1. After sign-in, AuthGate always goes to the lead app. It reads GET /api/user-profile (mobile/app/_layout.tsx:98). A 404 sends the user to /(onboarding)/profession (decideAuthGateRoute.ts:86-89). onboarding_complete false resumes onboarding (:125-126, :143-144). Complete goes to '/(app)/' plus a push token (:129, :133), and the first tab there is Lead Feed ((app)/_layout.tsx:278). These are phone-walk findings 8 and 9.
+F2. The (app) gate reads the lead_gen status. (app)/_layout.tsx:239-241 shows SubscriptionLoadingGuard while `profile.subscription_status == null`, and the server fills that field from the lead_gen entitlement (user-profile/route.ts:51). A MaxBLD-only user therefore spins forever. If the lead gate is passed, the 5-tab <Tabs> is drawn (:273-291) and is hidden only while parcel-tool has focus (appShell.ts:29).
+F3. How mctest-paid got past the gate. The seed gives it a user_profiles row with trade 'plumbing' (seed-personas.mjs:144) and only its catalogue entitlement, with no lead_gen row (:147, :181). RR-0480 (MD:2509-2512) then set onboarding_complete true. Every GET /api/user-profile runs applyFallbackTrialInitIfNeeded(uid,'lead_gen') (route.ts:72), which inserts a lead_gen 'trial' row when onboarding_complete is true (src/lib/subscription/expiration.ts:52-63). subscription_status became 'trial' and the gate opened. This is inferred from the code; I did not read the database.
+F3a. Side effect: that trial row opens the unmetered lead_gen arm of the parcel gate (src/lib/parcels/tool-gate.ts:15) once a parcel_tool plan lapses.
+F4. What fails on the server today. All three parcel routes call getCurrentUserContext: lookup/route.ts:65, entitlement/route.ts:33, lot-size/route.ts:41. It returns null, so the route answers 401, in two cases: no user_profiles row (get-user-context.ts:100-106), and a row with no trade (:135-142). A web buyer's row is created with no trade (parcel-checkout.ts:136; maxbld-terms.ts:10). So a paying MaxBLD customer gets 401 from search, the reports-left line and lot size, today.
+F4a. No database step is needed. usage_events, entitlements and parcel_user_inputs all reference auth.users, not user_profiles (migrations/303:28, 228:22, 305:36). Nothing has to write a row.
+F5. Start-up screen. app.json:11-15 points the splash at mobile/assets/splash-icon.png. I opened that file: it is the Expo template grid, and assets/icon.png is the same grid. The in-app loading screen is the dark spinner SubscriptionLoadingGuard. expo-splash-screen is not installed (mobile/node_modules).
+F6. Finding 7 (wrong email showed nothing). Wrong email and wrong password take the same path: signInWithPassword, then handleAuthError, then mapSupabaseError, which always returns text ('invalid_credentials' gives "Incorrect email or password.", supabaseErrors.ts:14-15). The red error line sits below the email form and its Back link (sign-in.tsx:576-579). The screen centres its content with no ScrollView or KeyboardAvoidingView. Only the OTP path calls Keyboard.dismiss() (:429). Likely cause: the open keyboard covered the error line. This is inferred; I could not see it on a device.
+F7. The search page already handles a no-plan user: "a plain 403 or no plan keep today's notice" (parcel-tool/index.tsx:63-66; content key search.entitlement).
+F8. useParcelEntitlement exists (useParcelLookup.ts:168-177): key ['parcel-entitlement'], not persisted (persistFilter.ts:28), retried through shouldRetryParcelLookup. The route answers 200 with every field null when the user has no plan.
+F9. The pattern for building a phone page is the task-452 wall, S-096: rows in static-page.json `screens`, drawn by PageTableBinding through a thin binding. Its commits 4cf68ec45 and 7d4410db0 carry the files that pin counts.
+F9a. Schema limits on those rows: section kinds are only bar, status, text, notice, choices and button; action is one of [back, retry, push, select]; there is no footer kind for screens (static-page.schema.json $defs).
+F10. The navigation lock still names three exceptions as "owed: MF-49": #15 and #16 (sign-in setMode) and #22 (sign-up). See nav-by-route.logic.test.ts:313-318 and :350.
+
+3. WHAT THE PLAN REUSES
+useParcelEntitlement; the server gate parcelToolAccess (tool-gate.ts:12-17); getEntitlementStatus (entitlements/index.ts:112); ParcelShelf and the parcel-tool Stack, unchanged; the wall pattern (WallBinding.tsx, useWallState.ts, wall-golden-capture.ts, wallScreens.golden.test.ts); the contract contract_parcels_entitlement; the Keyboard.dismiss pattern (sign-in.tsx:429); the sign-up method-param precedent resolveSignUpMethod (featureFlags.ts:34); the typed-switch precedent MAXBLD_WEB_LIVE (src/lib/surfaces/maxbld-web.ts:19).
+
+4. THE CHANGE, BY FILE, IN BUILD ORDER
+Server (no database step):
+S1. src/lib/auth/get-user-context.ts. Add an optional third argument `{ needsTrade: false }`, typed by overload to return `{uid, subscription_status} | null`. On that path the function does not read user_profiles; it reads the lead_gen status with getEntitlementStatus(pool, uid, 'lead_gen'). Without the argument, nothing changes for the lead routes.
+S2. The three parcel routes (lookup/route.ts:65, entitlement/route.ts:33, lot-size/route.ts:41) pass `{ needsTrade: false }`. Nothing else changes; the 403 gate is unchanged. lookup/route.ts is also on task-267's Files line.
+
+Phone:
+M1. mobile/src/lib/appShell.ts (a leaf module), new:
+- `APP_PRODUCT: 'parcel_tool' | 'lead_gen' = 'parcel_tool'`: the one switch that keeps the lead path compiled for the other app.
+- `MAXBLD_LOOKUP_ROUTE = '/(app)/parcel-tool'`.
+- A pure `decideMaxbldGate({hydrated, user, ent, segment})` returning:
+  - 'loading' until there is a user and a first answer;
+  - 'offline' while there is no data and failureCount ≥ 1 and the read is not yet in error;
+  - 'error' when the read is in error and there is no data;
+  - 'redirect' when there is data and segment !== 'parcel-tool';
+  - 'enter' otherwise.
+- Once data exists it never flips back: a failed refetch on focus keeps 'enter' (Spec 99 §6.5 stable gate).
+M2. mobile/src/lib/auth/decideAuthGateRoute.ts. Add an optional input `product` (default 'lead_gen', so the 9 lead arms and their tests are unchanged). For 'parcel_tool': no user → sign-in (arm 1, unchanged); user in (auth), (onboarding) or root → navigate MAXBLD_LOOKUP_ROUTE with no registerPushToken; user in (app) → wait. The profile is never read.
+M3. mobile/app/_layout.tsx. AuthGate passes `product: APP_PRODUCT` and calls useUserProfile with `enabled: !!user && APP_PRODUCT === 'lead_gen'`. With the profile read gone, the app no longer creates a lead_gen trial row (F3a).
+M4. mobile/app/(app)/_layout.tsx. The current body becomes `function LeadAppLayout()` with not one line of it changed. The default export AppLayout returns `APP_PRODUCT === 'parcel_tool' ? <MaxbldAppGate/> : <LeadAppLayout/>`. In MaxBLD mode the five-tab bar is never drawn.
+M5. NEW mobile/src/components/parcel/MaxbldAppGate.tsx (mount file). It calls useParcelEntitlement and decideMaxbldGate. 'loading', 'offline' and 'error' draw the Opening page through SurfaceRenderer; 'error' gives Try again = refetch. 'redirect' returns expo-router <Redirect href={MAXBLD_LOOKUP_ROUTE}/>, so the lead feed, map, settings and detail routes are unreachable. 'enter' returns <Slot/>, which is the existing parcel-tool Stack and ParcelShelf.
+M6. The Opening page, built the wall way (fe.31):
+- screens.mobile_parcel_opening rows in static-page.json:
+  - text header: the wordmark;
+  - text header: "Lot Intelligence";
+  - status when 'connecting': "Connecting…";
+  - notice when 'unreachable': title "Can't reach MaxBLD", text "Check your connection and try again.";
+  - button when 'unreachable': Try again, action retry.
+- New files: content json; descriptor with states loading, offline and error from the closed list; OpeningBinding.tsx; the generated slice; the bindings.json module and mount; converted-surfaces.json (expected_count +1); a census entry; the golden capture script; the goldens; the situations file; one golden test.
+- The version gate is left out.
+M7. mobile/app.json:11-15. Splash backgroundColor becomes the Daylight screen colour (PARCEL_SHELF_HEX.screen). The "image" entry is removed, which drops the Expo grid. The wordmark is drawn by M6.
+M8. mobile/app/(auth)/sign-in.tsx (finding 7). Call Keyboard.dismiss() first in handleEmailSignIn (:354), so the error line under the form is visible. If Q2 is A, also: the email form opens from the route param `?method=email` (the sign-up precedent), and Back becomes `canGoBack() ? back() : replace` with role and label. Same for sign-up.tsx's sign-in link (#22).
+
+Docs: the dated notes in section 7; the MF-49 row in .cursor/MCFRONTEND-QUEUE.md.
+
+5. TESTS FIRST (each is red on the tip, then green)
+Server:
+T1. src/tests/get-user-context.logic.test.ts, new cases. Red today because the third argument does not exist.
+- "needsTrade:false, no profile row → {uid, subscription_status:null}"
+- "needsTrade:false, trade-less row → context"
+- "needsTrade:false reads lead_gen via entitlements, not user_profiles"
+- "default call unchanged: no row → null"
+T2. consumer-parcel-lookup.infra.test.ts:49 and parcels-entitlement.infra.test.ts:152 pin the exact text `await getCurrentUserContext(request, pool)`. Move both pins to the new call text. Add a mock-argument assertion `toHaveBeenCalledWith(anything, anything, {needsTrade:false})`; the same assertion goes into parcels-lot-size-route.infra.test.ts. Red until S2.
+
+Phone:
+T3. mobile/__tests__/authGate.test.ts, new describe "MaxBLD front door". With product 'parcel_tool':
+- inputs: segments (auth); (onboarding)/profession; (onboarding)/address; root;
+- each with profile 404, incomplete, complete, or none;
+- expected: navigate '/(app)/parcel-tool' and never registerPushToken;
+- (app)/parcel-tool → wait; no user → sign-in.
+All existing lead cases stay as they are.
+T4. NEW mobile/__tests__/appShell.test.ts:
+- decideMaxbldGate gives loading, offline, error, redirect and enter in their cases.
+- Data plus isError stays 'enter' (gate stability).
+- Every route file under mobile/app/(app) other than parcel-tool, read from disk (index, map, flight-board, settings, [lead], [flight-job]), gives 'redirect'. A lead screen added later is covered automatically.
+- MAXBLD_LOOKUP_ROUTE === PARCEL_TAB_ROUTE.lookup (parcelSearchMatch.ts:253), so the two cannot drift.
+T5. NEW mobile/__tests__/maxbldAppGate.behaviour.test.tsx. Renders AppLayout with expo-router and useParcelEntitlement mocked:
+- the Tabs mock is never rendered;
+- pending → the wordmark;
+- error with no data → "Can't reach MaxBLD", and Try again calls refetch;
+- segments ['(app)'] → Redirect to the Lookup;
+- ['(app)','parcel-tool'] → Slot.
+T6. NEW mobile/__tests__/openingScreens.golden.test.ts with the goldens (the wallScreens pattern): one golden per state; every content key appears in a golden.
+T7. src/tests/surfaces/parcel-tool-fence.infra.test.ts gets the MF-49 extension its header names (:7-9): (app)/_layout.tsx must route on APP_PRODUCT to MaxbldAppGate, and MaxbldAppGate must return the Opening before <Slot. Plants for both.
+T8. NEW mobile/__tests__/signIn.behaviour.test.tsx: signInWithPassword rejects with {code:'invalid_credentials'}, then Keyboard.dismiss is called and "Incorrect email or password." is shown. Under Q2 A, also: ?method=email opens the form, and Back has role and label.
+T9. Count and list pins that move (from the wall commits):
+- src/tests/surfaces/static-page.logic.test.ts: screens 2 → 3;
+- page-arm.logic.test.ts: "2 of 2" → "3 of 3";
+- surface-validate.logic.test.ts and surface-conformance.logic.test.ts: converted 18 → 19, in scope +1, goldens +3;
+- admin-media.golden.test.ts:71 and :99: the mobile list;
+- surface-goldens.ts:48: the map;
+- nav-by-route.logic.test.ts:313-318 and :350 under Q2 A: three entries removed, EXCEPTION_AUDIT_ROWS becomes [29, 30].
+
+Re-run, expected unchanged: subscriptionGate.test.ts and routerTelemetry.test.ts (both read (app)/_layout.tsx and _layout.tsx), spec99.mandates.lint.test.ts, phoneGate.coverage.test.ts, useAuth.test.ts:623, parcel-routes.security.test.ts, parcel-lookup-gate.infra.test.ts. The pre-commit related run does not pick all of these; the station suite does.
+
+How the lock on the lead screens is proven (scope item 7): T3 (AuthGate never names onboarding or '/(app)/'), T4 (every lead route redirects, read from disk), T5 (no Tabs, Redirect drawn), T7 (structural fence).
+
+6. LIMITS AND SURPRISES
+- With no network the app cannot open: the plan read is not persisted, so the user gets "Can't reach MaxBLD" and the stored reports are not reachable offline. This matches the mock's state 4.
+- "Connecting…" shows on the first failed try, not after 2 s: a 2 s threshold would be a registered setting, which is a database step (fe.47).
+- The wordmark is plain text: the two-tone accent has no row role. Help & Support and the footer are left out: there is no open_help action in the closed list.
+- The app icon is still the Expo grid. That is brand assets, left out.
+- The sign-in tagline "Leads for the trades." (sign-in.tsx:463) is left as is: the card does not name it.
+- No sign-out in MaxBLD until card 2. Maestro auth.yaml:28-36 taps "Settings" after sign-in and will fail until then (WF7, not in the suite).
+- The account-deletion reactivation modal does not show for MaxBLD; it comes with the delete-account work in card 2 (task-271).
+- The useParcelLookup.ts:155 comment says "A display, never a gate". It is left alone because the file is task-267's; the gate site says why.
+- get-user-context with no trade: the overload types stop a lead route from passing the option silently, and the typecheck catches a misuse.
+- A future lead-app screen file is covered by T4 automatically.
+
+7. NOTES OWED (backlog CLI for the card, never a hand edit)
+- Spec 116 §3: a dated note 2026-11-25 quoting RR-0499 "1a" (MD:2598): the MaxBLD app lives inside the one Expo project for now; the Codebase/shell row and the 2026-11-09 note are departed from; the separate project is decided later, when the lead app is ready; the fence of ruling 2026-09-16 (c) holds, since parcel-tool stays in (app), whose gate now reads parcel_tool.
+- Spec 99 §5.1-5.3: the MaxBLD arm; §5.2 now reads the parcel_tool plan for this app.
+- Spec 100 §4: the Opening surface.
+- The task-313 card: a plan note, acceptance criteria, and the Files line via `backlog task edit`.
+- The MF-49 queue row in the same commit (DoD #6).
+
+8. OPEN CHOICES (each with a default)
+Q1. A user with no plan, in card 1.
+- A: they go in to Lookup, and today's refusal notice shows when they search (F7). Cost: none. The fence still holds, because every parcel data route answers 403 without an active parcel_tool plan (tool-gate.ts:12-17). Card 2 adds the No plan page at the same gate branch.
+- B: bring task-357 (the No plan page) into this card. Cost: one more surface, about 15 files, and it reorders RR-0501. Spec 126:1087 has "Sign in -> 'Subscribe at maxbld.ca' message".
+- Default: A.
+Q2. The three navigation exceptions owed to MF-49 (#15, #16, #22).
+- A: fix them here: same files, RR-0477 batching. Cost: about half a day, plus the moved tests named in T8 and T9.
+- B: give them a later owner. Cost: none now, but the lock's reasons point at a closed card, and RR-0392 forbids opening a new card without his word.
+- Default: A.
+Q3. The Opening page departs from the mock in three ways: Connecting… on the first failed try rather than at 2 s; a plain wordmark; no Help & Support.
+- A: accept them; nothing new is added.
+- B: add them: a new row part role, a new open_help action in the closed list (126:75 says that needs an operator ruling), and a registered 2 s setting (a database step, on its own card).
+- Default: A.
+
+GUESS estimate: 4 build days. Server 0.5; gate and AuthGate 1; the Opening surface 1.5; sign-in 0.5-1; notes 0.25.
+
+ORDER AND SHARED FILES. Build order: task-465 → tasks 267 and 317 → 343 and 268 → 313. 313 rebases last and re-reads every file:line cited here.
+- Shared with task-465: census/mobile-product.json, bindings.json, nav-by-route.logic.test.ts, Spec 99, Spec 100.
+- Shared with task-267: lookup/route.ts, consumer-parcel-lookup.infra.test.ts, the census, nav-by-route.logic.test.ts, the two 127 generated pages, Spec 99, Spec 100, MCFRONTEND-QUEUE.md.
+- Shared with task-317: MCFRONTEND-QUEUE.md.
+- Shared with task-392 and task-357: static-page.json.
+
+CUT TO LATER CARDS: Account and sign-out, and account deletion (271, card 2); the No plan page (357, card 2, unless Q1 is B); saving (269); the version gate and any 2 s setting (they need a setting, which is a database step); a splash PNG and the app icon (467 or brand); any web page.
+
+Files: src/lib/auth/get-user-context.ts, src/app/api/parcels/lookup/route.ts, src/app/api/parcels/entitlement/route.ts, src/app/api/parcels/lot-size/route.ts, mobile/src/lib/appShell.ts, mobile/src/lib/auth/decideAuthGateRoute.ts, mobile/app/_layout.tsx, mobile/app/(app)/_layout.tsx, mobile/src/components/parcel/MaxbldAppGate.tsx, mobile/src/components/surfaces/OpeningBinding.tsx, mobile/app.json, mobile/app/(auth)/sign-in.tsx, mobile/app/(auth)/sign-up.tsx, scripts/surfaces/_schema/static-page.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_opening.descriptor.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_opening.content.json, mobile/src/generated/surfaces/mobile_parcel_opening.json, scripts/surfaces/_schema/bindings.json, scripts/surfaces/_schema/converted-surfaces.json, scripts/surfaces/_schema/census/mobile-product.json, scripts/surfaces/_schema/auth-class-parity-exceptions.json, scripts/surfaces/platform_shared/F14/surfaces/binding_mobile_list.descriptor.json, scripts/surfaces/platform_shared/F14/surfaces/shell_app_tabs.descriptor.json, scripts/surfaces/opening-golden-capture.ts, mobile/__tests__/fixtures/surfaces/mobile_parcel_opening.goldens.json, mobile/__tests__/fixtures/opening.situations.json, src/tests/fixtures/surfaces/mobile_parcel_opening, docs/reports/policy/policy-ledger.json, src/tests/get-user-context.logic.test.ts, src/tests/consumer-parcel-lookup.infra.test.ts, src/tests/parcels-entitlement.infra.test.ts, src/tests/parcels-lot-size-route.infra.test.ts, src/tests/surfaces/parcel-tool-fence.infra.test.ts, src/tests/surfaces/nav-by-route.logic.test.ts, src/tests/surfaces/static-page.logic.test.ts, src/tests/surfaces/page-arm.logic.test.ts, src/tests/surfaces/surface-validate.logic.test.ts, src/tests/surfaces/surface-conformance.logic.test.ts, src/tests/surfaces/admin-media.golden.test.ts, src/tests/surfaces/surface-goldens.ts, mobile/__tests__/authGate.test.ts, mobile/__tests__/appShell.test.ts, mobile/__tests__/maxbldAppGate.behaviour.test.tsx, mobile/__tests__/openingScreens.golden.test.ts, mobile/__tests__/signIn.behaviour.test.tsx, mobile/__tests__/phoneGate.coverage.test.ts, mobile/__tests__/useAuth.test.ts, docs/reports/generated/127-surface-registry.md, docs/reports/generated/127-surface-review-queue.md, docs/reports/generated/rule-lists-by-kind.md, docs/specs/00-architecture/116_multi_product_architecture.md, docs/specs/03-mobile/99_mobile_state_architecture.md, docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, .cursor/MCFRONTEND-QUEUE.md
+(The two descriptors on this line bring in rule list step-132. sign-up.tsx, phoneGate.coverage.test.ts, useAuth.test.ts and the nav-by-route edits come off the line if Q2 is B.)
+
+9. UNVERIFIED
+- That RR-0480's flag plus GET /api/user-profile wrote mctest-paid's lead_gen trial row (F3): no database read.
+- The keyboard cause of finding 7: not seen on a device.
+- That expo-router <Redirect>/<Slot> in (app)/_layout behave as planned on Expo 54.
+- That `splash` with no image is accepted by Expo 54 prebuild.
+- That a mount file may live outside a route file, under mobile/src/components/parcel (the surface-validate mount rule).
+- That the rows can draw a second header without a new role.
+- Whether the "offline" state name is accepted for "Connecting…".
+- The next free S-number.
+- Whether policy-ledger.json and rule-lists-by-kind.md really move.
+- Whether subscriptionGate.test.ts regexes survive the LeadAppLayout split.
+- That a render test of sign-in can mock Apple, Google and the bottom sheet inline: no global jest mocks found.
+- The Maestro flows, which are not run in the suite.
+

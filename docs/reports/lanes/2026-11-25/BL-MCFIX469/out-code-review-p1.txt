@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-25T21:23:55.646Z file_sha256=9bf25197fd3ce532e21a4f6eb682e80b74236d3e32a444b2402b561822462480 prompt_sha256=90e46f2bb948acf4e050be73d603bad76089abd709403d78c73b0fed73f88311
+🔍 Lens review of docs/reports/lanes/2026-11-25/BL-MCFIX469/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — src/tests/backlog/rule-lists-table.logic.test.ts "const first = Object.keys(copy.goldens).sort()[0] as string;" — the `as string` cast hides a possible `undefined` (array index under noUncheckedIndexedAccess); if the fixture ever ships an empty `goldens` map, `first` is `undefined` and the later path template `.../${first}.mobile.json` fails with an opaque ENOENT instead of a clear assertion — assert `Object.keys(copy.goldens).length` is non-zero (or pick a known key) before indexing, and drop the cast.
+
+DEFER severity=NIT — src/tests/backlog/rule-lists-table.logic.test.ts "fs.writeFileSync(path.join(root, STRAY), '{}\\n');" — the stray copy is written last and never removed nor restored, so the mutated tmp tree is left on disk; if `tmp('emit')` ever hands back a reused directory the first green assertion "expect(ok.status).toBe(0)" would fail on the next run — delete the STRAY file (or `fs.rmSync(root, { recursive: true, force: true })`) at the end of the test.
+
+DEFER severity=NIT — src/tests/backlog/rule-lists-table.logic.test.ts "it('a real golden file of each folder is exempt (the surface folders, the report folder, the report-page captures and their mobile views)'" — the description still lists only the pre-task-469 folders while the body now also asserts the four `mobile/__tests__/fixtures/surfaces/*.goldens.json` copies, so the stated scope drifts from what it checks — add "and the phone goldens" (or similar) to the title.
+
+REJECT — src/tests/backlog/rule-lists-table.logic.test.ts "for (const p of ['src/tests/fixtures/surfaces/x/evil.ts', ... 'mobile/__tests__/fixtures/surfaces/x/a.goldens.json', ...])" — looks like the new `mobile/__tests__/fixtures/surfaces/*.goldens.json` glob might also swallow the nested `x/a.goldens.json` negative case — the neighbouring assertions already pin `*` as not crossing `/` (that same list keeps `src/tests/fixtures/surfaces/x/y/a.mobile.json` and `src/tests/fixtures/report-page/props/x/a.mobile.json` false), so the negative case is consistent and correct.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  69928ms (69.9s)
+📊 Tokens — total: 22242, input: 7745, output: 14497, reasoning: 13937

@@ -7,6 +7,7 @@ status: WAITS
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
+updated_date: '2026-11-25T19:49:00Z'
 due_date: '2026-11-26'
 labels:
   - 1-2
@@ -21,7 +22,7 @@ labels:
   - comp:HS
   - comp:BYL
   - comp:STO
-milestone: m-2
+milestone: m-13
 dependencies:
   - TASK-70
   - TASK-258
@@ -82,3 +83,9 @@ dependency not a plan task, dropped: MF-78, MF-74
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-25 (RR-0501, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2608): moved to the last increment (launch gate) by the operator's ruling on the Increment 1-C plan.
+<!-- SECTION:NOTES:END -->

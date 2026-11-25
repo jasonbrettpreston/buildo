@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-25T18:46:15.678Z file_sha256=9f444fe038dc0cf335293a68fda891a3505e712b49189d35e974ceda25676e52 prompt_sha256=a5bdf1d90708a12f2b0991e9da3c8262abb50c516d20631f70574eeb5cd8e3f8
+🔍 Lens review of docs/reports/reviews/task-267/context-r1.md (model: deepseek-reasoner)
+
+Touches: money and entitlements (the report meter and the at-limit wall on the lookup route).
+
+BUG severity=HIGH — plan step 4.2 "on the fast read, return the stored page if present; else, unless held, the checked view: buildTree({lifecycle:'loading', what_we_checked}) then viewOf on target mobile with no href" — a subscribed client calls the lookup with the query fast flag only, gets the server-built checked facts lot after lot, and because "under A2 the fast read counts only a stored page it serves" the usage row never moves, so one subscription serves unlimited lots' report facts — fix: the unmetered read returns progress labels only, never the checked facts, or it counts every lot whose checked view it serves.
+BUG severity=MED — plan section 5 G3 "at limit 403 with 0" with section 6 "the at-limit wall now shows after the compute (G3)" — a held account posts parcelId for many lots, each runs the 11 to 23 s compute before the 403 and writes 0, so an account with no entitlement burns server compute at request rate with no charge and no rate limit named — fix: resolve held and entitlement before the compute, and rate-limit lookups per user.
+DEFER severity=MED — plan section 6 "A failing compute runs up to 4 times, per the ruled retries." — any request for a lot whose compute throws costs four computes and is charged 0, repeatable at will, multiplying the compute exhaustion above — fix: cap retries per user per time window, not per request.
+DEFER severity=MED — plan step 4.4 "O5: no refetch on mount when the cache holds a page" against "a stale record is never served and is recomputed" — a phone that opened a lot before a settings or evaluator stamp change keeps showing the old numbers for as long as the cache lives, so stale report content is presented as current with no recompute — fix: keep one background refetch gated on the stamp.
+DEFER severity=LOW — plan section 2 "The persisted ['parcel-lookup', id] cache (useParcelLookup.ts:107-116; _layout.tsx:490; queryClient.ts:41)" — the cache is keyed by parcel id, not by user, and under O5 it is served with no fetch, so the next person on a shared phone sees the previous user's last opened lot and address, a browsing-history leak — fix: clear the cache on sign-out or key it by user id.
+REJECT — "src/lib/entitlements/index.ts:559 (export usageFor)" — looks like a widened cross-user usage read — the plan calls it from the lookup route for the session's own rows and no request-supplied user id is named, so no IDOR is visible.
+REJECT — "A compute that ends after the give-up is still counted on the server." — looks like an abandoned load could dodge or refund the charge — the count is written server side on production, so giving up or replaying the screen cannot avoid it.
+
+VERDICT: FAIL on exploitability
+Surfaces touched: money, entitlements
+
+---
+⏱  61004ms (61.0s)
+📊 Tokens — total: 44639, input: 33603, output: 11036, reasoning: 10353

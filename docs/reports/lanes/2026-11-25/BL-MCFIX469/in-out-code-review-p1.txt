@@ -1,0 +1,123 @@
+LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:c795119c1a7333c01b4401e05f7571b531d75e1d756434cda39468feab03add0 part 1 of 1 chunk 1 of 1
+NO RULE LIST: the lens template alone judges the material under review. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/analysis/rule-lists.json","src/tests/backlog/rule-lists-table.logic.test.ts"]
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/analysis/rule-lists.json b/scripts/analysis/rule-lists.json
+index 01999e5d037e2f1c131339ecde8d976bc84a6405..af6e234667645b531cff8e36805da2763b7ed285 100644
+--- a/scripts/analysis/rule-lists.json
++++ b/scripts/analysis/rule-lists.json
+@@ -6,7 +6,7 @@
+     "`exempt` globs are records the lane writes itself (the commit hooks always allow them, check-task-files.mjs): they resolve to NO list and the brief says so. A Files entry no row and no exempt glob matches is refused at launch with the path named. `no_files_default`: a task of that type with no Files line gets the named row (record-only tasks: the queue-records row, which attaches no list since task-448, RR-0418; such a task gets the every-task, increment and milestone lists only). `increment_docs`: every task also gets the requirements document of its milestone group letter.",
+     "V2.LIST (task-406, McFix V2 step 1; operator 2026-11-20, see the task text): `every_task` lists are attached to EVERY task whatever its Files line (the plan protocol as a repo document; the five words in the step handbook Glossary were one until task-453: off at both stages since then, RR-0452, the list definition kept so turning it back on is putting the id back); `milestone_docs` attaches to a task the objectives sections of its own milestone, beside `increment_docs`; `kinds` are the examples the generated page docs/reports/generated/rule-lists-by-kind.md prints (what each kind of work receives). `rule-lists.mjs validate` refuses a table with none of them.",
+     "task-453 (SEARCHFIX.5; RR-0440, MORNING-DECISIONS.md:2265; RR-0450, :2325; RR-0452, :2336): `output_off` names every_task lists that are off for OUTPUT reviews only (rule-lists.mjs outputLists, read by the close check and the launch brief for a build or fix task); a build task keeps them at its plan review; emptying the line turns them back on; five-words is out of every_task (off at both stages, nothing replaces it). task-460 (PROC.OUTSHAPE; RR-0457 :2367, RR-0458 :2372, RR-0459 :2377): output_off may name any defined list and names every list, so the output review of a build or fix task receives none (its plan review keeps them; a check or doc task keeps every list at either stage); validate refuses an id that is not a defined list; emptying the line puts every list back; a list added later is on at output until its id is added here (a test pins output_off to every key of lists).",
+-    "V2.LIST (task-406, round 7; operator, 2026-11-20, \"you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y\", MORNING-DECISIONS.md:1520, item 3 put to him as \"3. Exempt generated snapshots from review material. My recommendation: yes.\"): the `exempt` key (bare globs; no new field) also lists the golden snapshot files that one existing check validates, and each such glob names that check in the line below it (a test fails a golden glob with no named check). This exempts the REVIEW MATERIAL only (the close check and the launch brief take the task range minus matchesAny(exempt)); list resolution is unchanged (a golden path still matches its rows). A code file, a script, the manifest states.json or a nested file is not matched. The landing sample web_landing.sample.json is not tracked, so no glob is added for it.",
++    "V2.LIST (task-406, round 7; operator, 2026-11-20, \"you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y\", MORNING-DECISIONS.md:1520, item 3 put to him as \"3. Exempt generated snapshots from review material. My recommendation: yes.\"): the `exempt` key (bare globs; no new field) also lists the golden snapshot files that one existing check validates (and the generated phone copies of those goldens, which the generator's own --check proves: task-469, RR-0502), and each such glob names that check in the line below it (a test fails a golden glob with no named check). This exempts the REVIEW MATERIAL only (the close check and the launch brief take the task range minus matchesAny(exempt)); list resolution is unchanged (a golden path still matches its rows). A code file, a script, the manifest states.json or a nested file is not matched. The landing sample web_landing.sample.json is not tracked, so no glob is added for it.",
+     "exempt src/tests/fixtures/surfaces/*/*.mobile.json: proved by goldenProblems (scripts/surfaces/report-checks.mjs, the report folder and its manifest states.json) and screenArm (scripts/surfaces/screen-checks.mjs, the other surface folders): a golden file not in the manifest or not a declared state x target is a finding",
+     "exempt src/tests/fixtures/surfaces/*/*.web.json: proved by goldenProblems (scripts/surfaces/report-checks.mjs, the report folder and its manifest states.json) and screenArm (scripts/surfaces/screen-checks.mjs, the other surface folders): a golden file not in the manifest or not a declared state x target is a finding",
+     "exempt src/tests/fixtures/surfaces/*/*.admin.json: proved by goldenProblems (scripts/surfaces/report-checks.mjs, the report folder and its manifest states.json) and screenArm (scripts/surfaces/screen-checks.mjs, the other surface folders): a golden file not in the manifest or not a declared state x target is a finding",
+@@ -15,7 +15,8 @@
+     "exempt src/tests/fixtures/report-page/*.web.json: proved by report-page-capture.ts --check (scripts/surfaces/report-page-capture.ts: every page golden is rebuilt from its response_fixture by buildPage and compared byte for byte; the same equality runs in src/tests/surfaces/report-page.logic.test.ts)",
+     "exempt src/tests/fixtures/report-page/*.admin.json: proved by report-page-capture.ts --check (scripts/surfaces/report-page-capture.ts: every page golden is rebuilt from its response_fixture by buildPage and compared byte for byte; the same equality runs in src/tests/surfaces/report-page.logic.test.ts)",
+     "exempt src/tests/fixtures/report-page/*.pdf.json: proved by report-page-capture.ts --check (scripts/surfaces/report-page-capture.ts: every page golden is rebuilt from its response_fixture by buildPage and compared byte for byte; the same equality runs in src/tests/surfaces/report-page.logic.test.ts)",
+-    "exempt src/tests/fixtures/report-page/props/*.mobile.json: proved by report-page-capture.ts --check (captureMobileViews rebuilds each mobile page view and compares the file byte for byte; its props member is asserted equal to the mobile binding's reportProps by mobile/__tests__/reportScreens.golden.test.ts)"
++    "exempt src/tests/fixtures/report-page/props/*.mobile.json: proved by report-page-capture.ts --check (captureMobileViews rebuilds each mobile page view and compares the file byte for byte; its props member is asserted equal to the mobile binding's reportProps by mobile/__tests__/reportScreens.golden.test.ts)",
++    "exempt mobile/__tests__/fixtures/surfaces/*.goldens.json: proved by emit-mobile-surfaces.mjs --check (scripts/surfaces/emit-mobile-surfaces.mjs checkOutputs: each phone picture copy is rebuilt from src/tests/fixtures/surfaces/<id>/*.mobile.json and compared byte for byte, GEN-HAND-EDIT, GEN-STALE or GEN-STRAY otherwise; run by surface-validate.mjs S-gen; standing proof on the real copies: src/tests/surfaces/mcfront-proof.infra.test.ts canary b control, in the push suite; red proof on a bad copy: src/tests/backlog/rule-lists-table.logic.test.ts) (task-469, RR-0502 MORNING-DECISIONS.md:2613)"
+   ],
+   "contract_version": 1,
+   "base_ref": "wf2/board",
+@@ -228,7 +229,7 @@
+       "why": "ADDED by COMPLY.2 (not in the starting rows): test files are governed by the engineering standards (testing, section 5). V2.LIST (task-406): the standards are attached whole (eng-all); also tests/**, scripts/tests/** and supabase/tests/** (coverage review 2026-11-20: unmatched)"
+     }
+   ],
+-  "exempt": ["docs/reports/lanes/**", "docs/reports/reviews/**", "src/tests/fixtures/surfaces/*/*.mobile.json", "src/tests/fixtures/surfaces/*/*.web.json", "src/tests/fixtures/surfaces/*/*.admin.json", "src/tests/fixtures/surfaces/*/*.pdf.json", "src/tests/fixtures/report-page/*.mobile.json", "src/tests/fixtures/report-page/*.web.json", "src/tests/fixtures/report-page/*.admin.json", "src/tests/fixtures/report-page/*.pdf.json", "src/tests/fixtures/report-page/props/*.mobile.json"],
++  "exempt": ["docs/reports/lanes/**", "docs/reports/reviews/**", "src/tests/fixtures/surfaces/*/*.mobile.json", "src/tests/fixtures/surfaces/*/*.web.json", "src/tests/fixtures/surfaces/*/*.admin.json", "src/tests/fixtures/surfaces/*/*.pdf.json", "src/tests/fixtures/report-page/*.mobile.json", "src/tests/fixtures/report-page/*.web.json", "src/tests/fixtures/report-page/*.admin.json", "src/tests/fixtures/report-page/*.pdf.json", "src/tests/fixtures/report-page/props/*.mobile.json", "mobile/__tests__/fixtures/surfaces/*.goldens.json"],
+   "no_files_default": { "types": ["record"], "row": "queue-records" },
+   "increment_docs": {
+     "F": "inc-F", "S": "inc-S", "1-2": "inc-1-2", "1": "inc-1", "3": "inc-3", "4": "inc-4", "5": "inc-5", "6": "inc-6",
+diff --git a/src/tests/backlog/rule-lists-table.logic.test.ts b/src/tests/backlog/rule-lists-table.logic.test.ts
+index 1043e17976bb8cad6637a70d8f98a5e0d571d9ea..f15b6ac37f36b3481e5e5a91179be884a0a9f524 100644
+--- a/src/tests/backlog/rule-lists-table.logic.test.ts
++++ b/src/tests/backlog/rule-lists-table.logic.test.ts
+@@ -141,22 +141,22 @@ describe('V2.LIST round 5: an in-scope census entry with no route file is skippe
+ });
+ 
+ // V2.LIST round 7 (task-406; operator, 2026-11-20, "you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y", MORNING-DECISIONS.md:1520, item 3 put to him as "3. Exempt generated snapshots from review material. My recommendation: yes."):
+-// the table's own exempt key lists the golden snapshot files that one existing check validates. The review material is the task range minus matchesAny(exempt) (the close check and the launch brief); list resolution is NOT changed.
++// the table's own exempt key lists the golden snapshot files that one existing check validates (and the generated phone copies of those goldens, which the generator's own --check proves: task-469, RR-0502). The review material is the task range minus matchesAny(exempt) (the close check and the launch brief); list resolution is NOT changed.
+ describe('V2.LIST round 7: golden snapshot files are exempt from the review material, each glob names the check that proves it', () => {
+-  const CHECKS = ['goldenProblems', 'screenArm', 'report-page-capture.ts --check'];
++  const CHECKS = ['goldenProblems', 'screenArm', 'report-page-capture.ts --check', 'emit-mobile-surfaces.mjs --check'];
+   const raw = () => JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as { exempt: string[]; $comment: string[] };
+   const matcher = async () => (await import(path.join(ROOT, 'scripts/analysis/mcbylaws/paths.mjs'))) as { matchesAny: (globs: string[], p: string) => boolean };
+   it('a real golden file of each folder is exempt (the surface folders, the report folder, the report-page captures and their mobile views)', async () => {
+     const { matchesAny } = await matcher();
+     const ex = raw().exempt;
+-    for (const p of ['src/tests/fixtures/surfaces/report/v21.web.json', 'src/tests/fixtures/surfaces/report/v21.pdf.json', 'src/tests/fixtures/surfaces/web_landing/static.web.json', 'src/tests/fixtures/surfaces/admin_media/hit.web.json', 'src/tests/fixtures/surfaces/mobile_parcel_search/hit.mobile.json', 'src/tests/fixtures/surfaces/admin_media/hit.admin.json', 'src/tests/fixtures/report-page/v21.mobile.json', 'src/tests/fixtures/report-page/entered.pdf.json', 'src/tests/fixtures/report-page/entered.web.json', 'src/tests/fixtures/report-page/v21.admin.json', 'src/tests/fixtures/report-page/props/error.mobile.json']) {
++    for (const p of ['src/tests/fixtures/surfaces/report/v21.web.json', 'src/tests/fixtures/surfaces/report/v21.pdf.json', 'src/tests/fixtures/surfaces/web_landing/static.web.json', 'src/tests/fixtures/surfaces/admin_media/hit.web.json', 'src/tests/fixtures/surfaces/mobile_parcel_search/hit.mobile.json', 'src/tests/fixtures/surfaces/admin_media/hit.admin.json', 'src/tests/fixtures/report-page/v21.mobile.json', 'src/tests/fixtures/report-page/entered.pdf.json', 'src/tests/fixtures/report-page/entered.web.json', 'src/tests/fixtures/report-page/v21.admin.json', 'src/tests/fixtures/report-page/props/error.mobile.json', 'mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json', 'mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json', 'mobile/__tests__/fixtures/surfaces/mobile_parcel_semi_question.goldens.json', 'mobile/__tests__/fixtures/surfaces/mobile_parcel_wall.goldens.json']) {
+       expect(matchesAny(ex, p), p).toBe(true);
+     }
+   });
+   it('a code file, the manifest, a script or a nested golden-looking file is NOT exempt', async () => {
+     const { matchesAny } = await matcher();
+     const ex = raw().exempt;
+-    for (const p of ['src/tests/fixtures/surfaces/x/evil.ts', 'src/tests/fixtures/report-page/run.mjs', 'src/tests/fixtures/surfaces/report/states.json', 'src/tests/fixtures/surfaces/x/y/a.mobile.json', 'src/tests/fixtures/report-page/props/notes.json', 'src/tests/fixtures/report-page/props/x/a.mobile.json', 'scripts/surfaces/report-page-capture.ts']) {
++    for (const p of ['src/tests/fixtures/surfaces/x/evil.ts', 'src/tests/fixtures/report-page/run.mjs', 'src/tests/fixtures/surfaces/report/states.json', 'src/tests/fixtures/surfaces/x/y/a.mobile.json', 'src/tests/fixtures/report-page/props/notes.json', 'src/tests/fixtures/report-page/props/x/a.mobile.json', 'scripts/surfaces/report-page-capture.ts', 'mobile/src/generated/surfaces/mobile_parcel_search.json', 'mobile/__tests__/fixtures/surfaces/x/a.goldens.json', 'mobile/__tests__/fixtures/surfaces/notes.json', 'mobile/__tests__/fixtures/parcelSearch.situations.json', 'mobile/__tests__/parcelScreens.golden.test.ts']) {
+       expect(matchesAny(ex, p), p).toBe(false);
+     }
+   });
+@@ -172,11 +172,52 @@ describe('V2.LIST round 7: golden snapshot files are exempt from the review mate
+     const text = t.$comment.join('\n');
+     const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+     const golden = t.exempt.filter((g) => !g.startsWith('docs/reports/'));
+-    expect(golden.length).toBe(9);
++    expect(golden.length).toBe(10);
+     const unnamed = (globs: string[], comment: string) => globs.filter((g) => !CHECKS.some((c) => new RegExp(esc(g) + '[^\\n]*proved by[^\\n]*' + esc(c)).test(comment)));
+     expect(unnamed(golden, text)).toEqual([]);
+     expect(unnamed([...golden, 'src/tests/fixtures/zzz/*.json'], text)).toEqual(['src/tests/fixtures/zzz/*.json']);
+   });
++  // task-469 (RR-0502, MORNING-DECISIONS.md:2613 "465 a"): the phone picture copies are exempt because emit-mobile-surfaces.mjs --check rebuilds each copy from its
++  // sources and compares it byte for byte. Proven both ways on a tmp copy of what the generator reads (the same set as emitCopy, surface-conformance.logic.test.ts).
++  it('the proving check goes red on a phone copy that does not match its sources; a clean copy is green', () => {
++    const SEARCH = 'mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json';
++    const STRAY = 'mobile/__tests__/fixtures/surfaces/zz.goldens.json';
++    // realpath: the emitter runs its main only when argv[1] equals its own resolved path, and the OS tmp dir may be a symlink (macOS /var -> /private/var).
++    const root = fs.realpathSync(tmp('emit'));
++    for (const rel of ['scripts/surfaces', 'scripts/seeds/logic_variables.json', 'src/tests/fixtures/surfaces', 'mobile/src/generated/surfaces', 'mobile/__tests__/fixtures/surfaces']) {
++      fs.cpSync(path.join(ROOT, rel), path.join(root, rel), { recursive: true });
++    }
++    const check = () => run('node', [path.join(root, 'scripts/surfaces/emit-mobile-surfaces.mjs'), '--check']);
++    const restore = (rel: string) => fs.copyFileSync(path.join(ROOT, rel), path.join(root, rel));
++    const ok = check();
++    expect(ok.status, ok.stderr).toBe(0);
++    expect(ok.stderr).toBe('');
++    expect(ok.stdout).toMatch(/^surfaces ok/);
++    // (b) a hand edit: one value in the goldens body changed, the $comment (and its input_sha) kept
++    const copy = JSON.parse(fs.readFileSync(path.join(root, SEARCH), 'utf8')) as { goldens: Record<string, unknown> };
++    const first = Object.keys(copy.goldens).sort()[0] as string;
++    copy.goldens[first] = { hand_edit: true };
++    fs.writeFileSync(path.join(root, SEARCH), JSON.stringify(copy, null, 2) + '\n');
++    const hand = check();
++    expect(hand.status).toBe(1);
++    expect(hand.stderr).toContain(`GEN-HAND-EDIT ${SEARCH}`);
++    restore(SEARCH);
++    expect(check().status).toBe(0);
++    // (c) a stale copy: one source golden changed, the copy not regenerated
++    const SRC = `src/tests/fixtures/surfaces/mobile_parcel_search/${first}.mobile.json`;
++    const src = JSON.parse(fs.readFileSync(path.join(root, SRC), 'utf8')) as Record<string, unknown>;
++    fs.writeFileSync(path.join(root, SRC), JSON.stringify({ ...src, zz_changed: 1 }, null, 2) + '\n');
++    const stale = check();
++    expect(stale.status).toBe(1);
++    expect(stale.stderr).toContain(`GEN-STALE ${SEARCH}`);
++    restore(SRC);
++    expect(check().status).toBe(0);
++    // (d) a stray copy no converted surface owns
++    fs.writeFileSync(path.join(root, STRAY), '{}\n');
++    const stray = check();
++    expect(stray.status).toBe(1);
++    expect(stray.stderr).toContain(`GEN-STRAY ${STRAY}`);
++  });
+ });
+ 
+ // task-384 STD.REPORT-OWN part two (operator 2026-11-20, MORNING-DECISIONS.md:1421-1422, item 3 "bring them under the existing checks"): the web report renderer is under the
+

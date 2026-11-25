@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-engineering.md model=deepseek-reasoner at=2026-11-25T18:46:15.665Z file_sha256=823b5538f3324413eb4372c0e9ac0f815299dbea345fc705b2ded251f25cd399 prompt_sha256=3a11afb724b890c9b3f97a56d86d390fdf0ad3d6ecd148d552fecdcfb56458e8
+🔍 Lens review of docs/reports/reviews/task-267/in-plan-engineering-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §2.1 "you MUST include tests for **error paths and silent failures**" and §11 "Unhappy-path test cases listed: 400, 404, 500 (§2.1)" — PLAN-267-v2 §5 "G1 "a q hit never runs the stored read or the compute" ... G4 "683 Danforth": parcelId=5361889 with the compute mocked null. Expect 200, page null, meter not_produced" — none of the five new infra cases forces an error in the deepest layer or asserts a safe 500 without the raw message, so the modified route's error path is untested at plan altitude — add G6 that makes computeCustomerPageResponse throw and asserts a 500 body with no err.message plus logError called.
+
+BUG severity=HIGH — §13.3 "API routes MUST emit at least one `logInfo` per successful request with `{user_id, duration_ms, ...key_params}`" and §11 "Overarching try-catch with `logError(tag, err, context)` (§2.2, §6.1)" — PLAN-267-v2 step 2 "on the fast read, return the stored page if present; else, unless held, the checked view ... The meter code is unchanged." — the plan adds an early-return success branch to route.ts and states neither its logInfo nor that it sits inside the route's overarching try-catch, so the §11 API item cannot be ticked — state in step 2 that the fast read runs inside the existing try-catch, emits logInfo with user_id/duration_ms, and its catch uses logError.
+
+BUG severity=MED — §10.3 "New API routes must define Request/Response TypeScript interfaces in a shared types file (`src/lib/[feature]/types.ts`), not inline in the route" and §11 "Request/Response TypeScript interface in `src/lib/[feature]/types.ts` (§10.3)" — PLAN-267-v2 step 2 "OUTSIDE FILES LINE: src/app/api/parcels/lookup/types.ts (the response field `checked`, the X-4 a field, and the flag)" — the new response field is typed route-side, not in the shared types file — move the `checked` response interface to src/lib/parcels/types.ts or record why the route-local file is the shared contract.
+
+BUG severity=MED — §1.3 "Critical state transitions ... must trigger a haptic: `lightImpact()` for neutral actions, `successNotification()` for confirms, and the error variant for failures. Silent state changes that affect financial or account data are not acceptable." — PLAN-267-v2 step 5 "checkedProps renders screens 1-5 from existing kinds only (View, Text, Button, ActivityIndicator); screen 3's spinner and words are centred." — the new buttons and the failure/no-report transitions, which decide whether a metered report is shown, get no haptic and no stated press-state feedback — add lightImpact on View report, the error variant on screen 4, and withSpring press feedback for the three buttons.
+
+BUG severity=MED — §1.1 "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of **44px x 44px**" and §11 "Touch targets ≥ 44px (§1.1) ... 375px viewport test in test plan" — PLAN-267-v2 §5 "C6: a miss at 0.1 s gives "No report for this lot yet." and "Back to search" at 23000; a press calls back" — the new Try again, View report and Back to search buttons carry no 44px statement and the mobile test list has no 375px viewport case — add the 44px minimum to the three buttons and one 375px render case to the test list.
+
+BUG severity=MED — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" and §11 "No modifications to `scripts/`, `migrations/`, or `scripts/lib/` (§10.2)" — PLAN-267-v2 FILES "scripts/surfaces/_schema/census/mobile-product.json, scripts/surfaces/_schema/census/contracts.json ... scripts/surfaces/report-page-capture.ts, scripts/surfaces/emit-mobile-surfaces.mjs (O7)" — the plan edits many files under scripts/ and records no boundary exception, so the Frontend Boundary Check cannot be ticked — record each scripts/surfaces edit as a named, justified exception (generator inputs required by the surface registry) inside the plan.
+
+DEFER severity=LOW — §4.4 "All API routes must return a consistent envelope: `{ data, error, meta }`. Never return raw arrays or ad-hoc shapes." — PLAN-267-v2 step 3 "`checked` nullable and optional (the core's checked view shape)" — the plan does not say whether `checked` sits inside the existing envelope or is a new sibling top-level field — state the field's position in the envelope so the §4.4 check can be closed.
+
+MET — §5.3 — PLAN-267-v2 "#### 5. Tests first (red, then green)" — every new and moved test case (G1-G5, C1-C8, M1-M3, the logic table) is listed ahead of the file-by-file build steps.
+
+MET — §4.3 — PLAN-267-v2 step 2 "the response field `checked`" — one projected field the UI needs, no SELECT *.
+
+MET — §2.3 — PLAN-267-v2 step 5 "reportScreenState (:399-403) becomes total over (data, checked, isFetching, isError, elapsedMs, gaveUp)" and "With no address there is no title node at all" — nested access guarded rather than asserted.
+
+MET — §3.2 and §12.8 — PLAN-267-v2 §6 "no migration and no new seed row (see O7)" — no UP/DOWN or SQL lint owed because no migration lands.
+
+MET — §5.5 — PLAN-267-v2 step 11 "generate-surface-registry.mjs default run ... its `--check` must be clean" — the generated doc to generator drift guard is run, not asserted by eye.
+
+VERDICT: FAIL on the pasted engineering rules
+Clauses checked: 16   Unmet: 6
+
+---
+⏱  71466ms (71.5s)
+📊 Tokens — total: 39367, input: 24690, output: 14677, reasoning: 13280

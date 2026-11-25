@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-25T18:46:15.673Z file_sha256=628de34b4b51a27b75db7a791eadf1dc194c98624bfc707b65010280f3b8b968 prompt_sha256=82575a51a0bd38c113562c41379885534c5341526ce7981305243f0a934b6003
+🔍 Lens review of docs/reports/reviews/task-267/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC8 (126_maxbld_surface_standard.md:72) "No McFrontend work starts without its row in" — plan §4 step 12 "12. Specs and queue: ... .cursor/MCFRONTEND-QUEUE.md: one follow-up row to MF-62 for both cards, the next free id at claim" — the queue row is created after steps 1-11 of code, so the work starts before the row exists — add step 0 that claims the MF row, before any file in step 1 is touched
+BUG severity=HIGH — AC6 (08_agents.md:490) "Red tests first, then the code, through the real hooks." — plan §5 "The mobile jest files are run by no hook. Run them by hand or in Mobile CI and keep the output." — the mobile red-first pass (C1-C8, M1-M3) is not gateable by any hook, so nothing enforces the red state before the code — wire the mobile jest suite into a hook, or name the hook that runs it, before the red commit
+BUG severity=HIGH — RR-0491 "Teh mock looks great! 1 Change (1) Still building - Loading the report shuld be centered horizontally as opposed to left justified. Approved" — plan §3 "The label "Checks for this lot" is drawn VISIBLE in the mock. ... Left open as O8." — the mock is approved as drawn, so O8 is decided, and both branches touch SCREEN_CONTENT_KEYS, so the build cannot start — settle the label visible per the approval and carry the 126:869 conflict as a dated note, not as an open choice
+DEFER severity=MED — RR-0392 "Push for all 4. I  don't think we need any other infastrcuture beyond this.. we are good to go!" — plan §8 "A2: a fast parcelId read with one optional flag ... The flag and the response field `checked` (X-4 a, ruled) need his word under RR-0392." and step 4 "the fast-read query (key ['parcel-checking', id], under A2)" — the recommended path adds a second query key, a new wire field and a new census row beyond the four pushes, and the word RR-0392 requires is not in the pasted context — obtain that word, or plan A1, before plan-lock
+DEFER severity=MED — RR-0477 "Keep anything with a database step or its own operator question on its own card." — plan §8 "O7, the 60 s value: ... (b) A new seed row and config.give_up_ms. That is a database step, so its own card by RR-0477." — one card carries four undecided operator questions (O1, O5, O7, O8) and offers a database-step option inside its own scope — decide O1, O5, O7, O8 or split them out before build
+DEFER severity=MED — AC5 (08_agents.md:458) "one grounder re-executes every claim in the fold" — plan §9 "Nothing was run; this was read only" — no step runs a grounder over the line-number claims the plan rests on, so AC5 has no owner — add a grounder fold step over §2 and §4 to the plan
+DEFER severity=MED — AC3 (08_agents.md:144) "The brief file opens with a front-matter block" — plan FILES "src/tests/parcel-lookup-gate.infra.test.ts, ... scripts/surfaces/_schema/census/contracts.json" — write_scope is never declared; only a FILES list and "OUTSIDE FILES LINE" markers exist — add write_scope covering the outside files (census, descriptors, generated surfaces, specs, queue)
+DEFER severity=LOW — AC1 (.cursor/MCBYLAWS-QUEUE.md:109) "Pre-register the task's `rules[]` and expected moves" — plan §1 "Rules quoted first" — rules are quoted in prose but no commit pre-registers rules[] and expected moves alone — add a commit-0 step carrying only that pre-registration
+MET — RR-0490 — plan §3 "A failure or a miss that arrives while the lines play waits until they end. Then comes screen 4 (failure) or screen 5 (no report)." — the lines finish before failure or no-report, per 3 b and 4 B
+MET — RR-0491 — plan step 5 "screen 3's spinner and words are centred" — the one change the approval names is built
+MET — RR-0341 — plan step 9 "The 60 s give-up: per O7, either config.give_up_ms or a direct read of the existing slice value." — gives up at 60 s
+MET — RR-0486 — plan step 5 "backProps gains the address title. With no address there is no title node at all." — the title is clarified away from "Checking your lot"
+MET — RR-0278 — plan G3 "meter counts unchanged" — charged only when a page is produced, not on a q hit
+REJECT — RR-0278 — accused of charging a report the user never sees after the give-up — the clause's condition is "a report is produced", which holds, and C7 "a late page after the give-up, then Try again shows it with no fetch" keeps the counted report reachable
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 8
+Rules met: none
+
+---
+⏱  48760ms (48.8s)
+📊 Tokens — total: 23138, input: 13505, output: 9633, reasoning: 8404

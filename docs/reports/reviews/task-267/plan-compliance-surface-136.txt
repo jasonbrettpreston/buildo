@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-25T18:46:15.672Z file_sha256=2b5079d59ff51157de13f2743352fca00712a3096c9d44c5a52b6f06c3e537a4 prompt_sha256=ceac35a8a0151d50dfd4392a09c936ee35ccff95616b2be2646686bcb41ad9a9
+🔍 Lens review of docs/reports/reviews/task-267/in-plan-compliance-surface-136.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — fe.35 "never on miss, error or a reading tree" — plan C4 "no page at 60000 ms gives 'Could not load this report. Try again.' with the lines kept" and C6 "a miss at 0.1 s gives 'No report for this lot yet.' and 'Back to search' at 23000" — the plan keeps the checked lines on the failure (error) and no-report (miss) endings, so the checked object is shown on a miss/error tree that fe.35 forbids, and step 12 records no dated note amending fe.35 for RR-0490/RR-0491 — add a step 12 dated note that RR-0490/RR-0491 amend fe.35's "never on miss, error" for these endings ("the later operator ruling governs"), or state the finished lines render from a non-tree snapshot and the checked object is dropped when lifecycle becomes miss/error.
+DEFER severity=MED — fe.45 "Anything else computed client-side is a Rule 2 violation and needs a deviations[] row with an adjudicator and a date" — plan step 5 "reportScreenState (:399-403) becomes total over (data, checked, isFetching, isError, elapsedMs, gaveUp)" — the ending and the 60 s give-up are decided client-side with no deviations[] row named — add a deviations[] row for the client-side ending/give-up timer, or show it falls inside the five allowed (device state, animation).
+DEFER severity=MED — fe.56 "a lock never red against the defect it names is not a lock" — plan "src/tests/surfaces/report-failure.logic.test.ts (new; a table over reportScreenState, total, 317 R2)" — no planted-defect fixture is named for the new locks, so "Prove each lock RED on a fixture that declares a column or a policy that does not exist" is unmet — name the planted defect per fe.56 for report-failure.logic.test.ts and reportChecked.behaviour.test.tsx.
+DEFER severity=MED — fe.15 "the McFront proof canaries a-f, EXECUTABLE ... are in the plan's acceptance criteria" — pasted "## Acceptance criteria" lists only "#1 Pre-register the expected moves" through "#8 ... queue row first" — the acceptance criteria carry no canary a-f — add the executable canaries a-f to the plan's acceptance criteria.
+DEFER severity=LOW — fe.47 "All tunables are data; zero thresholds in src" — plan O7 "The 60 s value: (a) Read the existing registered 60 000 ... (b) A new seed row and config.give_up_ms ... (c) A typed number. Breaks Spec 128 Rule 3." — the give-up value is left an open choice — commit before build to reading the registered maxbld_page_continue_wait_ms (O7 a), never a typed number.
+MET — fe.29 — plan step 5 "LifecycleState stays loading | miss | error. The ending is a separate field, so no new states.lifecycle.* key is invented" — the closed lifecycle is preserved.
+MET — fe.31 — plan step 5 "checkedProps renders screens 1-5 from existing kinds only (View, Text, Button, ActivityIndicator)" — existing components only, no new component kind.
+MET — fe.33 — plan step 10 "mobile_parcel_detail.content.json gains back_to_search.text" — the new displayed string comes from content.
+MET — fe.32 — plan step 11.2 "the field whitelist gains `checked`" — the displayed member is added to the CONTRACT descriptor, not invented outside it.
+MET — fe.07 — plan Parity "the report detail is mobile only (identity.platforms [\"mobile\"]). There is no web/phone parity lock for its lifecycle" — single declared target, so the parity clause is not triggered.
+REJECT — fe.36 — the screen-state machine is accused of swapping the view by local state (a nav-by-route breach) — "Back to search" uses the existing `back` (useGoBack) and the endings are disclosure states, not route swaps, so navigation stays on the platform router.
+REJECT — fe.14 — the new MF-99 follow-up row is accused of being an MF task outside Phase 0-2 — it is a follow-up to MF-62 within the Phase 1 report page, so the Phase 0-2 fenced queue is not crossed.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 58   Unmet: 5
+Rules met: fe.01, fe.02, fe.03, fe.06, fe.07, fe.11, fe.18, fe.24, fe.28, fe.29, fe.31, fe.32, fe.33, fe.54
+
+---
+⏱  124698ms (124.7s)
+📊 Tokens — total: 47834, input: 20849, output: 26985, reasoning: 25920

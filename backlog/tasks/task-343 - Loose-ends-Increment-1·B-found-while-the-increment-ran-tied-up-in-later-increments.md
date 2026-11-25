@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane-BL-LOOSE'
 created_date: '2026-11-19T20:30:00Z'
-updated_date: '2026-11-25T17:05:00Z'
+updated_date: '2026-11-25T19:34:00Z'
 labels:
   - McFixV2
 milestone: m-1
@@ -159,4 +159,6 @@ Operator 2026-11-20, verbatim: "Task 370 yes . approved" (~/Buildo-scratch/queue
 2026-11-24: ordered last in the search milestone, after TASK-268 (RR-0447, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2308).
 
 McFixV2 addition 2026-11-25 (operator phone walk; rulings RR-0483, RR-0485, RR-0486 in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2523, :2533, :2538). Not yet planned. Two loose ends placed here by the operator ("4. agreed - we should ensure a card for add to loose ends", :2523). (a) Report counter: operator, "I opend maybe 10 reports checking all the addresses and the counter didnt move ... its definitely not working" (:2518). (b) Operator ruling: "4. We should not send a report without pricing - the report needs to be complete." (:2533). Today the lookup route serves a report with no priced option and does not count it (src/lib/parcels/consumer-lookup.ts:66; Spec 100 dated note 2026-11-12); the ruling replaces that: no priced option, no report sent; every report sent counts. (c) Control-panel range check for settings goes to Increment 1.C (operator "2. 1C", :2533; RR-0475 item 3).
+
+2026-11-25 (RR-0498 item 8, MORNING-DECISIONS.md:2593, operator 'y'): add as a line of this card: the 8 database test failures seen on the test stack on 2026-11-25 that are unrelated to the search cards (cause not yet known); find the cause and fix or record each.
 <!-- SECTION:NOTES:END -->

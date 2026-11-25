@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-25T20:02:40.571Z file_sha256=f4bc57eacaa1bcb9829e2dd6108d6674eb05e06b93c4f92f2f2f34ced6521410 prompt_sha256=207a0d34cdc672bb0b99a23a42813c866bda8215270bdf2902a40d508a9f68cc
+🔍 Lens review of docs/reports/reviews/task-313/in-plan-compliance-ms-1-2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0499 approved design text "the gate checks the MaxBLD plan" — mobile/src/lib/appShell.ts (M1) "'enter' otherwise" — a user with no plan gets 'enter' because the entitlement route "answers 200 with every field null when the user has no plan" (F8), so the front-door gate never checks the MaxBLD plan and the check is deferred to card 2 (Q1 default "they go in to Lookup") — fix: add a no-plan outcome to decideMaxbldGate derived from the entitlement status and draw the No plan surface, or pull task-357 into this card.
+BUG severity=HIGH — RR-0417 "its two named owned exceptions" — plan T9 "three entries removed, EXCEPTION_AUDIT_ROWS becomes [29, 30]" — the ruling names two owned exceptions, the plan's Q2 default A removes three and #22 (sign-up) is named by no pasted ruling, which is added behaviour under "keep it simple; no scope creep" — fix: fix only #15 and #16 here, and put #22 on its own card or get a word naming it.
+BUG severity=MED — Implementation Notes 2026-11-25 "the MaxBLD bar is the only bar" — mobile/app/(app)/_layout.tsx (M4/M5) "'enter' returns <Slot/>, which is the existing parcel-tool Stack and ParcelShelf" and M6 "there is no footer kind for screens" — no step names or builds the MaxBLD bar for the Lookup screen, the plan only removes the five-tab bar — fix: name the bar component on the Lookup route and add a T5 assertion that no lead tabs and exactly one MaxBLD bar render.
+DEFER severity=MED — RR-0232 "the open decisions need to provide whether it has been grounded (the issue) and the recommendation (verified)" — plan §9 "That expo-router <Redirect>/<Slot> in (app)/_layout behave as planned on Expo 54" — the mechanism every one of Q1 to Q3 rests on is declared unverified, so the recommendation is not verified — fix: verify Redirect/Slot and the image-less splash on Expo 54 before plan-lock and record the result on the card.
+DEFER severity=MED — pasted card text "a lane edits the row and this task in the same commit (rule 3)" and "renew with a named event, `expires when MF-47 is DONE`" — plan section 7 "the MF-49 row in .cursor/MCFRONTEND-QUEUE.md" — no step states the row's new Status, Expires, next or title, so the row still reads "a separate Expo project in a monorepo (Spec 116 section 3)" while the shipped code does the opposite — fix: write the row's new Status, Expires, next and retitle into DoD #6.
+DEFER severity=MED — increment objective "Tracked lots (MF-51) and alert delivery (MF-59) are on the launch list" — plan "Proposed follow-up, not part of R8a: MF-51 itself waits on MF-49 (.cursor/MCFRONTEND-QUEUE.md:375)" — no step clears MF-51's wait when MF-49 ships, so a launch-list row stays blocked after this card — fix: add the MF-51 row edit to the same commit notes.
+DEFER severity=LOW — project objective "we need one plan - we can only execute one plan" — plan "Build order: task-465 → tasks 267 and 317 → 343 and 268 → 313" and "lookup/route.ts is also on task-267's Files line" — card 313 is not executable on its own and touches a file another open card owns — fix: move S1/S2 onto task-267 or mark 313 blocked-by those four cards on the row.
+MET — RR-0499 "sign-in goes straight to search with no lead-app onboarding" — mobile/src/lib/auth/decideAuthGateRoute.ts (M2) "user in (auth), (onboarding) or root → navigate MAXBLD_LOOKUP_ROUTE with no registerPushToken" — onboarding and push registration are skipped on the parcel_tool arm, pinned by T3.
+MET — RR-0499 "the lead-app screens stay in the code, unreachable, kept for the other app" — T4 "Every route file under mobile/app/(app) other than parcel-tool, read from disk ... gives 'redirect'" — redirect plus the disk-read test and T7 fence hold the lock.
+MET — RR-0499 "the app gets its own start-up screen" — M6/M7 — the Opening surface plus the Daylight splash replacing the Expo grid.
+MET — RR-0485 "3. Nope" — M2 "The profile is never read" — no onboarding arm on the parcel_tool product.
+MET — RR-0477 "Keep anything with a database step or its own operator question on its own card" — "F4a. No database step is needed" and "Server (no database step)" — the card carries no database step and the 2 s setting stays on its own card.
+MET — RR-0482 "using existing components as well" — section 3 "WHAT THE PLAN REUSES" — reuses useParcelEntitlement, ParcelShelf, the wall pattern, the contract and the Keyboard.dismiss precedent.
+MET — RR-0496 "These grouped tasks are McApp" — plan header "Card task-313, McApp card 1 of 4" — the work is scoped as card 1 of the grouped McApp set.
+MET — project objective "keep it simple; no scope creep" — "CUT TO LATER CARDS" block — account, sign-out, No plan page, saving, version gate and splash PNG are cut to later cards.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 3
+Rules met: none
+
+---
+⏱  54458ms (54.5s)
+📊 Tokens — total: 21970, input: 10842, output: 11128, reasoning: 9813

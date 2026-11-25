@@ -1,0 +1,3 @@
+# TRIAGE BL-MCFIX469 (task-469), ROUND 1 (grounder Cairn-Ground-O469): 2 CONFIRMED (2 NIT); no CRITICAL, HIGH or MED stands (RR-0385 item 1: round 1 resolves CRITICAL, HIGH and MED, LOW and NIT are recorded). No fix round is owed; the closing commit holds the records only.
+out-code-review-p1#1 pile:"as string cast on the first golden key of the phone copy test; the fixture holds 33 goldens and a failure would be loud, NIT is recorded (RR-0385 round 1)"
+out-code-review-p1#3 pile:"test title names the old folders only while the body also checks the phone copies; wording only, NIT is recorded (RR-0385 round 1)"

@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:53:00Z'
+updated_date: '2026-11-25T19:49:00Z'
 due_date: '2026-11-26'
 labels:
   - 1-2
@@ -24,9 +24,9 @@ labels:
   - comp:STO
   - comp:AV3
   - comp:HS
+  - McWeb
 milestone: m-2
-dependencies:
-  - TASK-70
+dependencies: []
 references:
   - docs/reports/plan-import/raw/2026-11-19/sequence.json#1-2/LS.1
   - .cursor/MCFRONTEND-QUEUE.md#L332 sha256=e3b0c44298fc
@@ -86,4 +86,8 @@ who (plan text): lane
 
 <!-- SECTION:NOTES:BEGIN -->
 Dated note 2026-11-19 (M-246, prior text kept; RR-0307 · task-71 · Backlog; operator, verbatim: "it appears we will need it so we should build it")
+
+2026-11-25 (RR-0498 item 4, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2593, operator '4. yes later'): the nightly tests move to a later increment and checkout does not wait on them. McWeb.
+
+2026-11-25 (RR-0501, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2608): McWeb card 1 of 3 (checkout, with task-72); McWeb comes after McApp and includes the wiring of its pages (operator: 'for McWeb also need to include wiring here').
 <!-- SECTION:NOTES:END -->

@@ -4,9 +4,9 @@ title: BTN.SPRING One shared press-spring part for primary buttons on the phone 
 status: LATER
 assignee: []
 created_date: '2026-11-24T17:30:00Z'
-updated_date: '2026-11-24T20:20:00Z'
+updated_date: '2026-11-25T19:49:00Z'
 labels: []
-milestone: m-2
+milestone: m-13
 dependencies: []
 type: build
 ordinal: 153210
@@ -36,4 +36,6 @@ Card opened 2026-11-24 by the orchestrator from RR-0455 (~/Buildo-scratch/queues
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-24: comes after 458 (wraps the same press). What it needs is in docs/reports/reviews/task-452/v1/QUESTIONS-RULED.md (the old cite path is now v1/): the closed mobile mapping C-8m MOBILE_PARTS in surface-conformance.logic.test.ts, the sha-pinned vendored Button, the bindings.json mapping, reuse of SaveButton.tsx withSpring. It edits surface-conformance.logic.test.ts in another hunk than 452's pins, so it re-measures them.
+
+2026-11-25 (RR-0501, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2608): moved to the last increment (launch gate) by the operator's ruling on the Increment 1-C plan.
 <!-- SECTION:NOTES:END -->

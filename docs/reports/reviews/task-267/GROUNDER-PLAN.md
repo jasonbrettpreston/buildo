@@ -1,0 +1,172 @@
+# Plan grounder ruling: task-267 (PLAN-267-v2), round 1
+Grounder: Cairn-Ground-P267
+Lane: BL-MCFIX267
+
+Separate plan grounder (Sonnet, operator RR-0385 item 1, MORNING-DECISIONS.md:1917, and item 3, :1919): not the planned lane, not a seat, not the orchestrator. Read-only: no file written into the repo, no model call, no env file read, no test runner, no git state change. Board head read ea79b4d9e (branch wf2/board), then a4a092bad, then 1aee693d6; between them only task-465 evidence docs changed, so every cited line was read again at the later heads. ROUND 1: a CONFIRMED CRITICAL, HIGH or MED is folded into the plan; LOW and NIT are folded in a few words or piled. Context: docs/reports/reviews/task-267/context-r1.md; 14 plan lens outputs (111 ids) and 3 seat reports (31 ids), 142 ids each ruled once (the 14th, plan-compliance-step-132, was added after the new Files line attached list step-132 and is ruled in the addendum lines at the end of this file). A lens finding is a claim: the severity is ruled here, not taken from the lens. The fold is FOLD-267.json (77 pairs, each old string unique in the task file; 2 in the Description, 75 in the Implementation Plan). Rulings landed after the plan was written and folded: RR-0492 (MD:2567: "3. If there is a report - the animation needs to complete but if the it fails then the user should know right away", which reverses RR-0490 item 3 b; "2. Keep them for now they are apart of an animation"), RR-0493 (MD:2570, "approved": 60 s from the pick is the failure limit; the label Checks for this lot is shown as the mock draws it and replaces Spec 126:869 for that label) and RR-0494 (MD:2574, "A": a no-report lot shows the no-report screen at once). Open to the operator after this round: Q-a, Q-e, Q-g in QUESTIONS-RULED.md. Totals: 142 ids, 133 CONFIRMED (1 CRITICAL, 41 HIGH, 73 MED, 16 LOW, 2 NIT), 9 REJECTED, 0 CONFLICT. CRITICAL confirmed: rg#1; folded. The Plan line is copied last by the orchestrator after the fold check (Spec 08 section 11.2).
+
+Ruled: plan-compliance-inc-S.txt sha256:f36d59a1f194 findings:8
+Ruled: plan-compliance-mobile-90.txt sha256:33c3cbd386e3 findings:8
+Ruled: plan-compliance-mobile-98.txt sha256:f312018f4f93 findings:7
+Ruled: plan-compliance-mobile-99-p1.txt sha256:b9f823c7e0fc findings:4
+Ruled: plan-compliance-mobile-99-p2.txt sha256:c83066137f41 findings:8
+Ruled: plan-compliance-ms-S.txt sha256:c40af07f23ff findings:8
+Ruled: plan-compliance-plan-protocol.txt sha256:fd5cf7c40d20 findings:8
+Ruled: plan-compliance-surface-136.txt sha256:6c6faed14197 findings:5
+Ruled: plan-engineering-eng-all.txt sha256:6ee937253d84 findings:7
+Ruled: plan-error-paths.txt sha256:a07b8a02656c findings:7
+Ruled: plan-plan-review-deepseek.txt sha256:d5289ede48ee findings:20
+Ruled: plan-security.txt sha256:5c0075e3fd25 findings:5
+Ruled: plan-ux.txt sha256:1518abbdbef0 findings:8
+
+Seat: integration docs/reports/reviews/task-267/seat-integration-1.md sha256:d793d3f86efb
+Seat: reality-check docs/reports/reviews/task-267/seat-reality-check-1.md sha256:3c0da42eba0d
+Seat: regression docs/reports/reviews/task-267/seat-regression-1.md sha256:be0b5d9d1c97
+
+plan-compliance-inc-S#1 CONFIRMED src/app/api/parcels/lookup/route.ts:116 "=== null) meter = 'n" HIGH: true: the plan names 343's seam lines and assumes 267 lands first; folded: no order is assumed, whichever lands second reruns G1 and G3.
+plan-compliance-inc-S#2 CONFIRMED docs/specs/02-web-admin/126_maxbld_surface_standard.md:72 "No McFrontend work s" HIGH: true: the plan put the queue row last in step 12; folded: the row is claimed before any build commit.
+plan-compliance-inc-S#3 CONFIRMED .cursor/MCBYLAWS-QUEUE.md:109 "and expected moves (" HIGH: true: no step pre-registers rules[] and the expected moves; folded: a commit 0 alone in section 5.
+plan-compliance-inc-S#4 CONFIRMED docs/specs/03-mobile/98_mobile_testing_protocol.md:124 "and phone tests also" HIGH: true: the plan said the phone tests run by no hook, false since task-462; folded: the pre-push step and the red-first proof are stated.
+plan-compliance-inc-S#5 CONFIRMED docs/specs/00-architecture/08_agents.md:489 "one grounder re-exec" MED: true: the plan said nothing was run and named no re-execution; folded: the plan grounder re-read each cited line and writes FOLD-CHECK.md.
+plan-compliance-inc-S#6 CONFIRMED docs/specs/00-architecture/08_agents.md:144 "The brief file opens" MED: true: only a FILES block in the plan and no Files line on the card; folded: one complete Files line in the Description is the write scope.
+plan-compliance-inc-S#7 CONFIRMED .cursor/MCBYLAWS-QUEUE.md:116 "is committed with th" MED: true: no step names the OUTPUT panel record; folded: it is committed with the work, named in section 5.
+plan-compliance-inc-S#8 REJECTED src/lib/surfaces/report/core.ts:403 "out.checked = { ...t" Wrong: the mock the operator approved (RR-0491) draws check lines only and no outline component exists; G.2's outline is not built and the Spec note says so (O2 settled).
+plan-compliance-mobile-90#1 CONFIRMED docs/specs/03-mobile/90_mobile_engineering_protocol.md:73 "MMKV blobs, TanStack" HIGH: true: a new query key needs a Spec 99 section 4 B1 row and the plan named none; folded with its persistence exclusion.
+plan-compliance-mobile-90#2 CONFIRMED docs/specs/02-web-admin/126_maxbld_surface_standard.md:72 "Wider scope than the" HIGH: same defect as inc-S#2 (ruled once there); folded: the row is claimed first.
+plan-compliance-mobile-90#3 CONFIRMED .cursor/MCBYLAWS-QUEUE.md:109 "(08:453). Pre-regist" MED: same defect as inc-S#3; folded once: commit 0 alone.
+plan-compliance-mobile-90#4 CONFIRMED mobile/src/hooks/useTrackedLots.ts:13 "FIXTURE-BACKED STUB." MED: true: the tracked-lot exception of RR-0485 item 5 is not built; folded: the plan and the Spec 100 note say tracked lots are not built.
+plan-compliance-mobile-90#5 CONFIRMED src/lib/parcels/lookup-flow.ts:93 "address: resolved.ma" MED: true: the title source was null for an unknown lot; folded: the checked address, else the answer's match address.
+plan-compliance-mobile-90#6 CONFIRMED mobile/src/hooks/useParcelLookup.ts:46 "ConsumerParcelLookup" MED: true: the new field must pass the Zod boundary; folded: the phone mirror is stated and the unverified item is settled by reading.
+plan-compliance-mobile-90#7 CONFIRMED docs/specs/03-mobile/90_mobile_engineering_protocol.md:113 "then fetch fresh dat" MED: true: serving a cached page with no refetch breaks the silent background refresh; folded: O5 is reversed.
+plan-compliance-mobile-90#8 CONFIRMED mobile/src/constants/reportPage.ts:35 "min-h-[44px] rounded" LOW: true: the new button must use the existing 44 px classes; folded in a few words.
+plan-compliance-mobile-98#1 CONFIRMED docs/specs/03-mobile/98_mobile_testing_protocol.md:124 "RR-0462, step 4 of t" HIGH: same defect as inc-S#4; folded once.
+plan-compliance-mobile-98#2 CONFIRMED docs/specs/03-mobile/98_mobile_testing_protocol.md:88 "gate-stability tests" HIGH: true: the plan put isFetching into the state function against Spec 99 section 6.5; folded: no isFetching, and a toggle row.
+plan-compliance-mobile-98#3 CONFIRMED .cursor/MCBYLAWS-QUEUE.md:109 "Pre-register the tas" HIGH: same defect as inc-S#3; folded once.
+plan-compliance-mobile-98#4 CONFIRMED docs/specs/02-web-admin/126_maxbld_surface_standard.md:877 "the processing seque" MED: true that the HELD note and the open choices read as a block, but the hold is overtaken by the 2026-11-25 go and the choices are closed or defaulted; folded as a note.
+plan-compliance-mobile-98#5 CONFIRMED docs/specs/00-architecture/08_agents.md:144 "globs relative to th" MED: same defect as inc-S#6; folded once.
+plan-compliance-mobile-98#6 CONFIRMED src/app/api/parcels/lookup/route.ts:81 "semi: sp.get('semi')" MED: true: the flag and field need his word under RR-0392; the field is ruled (X-4 a), the flag is his (Q-e); folded: field name, default A2, the A1 cost.
+plan-compliance-mobile-98#7 CONFIRMED mobile/src/hooks/useParcelLookup.ts:137 "boundedWait(fetchPar" LOW: true: the note on RR-0176 and the 60 s is owed; already folded in the owed dated note.
+plan-compliance-mobile-99-p1#1 CONFIRMED docs/specs/03-mobile/99_mobile_state_architecture.md:545 "Coupling with transi" HIGH: true: Spec 99 section 6.5 bans isFetching and isError in a gate; folded: stable signals only.
+plan-compliance-mobile-99-p1#2 CONFIRMED docs/specs/03-mobile/99_mobile_state_architecture.md:209 "### B1 — Server → Ta" HIGH: true: a new server query key needs a B1 row; folded.
+plan-compliance-mobile-99-p1#3 CONFIRMED docs/specs/03-mobile/99_mobile_state_architecture.md:709 "MUST have a test ass" HIGH: true: no isFetching toggle test was listed; folded into the report-failure table.
+plan-compliance-mobile-99-p1#4 CONFIRMED docs/specs/02-web-admin/126_maxbld_surface_standard.md:869 "it doesnt need a tit" HIGH: true: the plan left O8 open against his word; ruled by RR-0493: visible, replaces :869 for this label; folded.
+plan-compliance-mobile-99-p2#1 CONFIRMED docs/specs/00-architecture/08_agents.md:458 "Meta-audit of the WO" HIGH: true: no re-execution was recorded; same defect as inc-S#5; folded once.
+plan-compliance-mobile-99-p2#2 CONFIRMED docs/specs/03-mobile/99_mobile_state_architecture.md:761 "comply with §2.1 PII" MED: true: the new key would persist unencrypted; folded: it is added to NOT_PERSISTED.
+plan-compliance-mobile-99-p2#3 CONFIRMED docs/specs/02-web-admin/126_maxbld_surface_standard.md:72 "A task not listed he" MED: same defect as inc-S#2; folded once.
+plan-compliance-mobile-99-p2#4 CONFIRMED .cursor/MCBYLAWS-QUEUE.md:116 "OUTPUT panel per tas" MED: same defect as inc-S#7; folded once.
+plan-compliance-mobile-99-p2#5 CONFIRMED docs/specs/02-web-admin/126_maxbld_surface_standard.md:869 "relayed by the coord" MED: true: O8 was left open; ruled by RR-0493; folded.
+plan-compliance-mobile-99-p2#6 CONFIRMED docs/specs/02-web-admin/126_maxbld_surface_standard.md:877 "(McFrontend MF-62 fo" MED: same defect as mobile-98#4; folded once.
+plan-compliance-mobile-99-p2#7 CONFIRMED docs/specs/02-web-admin/136_mcfrontend_handbook.md:136 "never on miss, error" LOW: true but moot: O6 and O8 are both closed (RR-0493); piled.
+plan-compliance-mobile-99-p2#8 CONFIRMED mobile/src/hooks/useTrackedLots.ts:55 "STUB_FIXTURE: Tracke" LOW: true: the tracked exception is not built; folded with mobile-90#4 in a few words.
+plan-compliance-ms-S#1 CONFIRMED .cursor/MCFRONTEND-QUEUE.md:5 "A task not listed her" HIGH: same defect as inc-S#2; folded once.
+plan-compliance-ms-S#2 CONFIRMED docs/specs/03-mobile/98_mobile_testing_protocol.md:124 "also run before ever" HIGH: same defect as inc-S#4; folded once.
+plan-compliance-ms-S#3 CONFIRMED docs/specs/02-web-admin/126_maxbld_surface_standard.md:869 "it should be process" HIGH: true: the plan left the label open after the operator approved the mock; ruled by RR-0493; folded.
+plan-compliance-ms-S#4 CONFIRMED src/app/api/parcels/lookup/route.ts:84 "const { q, parcelId," MED: same defect as mobile-98#6; folded once.
+plan-compliance-ms-S#5 CONFIRMED scripts/seeds/logic_variables.json:10887 "maxbld_page_continue" MED: true: an own seed row is a database step and its own card (RR-0477); ruled: (a) the existing value, (b) a later card; folded.
+plan-compliance-ms-S#6 CONFIRMED docs/specs/00-architecture/08_agents.md:462 "fires after ANY fold" MED: same defect as inc-S#5; folded once.
+plan-compliance-ms-S#7 CONFIRMED docs/specs/00-architecture/08_agents.md:144 "Write scope (per tas" MED: same defect as inc-S#6; folded once.
+plan-compliance-ms-S#8 CONFIRMED docs/specs/00-architecture/plan-protocol.md:44 "the integration pass" LOW: same defect as inc-S#3 (the plan has no pre-registered moves); folded once.
+plan-compliance-plan-protocol#1 CONFIRMED docs/specs/00-architecture/plan-protocol.md:22 "check.mjs, check-cit" HIGH: true: the plan said nothing was run; the grounder re-read the cites and the launch gate runs the checks; folded.
+plan-compliance-plan-protocol#2 CONFIRMED docs/specs/00-architecture/plan-protocol.md:22 "Seats R,C,I,D,G,O,W," HIGH: same defect as inc-S#3; folded once.
+plan-compliance-plan-protocol#3 CONFIRMED docs/specs/00-architecture/08_agents.md:489 "After folding any re" HIGH: same defect as inc-S#5; folded once.
+plan-compliance-plan-protocol#4 CONFIRMED .cursor/MCBYLAWS-QUEUE.md:116 "docs/reports/panels/" HIGH: same defect as inc-S#7; folded once.
+plan-compliance-plan-protocol#5 CONFIRMED docs/specs/02-web-admin/126_maxbld_surface_standard.md:867 "McFrontend MF-62 fol" MED: the HELD pilot note is overtaken by the operator's 2026-11-25 go (RR-0486, RR-0488) and the pages are report lifecycle states, so MED not HIGH; folded as a note.
+plan-compliance-plan-protocol#6 CONFIRMED docs/specs/03-mobile/98_mobile_testing_protocol.md:88 "gate-stability tests (" MED: same defect as inc-S#4; folded once.
+plan-compliance-plan-protocol#7 CONFIRMED docs/specs/00-architecture/plan-protocol.md:31 "Rulings: only when a" MED: true: O5 was a typed Rec with no search; the search is now quoted and O5 is reversed; folded.
+plan-compliance-plan-protocol#8 CONFIRMED docs/specs/00-architecture/plan-protocol.md:44 "every task carries a" MED: true: the card says UNMEASURED; folded: GUESS labelled in the Description.
+plan-compliance-surface-136#1 CONFIRMED docs/specs/02-web-admin/136_mcfrontend_handbook.md:136 "a lifecycle: loading" HIGH: true: fe.35 refuses the checked object on a miss or error tree and RR-0492 item 2 keeps the lines there; folded: lines drawn from the fast read, a Spec 136 dated note owed.
+plan-compliance-surface-136#2 CONFIRMED docs/specs/02-web-admin/136_mcfrontend_handbook.md:166 "The client is just g" MED: true: the plan did not classify the client timers; folded: the reveal is animation, the 60 s a device timer on a registered setting.
+plan-compliance-surface-136#3 CONFIRMED docs/specs/02-web-admin/136_mcfrontend_handbook.md:199 "a lock never red aga" MED: true: no planted-defect row for the state table; folded.
+plan-compliance-surface-136#4 CONFIRMED docs/specs/02-web-admin/136_mcfrontend_handbook.md:76 "the McFront proof ca" MED: true: the canaries are the section 5 tests, now each with a planted defect; folded.
+plan-compliance-surface-136#5 CONFIRMED docs/specs/02-web-admin/136_mcfrontend_handbook.md:172 "All tunables are dat" LOW: true: closed by the O7 ruling (a): the registered value is read, no typed number; piled.
+plan-engineering-eng-all#1 CONFIRMED docs/specs/00_engineering_standards.md:38 "you MUST include tes" HIGH: true: the route tests listed no error paths for the fast read; folded: G5 lists them.
+plan-engineering-eng-all#2 CONFIRMED docs/specs/00_engineering_standards.md:431 "API routes MUST emit" MED: the route already has the try/catch and logInfo (route.ts:128), so MED not HIGH; folded: the fast read adds fast to the log record.
+plan-engineering-eng-all#3 CONFIRMED docs/specs/00_engineering_standards.md:230 "API routes must defi" MED: true: the response field and flag live in types.ts with a strict schema; folded.
+plan-engineering-eng-all#4 REJECTED docs/specs/00_engineering_standards.md:24 "Critical state trans" Wrong for this card: the haptic half of button feedback is its own card (task-458, BTN.HAPTIC) and is not folded here.
+plan-engineering-eng-all#5 CONFIRMED docs/specs/00_engineering_standards.md:14 "have a minimum tappa" MED: same defect as mobile-90#8; folded: the existing 44 px classes.
+plan-engineering-eng-all#6 REJECTED docs/specs/00_engineering_standards.md:224 "Frontend WFs must NO" Wrong: the surface content, census and generated slices are the surface pipeline's own data that every McFrontend card names (Spec 126 section 11b); the route work is Cross-Domain by CLAUDE.md.
+plan-engineering-eng-all#7 REJECTED docs/specs/00_engineering_standards.md:89 "API routes must retu" Wrong: the field is added inside the existing data envelope; no raw or ad-hoc shape is returned.
+plan-error-paths#1 CONFIRMED mobile/src/hooks/useParcelLookup.ts:62 "export function shou" HIGH: true: retries run on behind the give-up and Try again stacks a compute; folded: retries stop at the give-up and Try again reads the cache first.
+plan-error-paths#2 CONFIRMED mobile/app/(app)/parcel-tool/[parcelId].tsx:23 "const { data, isErro" MED: true: one isError for two queries; folded: only the report read decides the ending.
+plan-error-paths#3 REJECTED mobile/src/lib/sliceConfig.ts:16 "if (typeof v !== 'nu" Wrong: sliceNumber throws at import for a missing or non-finite value, naming the key, so the timer never compares against NaN.
+plan-error-paths#4 CONFIRMED src/lib/parcels/what-we-checked.ts:167 "export async functio" MED: true: a read error and an unknown lot are both null; folded: the fast read's null never decides an ending, only the report read does.
+plan-error-paths#5 CONFIRMED mobile/src/hooks/useParcelLookup.ts:114 "retry: shouldRetryPa" MED: true: Try again did not reset the clock; folded: it clears the give-up mark, resets the clock and shows holding.
+plan-error-paths#6 CONFIRMED mobile/src/hooks/useParcelLookup.ts:113 "staleTime: LOOKUP_ST" MED: true: the persisted page up to 24 h was served with no refetch; folded: O5 is reversed.
+plan-error-paths#7 CONFIRMED mobile/src/hooks/useParcelPageHooks.ts:30 "router.canGoBack() ?" LOW: true: two taps pop twice; folded in a few words: a first-press guard on Back to search.
+plan-plan-review-deepseek#1 CONFIRMED src/app/api/parcels/lookup/route.ts:104 "await runLookupFlow(" MED: the compute has no deadline (a known launch precondition) and the 60 s bound is the phone's, so MED not HIGH; folded: the timeout stays UNVERIFIED, named, and a cut-off shows as screen 4.
+plan-plan-review-deepseek#2 CONFIRMED src/lib/parcels/lookup-flow.ts:83 "let pageResponse = h" HIGH: true: the plan said both that the meter is unchanged and that the fast read counts; folded: a stored page goes through the unchanged meter code, a facts-only answer counts nothing, a held lot gets no checked view.
+plan-plan-review-deepseek#3 CONFIRMED mobile/app/(app)/parcel-tool/[parcelId].tsx:37 "view === null ? wall : null}" MED: the wall already wins while view is null, so MED not HIGH; folded: the order is stated and tested: the wall first, then the endings.
+plan-plan-review-deepseek#4 CONFIRMED mobile/src/hooks/useParcelLookup.ts:55 "const LOOKUP_RETRY_M" MED: a give-up fires only with no page and Try again recovers, so MED not HIGH; folded: the pick mark, the cache read first on return.
+plan-plan-review-deepseek#5 CONFIRMED src/app/api/parcels/lookup/route.ts:119 "withTransaction((cli" MED: true: the close-app path counts; folded: the sentence now says an abandoned open is counted once, with a test.
+plan-plan-review-deepseek#6 CONFIRMED mobile/src/components/surfaces/ReportPageHost.tsx:24 "const COMPONENTS = {" MED: true: the Reduce Motion gate was unsaid; folded: the same gate (RR-0176), the lines at once.
+plan-plan-review-deepseek#7 CONFIRMED mobile/app/(app)/parcel-tool/[parcelId].tsx:35 "const onRetry = useC" MED: true: a second failing try was unspecified; folded: a fresh 60 s and a test.
+plan-plan-review-deepseek#8 CONFIRMED mobile/src/components/surfaces/ReportPageHost.tsx:37 "export function Repo" MED: true: a remount could restart the clock; folded: the pick mark is kept per parcelId outside the component.
+plan-plan-review-deepseek#9 CONFIRMED docs/specs/03-mobile/90_mobile_engineering_protocol.md:106 "MUST be parsed throu" MED: same defect as error-paths#6, the nearest rule line; folded: O5 is reversed.
+plan-plan-review-deepseek#10 CONFIRMED mobile/src/lib/persistFilter.ts:28 "NOT_PERSISTED = ['us" MED: true: the new key would persist; folded: added to NOT_PERSISTED.
+plan-plan-review-deepseek#11 CONFIRMED mobile/src/lib/schemas.ts:432 "export const Consume" MED: true: an older server sends no field; folded: the field is optional on the phone and the screen shows today's spinner.
+plan-plan-review-deepseek#12 REJECTED src/app/api/parcels/lookup/route.ts:5 "?q=<address> (free-t" Wrong: the readers of page were checked (the phone report screen and binding only; the admin route is separate and the web page imports the query schema only), and the q path keeps its resolver output.
+plan-plan-review-deepseek#13 CONFIRMED mobile/src/hooks/useParcelLookup.ts:18 "import { boundedWait" MED: true: the coupling of two waits was unsaid; folded: the shared value is read through REPORT_GIVE_UP_MS, said in the census why and a Spec 128 note.
+plan-plan-review-deepseek#14 CONFIRMED src/app/api/parcels/lookup/route.ts:98 "withRateLimit(reques" MED: the usageFor read is cut so there is no extra meter read; the fast read shares the detail bucket and does not retry; folded.
+plan-plan-review-deepseek#15 CONFIRMED src/lib/parcels/lookup-flow.ts:93 "match: { ...resolved" MED: same defect as mobile-90#5; folded once.
+plan-plan-review-deepseek#16 CONFIRMED mobile/src/hooks/useParcelLookup.ts:62 "failureCount: number" LOW: true: no backoff was named; folded in a few words: the library default 1, 2 and 4 s.
+plan-plan-review-deepseek#17 CONFIRMED mobile/src/hooks/useParcelLookup.ts:126 "queryClient.setQuery" LOW: true: the in-flight attempt is left to land, not cancelled; folded in the retries-stop sentence.
+plan-plan-review-deepseek#18 CONFIRMED src/tests/parcel-lookup-gate.infra.test.ts:245 "the same lot via q a" LOW: true: the fast-then-report sequence is now in G5; folded.
+plan-plan-review-deepseek#19 CONFIRMED src/app/api/parcels/lookup/types.ts:198 ".refine((r) => r.lotForm === null || r.parcel !== null," LOW: true but small: no other consumer of the contract is strict about the field; piled.
+plan-plan-review-deepseek#20 CONFIRMED mobile/src/hooks/useParcelLookup.ts:56 "const LOOKUP_STALE_M" NIT: true: one lot twice; the seat measured 20 lots (median 10.9 s, p90 27.2 s), which the plan now cites; piled.
+plan-security#1 CONFIRMED src/app/api/parcels/lookup/route.ts:74 "if (access === null)" MED: HIGH overstated: the facts are the lot's public data lines, the fast read is behind the same gate, rate bucket and meter code, and a facts-only answer counts nothing by RR-0278; folded.
+plan-security#2 CONFIRMED src/app/api/parcels/lookup/route.ts:121 "reportLimitReached(m" MED: true: an at-limit account computes before the 403; no worse than the q hit today, under the detail bucket; folded, with Q-g offering the check before the compute.
+plan-security#3 REJECTED mobile/src/hooks/useParcelLookup.ts:55 "LOOKUP_RETRY_MAX = s" Wrong: the retry count is the operator's ruling (MD:1409) and a per-user cap per window is a new mechanism beyond the card; the retries now stop at the give-up and the rate bucket bounds the rest.
+plan-security#4 CONFIRMED mobile/src/hooks/useParcelLookup.ts:110 "queryKey: ['parcel-l" MED: same defect as error-paths#6; folded: O5 is reversed.
+plan-security#5 REJECTED docs/specs/03-mobile/99_mobile_state_architecture.md:377 "in-flight fetches re" Wrong: the cache is cleared at sign-out (queryClient.clear() in clearLocalSessionState), so the next user does not see it.
+plan-ux#1 CONFIRMED src/lib/parcels/what-we-checked.ts:51 "export const showsWh" HIGH: true: the plan contradicted itself on the no-report lot; ruled by RR-0494: screen 5 at once, lines as far as they got; folded.
+plan-ux#2 CONFIRMED mobile/app/(app)/parcel-tool/[parcelId].tsx:35 "void refetch(), [ref" HIGH: true: no state was named for Try again; folded: holding with the lines in full, rows and tests added.
+plan-ux#3 CONFIRMED mobile/app/(app)/parcel-tool/[parcelId].tsx:34 "const { view, lifecy" MED: same defect as mobile-90#5; folded once.
+plan-ux#4 CONFIRMED mobile/app/(app)/parcel-tool/[parcelId].tsx:26 "const { kind: wallKi" MED: true: nothing drew the wait before the wall; folded: lines, then holding, then the wall.
+plan-ux#5 CONFIRMED src/tests/surfaces/report-checked.logic.test.ts:279 "c.summary = 'Checkin" MED: same defect as p1#4; ruled by RR-0493; folded.
+plan-ux#6 CONFIRMED src/app/api/parcels/lookup/types.ts:45 "semi: z.literal('ans" MED: true: the A1 screen was undrawn; folded: the A1 cost says screen 1 shows verbs only with the spinner.
+plan-ux#7 REJECTED mobile/app/(app)/parcel-tool/[parcelId].tsx:36 "const onBack = useGo" Wrong: the search box clearing on return is card 465's final plan and this card does not change the box; the address stays in the lot route, not in the box.
+plan-ux#8 CONFIRMED docs/specs/02-web-admin/126_maxbld_surface_standard.md:867 "the accessibility au" LOW: true: doc-2 G.3 says the report opens by itself; RR-0176 and the mock say a button; folded in a note.
+in#1 CONFIRMED src/tests/fix-tune.logic.test.ts:82 "expect(whitelist.sli" HIGH: true: the whitelist pins at :80-82 and consumer-parcel-lookup.infra :152 move and were not listed; folded with both files.
+in#2 CONFIRMED src/app/api/parcels/lookup/types.ts:185 "export const Consumer" HIGH: true: the wire shape and the strict schema were unsaid; folded: whatWeChecked carries view.checked only, strict, href null, refine, phone mirror.
+in#3 CONFIRMED mobile/src/components/surfaces/ReportPageHost.tsx:71 "<Renderer tree={life" HIGH: true: no timed reveal exists; folded: the host redraws the lines on a timer tick, nodes present or absent, no renderer change.
+in#4 CONFIRMED src/app/api/parcels/lookup/route.ts:78 "const parsed = Consu" HIGH: true: a new query key is dropped unless added in the route and the schema; folded: the flag, the schema refine, the descriptor input, and which query feeds the wall.
+in#5 CONFIRMED src/app/api/parcels/lookup/route.ts:94 "// 5. Rate limit — s" MED: true: the fast read shares the bucket; folded: no retry on the fast read.
+in#6 CONFIRMED mobile/src/lib/semiQuestion.ts:18 "export const SEMI_CO" MED: true: a host import of the semi constant is a cross-surface read; folded: read through REPORT_GIVE_UP_MS in the hook, census semi row noted.
+in#7 CONFIRMED scripts/surfaces/report-page-capture.ts:78 "MOBILE_LIFECYCLE_STA" MED: true: no builder for the props of the new states and the names were wrong after RR-0492; folded: the capture calls checkedProps, new names.
+in#8 CONFIRMED src/tests/surfaces/surface-conformance.logic.test.ts:857 "const host = MOBILE_" MED: true: a new host import trips the host list; folded: the host import list is unchanged.
+in#9 CONFIRMED src/lib/parcels/lookup-flow.ts:9 "module imports no me" MED: true: the fast read had no home; folded: a second exported function in lookup-flow.ts, no meter code in it.
+in#10 CONFIRMED .cursor/MCFRONTEND-QUEUE.md:5 "This file is the ONE" LOW: true: census rows are cited by line and drift after 465; folded in a few words.
+rc#1 CONFIRMED src/lib/parcels/lookup-flow.ts:87 "pageResponse = await" HIGH: true: the compute blocks an instance, so the fast read must go first; folded: the phone sends the fast read first and the report read after it settles.
+rc#2 CONFIRMED mobile/src/hooks/useParcelLookup.ts:68 "failureCount < LOOKU" HIGH: true: a slow failure gives 4 tries past 60 s and Try again adds a fifth; folded: retries stop at the give-up and Try again reads the cache first.
+rc#3 CONFIRMED src/lib/parcels/report-compute.ts:75 "if (!MAXBLD_WEB_LIVE" MED: true: with the switch off every lot ends on screen 5; folded: the tester table under RR-0494.
+rc#4 CONFIRMED mobile/src/hooks/useParcelLookup.ts:137 "SEMI_CONTINUE_WAIT_M" MED: true: 60 s is a failure bound, not an animation length; folded with the measured spread.
+rc#5 CONFIRMED src/app/api/parcels/lookup/route.ts:119 "openReport(client, c" MED: true: an abandoned open is still counted; folded: the sentence says so and a test covers Back during the compute.
+rc#6 CONFIRMED src/app/api/parcels/lookup/route.ts:121 "if (m.kind === 'limi" MED: true: the at-limit 403 comes after the compute; folded as a stated default, Q-g offers the check before it.
+rc#7 CONFIRMED src/lib/parcels/what-we-checked.ts:55 "const fmtArea = (sqm" LOW: true: the line was m2 only; ruled by the report area rule and the operator default imperial (MD:241); folded: sq ft first.
+rc#8 CONFIRMED src/lib/parcels/what-we-checked.ts:158 "ready_ms: (facts + 1" MED: SEAT LOW raised: the producer's ready sentence draws before the page is in, a false statement to the customer; folded: it draws only once the page is in, with a test.
+rc#9 CONFIRMED src/lib/parcels/what-we-checked.ts:51 "export const showsWha" MED: SEAT LOW raised: the plan cites a function that does the opposite of the skip; folded: named a new rule, showsWhatWeChecked is not used for the skip.
+rc#10 CONFIRMED src/lib/parcels/what-we-checked.ts:51 "meter === 'unmetered" NIT: true: the unmetered path gets the same fast read; piled.
+rg#1 CONFIRMED mobile/src/components/surfaces/ReportBinding.tsx:399 "export function repo" CRITICAL: true: RR-0492 reverses RR-0490 item 3 b and the plan treated the timing as ruled; folded: section 1, O4, (d), step 5 outputs, step 6, 11.5 names, C5, C6, the table rows, notes.
+rg#2 CONFIRMED mobile/src/components/surfaces/ReportBinding.tsx:369 "export function life" HIGH: true: the no-report reading was the orchestrator's and the retries clash with right away; folded: RR-0494 settles no-report, the retries default is the operator's Q-a.
+rg#3 CONFIRMED mobile/src/hooks/useParcelLookup.ts:137 "boundedWait(fetchParc" HIGH: true then, settled now: RR-0493 puts 60 s from the pick on his word; folded.
+rg#4 CONFIRMED mobile/src/lib/semiQuestion.ts:17 "how long Continue wa" HIGH: true: the semi page's value is reused for a second wait; folded: a stated coupling in the census why and a Spec 128 note, an own row is a later card (RR-0477).
+rg#5 CONFIRMED mobile/src/hooks/useParcelLookup.ts:56 "sliceNumber(searchSlice, 'lookup_stale_ms');" HIGH: true: O5 dropped a registered refetch and showed a page up to 24 h old; folded: O5 is reversed.
+rg#6 CONFIRMED src/tests/parcel-lookup-gate.infra.test.ts:234 "a hit writes one row" HIGH: true: the q-path rewrite lost the INSERT shape, the no-raw-q lock and the meter log line, and missed :308; folded: they move to a parcelId call.
+rg#7 CONFIRMED src/tests/parcel-lookup-gate.infra.test.ts:384 "a new lot at the lim" MED: true: the search page limit wall no longer fires from a q hit (task-452 AC#2); folded: stated as a change with notes, Q-g.
+rg#8 CONFIRMED src/tests/surfaces/report-checked.logic.test.ts:279 "live-progress word'," MED: same defect as p1#4; ruled by RR-0493; folded.
+rg#9 CONFIRMED mobile/src/components/surfaces/ReportBinding.tsx:394 "export const SCREEN_" MED: true: the auto-open removal, the golden names and the tracked and off-phone gaps were unrecorded; folded: notes and the Spec 100 note.
+rg#10 CONFIRMED src/app/api/parcels/lookup/route.ts:114 "access === 'parcel_t" LOW: same defect as inc-S#1, ruled once there; piled.
+rg#11 CONFIRMED src/app/api/parcels/lookup/route.ts:106 "Meter (MF-45; RR-027" LOW: same defect as inc-S#1, ruled once there; piled.
+
+Counts: 142 ids ruled (111 lens, 31 seat); 133 CONFIRMED (1 CRITICAL, 41 HIGH, 73 MED, 16 LOW, 2 NIT), 9 REJECTED, 0 CONFLICT. Every CONFIRMED CRITICAL, HIGH and MED is folded (115 ids); of the 18 LOW and NIT, 11 are folded in a few words and 7 are piled. Expected round line: Plan review round 1: 126 folded, 0 task, 0 ruling, 0 wontfix, 7 pile.
+
+Ruled: plan-compliance-step-132.txt sha256:02d36be2bf67 findings:8
+plan-compliance-step-132#1 CONFIRMED docs/specs/00-architecture/08_agents.md:145 "registries (orchestrator-only)" HIGH: true: write_scope was never declared and two paths sat inside build step 2; folded (same defect as inc-S#6): the Description holds one complete Files line, the only scope list, with no conditional file left (entitlements/index.ts is not touched).
+plan-compliance-step-132#2 CONFIRMED docs/specs/00-architecture/plan-protocol.md:22 "Beyond-research parts GROUNDED" HIGH: true: no pre-registration commit existed before the build; folded (same defect as inc-S#3): commit 0 alone in section 5.
+plan-compliance-step-132#3 CONFIRMED docs/specs/00-architecture/08_agents.md:489 "one cross-read adversary checks the folded decisions PAIRWISE" HIGH: true: the plan said nothing was run; folded (same defect as inc-S#5): the grounder re-read each cited line, settled the Zod item by reading, and writes FOLD-CHECK.md.
+plan-compliance-step-132#4 CONFIRMED mobile/src/components/surfaces/ReportBinding.tsx:30 "export type LifecycleState = 'loading' | 'miss' | 'error';" MED: true that the placement was unsaid, so MED: the three states carry no new words and LifecycleState is unchanged, and the two new words follow the screen's own content keys pattern (ReportBinding.tsx:394); folded as a sentence under step 10.
+plan-compliance-step-132#5 CONFIRMED docs/specs/03-mobile/98_mobile_testing_protocol.md:88 "render gates per §6.5)" MED: true: the plan said the phone tests run by no hook, false since task-462; folded (same defect as inc-S#4): the pre-push step and the red-first proof are stated.
+plan-compliance-step-132#6 CONFIRMED docs/specs/02-web-admin/126_maxbld_surface_standard.md:877 "prior text kept; operator, verbatim" MED: true: the pilot hold was not shown lifted; folded (same defect as mobile-98#4): task-390 is still RUNNING, and the operator's go of 2026-11-25 (RR-0486, RR-0488) overtakes the hold, noted.
+plan-compliance-step-132#7 CONFIRMED src/lib/parcels/what-we-checked.ts:171 "logError('[what-we-checked]', err, { parcelId });" MED: true: the null arm is not one of RR-0485 item 5's two ruled cases and a read error also gives null; folded: it is a fallback not a ruled skip, a page in with no checked view opens at once (nothing to animate), the Spec 100 note says so.
+plan-compliance-step-132#8 CONFIRMED docs/specs/02-web-admin/136_mcfrontend_handbook.md:136 "the title, the citywide and per-lot groups" MED: true: the label was left open at plan lock; already ruled by RR-0493 (visible as drawn, replaces Spec 126:869 for this label), same defect as p1#4; folded.
+
+Plan: task-267 sha256:ebfaa33df204

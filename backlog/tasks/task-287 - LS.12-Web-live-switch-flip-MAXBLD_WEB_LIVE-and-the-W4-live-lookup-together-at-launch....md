@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T22:30:00Z'
+updated_date: '2026-11-25T19:49:00Z'
 due_date: '2026-11-26'
 labels:
   - 1-2
@@ -22,7 +22,7 @@ labels:
   - comp:HS
   - comp:BYL
   - comp:DN
-milestone: m-2
+milestone: m-13
 dependencies:
   - TASK-123
   - TASK-285
@@ -94,4 +94,6 @@ who (plan text): lane
 Dated note 2026-11-19 (M-246, prior text kept; RR-0270 · task-287 · Backlog; operator, verbatim: "1. once  -approved")
 
 2026-11-19 (task-359, RC-1, UX-1) before this task flips MAXBLD_WEB_LIVE: nothing counts a report even when pages are served (the evaluated-option gate, route.ts:163, no owner: task-343 new line) and the limit wall is not built (task-343 R17 line, no owner). Both need an owner first, or the flip shows free reports and a wrong limit message.
+
+2026-11-25 (RR-0501, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2608): moved to the last increment (launch gate) by the operator's ruling on the Increment 1-C plan.
 <!-- SECTION:NOTES:END -->

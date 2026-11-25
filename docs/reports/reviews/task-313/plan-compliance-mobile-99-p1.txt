@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-25T20:02:40.578Z file_sha256=64f4cd6b1ec658e570931179ee1360a6f006d132539117c4c4513bdcb186056c prompt_sha256=be0ea5cb33384b4614701b6f658ff20775eef9894b0c6546e45c02a2a6f58bcf
+🔍 Lens review of docs/reports/reviews/task-313/in-plan-compliance-mobile-99-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 99 §4 B1 query-key registry "| `['parcel-entitlement']` | `useParcelEntitlement` ... a display, never a gate; the caller's own, so no parameter; not persisted across a restart" — plan "M5. NEW mobile/src/components/parcel/MaxbldAppGate.tsx (mount file). It calls useParcelEntitlement and decideMaxbldGate." — the plan makes navigation depend on a query the registry marks "never a gate" and the owed notes amending Spec 99 (§7 "Spec 99 §5.1-5.3: the MaxBLD arm") do not touch that registry row — amend the §4 B1 row in the same commit to name the layout gate as an authorized reader, or add a dedicated gate query with its own registry row.
+
+BUG severity=HIGH — Spec 99 §5.3 "2.   AccountDeletedError                             → reactivation modal (no nav)" and §7.3 "AuthGate Branch 2 (AccountDeletedError) → reactivation modal **shown** — compliance-critical (proves users saw the 30-day window prompt)." — plan "The account-deletion reactivation modal does not show for MaxBLD; it comes with the delete-account work in card 2 (task-271)." — with `enabled: !!user && APP_PRODUCT === 'lead_gen'` and "The profile is never read", arm 2 is unreachable for MaxBLD users in the deletion window — keep a minimal profile read or map the parcel routes' account-deleted refusal to AccountDeletedError before 'enter' so arm 2 still fires.
+
+BUG severity=HIGH — Spec 99 §7.3 "In **DEV builds**, every `router.replace` / `router.push` from AuthGate or AppLayout MUST emit `track('route_decision', { authority, branch, from, to, reason })`." — plan "user in (auth), (onboarding) or root → navigate MAXBLD_LOOKUP_ROUTE with no registerPushToken" and "Re-run, expected unchanged: subscriptionGate.test.ts and routerTelemetry.test.ts" — the new AuthGate arm and the MaxbldAppGate `<Redirect>` name no route_decision emission and no telemetry test — emit route_decision with a branch id on both paths and extend routerTelemetry.test.ts.
+
+DEFER severity=MED — RR-0499 "A inside the one project (sign-in straight to search, the MaxBLD bar the only bar, the gate checks the MaxBLD plan, own start-up screen, lead-app screens kept in the code unreachable ...)" — plan "'enter' otherwise" plus "Q1. A user with no plan, in card 1. ... A: they go in to Lookup, and today's refusal notice shows when they search" — `decideMaxbldGate` receives `ent` but no branch reads the plan, so the app gate does not check the MaxBLD plan and the ruling's clause waits on an unanswered question — make 'enter' depend on an active parcel_tool plan (or record the operator's Q1 answer before lock).
+
+DEFER severity=MED — RR-0477 "batch items that touch the same files or the same kind of file and need no database step. Keep anything with a database step or its own operator question on its own card." — plan "8. OPEN CHOICES (each with a default) / Q1. A user with no plan, in card 1. / Q2. The three navigation exceptions owed to MF-49 (#15, #16, #22)." — three operator questions ride on card 313 instead of standing on their own card — put Q1-Q3 to the operator and record the answers before plan-lock, or split them off the card.
+
+DEFER severity=MED — Spec 99 §5.3 "**Counting convention:** 9 distinct routing arms (1, 2, 3, 4, 4.5, 5a, 5b, 5c, 5d). §8.2 test mandate covers all 9." and §8.2 "Each branch in §5.3 (5 + 4.5 manufacturer = 6 branches) MUST have a Jest test" — plan "Spec 99 §5.1-5.3: the MaxBLD arm" — the owed note does not require updating the arm count or the §8.2 branch counts after a tenth product arm is added — extend the docs step to rewrite the counting convention and the §8.2 counts in the same commit.
+
+DEFER severity=MED — Spec 99 §8.3 "Each render gate condition (per §6.5) MUST have a test asserting that toggling `isFetching` does NOT flip the gate." — plan "T4 ... Data plus isError stays 'enter' (gate stability)." — the new MaxbldAppGate render gate gets an isError toggle case but no isFetching toggle case — add the isFetching true/false pair to T4 or T5.
+
+DEFER severity=LOW — no pasted clause or ruling names it — plan "If Q2 is A, also: the email form opens from the route param `?method=email` (the sign-up precedent), and Back becomes `canGoBack() ? back() : replace` with role and label." — a deep-link entry to the email form and a rewritten Back are new behaviour justified only by nav-lock rows that are not in the pasted context — record the operator's Q2 answer as the authorizing ruling before building it.
+
+MET — Spec 99 §5.3 "Any change to AuthGate's branches requires updating this section." — plan "Spec 99 §5.1-5.3: the MaxBLD arm; §5.2 now reads the parcel_tool plan for this app."
+MET — Spec 99 §8.2 "Each branch in §5.3 ... MUST have a Jest test verifying its specific (segments + profile + error) input combination" — plan "T3. mobile/__tests__/authGate.test.ts, new describe \"MaxBLD front door\" ... All existing lead cases stay as they are."
+MET — Spec 99 §4 B1 "not persisted across a restart (`mobile/src/lib/persistFilter.ts` NOT_PERSISTED)" — plan "useParcelEntitlement exists ... not persisted (persistFilter.ts:28)".
+MET — Spec 99 §2.1 "Layer 3 (Zustand) NEVER mirrors a Layer 1 (server) field unless the Field Ownership Matrix §3 explicitly authorizes the mirror" — plan M1 adds only the module constant `APP_PRODUCT`, no store field and no mirror.
+MET — Spec 99 §5.4 "Router `useEffect` dependency arrays MUST NOT contain Zustand fields read inside the effect body." — plan M5 "'redirect' returns expo-router <Redirect href={MAXBLD_LOOKUP_ROUTE}/>", so no routing useEffect is added.
+MET — Spec 99 §5.1 "The mobile app has exactly TWO routing boundaries ... `(app)` trial / expired / paywall | **AppLayout** | `mobile/app/(app)/_layout.tsx`" — plan M4 keeps the authority in "The default export AppLayout returns `APP_PRODUCT === 'parcel_tool' ? <MaxbldAppGate/> : <LeadAppLayout/>`".
+MET — RR-0499 "sign-in straight to search" with RR-0485 "3. Nope" — plan "For 'parcel_tool': no user → sign-in (arm 1, unchanged); user in (auth), (onboarding) or root → navigate MAXBLD_LOOKUP_ROUTE", no onboarding step.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 8
+Rules met: none
+
+---
+⏱  81374ms (81.4s)
+📊 Tokens — total: 49270, input: 32379, output: 16891, reasoning: 15186

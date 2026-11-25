@@ -1,0 +1,1016 @@
+LIST mobile-99 sha256:0d1ba12efef91c637b1e96920822531885355c50e61a23ed7fce2bdecbb460c4 material sha256:9dc48e9095f5334d478900ae0b10197157cceb351e4f5ea8066844e912489758 part 1 of 2
+RULE LIST mobile-99 (docs/specs/03-mobile/99_mobile_state_architecture.md, whole file), part 1 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+# Spec 99 — Mobile State Architecture & Ownership Protocol
+
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 2** of `.cursor/active_task.md`.
+
+> Dated note 2026-11-09 (McFrontend Phase 2, MF-41; M-246, prior text kept; operator, verbatim: "1. confirmed" (Part B incl. D-5), record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: Part B confirmed, Spec 126 standard section, MF-20 D-7"): the MaxBLD app (a separate Expo project, Spec 116 §3 dated note 2026-11-09; MF-49) owns its own state and routing: its own root layout and a `parcel_tool` gate, not `decideAuthGateRoute`. The §5 routing arms govern the Buildo app.
+
+**Status:** ACTIVE
+**Cross-references:** Spec 90 (Engineering Protocol §7), Spec 93 (Auth & AuthGate routing), Spec 94 (Onboarding), Spec 95 (User Profiles — server is canonical), Spec 96 (Subscription gate)
+**As-is audit:** `docs/reports/mobile_state_audit_2026-05-02.md`
+
+> ⚠️ **AMENDMENT 2026-09-15 (WF1 "Spec 126/127/128 surface standard") — max-server-side impact. Additive: no rule below is rewritten, and §3 stays normative.**
+>
+> Spec 126 makes Spec 90 §3's "Dumb Glass" prime directive *enforceable* rather than merely stated: under max-server-side the client renders a **fetched projection** — the server owns section order, labels, formatting decisions and which lines render — and the archetype component set draws it. That moves the Layer-2 / Layer-3 boundary in §2, and it does so in a direction this spec already anticipates.
+>
+> **Sections affected, and how:**
+>
+> | §  | Effect |
+> |---|---|
+> | **§2** (the five layers) | Layer 1 **grows** — canonical for the *projection*, not only the data. Layer 2's role is unchanged, but the cached object becomes a projected screen rather than a raw payload. Layer 3 **shrinks to device + ephemeral state only**. Layers 4a/4b and 5 are untouched, and §2.1's hard rules all still hold. |
+> | **§3** (the field ownership matrix) | Stays **normative**, and becomes **descriptor data**: the `Field / Server Type / Local Mirror / Owner Layer / Canonical Writer / Authorized Readers / Bridge` row is the SURFACE descriptor's `state` category verbatim (Spec 126 §4.1). Rows for fields that are Layer-3 *mirrors* of Layer-1 data retire as those mirrors collapse. Measured: **4 of the 7 stores are MMKV-persisted mirrors of server fields** — `filterStore` (139L) mirrors 6 `user_profiles` columns, `userProfileStore` (156L) mirrors 5 notification-preference columns. |
+> | **§4** (the six bridge patterns) | **B2** (TanStack→Zustand) and **B3** (Zustand→Server) retire *for the mirrored fields only*. B1 is unchanged and its query-key hygiene rule becomes a schema constraint: `inputs.query_key` is single-param on the DETAIL archetype. The six patterns are not reduced to four — they are unused for fields that no longer have a Layer-3 home. |
+> | **§7.7** (funnel ratio invariants) | Unchanged in substance; the per-method attempted/succeeded/failed contract becomes `emits.counters` with the ratio stated as a declared invariant, so the drift it warns about is checked rather than greppped. |
+> | **§8.6** (the schema-vs-matrix drift check) | **The gap is confirmed, not closed, by this amendment.** `mobile/scripts/check-spec99-matrix.mjs` exists and **nothing runs it** — re-verified 2026-09-15: no match in `.husky/`, `.github/`, `mobile/package.json` or `package.json`; `mobile/__tests__/spec99.mandates.lint.test.ts:335-346` only asserts the file *exists*. Wiring it into `mobile-ci.yml` is Spec 126 §12 phase **P0b**. |
+>
+> **What deliberately stays client-side** — these five are the boundary, and each is declared per surface rather than assumed: device state (GPS, push token, permission status) · optimistic UI (Spec 90 §3 encourages it by name) · the 24 h MMKV offline cache · animation/gesture (Layer 5, §2.1's hard rule) · navigation position (`expo-router` owns it). Anything else computed on the client is a Spec 128 rule-2 violation needing a dated `deviations[]` row.
+>
+> **The three auth screens are out of scope entirely** (1,302 lines): they talk to the Supabase Auth SDK, not to our contracts.
+
+
+## 1. Goal & Anti-Patterns This Prevents
+
+**Goal:** A single normative document that, for every piece of mobile state, answers four questions:
+1. **Who owns it?** (single layer)
+2. **Who can write it?** (single function)
+3. **Who can read it?** (typed contract)
+4. **What bridges are allowed?** (enumerated patterns)
+
+**This spec is the gate-keeper.** Adding a new Zustand store, a new MMKV blob, a new hydration bridge, or a new routing `useEffect` requires either matching an existing pattern in §3-§5 or amending this spec.
+
+### 1.1 Three documented incidents this protocol prevents
+
+| Incident | Date | Pattern | Spec rule that would have prevented it |
+|----------|------|---------|----------------------------------------|
+| `currentStep` selector subscription loop | 2026-05-02 (commit `3727ceb` → fixed `6c5d085`) | Routing `useEffect` subscribed to a Zustand field it ALSO mutated via `router.replace`-induced cascade | §6.4 (lazy `getState()` for state read in router effects) |
+| Dual-router (AuthGate ↔ OnboardingLayout) loop | 2026-05-02 (fixed same day, WF3) | Two layout-level `router.replace` effects reading DIFFERENT sources of truth (server profile vs local store) for the same routing decision | §5.1 (one router per gate boundary) + §5.2 (read canonical source) |
+| `isFetching` / Tabs flicker loop | 2026-05-02 (current — fix scheduled as §9.4a P0 BLOCKING) | Render gate condition included an unstable signal (`isFetching` toggles on every refetch); flips AppLayout between `<SubscriptionLoadingGuard/>` and `<Tabs>` ~80×/sec, mounting/unmounting LeadFeedScreen continuously | §6.5 (gate conditions must be stable; never gate on `isFetching`) |
+
+### 1.2 The six user-stated quality goals (verbatim)
+
+1. **Observability (maximum)** — every state mutation, every gate decision, every cache invalidation must leave a trace. Codified in §7.
+2. **Clear ownership** — for every field, exactly ONE store owns the canonical value. Codified in §3.
+3. **Where bridges are allowed** — only the patterns in §4. Anything else is a spec amendment.
+4. **Canonical write path** — for every field, exactly one function writes it. Codified in §3 column "Canonical Writer".
+5. **Clear structure / clear logic / similar approach / one approach** — codified in §2 (layer hierarchy), §6 (selector hygiene), §8 (test mandates).
+
+---
+
+
+## 2. Layer Hierarchy
+
+State flows top-down. A lower layer NEVER initiates a write to an upper layer except via the bridges in §4.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 1 — SERVER (Postgres user_profiles, Firebase Auth)   │  ← canonical for ALL account-scoped data
+└─────────────────────────────────────────────────────────────┘
+                         ↓ (Bridge B1: useQuery)
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 2 — TanStack Query cache (in-memory + MMKV persist)  │  ← canonical for CACHED server state
+└─────────────────────────────────────────────────────────────┘
+                         ↓ (Bridge B2: hydrate effect)
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 3 — Zustand stores (typed, scoped, never reactive    │  ← canonical for LOCAL UX state
+│           to themselves)                                     │
+└─────────────────────────────────────────────────────────────┘
+                         ↓ (Zustand `persist` middleware)
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 4a — MMKV (UNENCRYPTED, plaintext on disk)           │  ← persistence for non-sensitive UX state
+│           Persists Zustand stores + TanStack Query cache.   │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 4b — Expo SecureStore / iOS Keychain / Android       │  ← persistence for sensitive credentials
+│            Keystore (ENCRYPTED, hardware-backed where avail)│
+│            Currently used only by RNFirebase native module  │
+│            for the Firebase auth session — no app code      │
+│            touches it directly today.                        │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 5 — Reanimated SharedValues (UI-only, never gated    │  ← orthogonal to layers 1-4
+│           on for routing or business logic)                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 2.1 Hard rules
+
+- **Layer 4a (MMKV) is NEVER read directly outside Zustand `persist` middleware or TanStack `Persister`.** Direct `createMMKV().getString()` in component / hook code is BANNED. (Closes the `user-profile-cache` duplicate-blob anti-pattern.) The Zustand `persist` middleware's own rehydration read (via the configured `storage.getString`) is the sole exempt pathway — it is the canonical mechanism by which persisted Zustand state hydrates on cold boot. The TanStack `Persister`'s rehydration read is similarly exempt for the same reason.
+- **Layer 4a (MMKV) is UNENCRYPTED.** Anything sensitive — Firebase ID tokens, refresh tokens, API keys, payment credentials, government IDs, photo content — MUST go into Layer 4b (SecureStore/Keychain), NEVER into MMKV. The current allowlist of sensitive-but-OK-in-MMKV items is empty. Adding a new persisted field with credential-like content requires a Spec 99 amendment naming it explicitly.
+- **Layer 4b (SecureStore) is the ONLY place sensitive credentials may live on disk.** RNFirebase handles its own session storage natively (Keychain on iOS, EncryptedSharedPreferences on Android) — app code does NOT manage Firebase tokens directly. Adding any new app-managed credential (e.g., a third-party API key) requires using `expo-secure-store` + a Spec 99 amendment.
+- **The `['user-profile']` TanStack query is excluded from MMKV persistence** via `dehydrateOptions.shouldDehydrateQuery` on the `PersistQueryClientProvider` (`mobile/app/_layout.tsx`). The query payload carries 5 PII identity fields (`full_name`, `phone_number`, `company_name`, `email`, `backup_email`); persisting it to Layer 4a would violate this section. The query stays in-memory normally; cold-boot mobile re-fetches from server (the canonical source) — adds ~50–200 ms to the first profile-dependent render but eliminates the on-disk PII surface. Other queries (`['lead-feed']`, `['flight-board']`, `['notification-prefs']`) carry only public permit data or non-PII toggles and continue to persist normally. The full encryption-at-rest path (passing `encryptionKey` to `createMMKV` in `mmkvPersister.ts`) is a future hardening that would let other PII-adjacent queries persist safely; the dehydrate filter is the immediate fix.
+- **Layer 3 (Zustand) NEVER mirrors a Layer 1 (server) field unless the Field Ownership Matrix §3 explicitly authorizes the mirror, with a declared bridge (§4) as the canonical writer.**
+- **Layer 5 (Reanimated SharedValues) NEVER drives routing, gating, or business logic.** SharedValues exist on the UI thread; reading them on the JS thread is racy.
+
+---
+
+
+## 3. Field Ownership Matrix
+
+This table is **normative**. Adding a field to the mobile app requires adding a row here. Modifying ownership requires a spec amendment.
+
+### 3.1 Server-Authoritative Profile Fields (Spec 95 §6)
+
+| Field | Server Type | Local Mirror | Owner Layer | Canonical Writer | Authorized Readers | Bridge |
+|-------|-------------|--------------|-------------|------------------|---------------------|--------|
+| `user_id` | text PK | — (no mirror; equal to `authStore.user.uid`) | Server | Server insert on first PATCH | apiClient (Bearer routing), AuthGate | — |
+| `trade_slug` | text (immutable post-set) | `filterStore.tradeSlug` | Server | Server PATCH `/api/user-profile` from `profession.tsx` | filterStore consumers (LeadFeedScreen, LeadFilterSheet, settings) | B2 |
+| `default_tab` | enum | `filterStore.defaultTab` | Server | Server PATCH from settings | AppLayout default-route, settings | B2 |
+| `location_mode` | enum | `filterStore.locationMode` | Server | Server PATCH from `address.tsx` or settings | useLocation, LeadFeedScreen | B2 |
+| `home_base_lat` / `home_base_lng` | numeric | `filterStore.homeBaseLocation{lat,lng}` | Server | Server PATCH from `address.tsx` or settings | useLocation (fallback when GPS denied) | B2 |
+| `radius_km` | int | `filterStore.radiusKm` | Server | `usePatchProfile()` mutation hook (Spec 99 §9.16, B3 with rollback) — called from LeadFilterSheet preset buttons, settings slider, `(app)/index.tsx` widen-radius shortcuts | useLeadFeed params, LeadFilterSheet UI | B2 read + B3 write |
+| `supplier_selection` | text | `filterStore.supplierSelection` | Server | Server PATCH from `supplier.tsx` or settings | settings, future supplier-tagged feed | B2 |
+| `full_name` / `company_name` / `phone_number` / `backup_email` | text | `userProfileStore.{fullName,companyName,phoneNumber,backupEmail}` | Server | Server PATCH from settings | settings forms, NotificationToast (display only) | B2 |
+| `new_lead_min_cost_tier` | enum (`low`/`medium`/`high`) | `userProfileStore.newLeadMinCostTier` | Server | Server PATCH from settings notifications | settings cost-tier slider, push-notification dispatch (lifecycle classifier) | B2 |
+| `phase_changed` | bool | `userProfileStore.phaseChanged` | Server | Server PATCH from settings notifications | settings toggle, push-notification dispatch | B2 |
+| `lifecycle_stalled_pref` | bool | `userProfileStore.lifecycleStalled` | Server | Server PATCH from settings notifications | settings toggle, push-notification dispatch (suffix `_pref` on server side avoids collision with `permits.lifecycle_stalled`) | B2 |
+| `start_date_urgent` | bool | `userProfileStore.startDateUrgent` | Server | Server PATCH from settings notifications | settings toggle, push-notification dispatch | B2 |
+| `notification_schedule` | enum (`morning`/`anytime`/`evening`) | `userProfileStore.notificationSchedule` | Server | Server PATCH from settings notifications | settings segmented control, push-notification dispatch | B2 |
+| `onboarding_complete` | bool | **NONE** (was `onboardingStore.isComplete` until 2026-05-02; see §3.5 deprecation) | Server | Server PATCH in `complete.tsx` | AuthGate (Branch 5), `IncompleteBanner` (read server profile directly per §9.2) | B2 |
+| `tos_accepted_at` | timestamptz | — | Server | Server PATCH from `terms.tsx` | AuthGate fallback, audit | — |
+| `account_preset` | enum | — | Server (admin-set) | Admin tool | AuthGate manufacturer branch (Branch 4.5) | — |
+| `account_deleted_at` | timestamptz | — | Server | DELETE intent endpoint | apiClient → AccountDeletedError → AuthGate reactivation modal | — |
+| `subscription_status` | enum | — | Server (Stripe webhook + admin) | Stripe webhook handler | AppLayout subscription gate, PaywallScreen | — |
+| `lead_views_count` | int | — | Server (incremented on lead view API) | Lead view endpoint | PaywallScreen copy | — |
+| `trial_started_at` | timestamptz | — | Server | server / admin | settings, internal logic | — |
+<!-- WF3 2026-05-04 hardening (review_followups.md mobile-PII bundle + Phase 7 amendment): `stripe_customer_id`, `trade_slugs_override`, and `radius_cap_km` removed from this matrix and from `mobile/src/lib/userProfile.schema.ts`. All three are server-only / admin-internal — `stripe_customer_id` is PII (Spec 99 §2.1 violation if persisted to MMKV), the other two are admin-managed fields with no mobile consumer (verified by grep). The corresponding API route's `CLIENT_SAFE_COLUMNS` whitelist (Phase 2, commit 08ff823) excludes all three from GET / PATCH responses to mobile clients. The Phase 7 amendment caught a CRITICAL bug where the mobile schema still declared `trade_slugs_override` and `radius_cap_km` as required-but-nullable — Zod v4's `.nullable()` permits `null` but NOT a missing key, so every API response would have failed schema parse and broken every profile-dependent screen. -->
+
+| `display_name` | text | — | Server | Server insert on first PATCH (typically derived from auth provider) | settings (display only) | — |
+| `email` | text | — | Server (Firebase auth claim) | Server insert on first PATCH | settings (display only), notification dispatch | — |
+| `created_at` / `updated_at` | timestamptz | — | Server (Postgres trigger) | Postgres `NOW()` on insert/update | observability only — never read by client routing | — |
+
+### 3.2 Auth / Identity (Firebase + apiClient)
+
+| Field | Owner Layer | Canonical Writer | Authorized Readers | Persistence |
+|-------|-------------|------------------|---------------------|-------------|
+| `user.uid` | `authStore` (Layer 3) | `authStore.setAuth()` — invoked ONLY from `initFirebaseAuthListener` | AuthGate (gate Branch 1), apiClient (Bearer Authorization), useUserProfile (`enabled` gate), settings/account screens (display) | MMKV `auth-store` (uid only — Spec 93 §3.4 partialize strips PII) |
+| `user.email` | `authStore` | `authStore.setAuth()` | reactivation modal copy, settings | NOT persisted |
+| `user.displayName` | `authStore` | `authStore.setAuth()` | settings | NOT persisted |
+| `idToken` | `authStore` | `authStore.setAuth()` (init + 401 retry) | apiClient `Authorization: Bearer` only | NOT persisted (short-lived) |
+| `isLoading` | `authStore` | `authStore.setAuth()` / `clearAuth()` / `setLoading()` (init defaults to `true`; cleared to `false` on first auth resolve) | AuthGate (initial-load gate before hydrate completes) | NOT persisted (process-local) |
+| `_hasHydrated` | `authStore` | `onRehydrateStorage` callback (sole production writer); `setHasHydrated(true)` permitted ONLY in tests to bypass MMKV | AuthGate (Branch 0 — wait-for-hydrate gate) | NOT persisted (process-local) |
+
+### 3.3 Onboarding-Local State (no server mirror)
+
+After §9.3 deduplication, `onboardingStore` holds ONLY these two genuinely-local fields. `selectedTradeName` (display-only mirror) was removed — display sites derive the trade label from the canonical `filterStore.tradeSlug` via `getTradeLabel(slug)` in `mobile/src/lib/onboarding/tradeData.ts`.
+
+| Field | Owner Layer | Canonical Writer | Authorized Readers |
+|-------|-------------|------------------|---------------------|
+| `currentStep` | `onboardingStore` | each onboarding screen calls `setStep('next')` AFTER its PATCH succeeds (Spec 94 §10 Step 11) | AuthGate `getResumePath()` — **MUST be read via `useOnboardingStore.getState().currentStep` inside the effect closure (NEVER subscribed via `useStore((s) => s.currentStep)` per §6.4)** |
+| `selectedPath` | `onboardingStore` | `setPath()` in `path.tsx` | `address.tsx`, `supplier.tsx` (skip-suppliers branch), `terms.tsx` (Path L vs Path T branch), `complete.tsx` (display) |
+
+### 3.4 Engagement (Zustand, in-memory)
+
+| Field | Owner Layer | Writer | Readers |
+|-------|-------------|--------|---------|
+| `unreadFlightBoard` | `notificationStore` (in-memory) | `incrementUnread()` in `NotificationHandlers` foreground push handler; `clearUnread()` on Flight Board tab focus | AppLayout tab badge |
+| `paywall.visible` | `paywallStore` (in-memory — Spec 96 §9 explicit) | `show()` — called by `InlineBlurBanner.tsx:12` on banner tap (verified 2026-05-03 §9.9 audit). The original §3.4 audit incorrectly flagged this as caller-less; the grep missed `usePaywallStore((s) => s.show)` selector usage. | AppLayout subscription gate, PaywallScreen |
+| `paywall.dismissed` | `paywallStore` (in-memory) | `dismiss()` (PaywallScreen "Maybe later" tap), `reset()` (signOut per §B5; `expired→active` transition in AppLayout — renamed from `clear()` 2026-05-03 for §B5 naming uniformity) | AppLayout subscription gate, InlineBlurBanner |
+
+### 3.4c Engagement (Zustand, MMKV-persisted)
+<!-- Subsection number is `3.4c`, not `3.4b`, because §3.4a (UI-Only SharedValues, below) was already taken by an existing subsection. Document order in this section: §3.4 → §3.4a (existing) → §3.4c (this section). -->
+
+These stores survive app close and are reset on sign-out via §B5. Spec 77 §3.2 prescribes the persistence — same-user re-sign-in re-seeds via the gate (no server source of truth to re-hydrate from, so first-sight semantics protect post-reset UX).
+
+| Field | Owner Layer | Writer | Readers | Persistence | Sign-out reset |
+|-------|-------------|--------|---------|-------------|----------------|
+| `seenMap` (`Record<permitId, ISO8601>`) | `flightBoardSeenStore` (Zustand + persist→MMKV `flight-board-last-seen` blob) | `markSeen(permitId, updatedAt)` from `[flight-job].tsx` on detail-open | `flight-board.tsx` `renderItem` to compute `hasUpdate = updated_at !== seenMap[permitId]` per Spec 77 §3.2 | Layer 4a (MMKV plaintext — non-PII; just permit IDs + ISO timestamps) | Required (§B5) — `clearLocalSessionState` calls `useFlightBoardSeenStore.getState().reset()` |
+| `recent` (`string[]`, newest first, at most `SEARCH_RECENT_MAX` = 3) | `recentSearchesStore` (Zustand + persist→MMKV `parcel-recent-searches` blob) | `add(query)` from `parcel-tool/index.tsx`, only when a search opens a page (the lot report, SELECT on the address list, the map page) | `parcel-tool/index.tsx` recent-search chips | Layer 4a (MMKV plaintext — a searched street address; not in the Layer 4b list above) | Required (§B5) — `clearLocalSessionState` calls `useRecentSearchesStore.getState().reset()` |
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-35 · McFrontend queue · lane MF-35 build; operator, verbatim: "D15 b, D16 a, D17 a D18 a, D-2 a , D-9 a, D-1 a"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-10: MF-35 v3 and MF-51 decisions"; plan `~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md`): the `recentSearchesStore` row above is added by MF-35 (P35-D16 a: the MaxBLD search page's recent searches on the phone, max 3, newest first, duplicates ignoring case removed, saved only when a search opens a page, cleared at sign-out). A searched street address is none of the Layer 4b items (tokens, keys, payment credentials, government IDs, photo content; :97), so Layer 4a applies. `storeReset.coverage.test.ts` finds the new store with no count change (its guard is `>= 6`).
+
+> Dated note 2026-11-25 (task-454): SEARCH_RECENT_MAX is now the setting maxbld_page_recent_max.
+
+### 3.4a UI-Only SharedValues (Layer 5 — orthogonal to Layers 1-4)
+
+These are NOT Zustand stores. They use `react-native-reanimated`'s `makeMutable()` and live exclusively on the UI thread. They are **never** read by router effects, hydrated from server, persisted to MMKV, or reset in §B5 sign-out — they are process-local UI state for animations.
+
+| Field | File | Writer | Readers | Sign-out reset |
+|-------|------|--------|---------|----------------|
+| `tabBarScrollY` | `tabBarStore.ts` | `onScroll` worklets in `(app)/index.tsx`, `flight-board.tsx`, `map.tsx` | `AnimatedTabBar` `useDerivedValue` | NOT required (process-local, not user-scoped) |
+| `tabBarVisible` | `tabBarStore.ts` | derived from `tabBarScrollY` direction | `AnimatedTabBar` `translateY` | NOT required |
+
+### 3.5 Deprecated mirrors (migration targets per §9)
+
+| Mirror | Replacement | Migration WF |
+|--------|-------------|--------------|
+| `onboardingStore.isComplete` | Read `useUserProfile().data.onboarding_complete` directly | WF2 §9.2a-c |
+| `onboardingStore.locationMode` / `homeBaseLat` / `homeBaseLng` / `supplierSelection` (the duplicates) | Use `filterStore` exclusively (already populated by B2 hydration) | WF2 §9.3 |
+| `onboardingStore.selectedTrade` (duplicate of `filterStore.tradeSlug`) | Use `filterStore.tradeSlug` | WF2 §9.3 |
+| `onboardingStore.selectedTradeName` (display-only mirror of server `display_name` lookup) | Read from server profile or extract from trade catalog at display site | WF2 §9.3 |
+| `useUserProfile.readCachedProfile` MMKV blob (`user-profile-cache`) | Eliminated — TanStack persister covers fast-hydration | WF3 §9.1 (✅ done — see `mobile/src/lib/migrations/userProfileCacheCleanup.ts` for the one-time orphan-file cleanup) |
+| `userProfileStore.hydrate` non-idempotent set | Migrate to deep-equal-before-set per §6.6 | WF2 §9.8 |
+| `filterStore.hydrate` non-idempotent set | Same | WF2 §9.8 |
+| ~~`paywallStore.show()` action with no caller~~ | RESOLVED — §9.9 audit (2026-05-03) confirmed `InlineBlurBanner.tsx:12` calls it. The original audit grep missed the selector form. | WF3 §9.9 ✅ |
+
+---
+
+
+## 4. The Six Bridge Patterns
+
+These are the **only** allowed cross-layer flows. A seventh pattern requires a spec amendment.
+
+### B1 — Server → TanStack Query
+
+**Pattern:**
+```ts
+const query = useQuery({
+  queryKey: ['user-profile'],
+  queryFn: fetchProfile,
+  staleTime: 300_000,
+  enabled: !!user,
+});
+```
+
+**Rules:**
+- Every server fetch MUST go through TanStack Query — never raw `fetch()` in components.
+- `queryKey` MUST be a stable, parameterized array. Object literals with closure refs are BANNED (cache fragmentation).
+- `enabled` gates: use `!!user` for user-scoped queries; never `enabled: someChangingValue` that toggles continuously.
+- **`refetchOnReconnect` defaults to `true` and MUST stay enabled** for `['user-profile']` so a returning-from-offline user gets a fresh profile (Stripe webhook may have flipped `subscription_status` during the offline window). The 2026-05-02 incident #3 root cause is **not** `refetchOnReconnect` — it's that AppLayout's render gate gates on `isFetching` (per §6.5 BANNED). Surgical fix: strip `isFetching` from the gate condition (§9.4); `refetchOnReconnect` stays on.
+- Validation: every response MUST be parsed through a Zod schema before TanStack stores it (Spec 90 §13 Zod Boundary).
+
+**Query-key registry (the stable, parameterized keys in use).** Adding a new server query requires a row here:
+
+| Query key | Owner hook | Notes |
+|-----------|-----------|-------|
+| `['user-profile']` | `useUserProfile` | PII — excluded from MMKV persistence (§2.1) |
+| `['lead-feed', params]` | `useLeadFeed` | public permit data; persists normally |
+| `['flight-board']` | `useFlightBoard` | saved-board rows |
+| `['lead-detail', id]` | `useLeadDetail` | single lead |
+| `['parcel-search', q]` | `useParcelSearch` (Spec 100) | debounced typeahead; public cadastral data; persists normally |
+| `['parcel-lookup', parcelId]` | `useParcelLookup` (Spec 100) | the parcel detail; depends ONLY on `parcelId` (query-key hygiene — never on the search string) |
+| `['parcel-entitlement']` | `useParcelEntitlement` (Spec 100; SRCH.A6, task-320) | the caller's plan and this month's report count ("N of M reports left until <date>"); a display, never a gate; the caller's own, so no parameter; not persisted across a restart (`mobile/src/lib/persistFilter.ts` NOT_PERSISTED) |
+
+### B2 — TanStack → Zustand (server-to-local hydration)
+
+**Pattern:**
+```ts
+useEffect(() => {
+  if (query.data) {
+    hydrateFilter(query.data);
+    hydrateUserProfile(query.data);
+  }
+}, [query.data, hydrateFilter, hydrateUserProfile]);
+```
+
+**Rules:**
+- The hydrate effect MUST live in exactly ONE hook (`useUserProfile` for the profile bridge). Multiple components calling that hook share the same TanStack cache, but each runs the effect once on mount — that's fine; the hydrate functions are idempotent.
+- Hydrate functions MUST be **idempotent** — calling twice with identical data MUST result in zero observable state change. Specifically: object-valued fields MUST use deep-equal-before-set per §6.6.
+- Hydrate MUST NOT call `router.replace` or trigger any navigation. Routing happens in §5 routers, not in hydrate effects.
+- The `markComplete()` bridge call (currently in `useUserProfile.ts:101-103`) is DEPRECATED — see §9.2.
+
+### B3 — Zustand → Server (mutation with optimistic update)
+
+**Pattern:**
+```ts
+const mutation = useMutation({
+  mutationFn: (patch) => fetchWithAuth('/api/user-profile', { method: 'PATCH', body: JSON.stringify(patch) }),
+  onMutate: async (patch) => {
+    // Optimistic update: write to filterStore immediately
+    useFilterStore.getState().setRadiusKm(patch.radius_km);
+    return { previous: prevValue };
+  },
+  onError: (_err, _patch, ctx) => {
+    // Rollback
+    useFilterStore.getState().setRadiusKm(ctx.previous);
+  },
+  onSettled: () => queryClient.invalidateQueries({ queryKey: ['user-profile'] }),
+});
+```
+
+**Rules:**
+- Optimistic local writes MUST go through the field's canonical writer per §3.
+- Rollback MUST be paired with every optimistic write.
+- `onSettled` MUST invalidate the relevant query so the next render reads server truth.
+
+> **Rollback race acknowledgement 2026-05-05 (originally amended to mandate re-read; revised same day to match `usePatchProfile.ts` §9.16 implementation):** the naive rollback pattern above CAN overwrite legitimate concurrent writes when the same field is mutated more than once in flight. Concrete scenario: user adjusts the radius slider (mutation A starts; `onMutate` captures `previous = 10`, applies optimistic = 20). Before A's network call resolves, user adjusts again (mutation B starts; B's `onMutate` reads `useFilterStore.getState().radiusKm` = 20 — A's optimistic value — applies optimistic = 30). Mutation A errors. A's `onError` restores 10. The user's screen flips 30 → 10; B's eventual `onSettled` invalidate refetches and restores 30 from the server (B's PATCH succeeded), so the FINAL state is correct — but the user sees a one-frame flicker during the rollback.
+>
+> **Canonical pattern: naive rollback** (what `usePatchProfile.ts:onError` currently does — restore `previous` unconditionally on error). Acceptable for low-contention fields where the user is unlikely to fire a second mutation before the first resolves.
+>
+> **Recommended for high-contention fields: re-read-before-rollback.** When a field is prone to rapid concurrent user input (slider drags, type-ahead, multi-step forms), augment `onError` to read the current Zustand value first; only restore `previous` if it equals the optimistic value the mutation set:
+> ```ts
+> onError: (_err, patch, ctx) => {
+>   const current = useFilterStore.getState().radiusKm;
+>   if (current === patch.radius_km) {
+>     useFilterStore.getState().setRadiusKm(ctx.previous);
+>   }
+>   // else: a newer write landed — do not clobber (last-write-wins).
+> },
+> ```
+>
+> **Alternative for stricter correctness: per-field version counter.** Each `onMutate` increments a counter; `onError` only restores if the counter at error-time matches. Handles the edge case where a concurrent write happens to set the same value as the optimistic (which the equality check above misses). More elaborate; only justified if the equality-miss case is observed in production.
+>
+> **For deep-equal fields** (e.g., `homeBaseLocation`), the equality check uses `fast-deep-equal/es6` per §6.6.
+>
+> **Per-field decision matrix:** review each existing `useMutation` site for contention. `usePatchProfile.ts` currently mutates `radius_km` only; user-facing surfaces are slider + preset buttons + settings page. Slider drag is a high-contention shape (multiple mutations in flight while the user holds + drags). Decision recorded here: **re-read-before-rollback IS recommended for `radius_km` if the slider's mutation cadence is observed to fire concurrent mutations in production.** Until that observation, the naive pattern is the canonical default — promoting re-read prematurely creates spec-vs-code drift the M1+M2+M3 batch was designed to close.
+
+### B4 — Auth Listener → Cache Invalidation
+
+**Pattern:** (current implementation in `mobile/src/store/authStore.ts`)
+```ts
+auth().onAuthStateChanged((firebaseUser) => {
+  if (firebaseUser) {
+    const expectedUid = firebaseUser.uid;
+    const isUidChange = lastKnownUid !== expectedUid;
+    if (isUidChange) {
+      lastKnownUid = expectedUid;
+    }
+    void firebaseUser.getIdToken().then((idToken) => {
+      if (lastKnownUid !== expectedUid) return; // stale
+      useAuthStore.getState().setAuth({...}, idToken);
+      // Invalidate AFTER setAuth so the refetch uses the NEW bearer token.
+      // Pre-§9.1-amend, invalidate fired synchronously and raced setAuth
+      // (Gemini WF3-§9.1 review F7).
+      if (isUidChange) {
+        void queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      }
+    });
+  }
+});
+```
+
+**Rules:**
+- Triggers: cold-boot first-fire (`lastKnownUid === null`) AND genuine UID change.
+- `lastKnownUid` is NOT reset on sign-out (Spec 93 §3.4 fast-path preservation).
+- Stale-resolution guard: `getIdToken().then()` MUST verify `lastKnownUid === expectedUid` before calling `setAuth` (race-prevention per WF3 review).
+- Telemetry: emit `Sentry.addBreadcrumb({category:'auth', message:'uid_change_cache_invalidated'})` only on genuine UID change (not first-fire) per §7.
+- **HMR caveat (DEV only):** `lastKnownUid` is module-scoped `let`, so Metro Fast Refresh resets it on hot reload of `authStore.ts` while in-flight `getIdToken().then()` closures from the OLD module retain the stale binding. The stale-resolution guard above mitigates the late-write race. The cache-invalidation re-fire is acceptable (extra refetch, not data loss). DO NOT move `lastKnownUid` into Zustand state to "fix" HMR — that would defeat the cold-boot first-fire detection (Zustand persist would rehydrate it from MMKV).
+
+### B5 — Sign-out Reset (the global fan-out)
+
+**Pattern:** (current implementation in `mobile/src/store/authStore.ts:signOut` after the §9.19 unification)
+```ts
+// Module-scope helper — shared between explicit signOut() and the
+// onAuthStateChanged(null) listener branch (forced sign-outs). Both
+// paths invoke this AFTER auth().signOut() resolves (or fails — see
+// the try/finally in signOut below).
+function clearLocalSessionState(): void {
+  usePaywallStore.getState().reset();      // Spec 96 §9 — fast shared-device handoff
+  queryClient.clear();                     // §9.10 — purge ALL TanStack queries
+  mmkvPersister.removeClient();            // §9.18 — purge persister disk blob
+  useFilterStore.getState().reset();
+  useNotificationStore.getState().reset();
+  useOnboardingStore.getState().reset();
+  useUserProfileStore.getState().reset();
+  useAuthStore.setState({ user: null, idToken: null, isLoading: false });
+  resetIdentity();
+}
+
+signOut: async () => {
+  track('signout_initiated');
+  // §9.19 (also DeepSeek WF2 P2 review #11): try/finally guarantees the
+  // PIPEDA-critical local cleanup runs even if Firebase signOut throws
+  // (network blip, expired refresh token, Firebase unreachable). Pre-fix
+  // a thrown signOut() left the user logged in locally with stale
+  // Zustand + TanStack caches.
+  try {
+    await auth().signOut();
+  } catch (err) {
+    Sentry.captureException(err, {
+      extra: { context: 'authStore.signOut: firebase signOut failed; running cleanup anyway' },
+    });
+  } finally {
+    clearLocalSessionState();
+  }
+}
+```
+
+**Rules:**
+- Order WAS normative (paywall reset BEFORE firebase signOut) but the §9.19 unification moved the entire fan-out into `clearLocalSessionState()` which runs in `finally` (i.e., AFTER `auth().signOut()` resolves or throws). This is intentional: the try/finally guarantees cleanup on Firebase failure (the PIPEDA-critical case), and the paywall reset still runs before any subsequent code observes the cleared session because both branches reach `finally` synchronously. The "BEFORE firebase signOut" rule for paywall reset (Spec 96 §9 anti-flicker) is preserved by Spec 96 §9's separate guard, not by the order in `signOut()`.
+- All in-memory Zustand stores MUST be enumerated in `clearLocalSessionState()`. Adding a new store with user-scoped state requires adding a `.reset()` call there. **Enforcement:** §8.5 store-enumeration test grep-asserts that every `create<*Store>(` in `mobile/src/store/*.ts` has a corresponding `.getState().reset()` call in `clearLocalSessionState()` (or in `signOut()` directly for stores explicitly excluded from the helper — currently none).
+- **`queryClient.clear()` MUST fire** as part of `clearLocalSessionState()`. Reason: `enabled: !!user` only stops *new* fetches — in-flight fetches resolve and write to the cache, attributing the previous user's data to the next sign-in. Additionally, the MMKV-persisted TanStack cache (`mmkvPersister`, 24h `maxAge`) survives the sign-out and rehydrates on next mount, leaking previous-user `['user-profile']` to a different user signing in on a shared device — a privacy violation under PIPEDA (the same reason `userProfileStore.partialize` strips PII). The B4 invalidate-on-uid-change is defense-in-depth; this `clear()` call is the primary fix. **§9.10 ✅ DONE** — implementation chose `queryClient.clear()` (broader purge) over the originally-specified scoped `removeQueries({queryKey: ['user-profile']})`; broader purge is defense-in-depth (cancels in-flight refetches across all queries, not just `['user-profile']`) and is stricter than the §B5 PIPEDA letter requires. Spec amended 2026-05-05 to match implementation. The MMKV blob is purged separately via `mmkvPersister.removeClient()` (added §9.18, consolidated into `clearLocalSessionState()` by §9.19) — orthogonal mechanism, both required.
+
+### B6 — API Client → Auth Listener (mid-session token refresh on 401)
+
+Spec 99 amendment 2026-05-05 (resolves WF2 M1+M2+M3 #6, DeepSeek): Firebase ID tokens expire after ~1 hour. `onAuthStateChanged` does NOT fire on token expiry — Firebase only fires it on USER state changes (sign-in / sign-out / forced revocation). Pre-amend, B4 covered cold-boot/UID-change invalidation but the spec said nothing about mid-session refresh; the apiClient's existing 401 interceptor was implicit. A future contributor removing the interceptor "because it's not in the spec" would silently break the app at the 1-hour mark. B6 documents the interceptor as a normative bridge.
+
+**Pattern:** (current implementation in `mobile/src/lib/apiClient.ts:65-84`)
+```ts
+async function fetchWithAuthInternal<T>(path, options, isRetry = false): Promise<T> {
+  const { idToken } = useAuthStore.getState();
+  const headers = { Authorization: `Bearer ${idToken}`, ... };
+  const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
+
+  // 401 intercept: force-refresh idToken and retry once.
+  if (response.status === 401 && !isRetry) {
+    try {
+      const { user } = useAuthStore.getState();
+      const newToken = await auth().currentUser?.getIdToken(true);
+      if (newToken && user) {
+        useAuthStore.getState().setAuth(user, newToken);
+        return fetchWithAuthInternal<T>(path, options, /* isRetry */ true);
+      }
+    } catch {
+      // Token refresh failed (Firebase unreachable, refresh token revoked) —
+      // fall through to throw ApiError(401).
+    }
+    throw new ApiError(401, 'Unauthorized');
+  }
+  // ...
+}
+```
+
+**Rules:**
+- 401 from server MUST trigger `auth().currentUser?.getIdToken(true)` (force-refresh) exactly once. The `isRetry` boolean parameter is the cycle guard — recursive call sets `isRetry: true`, the second 401 propagates `ApiError(401)` instead of looping.
+- Refreshed token MUST be written to `useAuthStore` via `setAuth(user, newToken)` BEFORE the retry. The retry uses the new bearer because `fetchWithAuthInternal` re-reads `idToken` from the store at line 20.
+- Refresh failure (Firebase unreachable, `currentUser` null, `getIdToken` rejection) MUST propagate as `ApiError(401)` — the apiClient does NOT call `clearAuth()` directly. The error propagates to TanStack Query → consumer → AuthGate, which routes via Branch 4 (other profileError) to the retry UI per §5.3. A second 401 after the user-initiated retry would mean the refresh token itself is invalid — at that point the user is effectively signed out, and the next foreground/AppState event would let the listener detect the broken session.
+- This bridge is mid-session ONLY. Cold-boot UID-change invalidation belongs to B4; sign-out cleanup belongs to B5. B6 fires when the app already has a logged-in `user` and just needs a fresh `idToken`.
+- This section is the canonical (and sole) normative source for the 401 interceptor contract; `mobile/src/lib/apiClient.ts:65-84` is the implementation site. Removing the interceptor without a corresponding B6 spec amendment is forbidden.
+- **Known limitation:** concurrent 401s each call `getIdToken(true)` independently. Firebase deduplicates the network refresh internally, but the store receives two `setAuth` writes. Low risk in practice (Zustand `set` is sync; second write is a no-op if newToken is identical). Tracked in `docs/reports/review_followups.md` as "concurrent 401 mutex" for future hardening.
+
+---
+
+
+## 5. Routing Authority Rules
+
+### 5.1 One router per gate boundary
+
+The mobile app has exactly TWO routing boundaries:
+
+| Boundary | Sole Authority | File | Spec |
+|----------|----------------|------|------|
+| `(auth)` ↔ `(onboarding)` ↔ `(app)` | **AuthGate** | `mobile/app/_layout.tsx` AuthGate component | Spec 93 §5 Step 6 + Spec 94 §10 |
+| `(app)` trial / expired / paywall | **AppLayout** | `mobile/app/(app)/_layout.tsx` | Spec 96 §10 Step 2 |
+
+**Other layouts (`(auth)/_layout.tsx`, `(onboarding)/_layout.tsx`, `(app)/[lead]`/`[flight-job]` modals) MUST NOT have routing `useEffect`s.** They render their `<Stack/>` and let AuthGate / AppLayout govern transitions.
+
+### 5.2 Routers MUST read from the canonical source
+
+For each routing decision, the router MUST read from the field's owner per §3:
+
+| Decision | Read from |
+|----------|-----------|
+| Is user authenticated? | `authStore.user` (canonical) |
+| Has onboarding completed? | `useUserProfile().data.onboarding_complete` (canonical = server profile) — NEVER `useOnboardingStore.isComplete` |
+| Which onboarding step to resume? | `useOnboardingStore.getState().currentStep` (lazy read per §6.4) |
+| Account in deletion window? | `profileError instanceof AccountDeletedError` |
+| Subscription status? | `useUserProfile().data.subscription_status` (canonical) — NEVER mirrored locally |
+
+**Stale-profile guard (CRITICAL):** Routers MUST NOT make a routing decision against a `profile` whose `user_id !== authStore.user?.uid`. When the UID changes (B4 cache invalidation in flight), TanStack returns the previous user's `query.data` until the new fetch resolves; using it would route the new user based on the old user's `onboarding_complete` / `subscription_status`. AuthGate's existing `profileLoading && !profile` guard only defends the cold-boot case — it does NOT defend the UID-change-mid-fetch case. Implementation: `if (profile && (!profile.user_id || profile.user_id !== user?.uid)) return;` placed after the `profileLoading` guard.
+
+**Hardening beyond spec letter (Gemini WF2 §9.6 F1 + DeepSeek #2 consensus, landed in `mobile/src/lib/auth/decideAuthGateRoute.ts`):** the falsy-uid pre-check (`!profile.user_id`) is stricter than the §5.2 `!==` letter required and rejects a corrupted/poisoned cache where `user_id` is `null` / `''` / `undefined` while attesting to `onboarding_complete: true`. Without the falsy guard, `null !== 'real-uid'` evaluates `true` so the inequality check ALSO returns `wait` for this case — *but only by accident*: a future cache-shape change that surfaced `user_id: ''` (empty string, not null) coupled with the same falsy assertion would still bypass the inequality (empty string `!== 'real-uid'` is also `true`, so the path appears safe — but a future predicate that read `profile.user_id` for routing would see the empty string and fail open). The explicit `!profile.user_id` falsy guard rejects the entire "corrupted cache" attack class regardless of which falsy value the corruption produces. AuthGate's caller emits a Sentry `stale_profile_missing_user_id` breadcrumb in this branch (caller-side side effect) so cache corruption is observable without routing on it. **§9.11 ✅ DONE.**
+
+### 5.3 The 9 routing arms (AuthGate, Spec 93 §5 Step 6)
+
+This subsection is the canonical AuthGate matrix. Any change to AuthGate's branches requires updating this section. **Counting convention:** 9 distinct routing arms (1, 2, 3, 4, 4.5, 5a, 5b, 5c, 5d). §8.2 test mandate covers all 9. Branch 5 has 4 sub-cases (5a-5d) because the destination depends on which group the user is currently in × `onboarding_complete`; collapsing them in tests would mask sub-case-specific bugs.
+
+```
+1.   !user                                           → /(auth)/sign-in
+2.   AccountDeletedError                             → reactivation modal (no nav)
+3.   ApiError 404                                    → /(onboarding)/profession
+4.   profileError (other)                            → retry UI (no nav)
+4.5. profile.account_preset='manufacturer' && !complete  → /(onboarding)/manufacturer-hold
+5a.  profile && inAuthGroup && !complete             → getResumePath(profile, currentStep)
+5b.  profile && inAuthGroup && complete              → /(app)/ + registerPushToken
+5c.  profile && inOnboardingGroup && complete        → /(app)/
+5d.  profile && !auth && !onboarding && !complete    → getResumePath(profile, currentStep)
+```
+
+### 5.4 Lint rule: router useEffect dependency hygiene
+
+Router `useEffect` dependency arrays MUST NOT contain Zustand fields read inside the effect body. Use lazy `useStore.getState().field` instead. **Exception:** the dep array MUST contain values that — when changed — should cause the routing decision to be re-evaluated (e.g., `segments`, `user`, `profile`). The distinction: `user.uid` is a routing input (in deps); `currentStep` is informational for the destination (lazy read).
+
+---
+
+
+## 6. Render-Stability Rules (selector hygiene)
+
+### 6.1 Atomic selectors MANDATE — no whole-store reads, no object-returning selectors without `useShallow`
+
+Components MUST select only the primitives or stable references they need. As stores grow, bad selectors destroy frame rate by triggering re-renders on every mutation regardless of whether the component cared about the changed field. Zustand without a selector returns the WHOLE state object — a new reference produced on every `set()` — guaranteeing a re-render of the consumer on every store mutation anywhere in the store.
+
+```ts
+// BANNED — returns the WHOLE state on every render → re-renders on EVERY store mutation
+//          even if the component only consumes one field. UI thread blocking risk.
+const store = useFilterStore();
+const { tradeSlug } = useFilterStore();   // destructure of whole state — same problem
+
+// BANNED — returns a NEW object every render → re-renders on every store mutation
+const { hydrate, reset } = useFilterStore((s) => ({ hydrate: s.hydrate, reset: s.reset }));
+
+// REQUIRED — atomic primitive selectors
+const tradeSlug = useFilterStore((s) => s.tradeSlug);
+const hydrate = useFilterStore((s) => s.hydrate);
+const reset = useFilterStore((s) => s.reset);
+```
+
+**`useShallow` escape hatch:** Zustand v5 ships `useShallow` exactly to opt into shallow-equality checks for object-returning selectors. Permitted for selectors returning arrays/objects of primitives (e.g., `useShallow((s) => s.tags)` or `useShallow((s) => ({ lat: s.lat, lng: s.lng }))`). BANNED for selectors returning store-action objects (`useShallow((s) => ({ hydrate: s.hydrate, reset: s.reset }))`) — separate selectors per action are simpler and shallow-equal still allocates a new array per render. Each `useShallow` site MUST include a one-line comment justifying why a primitive selector is insufficient.
+
+**Enforcement:** §9.15 (router-hygiene lint vitest) is extended in this amendment to also flag whole-store reads (`useFilterStore()` with no selector) anywhere in `mobile/app/**` and `mobile/src/components/**`.
+
+### 6.2 Hydrate functions MUST be idempotent
+
+```ts
+// REQUIRED idempotent pattern
+hydrate: (profile) => {
+  const next = { tradeSlug: profile.trade_slug ?? '', radiusKm: profile.radius_km ?? 10, ... };
+  set((prev) => {
+    // Only update keys that changed — Zustand's set bails out only on full-state Object.is
+    const diff = computeDiff(prev, next);
+    return diff.empty ? prev : { ...prev, ...diff.changed };
+  });
+}
+```
+
+### 6.3 IS DISTINCT FROM gate on mutation
+
+```ts
+// REQUIRED — don't write the same value back
+setTradeSlug: (slug) => set((s) => s.tradeSlug === slug ? s : { tradeSlug: slug }),
+```
+
+### 6.4 Lazy `getState()` in router effects
+
+```ts
+// REQUIRED inside AuthGate's routing effect
+useEffect(() => {
+  // ... routing decision ...
+  const currentStep = useOnboardingStore.getState().currentStep;  // ← lazy
+  router.replace(getResumePath(profile, currentStep));
+}, [user, segments, profile, ...]);  // ← currentStep NOT in deps
+```
+
+### 6.5 Gate conditions MUST be stable signals
+
+A render gate condition (`if (X) return <Loading/>`) MUST evaluate to the same value across consecutive renders unless an *intentional* state transition occurred.
+
+```ts
+// BANNED — isFetching toggles on every refetch → AppLayout flickers between guard and Tabs
+if (isLoading || isFetching || profile == null) return <SubscriptionLoadingGuard/>;
+
+// REQUIRED — gate only on stable signals
+if (isLoading || profile == null || profile.subscription_status == null) {
+  return <SubscriptionLoadingGuard/>;
+}
+// Background refetches (isFetching=true with profile already loaded) are silent —
+// the existing rendered tree stays mounted; refetch updates data when it resolves.
+```
+
+> **Amendment 2026-05-05 (resolves WF5 H1, audit `audit_spec99_2026-05-04.md`):** narrow `isFetching` carve-outs ARE permitted in render gates ONLY when ALL three conditions hold:
+>
+> 1. The carve-out pairs `isFetching` with a **stable status field** — a server-canonical enum that doesn't toggle on every refetch (e.g., `subscription_status`). Coupling with transient signals (`isError`, `isPaused`, `fetchStatus`) is BANNED.
+> 2. The carve-out branch returns the **same `<Loading*/>` element** as the parent stable-signal gate. Returning a different element introduces a new flicker surface and is BANNED.
+> 3. The carve-out is **explicitly enumerated below** by spec amendment in the SAME commit that adds the code. Implicit / grandfathered carve-outs are BANNED — reviewers MUST reject any unenumerated carve-out.
+>
+> **Permitted carve-outs (enumerated):**
+>
+> - **`mobile/app/(app)/_layout.tsx` — `isFetching && profile.subscription_status === 'expired'` returning `<SubscriptionLoadingGuard/>`.**
+>   *Rationale:* Protects the post-payment `expired → active` transition (Spec 96 §9 anti-flicker). After Stripe's webhook flips `subscription_status` from `'expired'` to `'active'`, the next AppState→active or `refetchOnReconnect` fires a `['user-profile']` refetch; without the carve-out the gate would briefly render `<PaywallScreen>` for one frame before the new status arrives. The `'expired'` value is a server-canonical enum — it doesn't flip on refetch — so this branch fires ONLY while the cached status is already `'expired'` AND a refetch is in flight. Trial / active / past_due / admin_managed users never enter this branch (status mismatch), so background refetches stay silent for them and the tab tree stays mounted.
+>   *Why this carve-out instead of a `useMutation`-backed flag refactor:* A flag refactor narrows the protection to AppState→active-initiated refetches only, leaving `refetchOnReconnect` and other automatic refetch paths exposed to the one-frame flash. The carve-out covers all refetch sources for the same UX cost.
+>
+> Adding a new permitted carve-out requires extending this enumeration in the same commit; reviewers MUST reject any unenumerated carve-out.
+>
+> **Dated note 2026-11-24 (M-246, prior text kept; task-450 SEARCHFIX.2; RR-0444 MD:2290 "Now we need to fold the findings"; findings V4, V5, N4; GROUNDER-B D2, D3, D5):** the redirect-once pattern of the MaxBLD parcel-tool pages. (1) A page replaces itself through `useSettledRedirect` (mobile/src/hooks/useParcelPageHooks.ts:16-25): the first time the fetch is not running and a target route exists, and never again; its effect dependencies name the route string (`target`), not an object. (2) The page states are derived from stable signals, not from `isFetching`: the search page keeps its no-match line while a settled miss is fetched again (mobile/src/lib/parcelSearchMatch.ts `buildSearchSituation`, `showMiss`), and the semi question page reads no data with a parcel id as loading, never as a redirect (mobile/src/lib/semiQuestion.ts `buildSemiQuestionSituation`), because a paused offline first fetch reports `isFetching` false with no data; only an empty parcel id goes to the Lookup route. No carve-out is added to the enumeration above.
+
+**Current violations being remediated** (do not soften this rule because the live code violates it — these are tracked):
+- _Previously-tracked §6.5 violations all resolved_: line 202 broad gate removed by §9.4a (✅ DONE); line 216 narrow `expired` carve-out permitted by 2026-05-05 amendment above (now an enumerated exception).
+
+### 6.6 Object-valued store fields MUST be deep-compared before set
+
+> **§9.14 update (2026-05-04):** the original `notificationPrefs` JSONB blob — the canonical example for this rule — was flattened to 5 sibling primitive fields on `userProfileStore` (migration 117 + Phase B). Primitives compare via `Object.is` for free (Zustand's own equality), so deep-equal is no longer needed for that field. **Field-by-field comparison is the preferred shape going forward** (see Rules below); deep-equal remains required only for the few legitimately composite fields like `filterStore.homeBaseLocation` (`{lat, lng}` always travels together).
+
+```ts
+// REQUIRED for nested object fields (homeBaseLocation; was notificationPrefs pre-§9.14)
+import equal from 'fast-deep-equal/es6';
+
+hydrate: (profile) => set((prev) => {
+  const nextLoc = { lat: profile.home_base_lat, lng: profile.home_base_lng };
+  return equal(prev.homeBaseLocation, nextLoc) ? prev : { homeBaseLocation: nextLoc };
+});
+```
+
+**Rules:**
+- MUST use `fast-deep-equal/es6` (npm-installed, ~80 lines, no deps). Hand-rolled deep-equal is BANNED — easy to get wrong, hard to test, slow on cold paths.
+- For schemas with stable shape (Zod-validated), **prefer field-by-field comparison** over deep-equal. The §9.14 flatten of `notification_prefs` is the canonical example: 5 atomic primitives + 5 `Object.is` gates replaced 1 JSONB blob + 1 `fast-deep-equal` call.
+- New composite fields MUST justify the deep-equal cost in the spec PR (decision tree: would 2-3 atomic fields work? if yes, prefer flatten).
+
+---
+
+
+## 7. Observability Mandates
+
+### 7.1 Permanent state-debug hub
+
+Promote `mobile/src/lib/debug/loopDetector.ts` (currently temporary) to `mobile/src/lib/debug/stateDebug.ts`. In **DEV builds only** (`__DEV__` guard), it MUST:
+- Subscribe to every Zustand store and log every mutation with field-level diffs (current loopDetector behavior — keep)
+- Track render counts per component using `trackRender(tag)` (keep)
+- Track effect fires with dep diffs via `useDepsTracker(tag, deps)` (keep)
+- Detect render storms (>30 renders/sec) and log `[LOOP-DETECTED]` once with the offending tag (keep)
+
+In **production builds** (`!__DEV__`), the hub is a no-op stub (zero overhead). Implemented in §9.5 (commit `af52c75`) — every export early-returns; `useDepsTracker` is exported as `__DEV__ ? useDepsTrackerDev : useDepsTrackerNoop` (module-scope ternary) so the production noop has zero hook calls (Hermes/Metro constant-folds the ternary at build time).
+
+### 7.2 Cache invalidation telemetry
+
+Every `queryClient.invalidateQueries` call MUST be paired with:
+- `Sentry.addBreadcrumb({ category: 'query', message: 'invalidate', data: { key } })` for non-trivial invalidations (anything not in a user-initiated mutation's `onSettled`)
+- A `track('query_invalidate', { key })` PostHog event in DEV only (production volume too high)
+
+### 7.3 Router decision telemetry
+
+In **DEV builds**, every `router.replace` / `router.push` from AuthGate or AppLayout MUST emit `track('route_decision', { authority, branch, from, to, reason })`.
+
+In **production**, ONLY these four routing events emit telemetry (low frequency, high signal):
+1. `signOut → /(auth)/sign-in` — fires once per session end; churn / engagement signal.
+2. AuthGate Branch 2 (AccountDeletedError) → reactivation modal **shown** — compliance-critical (proves users saw the 30-day window prompt).
+3. `cancelled_pending_deletion` → forced sign-out (AppLayout deletion handler) — revenue / churn signal.
+4. AppLayout `expired → active` transition (paywall clears) — subscription conversion event.
+
+The high-frequency onboarding routing arms (5a-5d) MUST NOT emit production telemetry — too noisy, no actionable signal.
+
+### 7.4 React Strict Mode visibility
+
+`stateDebug.trackRender(tag)` MUST count Strict Mode double-fires (counter increments on each), not suppress them. The `[LOOP-DETECTED]` threshold (30/sec) is high enough to ignore Strict Mode noise but catch genuine loops.
+
+### 7.5 User attribution for Sentry crash reports
+
+`Sentry.setUser({ id: firebaseUser.uid })` MUST be called in the auth listener's signed-in branch (immediately after `identifyUser(uid)` for symmetry with the PostHog distinctId mechanism). `Sentry.setUser(null)` MUST be called inside `clearLocalSessionState()` (the §B5 fan-out — NOT in `signOut()` directly, so the listener-driven forced-signout path also clears the attribution; same lesson as `paywallStore.reset()` from commits `381a0c9` + `f2f7147`).
+
+**Rationale:** without user attribution, individual user reports of crashes cannot be correlated with Sentry events. Anonymous JS stack traces are unactionable for support workflows.
+
+**PII boundary:** Firebase `uid` is opaque (server-generated, not personally identifying alone). The `Sentry.setUser` payload is restricted to `{ id }` only — `email`, `username`, `ip_address` are NEVER sent. Same precedent as PostHog distinctId per `mobile/src/lib/analytics.ts`.
+
+**Enforcement:** `mobile/__tests__/useAuth.test.ts` asserts `Sentry.setUser` calls match the auth state machine — set on signed-in, null on signed-out, null on forced-signout. A regression that drops `Sentry.setUser` on the signout fan-out fails CI.
+
+### 7.6 Product funnel events
+
+A fixed enumeration of product flow events MUST fire at canonical sites so the funnel ratios (`% of lead-detail-views that save`, `% of paywall-shows that convert`) are measurable in PostHog without manual instrumentation diff against the codebase.
+
+**Production events (low-frequency, high-signal, fire in both DEV and PROD):**
+
+| Event | Site | Trigger | Payload |
+|---|---|---|---|
+| `lead_detail_viewed` | `mobile/app/(app)/[lead].tsx` | `useEffect` on `detail.lead_id` resolve (per-navigation, NOT per-render) | `{ lead_id, lead_type }` |
+| `flight_job_detail_viewed` | `mobile/app/(app)/[flight-job].tsx` | `useEffect` on `item.permit_num` + `item.revision_num` resolve | `{ lead_id, lead_type: 'permit' }` |
+| `lead_saved` / `lead_unsaved` | `mobile/src/hooks/useSaveLead.ts` `onMutate` | User tap (BEFORE server confirms — measures intent) | `{ lead_id, lead_type }` |
+| `paywall_shown` | `mobile/src/components/paywall/PaywallScreen.tsx` | Mount `useEffect` (component only mounts when `subscription_status='expired'` AND `!paywallStore.dismissed`) | `{ subscription_status: 'expired' }` |
+| `subscribe_button_clicked` | `PaywallScreen.tsx` `handlePrimary` | User tap on the primary CTA, BEFORE `openCheckout` resolves | none |
+
+**DEV-only events (high-frequency; emit per `__DEV__` gate per §7.3 split — too noisy for production):**
+
+| Event | Site | Reason for DEV-only |
+|---|---|---|
+| `paywall_dismissed` | `PaywallScreen.tsx` "Maybe later" press | A user can dismiss → reopen → dismiss repeatedly per session; per-tap PostHog events would flood. |
+| `flight_board_viewed` | `mobile/app/(app)/flight-board.tsx` mount `useEffect` | Tab toggles (Feed ↔ FlightBoard) are unbounded per session. |
+
+**Rejected (per §7.3 frequency-split rule — would flood production):**
+- `lead_card_viewed` per FlashList `renderItem` (covered by `lead_detail_viewed` on tap).
+
+**PII boundary** (whitelisted in `mobile/src/lib/analytics.ts` `ALLOWED_KEYS`):
+- `lead_id` is `${permit_num}--${revision_num}` for permits or `COA-${application_number}` for CoA — public city-of-record data, NOT PII.
+- `lead_type`, `subscription_status`, `tier` are categorical enums, NOT PII.
+- `email`, `phone_number`, `displayName`, etc. are NEVER passed to `track()` and would be dropped by the whitelist if accidentally added.
+
+**Enforcement (§8.7 — see §8 Test Mandates):** the `mobile/__tests__/spec99.mandates.lint.test.ts` test greps each canonical site for the matching `track()` call. A regression that removes a funnel event from its canonical site fails CI.
+
+### 7.7 Auth funnel ratio invariants
+
+For the `auth_method_attempted` / `auth_method_succeeded` / `auth_method_failed` ratio to be measurable in PostHog, every auth method MUST emit at least one outcome event (`succeeded` XOR `failed`) per attempt. Drift here corrupts the ratio silently — a regression that drops `auth_method_failed` on a specific error path makes the conversion rate look better than it is.
+
+**Per-method contract (verified at `mobile/app/(auth)/sign-in.tsx`):**
+
+| Method | Attempted site | Succeeded site | Failed site(s) |
+|---|---|---|---|
+| Apple | `handleAppleSignIn` (line ~258) | `handleAppleSignIn` success branch (line ~281) | `handleAppleSignIn` catch (line ~287; skip on `ERR_REQUEST_CANCELED`) |
+| Google | `handleGoogleSignIn` (line ~296) | googleResponse useEffect success branch (line ~236) | googleResponse useEffect (3 sites: oauth_response_error line ~217, no_id_token line ~226, signInWithCredential catch line ~241) |
+| Email | `handleEmailSignIn` (line ~312) | `handleEmailSignIn` success branch (line ~319) | `handleEmailSignIn` catch (line ~322) |
+| Phone (SMS) | `handleSendCode` (line ~335) | (no synchronous succeeded — SMS-request success transitions to OTP entry) | `handleSendCode` catch (line ~348) |
+| Phone (OTP) | (implicit: continuation of phone-attempted from SMS step) | `handleVerifyOtp` success branch (line ~372) | `handleVerifyOtp` catch (line ~377) |
+
+**Phone exception explained:** the phone flow is 2-step (SMS request + OTP verify). `auth_method_attempted: phone` fires at the SMS step. The outcome can fire at:
+1. SMS request error (`handleSendCode` catch) → `auth_method_failed`.
+2. OTP verify success (`handleVerifyOtp` success) → `auth_method_succeeded`.
+3. OTP verify failure (`handleVerifyOtp` catch) → `auth_method_failed`.
+
+If the user abandons between SMS-success and OTP-entry, the attempted has no outcome — UX dropout, not a code bug. PostHog dashboards should account for this with a "phone-attempted with no outcome" funnel step.
+
+**Apple `ERR_REQUEST_CANCELED` exception:** Apple sign-in's user-cancellation is handled BEFORE the `auth_method_failed` track call (sign-in.tsx around line 285). User-cancelled attempts deliberately produce no outcome event because cancellation is not a "failure" — the user actively chose not to authenticate. PostHog dashboards should treat Apple-cancelled the same as phone-abandoned.
+
+**Enforcement (§8.8 — see §8 Test Mandates):** the `mobile/__tests__/spec99.mandates.lint.test.ts` test greps `sign-in.tsx` for each method's `auth_method_attempted/succeeded/failed` triple. A regression that removes any outcome event from sign-in.tsx fails CI.
+
+---
+
+
+## 8. Test Mandates
+
+### 8.1 Idempotency tests for every bridge
+
+Each bridge in §4 MUST have a Jest test asserting that calling it twice with identical input produces zero observable mutations on the second call. Pattern:
+
+> **B6 carve-out (added with §4 B6, 2026-05-05):** B6 is a one-shot 401-retry interceptor — by design, two consecutive 401s with identical input fire `getIdToken(true)` on each call (Firebase deduplicates the network refresh internally; the per-request `isRetry` guard limits each call chain to exactly one retry). The B1-B5 idempotency mandate does NOT apply to B6 in the hydration-equality sense. B6's test contract is enforced separately by the §4.B6 rules (exactly-once retry per call chain via `isRetry`; identical-token short-circuit at the Firebase SDK layer).
+
+```ts
+it('hydrate is idempotent — second call with same profile produces no notify', () => {
+  const listener = jest.fn();
+  useFilterStore.subscribe(listener);
+  useFilterStore.getState().hydrate(profile);
+  useFilterStore.getState().hydrate(profile);
+  expect(listener).toHaveBeenCalledTimes(1);  // not 2
+});
+```
+
+### 8.2 Router branch coverage
+
+Each branch in §5.3 (5 + 4.5 manufacturer = 6 branches) MUST have a Jest test verifying its specific (segments + profile + error) input combination produces the correct `router.replace` call. Pattern: `mobile/__tests__/authGate.test.ts` (to be created in WF2).
+
+### 8.3 Gate-stability tests
+
+Each render gate condition (per §6.5) MUST have a test asserting that toggling `isFetching` does NOT flip the gate. Pattern: render the layout twice (once with isFetching=true, once with =false) — both must produce the same JSX.
+
+### 8.4 The stateDebug hub as CI regression guard
+
+**Prerequisite:** §9.5 ✅ done (commit `af52c75` promoted `loopDetector.ts` → `stateDebug.ts` with `__DEV__` guards).
+
+`stateDebug.dumpDiagnostics()` is permitted in CI integration tests as an assertion — `expect(maxRendersPerSecond).toBeLessThan(20)`. **Not yet actionable as written:** `dumpDiagnostics()` returns a `string` (human-readable snapshot), not a structured object. Tracked as **§9.5b** (NEW followup): add a `getDiagnosticsSnapshot(): { renders: Array<{tag, total, last1s}>, effects: Array<...> }` accessor for parse-free CI assertions (Gemini WF3-§9.5 review #4).
+
+### 8.5 Store-enumeration test (§B5 reset coverage)
+
+A vitest at `mobile/__tests__/storeReset.coverage.test.ts` MUST glob `mobile/src/store/*.ts`, parse each file for `export const use<Name>Store = create<...>(`, and assert that `signOut()` in `mobile/src/store/authStore.ts` calls `use<Name>Store.getState().reset()` for every discovered store (or that the store is explicitly excluded with a `// signOut-exempt: <reason>` comment). Adding a store without a reset call OR exemption fails CI.
+
+### 8.6 Schema-vs-matrix drift check
+
+A pre-commit script `mobile/scripts/check-spec99-matrix.mjs` MUST parse the Zod object keys from `mobile/src/lib/userProfile.schema.ts` and the §3.1 markdown table, asserting setEqual (every server field has exactly one §3.1 row). A future migration that adds a new server field without a §3.1 row fails the check. Pattern matches existing `scripts/ai-env-check.mjs`.
+
+---
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Full title: LOAD.2 Loading screen (MF-62 Checking your lot): the animation keeps its set length (23 s today) and always runs to completion; the button to open the report shows only when the report AND See details are loaded, however long that takes (no 35 s cap)
+
+snapshot: docs/reports/plan-import/raw/2026-11-19/ (sequence.json sha256 12b1774a3bf4)
+Estimate: UNMEASURED
+
+Plan text at the snapshot: RULED; panel + build pass owed; edge case owed: the screen when a load fails; waits LOAD.1
+slicePart: page and binding
+planNote: storage-policy: dependsOn LOAD.1,LOAD.3 (the 35 s seed max (LOAD.3); the updating state is the existing lifecycle loading, no new task needed here (seat K))
+planNote: storage-policy: title + ; where the numbers are not ready at the maximum the report opens with the "updating" state, never an old number (A-MF62) (screen is not a gate for Skip and re-open edges)
+planNote: loading-r2: title Loading screen (MF-62 Checking your lot): the animation keeps its set length (23 s today) and always runs to completion; the button to open the report shows only when the report AND See details are loaded, however long that takes (no 35 s cap) (operator 2026-11-18 MORNING-DECISIONS.md ("so right now the animation takes 23 seconds ... the report and the details should be loaded" + "yes that is correct"))
+planNote: loading-r2: status RULED; panel + build pass owed; edge case owed: the screen when a load fails; waits LOAD.1 (operator 2026-11-18 MORNING-DECISIONS.md ("so right now the animation takes 23 seconds ... the report and the details should be loaded" + "yes that is correct"))
+who (plan text): McFrontend lane (MF-62 follow-up)
+
+
+## Acceptance criteria
+- #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
+- #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
+- #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
+- #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
+- #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
+- #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
+- #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
+
+
+## Implementation Plan
+Planner: Cairn-Plan-267
+Plan id: PLAN-267-v2
+Head read: 2fd2f6042 (wf2/board). Since v1 (4c22af6e8) only docs and backlog files changed, so every code line cited in v1 still holds. MD = ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md. Mock = ~/Buildo-scratch/lanes-20261125/mcfixv2-267/MOCK-LOADING-ENDINGS-approved.html, read whole including its table and foot. This version replaces v1 and builds task-317 in the same lane, by RR-0477 (MD:2496) and RR-0488 (MD:2547).
+
+#### 1. Rules quoted first
+- RR-0176, MD:783/786: "the animation takes 23 seconds - this goes to completion - the buttononly appears when the load is done". Ruled: "always runs to completion", "no 35 s cap".
+- MD:695: "from the search page". The reading at :696: the calculation "starts when the user picks the address".
+- RR-0485, MD:2533:
+  - "4. We should not send a report without pricing" (task-343).
+  - "5. Always - except for a tracked/stored lot or one that has previously been opened".
+- RR-0486, MD:2538: "it may not be the users lot they are checking - just a note to clarify".
+- RR-0490, MD:2559:
+  - "1 a": keep "Could not load this report. Try again."
+  - "3 b - let the animation finish and then say the report failed (same screen as 2a for a failure after 60 seconds)".
+  - "4 B - no report screen".
+- RR-0491, MD:2563: "Teh mock looks great! 1 Change (1) Still building - Loading the report shuld be centered horizontally as opposed to left justified. Approved".
+  - The orchestrator's reading at :2564-2565: the give-up is 60 s from the pick; the lines stay on the failure and no-report screens; a no-report lot plays the lines to the end first.
+- RR-0477, MD:2496 (batching). RR-0482, MD:2518 ("larger tasks and using existing components").
+- RR-0278, MD:1082: "I should only be charged a report if I find the address and lot Im looking for and a report is produced".
+- MD:1409: "Phone retires yes" (keep the 3 retries).
+- MD:699: "Once somebody opens a lot or tracks a lot - we have this lot data saved".
+- Spec 126:869: "it doesnt need a title... it should be processing". The coordinator's relay on that line: remove the title "and any section labels".
+- Spec 136 fe.35 (:136): no "live-progress word". The lock report-checked.logic.test.ts:279 refuses 'Checking your lot'.
+- Spec 136 fe.31 (:124): existing components.
+- Spec 128 Rule 3 and the FIX.TUNE precedent (semiQuestion.ts:17, config.continue_wait_ms): a timeframe is surface config backed by a registered logic variable, never a typed number.
+- The "already discussed" skip rule: FOUND for opened lots only. MF-62/plan.md:44 says "Re-opened lot (already counted this period, MF-45 D-3 a): screen skipped". That plan was approved with "Mf-62 - yes" (phase1/open-questions.md:963) and is built as showsWhatWeChecked (what-we-checked.ts:49-51). No earlier line says to skip for a tracked or stored lot; the nearest is MD:699. The mock's table row "Lot opened before, or stored: No check lines. The report opens directly" now draws it, approved by RR-0491.
+
+#### 2. What exists and is reused
+- Server:
+  - lookup-flow.ts:79-90 (the stored read at :83, the compute at :87).
+  - The meter at route.ts:114-123.
+  - openReport (entitlements/index.ts:590-614; already_counted at :606; usageFor is private at :559).
+  - readWhatWeChecked (what-we-checked.ts:167), which returns null on any error.
+  - The core's checked tree and view: buildChecked (core.ts:130); a loading tree that carries checked (:239-243).
+  - The view adds checked with paced=true on collapsed rows. With no href it draws no Skip (:397-403).
+- Phone:
+  - The persisted ['parcel-lookup', id] cache (useParcelLookup.ts:107-116; _layout.tsx:490; queryClient.ts:41).
+  - reportScreenState (ReportBinding.tsx:399-403), lifecycleProps (:369-381), backProps (:383-389), the key lists (:392-394).
+  - The host state (ReportPageHost.tsx:40-41) and the wall (useWallState, [parcelId].tsx:26).
+  - The Back action (useGoBack).
+- The existing 60 s:
+  - setting maxbld_page_continue_wait_ms, read as SEMI_CONTINUE_WAIT_MS (semiQuestion.ts:17);
+  - the timer boundedWait (:26-35).
+- Words that already exist:
+  - states.lifecycle.loading "Loading the report…", .error "Could not load this report. Try again.", .miss "No report for this lot yet." (report-presentation.json:87-89);
+  - retry.text "Try again" (mobile_parcel_detail.content.json);
+  - states.checked.ready / open "View report" / summary (report-presentation.json:139-142).
+- The precedent for a request flag: semi=answered (useParcelLookup.ts:40-44; route.ts:81).
+- Generators:
+  - generate-surface-registry.mjs (--emit-descriptors :1596, default run, --check);
+  - emit-mobile-surfaces.mjs --write;
+  - report-page-capture.ts (MOBILE_LIFECYCLE_STATES :78).
+
+#### 3. What the rulings and the mock settle, and the answers to v1 (a)-(f)
+- (a) The hand-off is unchanged from v1. The stored read and the compute run only on the parcelId form; a q hit sends page null and logs not_produced. The usage rows are identical before and after:
+  - new lot: 1;
+  - already counted: 0;
+  - tracked lot (a stub today, useTrackedLots.ts:52): same as the two rows above;
+  - at-limit new lot: 0, but the 403 wall moves from the search page to the report screen.
+  - The seam with 343 is route.ts:114-116 and consumer-lookup.ts:66 (343's) against lookup-flow.ts:83-90 (267's). 267 lands first.
+- O4 is now RULED (RR-0490 3 b). A failure or a miss that arrives while the lines play waits until they end. Then comes screen 4 (failure) or screen 5 (no report).
+- Give-up is RULED: 60 s from the pick (RR-0491, LD-2 A).
+  - How it meets RR-0176: RR-0176 removed the 35 s cap on a report that is still arriving. Between 23 and 60 s that still holds: screen 3, and the button appears the moment the page lands.
+  - RR-0491 adds a failure bound at 60 s; that bound is new, not the 35 s cap coming back.
+  - Owed: a dated note in Spec 126 §11a.7 and Spec 100 §4 saying that RR-0491 bounds RR-0176's "however long that takes" at 60 s from the pick. Also a card note on 267, whose title says "however long".
+  - The pick mark is the report screen's mount, milliseconds after the push. 465's push is the pick.
+- O3 Skip: the mock draws none. RR-0176 says the animation "always runs to completion", and the core draws no Skip when it is given no href (core.ts:399-403). Settled: no Skip, and none is passed.
+- O2 picture: the mock draws lines only. Settled: no scene, no new component kind.
+- O6 bar title: the mock draws the lot's address in the bar, taken from the checked view's address (what-we-checked.ts:45). Settled.
+- The label "Checks for this lot" is drawn VISIBLE in the mock. It conflicts with Spec 126:869 ("any section labels"). Left open as O8.
+- Words per screen:
+  - Screen 1: verbs and lines, server-built.
+  - Screen 2: states.checked.ready plus states.checked.open "View report".
+  - Screen 3: states.lifecycle.loading, centred (RR-0491's one change).
+  - Screen 4: states.lifecycle.error plus retry.text.
+  - Screen 5: states.lifecycle.miss plus NEW back_to_search.text "Back to search". The key lives in mobile_parcel_detail.content.json; its action is the existing `back` (useGoBack). It moves: the content file, ReportBinding.tsx:394 SCREEN_CONTENT_KEYS, the generated slice mobile/src/generated/surfaces/mobile_parcel_detail.json, reportPage.behaviour.test.tsx:156, reportScreens.golden.test.ts:285, props/miss.mobile.json, and reportScreen.mount.behaviour.test.tsx.
+- (b) When the lines show (RR-0485 item 5 and the mock's table). They are skipped when:
+  - the persisted cache holds a page (opened on this phone); or
+  - the parcelId answer brings a page with no checked view (a stored lot, or already counted: showsWhatWeChecked); or
+  - the checked view is null for an unknown lot or unusable pace (the producer's promise).
+  - Tracked lots: tracking is not built. A tracked lot is stored (MD:699), so the stored rule covers it once task-269 and task-265 land. No field now.
+- (d) The wait today: 11-23 s per compute, and M1 computed the same lot twice (21.7 s plus 21.0 s). After this plan: one compute behind the lines; screen 3 from 23 to 60 s; screen 4 at 60 s or on a failure.
+  - Timing: screen 4 comes after the 3 retries (MD:1409), or at 60 s if that comes first.
+  - 683 Danforth (compute null in 108 ms): lines to 23 s, then screen 5.
+
+#### 4. The change, file by file, in build order (one lane; 267 then 317 in the same commits)
+1. src/lib/parcels/lookup-flow.ts:79-90: `findOnly = parcelId === undefined`. The stored read and the compute are skipped when held or findOnly. Header note :5-6.
+2. src/app/api/parcels/lookup/route.ts:
+   - comments :13-19, :26-27;
+   - O1-A2: parse the fast flag like semi (:78-84);
+   - on the fast read, return the stored page if present; else, unless held, the checked view: buildTree({lifecycle:'loading', what_we_checked}) then viewOf on target mobile with no href. If O1-A2 is ruled, the fast read also skips the lines for an already-counted lot (a usageFor export, one read). The meter code is unchanged.
+   - OUTSIDE FILES LINE: src/app/api/parcels/lookup/types.ts (the response field `checked`, the X-4 a field, and the flag) and src/lib/entitlements/index.ts:559 (export usageFor), both needed only under A2.
+3. mobile/src/lib/schemas.ts:432-441: `checked` nullable and optional (the core's checked view shape).
+4. mobile/src/hooks/useParcelLookup.ts:107-116:
+   - the fast-read query (key ['parcel-checking', id], under A2);
+   - O5: no refetch on mount when the cache holds a page.
+5. mobile/src/components/surfaces/ReportBinding.tsx:
+   - reportScreenState (:399-403) becomes total over (data, checked, isFetching, isError, elapsedMs, gaveUp). Its outputs: view | checking | ready | holding | error | miss. Data with no page while a fetch is running is checking or loading, never miss (finding 23).
+   - checkedProps renders screens 1-5 from existing kinds only (View, Text, Button, ActivityIndicator); screen 3's spinner and words are centred.
+   - backProps gains the address title. With no address there is no title node at all.
+   - LifecycleState stays loading | miss | error. The ending is a separate field, so no new states.lifecycle.* key is invented.
+   - SCREEN_CONTENT_KEYS gains back_to_search.text (and checks.label if O8 is visible).
+6. mobile/src/components/surfaces/ReportPageHost.tsx:64-74:
+   - the clock starts at mount;
+   - the give-up timer at 60 s from mount, or never once a page is shown;
+   - Reduce Motion: all lines at once, one announcement of summary;
+   - no auto-open; no Skip.
+   - A late page that lands after the give-up stays in the cache. Try again shows it at once without a new compute, otherwise it refetches.
+7. mobile/app/(app)/parcel-tool/[parcelId].tsx:23-37: pass the fast read, isFetching, error and the cache skip. The wall stays the first branch when there is no view.
+8. mobile/src/constants/reportPage.ts: the line, tick, end and centred-hold classes.
+9. The 60 s give-up: per O7, either config.give_up_ms or a direct read of the existing slice value.
+10. Content:
+    - mobile_parcel_detail.content.json gains back_to_search.text (and checks.label per O8);
+    - report-presentation.json is unchanged.
+    - OUTSIDE FILES LINE: scripts/surfaces/emit-mobile-surfaces.mjs:120-127, only if O7 picks config.give_up_ms (the report slice writes config {} today).
+11. Census first, then emit, then registry. OUTSIDE FILES LINE for each:
+    1. scripts/surfaces/_schema/census/mobile-product.json, row mobile_parcel_detail (:6151): states :299-325 gain checking, ready, holding; dated notes; the evidence cites move (gate route.ts, states [parcelId].tsx).
+    2. scripts/surfaces/_schema/census/contracts.json, row contract_parcels_lookup (:22081):
+       - metering.why: a q hit sends no page; under A2 the fast read counts only a stored page it serves;
+       - the field whitelist gains `checked`; evidence cites move.
+    3. `node scripts/violations/generate-surface-registry.mjs --emit-descriptors`, which writes:
+       - mobile_parcel_detail.descriptor.json;
+       - contract_parcels_lookup.descriptor.json;
+       - src/lib/surfaces/generated/surface-descriptor.d.ts and validate-descriptor.mjs (expected byte-unchanged; if not, add them).
+       Never edit a descriptor by hand (surface-registry.infra.test.ts:277-281).
+    4. emit-mobile-surfaces.mjs --write, which writes mobile/src/generated/surfaces/mobile_parcel_detail.json.
+    5. report-page-capture.ts: MOBILE_LIFECYCLE_STATES (:78) gains checking, ready, holding, error_after, miss_after. It writes src/tests/fixtures/report-page/props/*.mobile.json (5 new; loading, miss and error move).
+    6. generate-surface-registry.mjs default run, which writes docs/reports/generated/127-surface-registry.md and 127-surface-review-queue.md; its --check must be clean.
+- Parity: the report detail is mobile only (identity.platforms ["mobile"]). There is no web/phone parity lock for its lifecycle; parity.golden.test.ts compares reading trees only. The pins that move are report-mobile.logic.test.ts:32 (the golden names), reportPage.behaviour.test.tsx:156 (the slice keys), reportScreens.golden.test.ts:285 (lifecycle refs) and report-checked.logic.test.ts (words; unchanged unless O8).
+12. Specs and queue:
+    - Spec 100 §3.2 note (the q path sends no page) and §4 note (the endings, 60 s, the skip rule).
+    - Spec 126 §11a.7 note (the app render; RR-0491 bounds RR-0176; Skip not drawn; O8 if visible).
+    - .cursor/MCFRONTEND-QUEUE.md: one follow-up row to MF-62 for both cards, the next free id at claim (MF-99 at this head, :5, unless 465 took it).
+
+FILES (both cards):
+- src/lib/parcels/lookup-flow.ts, src/app/api/parcels/lookup/route.ts, src/app/api/parcels/lookup/types.ts, src/lib/entitlements/index.ts
+- mobile/src/lib/schemas.ts, mobile/src/hooks/useParcelLookup.ts, mobile/src/components/surfaces/ReportBinding.tsx, mobile/src/components/surfaces/ReportPageHost.tsx, mobile/app/(app)/parcel-tool/[parcelId].tsx, mobile/src/constants/reportPage.ts
+- scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.content.json, scripts/surfaces/_schema/census/mobile-product.json, scripts/surfaces/_schema/census/contracts.json, scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.descriptor.json, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
+- mobile/src/generated/surfaces/mobile_parcel_detail.json, src/tests/fixtures/report-page/props, scripts/surfaces/report-page-capture.ts, scripts/surfaces/emit-mobile-surfaces.mjs (O7), docs/reports/generated/127-surface-registry.md, docs/reports/generated/127-surface-review-queue.md
+- src/tests/parcel-lookup-gate.infra.test.ts, src/tests/surfaces/report-mobile.logic.test.ts, src/tests/surfaces/report-failure.logic.test.ts (new)
+- mobile/__tests__/reportScreen.mount.behaviour.test.tsx, mobile/__tests__/reportPage.behaviour.test.tsx, mobile/__tests__/reportScreens.golden.test.ts, mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx, mobile/__tests__/useParcelLookup.test.ts, mobile/__tests__/reportChecked.behaviour.test.tsx (new)
+- docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, docs/specs/02-web-admin/126_maxbld_surface_standard.md, .cursor/MCFRONTEND-QUEUE.md
+
+#### 5. Tests first (red, then green)
+Both cards' acceptance lines are the process lines AC1-AC8. These tests serve AC2 (written into the plan) and AC6 (red first). Each is also tied to a scope item below.
+
+Server, src/tests/parcel-lookup-gate.infra.test.ts:
+- G1 "a q hit never runs the stored read or the compute": page null, meter not_produced, no insert (267 hand-off).
+- G2 "compute once per opened lot": q then parcelId=P-45 with a stored miss. Expect computeCustomerPageResponse called once and 1 insert.
+- G3 "meter counts unchanged" (it.each on parcelId): new lot counted 1; already counted 0; at limit 403 with 0; at limit with a counted lot 200 with 0. Each case's q call before it inserts 0.
+- Rewrite :234, :245 and :369 (q-path counting) with a dated note that keeps their titles.
+- G4 "683 Danforth": parcelId=5361889 with the compute mocked null. Expect 200, page null, meter not_produced (317, finding 31).
+- G5 (A2): the fast flag returns the checked view and no compute. A stored page is returned and counted. A held lot gets no checked view. An already-counted lot gets checked null.
+
+src/tests/surfaces/report-failure.logic.test.ts (new; a table over reportScreenState, total, 317 R2). Rows:
+- page, then view;
+- lines playing with no page, then checking;
+- lines done with a page, then ready;
+- lines done with no page and under 60 s, then holding;
+- an error during the lines, then checking until the end, then error (RR-0490 3 b);
+- 60 s passed, then error;
+- a miss during the lines, then miss at the end;
+- no checked view with a miss, then miss at once;
+- a cached page, then view with no lines.
+
+src/tests/surfaces/report-mobile.logic.test.ts: the golden names include the 5 new endings; the capture writes them byte for byte (317 R1).
+
+mobile/__tests__/reportChecked.behaviour.test.tsx (new, fake timers):
+- C1: verbs at delay_ms, facts at done_ms.
+- C2: page at 5 s, no "View report" until 23000; no auto-open; no Skip.
+- C3: no page at 30 s gives the centred spinner and "Loading the report…".
+- C4: no page at 60000 ms gives "Could not load this report. Try again." with the lines kept.
+- C5: a 500 at 8 s gives the failure only at 23000.
+- C6: a miss at 0.1 s gives "No report for this lot yet." and "Back to search" at 23000; a press calls back.
+- C7: a late page after the give-up, then Try again shows it with no fetch.
+- C8: Reduce Motion gives all lines and one announcement.
+
+mobile/__tests__/reportScreen.mount.behaviour.test.tsx:
+- M1: a cached miss while refetching shows no miss text.
+- M2: a cached page opens at once with no lines and no fetch (O5).
+- M3: the address is the bar title; with no address there is no title node.
+
+reportScreens.golden.test.ts: the miss refs are [states.lifecycle.miss, back_to_search.text]; components only from mapping.mobile.REPORT. reportPage.behaviour.test.tsx:156: the slice keys.
+
+The mobile jest files are run by no hook. Run them by hand or in Mobile CI and keep the output.
+
+#### 6. Limits, and how failure is caught
+- Not done:
+  - no change to the search box, index.tsx or lotMap.ts (465);
+  - no change to the meter rule (343);
+  - no change to the report page content;
+  - no migration and no new seed row (see O7);
+  - MAXBLD_WEB_LIVE stays false;
+  - no web failure page, because the web report render is not built (task-285, task-287);
+  - no scene picture.
+- Risks, and how the build catches each:
+  - A compute that ends after the give-up is still counted on the server. C7 keeps the counted report reachable with no second compute, and G3 shows no double count.
+  - The at-limit wall now shows after the compute (G3).
+  - A failing compute runs up to 4 times, per the ruled retries.
+  - Census and descriptor drift is caught by --check and surface-registry.infra.test.ts:277.
+  - Cite drift is caught by check-cites.
+  - Missing paths are caught by the close check.
+
+#### 7. Notes owed (backlog CLI only)
+- task-267: PLAN-267-v2; the new title (the address replaces "Checking your lot"); the Files line above; a note on "however long" against the 60 s give-up.
+- task-317: built in lane 267 (RR-0477, RR-0488); its Files line is folded into 267's.
+- task-343: the seam in section 3 (a).
+- task-465: the hand-off removes its O1 risk.
+- doc-16 A-MF62 (35 s, "updating"): a dated note through `backlog doc edit` that it is superseded by RR-0176 and RR-0491.
+- Spec dated notes and the queue row as in step 12.
+
+#### 8. Open choices (not decided)
+- O1, the source of the lines (L2-1, MD:1276):
+  - A1: the lines arrive with the page, so the lines start after the compute. This breaks "always to the end" timing and the 23 s overlap.
+  - A2: a fast parcelId read with one optional flag, the semi=answered precedent. It returns the stored page or the checked view and runs no compute. The flag and the response field `checked` (X-4 a, ruled) need his word under RR-0392.
+  - Rec A2. The mock's timeline (lines from 0 s while the report builds) needs it.
+- O5: no refetch-on-mount for a cached page (one compute per open), versus today's 60 s stale refetch. Rec no refetch.
+- O7, the 60 s value:
+  - (a) Read the existing registered 60 000 (maxbld_page_continue_wait_ms, via the semi slice). No database step; one value serves both waits; dated note.
+  - (b) A new seed row and config.give_up_ms. That is a database step, so its own card by RR-0477.
+  - (c) A typed number. Breaks Spec 128 Rule 3.
+  - Rec (a), with (b) as a later card if he wants the two waits apart.
+- O8, the "Checks for this lot" label:
+  - visible as drawn: a new key checks.label, plus a Spec 126 note that RR-0491 replaces :869 for this one label;
+  - or a screen-reader label only (the v8 aria-label, build.mjs:801).
+  - Rec visible as drawn, flagged to him with the :869 conflict named.
+- Settled since v1: O2, O3, O4, O6, O7-batch (task-317 is now in this lane).
+
+What this plan assumes of 465 (final for round 1; lane BL-MCFIX465 is building now):
+- A pick (Enter, a row tap, or a chip tap that submits) pushes /(app)/parcel-tool/<id> through parcelSearchRoute.
+- No search code reads `page`.
+- The web search mirrors the phone and the web report stays off.
+- The four new semi keys in lotMap.ts, and WallBinding, are not touched here.
+- On return the box clears (465's focus effect), so "Back to search" lands on an empty box.
+- Files both cards touch:
+  - census/mobile-product.json (different rows: 465 has :7154 and :7578, 267 has :6151);
+  - the --emit-descriptors run and the default registry run, with 127-surface-registry.md and 127-surface-review-queue.md;
+  - the emit-mobile-surfaces.mjs run (different slices);
+  - Spec 100 and Spec 126 (separate dated notes);
+  - the queue.
+- 267 rebases on 465's tip and reruns every generator.
+
+#### 9. UNVERIFIED
+- Whether the checked view (viewOf with no href) passes the mobile Zod schema without a core change.
+- Whether report_check_* and the citywide snapshot row exist on the test stack.
+- Whether surface-descriptor.d.ts moves on the emit.
+- Whether report-checked.logic.test.ts pins the states.checked key list.
+- The platform request timeout.
+- Nothing was run; this was read only.
+

@@ -7,6 +7,7 @@ status: WAITS
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
+updated_date: '2026-11-25T19:49:00Z'
 due_date: '2026-11-26'
 labels:
   - 1-2
@@ -20,6 +21,7 @@ labels:
   - comp:HS
   - comp:BYL
   - comp:STO
+  - McApp
 milestone: m-2
 dependencies:
   - TASK-258
@@ -83,3 +85,13 @@ who (plan text): lane
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-25 (RR-0497, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2588, operator: 'Saving the lot is the same functionality (Mcapp)'; RR-0498 :2593 'Obviously, users will need to save lots'): saving a lot or report is this card. Open with the operator: whether saved lots can use the existing parcel_user_inputs table (his question, RR-0499 :2598) and whether it builds now or waits for the launch-gate storage.
+
+2026-11-25 (RR-0500, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2603, operator '2. build now'): saving a lot builds now with McApp, not at the launch gate.
+
+2026-11-25 (RR-0501, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2608): McApp card 3 of 4 (saving a lot); own card because it has a database step (RR-0477).
+<!-- SECTION:NOTES:END -->

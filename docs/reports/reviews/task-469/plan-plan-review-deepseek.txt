@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-25T20:41:32.928Z file_sha256=f1bdeeb0a1354d5a03082437f0e6795fde58a042ccd6a7d2ddaf13e922f84fa2 prompt_sha256=807e74fa1e3f611e37d1354b892226adc595bafc998bf195c14eff214d867e5b
+🔍 Lens review of docs/reports/reviews/task-469/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — §7 step 7 / §3 "Size check after the change (estimate)" / §10 UNVERIFIED — AC3 ("465's input builds without the size refusal") is deferred to 465's rebuild and never verified read-only in this card; if the remaining non-exempt files in `1aee693d6..0aa1b011e` exceed the bound at rule-lists.mjs:434, 469 closes without unblocking 465 — Fix: run `git diff --stat 1aee693d6..0aa1b011e -- . ':(exclude)src/tests/fixtures/surfaces/*' ':(exclude)mobile/__tests__/fixtures/surfaces/*.goldens.json'` and confirm every remaining file <80 KB before locking.
+BUG severity=HIGH — §7 step 6 — the plan assumes 465's `wf2/mcfix465` merges `wf2/board` cleanly, but if `0aa1b011e` touches `scripts/analysis/rule-lists.json` (or `rule-lists-table.logic.test.ts`) since `1aee693d6`, the merge conflicts on the `exempt` array and either drops the new glob or wedges 465's close — Fix: `git diff --name-only 1aee693d6..0aa1b011e -- scripts/analysis/rule-lists.json src/tests/backlog/rule-lists-table.logic.test.ts`; if non-empty, name the conflict resolution that keeps the new glob.
+DEFER severity=MED — §5 T1 :175 — bumping `toBe(9)`→`toBe(10)` and adding a `$comment` line may leave a sibling red suite if any other test or tool pins the exempt/$comment count — Verification: `grep -rn 'exempt\|toBe(9)\|golden.length' src/tests/backlog/*.logic.test.ts scripts/analysis/rule-lists.mjs`.
+DEFER severity=MED — §5 T2 — the claim that `matchesAny` in the test is "the same function the close check uses at :842" — if `check-lane-close.mjs:842` imports a different implementation than the test imports, T2 green does not assure the close path — Verification: `grep -n 'matchesAny' scripts/hooks/check-lane-close.mjs scripts/analysis/rule-lists.mjs` and confirm one shared impl.
+DEFER severity=MED — §2 "matches 4 tracked files" — an unnoticed 5th orphan `.goldens.json` in `mobile/__tests__/fixtures/surfaces/` would be newly exempted and pass rule-lists.mjs:153 undetected (widens the review skip) — Verification: `git ls-files 'mobile/__tests__/fixtures/surfaces/*.goldens.json'` and diff against the four named in §5 T2.
+DEFER severity=MED — §4 "page reads kinds and lists (:544-582), never exempt or $comment" — a shared helper called from the page path could read `exempt` and break `page --check` at .husky/pre-commit:44 — Verification: `grep -n 'exempt\|\$comment' scripts/analysis/rule-lists.mjs` (whole file, not just :544-582).
+DEFER severity=MED — §3 / §7 step 4 — no rollback path is named for a regression found after the fold; because exempt is read from the board ref (:729,:787), a lane-side `git revert` is insufficient, and 465 must re-merge — Fix: note `git reset --hard <pre-fold-sha>` on the board worktree + re-merge as the rollback.
+DEFER severity=MED — §7 steps 4-5 — folding to `wf2/board` exposes the new exemption to every lane whose close reads the board ref; if 267/317 or any unrelated lane closes inside that window it skips the copies from review before its material is rebuilt — Fix: state the guard that the 469 fold+close completes before any other close starts.
+DEFER severity=LOW — §5 T4 case (c) — requires a source `.mobile.json` field that actually round-trips into the copy; if the edited field is dropped by the emitter, GEN-STALE will not fire and the case is green when it should be red — Verification: `ls src/tests/fixtures/surfaces/mobile_parcel_search/` and pick a value that also appears in `<id>.goldens.json`.
+DEFER severity=LOW — Description / §7 — tasks 267 and 317 "would meet the same refusal" but step 7 rebuilds only 465's material; their launches will need the same `:(exclude,glob)` rebuild — Fix: add one line that the rebuild step applies to any post-fold lane whose non-exempt diff exceeds the bound.
+DEFER severity=LOW — §2 "No hook calls either script directly" — verifiable, not verified — Verification: `grep -rn 'emit-mobile-surfaces\|surface-validate' .husky/`.
+DEFER severity=LOW — §6 risk (a) "T4's copy is about 9 MB ... about a second" — unverified size; a much larger fixture tree would balloon suite time — Verification: `du -sh scripts/surfaces src/tests/fixtures/surfaces mobile/__tests__/fixtures/surfaces mobile/src/generated/surfaces`.
+DEFER severity=NIT — §4 `$comment` line — the trailing "(task-469, RR-0502 MORNING-DECISIONS.md:2613)" could fail the :178 regex if it anchors on end-of-line after `<check>` — mitigated by T1 going red, no action needed before lock.
+REJECT — §2 "The exempt list: a bare array at rule-lists.json:231" — the claim that this is an idempotency/idempotency hazard — no; adding a duplicate glob is caught by `rule-lists.mjs validate` and the count pin at :175, so re-running the edit cannot silently corrupt the list.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- AC3 size bound is unverified and deferred to 465: run the exclude list against `git diff --stat` on 465's real range now, confirm every remaining file <80 KB, else the card closes without unblocking 465.
+- 465's merge cleanliness is assumed, not checked: `git diff --name-only 1aee693d6..0aa1b011e -- scripts/analysis/rule-lists.json src/tests/backlog/rule-lists-table.logic.test.ts`; a non-empty result means a designed conflict resolution for the `exempt` array is owed.
+- Sibling exempt-count assertions unverified: `grep -rn 'exempt\|toBe(9)\|golden.length' src/tests/backlog/*.logic.test.ts scripts/analysis/rule-lists.mjs` before the count bump, or the suite may go red at pre-push rather than at the lane commit.
+
+Top 3 unverified data premises (regardless of verdict):
+- Remaining non-exempt per-file sizes in `1aee693d6..0aa1b011e` < rule-lists.mjs:434's bound — verify with `git diff --stat` + the two `:(exclude,glob)` patterns.
+- 465's branch has not touched `scripts/analysis/rule-lists.json` or `rule-lists-table.logic.test.ts` since `1aee693d6` — `git diff --name-only 1aee693d6..0aa1b011e -- <those paths>`.
+- The exempt glob matches exactly four tracked files with no orphan — `git ls-files 'mobile/__tests__/fixtures/surfaces/*.goldens.json' | wc -l` and diff against the four named in §5 T2.
+
+---
+⏱  106404ms (106.4s)
+📊 Tokens — total: 40758, input: 20181, output: 20577, reasoning: 18825

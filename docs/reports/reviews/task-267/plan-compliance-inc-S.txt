@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-25T18:46:15.667Z file_sha256=7bc83d13917c434c3941c878f5de04415050b4a88cc80fda3b32e07fd47eeee2 prompt_sha256=3ead47ea9eee04a2895d5469206784854e11ebc6fe0d16b6333335fdf129127a
+🔍 Lens review of docs/reports/reviews/task-267/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0485 item 4 "We should not send a report without pricing" (task-343) — Implementation Plan §3(a) "The seam with 343 is route.ts:114-116 and consumer-lookup.ts:66 (343's) against lookup-flow.ts:83-90 (267's). 267 lands first." and "Screen 2: states.checked.ready plus states.checked.open \"View report\"" — the plan makes the report reachable on the phone (lines finish, View report, report opens) while pricing is unbuilt and states it lands first, so a report is sent with no pricing — gate the report open (screen 2 button and the auto reach of the report) on 343's pricing field, or sequence 267 after 343
+
+BUG severity=HIGH — AC #8 "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72) — Implementation Plan step 12 "one follow-up row to MF-62 for both cards, the next free id at claim (MF-99 at this head, :5, unless 465 took it)" — the queue row for this lane is step 12, after steps 1-11 build lookup-flow, route, ReportBinding, ReportPageHost and the generators, and task-317 has no row of its own until then — make the row (next free id, both cards) the first commit before step 1
+
+BUG severity=HIGH — AC #1 "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109) — NONE (no plan step registers `rules[]`; §5 "Tests first (red, then green)" opens the working commits and no commit is made alone) — the pre-registration commit that AC1 requires does not appear anywhere in the build order — add a first commit that pre-registers `rules[]` and the expected moves alone, ahead of step 5
+
+BUG severity=HIGH — AC #6 "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490) — Implementation Plan §5 "The mobile jest files are run by no hook. Run them by hand or in Mobile CI and keep the output." — the tests carrying red-first (C1-C8, M1-M3) run under no hook, so red-then-green on the tip is not proven by the plan's own admission — wire those mobile jest files into a hook (or a named CI gate) as part of step 5, or move the AC6 proof to a hooked suite
+
+DEFER severity=MED — AC #5 "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458) — Implementation Plan §9 "Nothing was run; this was read only." — no grounder step re-executes the fold's claims; the plan hands back an UNVERIFIED list instead, and step 12 lists no grounder run or output — add the grounder run and its committed output to step 12, and resolve or carry the §9 items through it
+
+DEFER severity=MED — AC #3 "`write_scope` declared in the brief" / "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144) — "FILES (both cards):" is the only scope statement in the plan and no brief with a write_scope front-matter block is named — the write_scope declaration AC3 requires is absent from the material under review — add the brief file with its front-matter write_scope matching the FILES list, before step 1
+
+DEFER severity=MED — AC #7 "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116) — Implementation Plan step 12 "Specs and queue:" lists the spec notes and the queue row only — no OUTPUT panel record is named among the commits that carry the work — add the OUTPUT panel record to the commits in step 12 so it lands with the work
+
+DEFER severity=MED — G.2 "Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked)" — Implementation Plan §3 "O2 picture: the mock draws lines only. Settled: no scene, no new component kind." — the drawn lot outline is dropped from a BUILT-NO-DATA element and no dated note corrects G.2 in doc-2, unlike the C.3 row which carries one ("The C.3 words \"neighbours in zinc\" no longer describe the page.") — add doc-2 G.2 to the notes owed in step 7 recording RR-0491's approved mock, or build the outline
+
+MET — RR-0491 — Implementation Plan §3 "Screen 3: states.lifecycle.loading, centred (RR-0491's one change)" and test C3 — the one approved change (still-building line centred) is carried into the render and a test
+MET — RR-0490 item 3 b — Implementation Plan §3 "A failure or a miss that arrives while the lines play waits until they end." and test C5 — failure shows only after the animation ends, and at 60 s
+MET — RR-0490 item 1 a — Implementation Plan §3 "Screen 4: states.lifecycle.error plus retry.text." — the built sentence "Could not load this report. Try again." is kept with Try again
+MET — RR-0490 item 4 B — Implementation Plan §3 "Screen 5: states.lifecycle.miss plus NEW back_to_search.text" and test C6 — the no-report screen is drawn with the address and Back to search
+MET — G.6 — Implementation Plan §5 G3 "at limit 403 with 0" plus "the 403 wall moves from the search page to the report screen" — matches the 2026-11-24 date note that the wall is the phone's limit state
+MET — G.1 dated note (exact match only) — Implementation Plan step 1 "findOnly = parcelId === undefined" and §3(a) "a q hit sends page null and logs not_produced" — the hand-off keeps the exact-match-only rule and adds no new open path
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 19   Unmet: 8
+Rules met: G.1, A.3
+
+---
+⏱  48225ms (48.2s)
+📊 Tokens — total: 29972, input: 20121, output: 9851, reasoning: 8425

@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-25T20:02:40.586Z file_sha256=78a16eff5b53c260e2e57440a74f10be22bf56a877d24a4d20eecaa890552f25 prompt_sha256=f2f9aaa6f5f8c1757924dec352c6646c2261f0ac96f421e7303452a5bcae3a5c
+🔍 Lens review of docs/reports/reviews/task-313/context-r1.md (model: deepseek-reasoner)
+
+Surfaces touched: auth, entitlements, money, PII
+
+BUG severity=HIGH — S1 "it reads the lead_gen status with getEntitlementStatus(pool, uid, 'lead_gen')" — the parcel routes' caller identity now resolves subscription_status from the lead_gen entitlement, and F3a says "that trial row opens the unmetered lead_gen arm of the parcel gate (src/lib/parcels/tool-gate.ts:15)", so any user holding only the auto-created lead_gen trial calls /api/parcels/lookup, /entitlement and /lot-size and is served unpaid parcel data — derive subscription_status for these three routes from the parcel_tool entitlement instead, and make tool-gate the single authority the tests pin.
+
+BUG severity=HIGH — F3 "Every GET /api/user-profile runs applyFallbackTrialInitIfNeeded(uid,'lead_gen') (route.ts:72), which inserts a lead_gen 'trial' row when onboarding_complete is true" — a plain authenticated GET, replayable at will, mints the very entitlement S1 then trusts on the parcel routes, so a free sign-up self-issues a paid-tier context in one request — do not mint on a user-triggered GET, create the trial only inside the paid flow, and have S1 ignore trial rows entirely.
+
+BUG severity=MED — M5 "'redirect' returns expo-router <Redirect href={MAXBLD_LOOKUP_ROUTE}/>, so the lead feed, map, settings and detail routes are unreachable" — a client redirect is not a control, a crafted deep link to a retained lead-app route in the same binary reaches those screens and their APIs, and with the lead_gen trial auto-minted those APIs will answer — say in the plan that retained lead routes are protected by server authz alone, and add a per-route guard or exclude the lead routes from the MaxBLD build.
+
+BUG severity=MED — M5 "It calls useParcelEntitlement and decideMaxbldGate" — the phone gate reads parcel_tool while S1 makes the server context read lead_gen, so the gate the user sees is not the gate the server enforces, a user shown "Can't reach MaxBLD" or a no-plan notice can still be admitted server-side and one admitted by the app can be refused, the divergence is where the free-access path hides — read the same entitlement on both sides and pin it with T5 and T2.
+
+DEFER severity=LOW — F4 "A web buyer's row is created with no trade (parcel-checkout.ts:136; maxbld-terms.ts:10)" — dropping the user_profiles existence check removes the only record tying an entitlement call to a real MaxBLD buyer, so every Supabase auth user, including allow-list sign-ups, reaches the parcel routes unprofiled — cheap and non-blocking once the entitlement read above is correct, add a test that an unprofiled user with no parcel_tool row gets 403.
+
+REJECT — F6 "mapSupabaseError, which always returns text ('invalid_credentials' gives \"Incorrect email or password.\", supabaseErrors.ts:14-15)" — looks like account enumeration — it is not, wrong email and wrong password return identical text and identical path, nothing is disclosed.
+
+VERDICT: FAIL on exploitability, two HIGH before plan-lock
+Surfaces touched: auth, entitlements, money, PII
+
+---
+⏱  22283ms (22.3s)
+📊 Tokens — total: 28853, input: 24960, output: 3893, reasoning: 3162

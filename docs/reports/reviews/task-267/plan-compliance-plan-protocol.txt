@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-25T18:46:15.679Z file_sha256=38179b4920158517227bdeaa28ccae1593d700638be071d9713de85c701baf51 prompt_sha256=8bf79652f6ea403ae4cab8dbf43e50913acb6ec24824e59897f0c3935fc58677
+🔍 Lens review of docs/reports/reviews/task-267/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan-protocol §2 step C gate "check.mjs, check-cites, check-quotes PASS" and step D gate "| PASS lines |" — Plan §9 "Nothing was run; this was read only." — the plan rests on dozens of file:line cites and generator runs but carries no PASS line for check.mjs, check-cites, check-quotes or step D, so the panel gate is unproven — run the three checks and the named generators on the head and paste their PASS lines into the plan before lock.
+
+BUG severity=HIGH — AC1 "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109) — NONE — no step in sections 1 to 12 commits the rules[] and expected-moves registration, alone, before the build — add a first commit that pre-registers this task's rules[] and expected moves per touched artifact.
+
+BUG severity=HIGH — AC5 "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458) — Plan §9 "Whether the checked view (viewOf with no href) passes the mobile Zod schema without a core change." — six claims the build order depends on are left UNVERIFIED with no grounder record, including the schema pass, the report_check_* rows, the descriptor bytes and the pinned key list — ground each one and record the re-execution in the plan.
+
+BUG severity=HIGH — AC7 "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116) — Plan §7 "Notes owed (backlog CLI only)" — the owed list names no OUTPUT panel record and no commit for one, so the record cannot land with the work — add the OUTPUT panel record to §7 and commit it with the build.
+
+BUG severity=HIGH — pasted card note "HELD (operator 2026-11-20 "4. Hold the three unbuilt pages until the pilot result"): build as rows of the page table once the PAGE.TABLE pilot passes." and "317 after 267 stage 2 and LD-1, 2, 3, 5" — Plan head "builds task-317 in the same lane" and §4 "one lane; 267 then 317 in the same commits" — the plan starts work the operator held, with no PAGE.TABLE pilot result recorded, and lands 317 ahead of LD-1, LD-3 and LD-5 — gate the build on the pilot result and split 317 out per the note.
+
+DEFER severity=MED — AC6 "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490) — Plan §5 "The mobile jest files are run by no hook. Run them by hand or in Mobile CI and keep the output." — the red-first gate is admitted to run outside the hooks, so it cannot be shown as AC6 names it — name the exact command or required CI check that runs each new mobile test through a hook.
+
+DEFER severity=MED — plan-protocol §3 "Rulings: only when a search of the record finds none; the search is quoted." — Plan §8 "O5: no refetch-on-mount for a cached page (one compute per open), versus today's 60 s stale refetch. Rec no refetch." — O5 carries no quoted search of the record, so an operator question is opened without the search the protocol requires — quote the search for O5, or remove it as a ruling request.
+
+DEFER severity=MED — plan-protocol §5 item 5 "every task carries an estimate (MEASURED with source, or GUESS labelled)" — "Estimate: UNMEASURED" — neither form is carried, so the integration pass critical path has no number for this card — label it GUESS with its basis (the measured 11 to 23 s computes in §3(d)) or measure the build.
+
+MET — RR-0490 item 3 b "let the animation finish and then say the report failed" — Plan §5 "C5: a 500 at 8 s gives the failure only at 23000." — the failure is held to the end of the lines and the lines stay on screen 4.
+MET — RR-0491 "Loading the report shuld be centered horizontally as opposed to left justified" — Plan §5 "C3: no page at 30 s gives the centred spinner and "Loading the report…"." — screen 3 is centred.
+MET — RR-0176 "no 35 s cap" / "this goes to completion" — Plan §3 "RR-0176 removed the 35 s cap on a report that is still arriving. Between 23 and 60 s that still holds" — the cap is not reintroduced and the lines run to the end.
+MET — RR-0486 "it may not be the users lot they are checking - just a note to clarify" — Plan §5 "M3: the address is the bar title" — "Checking your lot" is replaced by the lot address.
+MET — RR-0485 item 5 "Always - except for a tracked/stored lot or one that has previously been opened" — Plan §3 "(b) ... the persisted cache holds a page ... the parcelId answer brings a page with no checked view" — the skip rule covers opened, stored and tracked lots.
+MET — AC2 "are written INTO the plan and reviewed at PLAN altitude" — Plan §5 "Tests first (red, then green)" — each test is named with its scope item.
+MET — RR-0278 "a report is produced" — Plan §5 "G4 ... Expect 200, page null, meter not_produced" — a null compute is not metered.
+MET — plan-protocol §0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from)" — Plan head "builds task-317 in the same lane, by RR-0477 (MD:2496) and RR-0488 (MD:2547)" — 317 carries its ruling sources.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 8
+Rules met: none
+
+---
+⏱  85550ms (85.5s)
+📊 Tokens — total: 33968, input: 15119, output: 18849, reasoning: 17488

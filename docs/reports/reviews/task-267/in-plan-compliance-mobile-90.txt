@@ -1,0 +1,396 @@
+LIST mobile-90 sha256:a35f6359cce4cf196797496385e86ef15014b73d358a929c0d82c26ee37fe1e2 material sha256:9dc48e9095f5334d478900ae0b10197157cceb351e4f5ea8066844e912489758 part 1 of 1
+RULE LIST mobile-90 (docs/specs/03-mobile/90_mobile_engineering_protocol.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+# Spec 90 — Mobile Engineering Protocol & Architecture (The Pivot)
+
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 2** of `.cursor/active_task.md`.
+
+> **Prevention loop (frontend/mobile home):** the frontend-tagged rows of the prevention registry (`docs/specs/00_engineering_standards.md` §14) live here. New CRITICAL/HIGH review findings (Spec 08 roster — incl. the User-Advocate/UX lens) that yield a *mobile* rule become protocol requirements in this spec and, where deterministic, a gate.
+
+## 1. Goal & User Story
+**Goal:** Build a truly native Expo application for tradespeople, relying on the Next.js backend for all heavy lifting. This establishes the foundation for offline reliability, native push notifications, and elite list performance. *Note: Push infrastructure is a cross-domain dependency requiring coordination with the Next.js backend for token registration and payload triggering.*
+**User Story:** As a tradesperson standing in a concrete basement with poor cell service, I need my Lead Feed to open instantly without crashing, allow me to scroll through thousands of local permits flawlessly, and ping my lock-screen the second a high-value job changes phases.
+
+## 2. Platform & Device Matrix
+This single Expo codebase targets three environments (Minimum OS requirements: iOS 16+ / Android 10+):
+1. **Mobile (iOS/Android):** Primary target. UI must accommodate notches, dynamic islands, and safe areas.
+2. **Tablet (iPad/Android):** UI must be responsive. Use NativeWind breakpoints (e.g., `md:flex-row`) to convert stacked mobile cards into side-by-side or grid layouts.
+3. **Web (Expo Web):** Compiles to a PWA. *Fallback constraint:* `@shopify/flash-list` does not support Web. You must implement a standard `<FlatList>` or TanStack Virtual fallback for the web target.
+
+> Dated note 2026-11-09 (M-246, prior text kept; spec review R-8, `~/Buildo-scratch/mcfrontend/PROGRAMME/SPEC-REVIEW-mobile-web.md`): descriptor-governed web surfaces render as Next.js RSC (Spec 126 §5.3; Spec 128 R-22); the MaxBLD web pages use the web library of Spec 126 §11b.4. The Expo Web build target is unruled.
+
+**Theme Constraint:** The app must natively support System Dark Mode. NativeWind `dark:` variants are required for all UI components.
+
+> Dated note 2026-11-09 (MF-42 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions"): measured at `ffb6b0610`, no `.tsx` file under `mobile/src` or `mobile/app` uses a `dark:` class, and the brand-primary surfaces are dark-mode-only (Spec 117 §3.4). How the React Native Reusables components carry their dark values is MF-35's to rule (coordinator direction, pending operator confirmation). Measured fact only; no rule changes.
+
+## 3. The Prime Directive: "Dumb Glass" Architecture
+You are an expert React Native / Expo developer. You are operating strictly in the **Mobile Domain**. 
+This mobile application is a "Dumb Glass" client. It **MUST NOT** perform complex data mutation, geographic PostGIS math, or algorithmic sorting. All heavy computational lifting is handled entirely by the Next.js API Backend. 
+
+The mobile app's sole responsibility is:
+1. Capturing device state (GPS coordinates, push tokens).
+2. Fetching pre-calculated JSON from the backend.
+3. Rendering the UI at 60fps.
+
+*Clarification:* This prohibits server-authoritative computed state. Ephemeral **optimistic UI state** (e.g., toggling a "Save" icon instantly before the server confirms) is highly encouraged and expected.
+
+## 4. The Tech Stack Constraints
+You must strictly adhere to the following stack:
+* **Framework:** Expo SDK (React Native) utilizing Expo Router.
+* **Core Native UI:** `react-native-reanimated` v3 and `react-native-gesture-handler` (required for 60fps animations and swipe gestures).
+* **Styling:** NativeWind v4 (Tailwind CSS for React Native).
+> ⚠️ **AMENDMENT 2026-09-15 (WF1 "Spec 126/127/128 surface standard") — two measured prose-vs-code drifts in this section. Additive; the original lines are retained below, unedited.**
+>
+> 1. **Auth is Supabase, not Firebase.** Measured: `mobile/package.json` declares `@supabase/supabase-js 2.110.7` and **no `@react-native-firebase/*` dependency at all**. The "Firebase Auth via `@react-native-firebase/auth`" line below predates the Supabase migration (Spec 113) and was never updated. Token persistence via Keychain/Keystore is still accurate in substance — it is the provider that is wrong.
+> 2. **There is no monorepo and no `packages/shared-types`.** Measured: no workspace of that name exists in either tree. Zod schemas are **transcribed per tree** today, which is precisely the defect Spec 126 §5.2 closes by *generating* the mobile mirror from the CONTRACT descriptor — the parcel cost contract is currently declared at **four** sites and locked at **one**, and the two Zod declarations disagree in strictness (`src/app/api/parcels/lookup/types.ts` uses `.strict()` six times; `mobile/src/lib/schemas.ts` uses `.passthrough()`/`z.record` five times — the client is looser than the server it mirrors).
+>
+> **§3's "Dumb Glass" prime directive is unaffected and is reinforced** — Spec 126 §5.3 makes it enforceable rather than merely stated, and preserves its optimistic-UI carve-out verbatim.
+
+* **Auth:** Firebase Auth via `@react-native-firebase/auth` (native module). Native Keychain (iOS) / Keystore (Android) handles token persistence; Play Integrity (Android) and APN silent-push (iOS) handle phone-auth bot prevention — no JS-rendered reCAPTCHA. Native dev build required (Spec 98); Expo Go is not supported.
+* **Server State:** `@tanstack/react-query` (v5).
+* **Client State:** `zustand` v5.
+* **Local Persistence:** `react-native-mmkv` (Synchronous C++ storage).
+* **Hardware:** `expo-location`, `expo-notifications`, `expo-haptics`.
+* **Infrastructure:** EAS (Expo Application Services) for CI/CD builds (`eas build`) and Over-The-Air updates (`eas update`).
+
+## 5. Strict Anti-Patterns (NEVER DO THESE)
+If you attempt to use any of the following web paradigms in this project, you have failed:
+* **NO HTML/DOM:** Never use `<div>`, `<span>`, `<a>`, `<p>`, or `<button>`. 
+* **NO Web Libraries:** Never import `shadcn/ui`, `@tremor/react`, `framer-motion`, or `lucide-react`. 
+* **NO DOM APIs:** Never use `window`, `document`, `localStorage`, `navigator.geolocation`.
+* **NO `useEffect` for Fetching:** Never fetch API data inside a `useEffect`. Always use TanStack Query.
+* **NO Inline `renderItem`:** Never pass an inline arrow function to a FlashList/FlatList `renderItem`. Always use `useCallback` or extract the function.
+* **NO standard `<Image>`:** Never use the base React Native `<Image>` for external URLs.
+
+## 6. The Component Philosophy: React Native Reusables
+We do not npm-install generic UI components. We use **React Native Reusables** (via `npx rn-reusables add [component]`). The code lives inside our repository, giving us full ownership of Tailwind styling and native dependency adjustments without version conflicts.
+
+> Dated note 2026-11-09 (MF-42 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions"): the command named above is not the CLI's package name: the CLI is `@react-native-reusables/cli` (version 0.7.1, registry `nativewind`; measured by the MF-42 plan lane), recorded in `scripts/surfaces/_schema/vendor-rnr.manifest.json`, with `mobile/components.json` aliases into the protected vendor dir `mobile/src/vendor/rnr/` (Spec 126 §11b.4). MF-35 runs it.
+
+> Dated note 2026-11-09 (McFrontend Phase 2; M-246, prior text kept; operator, verbatim: "D-0-D-4 approved D-3 we should used our existing components and approach as detailed in the mobile build specs"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9"): React Native Reusables is confirmed as the mobile library for MaxBLD pages (D-3). The CLI output is generated and never edited; it is vendored unmodified under a protected manifest (the vendor folder and its rule: Spec 126 §11b.4). It is installed by MF-35.
+
+## 7. State & Data Flow Protocol
+* **The API Contract:** The Next.js `src/app/api/*` routes are the absolute source of truth.
+* **Validation (Monorepo):** Zod schemas are shared via a `packages/shared-types` monorepo workspace to guarantee the mobile app and Next.js backend are never out of sync.
+* **Offline Mutation Queue:** Mutations (like saving a lead) made while offline MUST be queued using TanStack Query's offline mutation cache, backed by MMKV, ensuring they flush to the server upon reconnection.
+* **State Architecture & Ownership:** All Zustand stores, MMKV blobs, TanStack Query keys, and cross-layer bridges MUST conform to **Spec 99 — Mobile State Architecture & Ownership Protocol** (`docs/specs/03-mobile/99_mobile_state_architecture.md`). Adding a new field, store, or bridge requires either matching an existing pattern in Spec 99 §3-§5 or a Spec 99 amendment. Three render-loop incidents in 2026-05-02 traced to dual-source-of-truth violations precipitated this requirement.
+
+## 8. Hardware & Geolocation Protocol
+1. **Foreground Only:** Request ONLY foreground location (`requestForegroundPermissionsAsync()`). Background location invokes heavy App Store privacy scrutiny and is unnecessary for this feature.
+2. **App Store Compliance:** Ensure `NSLocationWhenInUseUsageDescription` is explicitly defined in `app.json` under `expo.ios.infoPlist`.
+3. **Debounce Map Pan:** Do not fire a TanStack Query refetch on every millimeter of map movement; wait for a 500ms pause.
+
+## 9. UI & Styling Rules
+* Touch targets for all interactive elements MUST be a minimum of `44px` by `44px`.
+* Use the established design system tokens from **Spec 74** (e.g., `bg-bg-feed`, `text-amber-hardhat`). 
+* **Font Loading:** Use `expo-font` to load custom fonts, keeping the Splash Screen visible until fonts are ready to prevent FOIT (Flash of Unstyled Text).
+* Accommodate device Safe Areas using `react-native-safe-area-context`.
+
+## 10. Testing Mandate
+* **E2E / UI Testing (Maestro):** Specs are written in YAML and run directly against the iOS Simulator/Android Emulator. *Operational Note: Maestro Cloud will be used for CI to avoid the 10x cost premium of macOS GitHub Action runners.*
+* **Unit Testing (Jest):** Jest + React Native Testing Library for logic hooks. Minimum 80% coverage threshold.
+* **Offline Resilience Test:** Maestro flows MUST include a step that executes `toggleAirplaneMode` to verify the MMKV offline cache and empty states render without crashing.
+
+## 11. Best-in-Class: Observability
+* **Native Crash Reporting:** `@sentry/react-native`. *Critical:* Sentry source maps MUST be uploaded automatically during EAS Build using the `@sentry/react-native/app-plugin` in `app.json`.
+* **Product Telemetry:** `posthog-react-native`. Track funnel events (`lead_viewed`, `job_claimed`). **Strip all PII**.
+
+## 12. Best-in-Class: Scaling & Performance
+* **FlashList Mastery:** Use `@shopify/flash-list` for native GPU memory recycling.
+  * **v1 (legacy):** required an explicit `estimatedItemSize` prop for the recycler to pre-size cells.
+  * **v2 (current — `^2.3.1` per `mobile/package.json`, since Spring 2026):** `estimatedItemSize` is **removed from the public API**. The new render engine auto-measures item heights at first render and reuses the measurements; passing the prop is now a TypeScript error (`Property 'estimatedItemSize' does not exist on type 'FlashListProps'`). Per-item-type recycling is still preserved via `getItemType` (e.g., `flight-board.tsx` tags 'header' vs 'card'). If a future version reintroduces the prop or exposes a `_estimatedItemSize` measurement override, this section becomes the canonical site to update.
+  * **Use the typed `AnimatedFlashList` wrapper** (`mobile/app/(app)/index.tsx` + `flight-board.tsx`) so generic narrowing survives `Animated.createAnimatedComponent` (resolved 2026-04-30 by H4 commit `21520d9`).
+* **Image Caching:** You MUST use `expo-image` for aggressive disk caching (SDWebImage/Glide).
+* **Cache Management:** Configure TanStack Query with strict timeouts. Recommended: `gcTime: 86400000` (24h) and `staleTime: 300000` (5m) for the main feed. The MMKV persister requires `@tanstack/query-async-storage-persister`.
+* **Bundle Optimization:** `react-native-maps` adds ~15MB. Use Expo's `metro.config.js` to exclude Apple Maps bundles from Android builds.
+
+## 13. Best-in-Class: Bug Prevention
+* **EAS Update (Over-The-Air Patches):** The ultimate bug prevention. JavaScript bundle fixes will bypass App Store review via Expo Application Services (EAS), allowing us to fix logical bugs in production in minutes.
+* **The Zod Boundary:** Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema before hitting the UI to prevent fatal native app crashes from API drift.
+* **TypeScript Strictness:** `"strict": true` and `"noImplicitAny": true`. 
+
+## 14. Best-in-Class: User Experience (The "Native" Feel)
+* **Pull-to-Refresh:** Standard mobile expectation. Use `RefreshControl` combined with `queryClient.invalidateQueries()`.
+* **Empty States:** A new user in a low-permit area must see a "No leads in your area" state with an "Expand radius" CTA button.
+* **Optimistic Updates:** When a user taps "Save Lead", use `onMutate` to flip the UI instantly. Rollback on failure.
+* **Instant Rehydration:** Use `react-native-mmkv` to cache the feed. On cold boot, the app must paint page 1 from cache instantly, then fetch fresh data in the background silently.
+* **Tactile Feedback:** Use `expo-haptics` on major interactions.
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Full title: LOAD.2 Loading screen (MF-62 Checking your lot): the animation keeps its set length (23 s today) and always runs to completion; the button to open the report shows only when the report AND See details are loaded, however long that takes (no 35 s cap)
+
+snapshot: docs/reports/plan-import/raw/2026-11-19/ (sequence.json sha256 12b1774a3bf4)
+Estimate: UNMEASURED
+
+Plan text at the snapshot: RULED; panel + build pass owed; edge case owed: the screen when a load fails; waits LOAD.1
+slicePart: page and binding
+planNote: storage-policy: dependsOn LOAD.1,LOAD.3 (the 35 s seed max (LOAD.3); the updating state is the existing lifecycle loading, no new task needed here (seat K))
+planNote: storage-policy: title + ; where the numbers are not ready at the maximum the report opens with the "updating" state, never an old number (A-MF62) (screen is not a gate for Skip and re-open edges)
+planNote: loading-r2: title Loading screen (MF-62 Checking your lot): the animation keeps its set length (23 s today) and always runs to completion; the button to open the report shows only when the report AND See details are loaded, however long that takes (no 35 s cap) (operator 2026-11-18 MORNING-DECISIONS.md ("so right now the animation takes 23 seconds ... the report and the details should be loaded" + "yes that is correct"))
+planNote: loading-r2: status RULED; panel + build pass owed; edge case owed: the screen when a load fails; waits LOAD.1 (operator 2026-11-18 MORNING-DECISIONS.md ("so right now the animation takes 23 seconds ... the report and the details should be loaded" + "yes that is correct"))
+who (plan text): McFrontend lane (MF-62 follow-up)
+
+
+## Acceptance criteria
+- #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
+- #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
+- #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
+- #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
+- #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
+- #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
+- #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
+
+
+## Implementation Plan
+Planner: Cairn-Plan-267
+Plan id: PLAN-267-v2
+Head read: 2fd2f6042 (wf2/board). Since v1 (4c22af6e8) only docs and backlog files changed, so every code line cited in v1 still holds. MD = ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md. Mock = ~/Buildo-scratch/lanes-20261125/mcfixv2-267/MOCK-LOADING-ENDINGS-approved.html, read whole including its table and foot. This version replaces v1 and builds task-317 in the same lane, by RR-0477 (MD:2496) and RR-0488 (MD:2547).
+
+#### 1. Rules quoted first
+- RR-0176, MD:783/786: "the animation takes 23 seconds - this goes to completion - the buttononly appears when the load is done". Ruled: "always runs to completion", "no 35 s cap".
+- MD:695: "from the search page". The reading at :696: the calculation "starts when the user picks the address".
+- RR-0485, MD:2533:
+  - "4. We should not send a report without pricing" (task-343).
+  - "5. Always - except for a tracked/stored lot or one that has previously been opened".
+- RR-0486, MD:2538: "it may not be the users lot they are checking - just a note to clarify".
+- RR-0490, MD:2559:
+  - "1 a": keep "Could not load this report. Try again."
+  - "3 b - let the animation finish and then say the report failed (same screen as 2a for a failure after 60 seconds)".
+  - "4 B - no report screen".
+- RR-0491, MD:2563: "Teh mock looks great! 1 Change (1) Still building - Loading the report shuld be centered horizontally as opposed to left justified. Approved".
+  - The orchestrator's reading at :2564-2565: the give-up is 60 s from the pick; the lines stay on the failure and no-report screens; a no-report lot plays the lines to the end first.
+- RR-0477, MD:2496 (batching). RR-0482, MD:2518 ("larger tasks and using existing components").
+- RR-0278, MD:1082: "I should only be charged a report if I find the address and lot Im looking for and a report is produced".
+- MD:1409: "Phone retires yes" (keep the 3 retries).
+- MD:699: "Once somebody opens a lot or tracks a lot - we have this lot data saved".
+- Spec 126:869: "it doesnt need a title... it should be processing". The coordinator's relay on that line: remove the title "and any section labels".
+- Spec 136 fe.35 (:136): no "live-progress word". The lock report-checked.logic.test.ts:279 refuses 'Checking your lot'.
+- Spec 136 fe.31 (:124): existing components.
+- Spec 128 Rule 3 and the FIX.TUNE precedent (semiQuestion.ts:17, config.continue_wait_ms): a timeframe is surface config backed by a registered logic variable, never a typed number.
+- The "already discussed" skip rule: FOUND for opened lots only. MF-62/plan.md:44 says "Re-opened lot (already counted this period, MF-45 D-3 a): screen skipped". That plan was approved with "Mf-62 - yes" (phase1/open-questions.md:963) and is built as showsWhatWeChecked (what-we-checked.ts:49-51). No earlier line says to skip for a tracked or stored lot; the nearest is MD:699. The mock's table row "Lot opened before, or stored: No check lines. The report opens directly" now draws it, approved by RR-0491.
+
+#### 2. What exists and is reused
+- Server:
+  - lookup-flow.ts:79-90 (the stored read at :83, the compute at :87).
+  - The meter at route.ts:114-123.
+  - openReport (entitlements/index.ts:590-614; already_counted at :606; usageFor is private at :559).
+  - readWhatWeChecked (what-we-checked.ts:167), which returns null on any error.
+  - The core's checked tree and view: buildChecked (core.ts:130); a loading tree that carries checked (:239-243).
+  - The view adds checked with paced=true on collapsed rows. With no href it draws no Skip (:397-403).
+- Phone:
+  - The persisted ['parcel-lookup', id] cache (useParcelLookup.ts:107-116; _layout.tsx:490; queryClient.ts:41).
+  - reportScreenState (ReportBinding.tsx:399-403), lifecycleProps (:369-381), backProps (:383-389), the key lists (:392-394).
+  - The host state (ReportPageHost.tsx:40-41) and the wall (useWallState, [parcelId].tsx:26).
+  - The Back action (useGoBack).
+- The existing 60 s:
+  - setting maxbld_page_continue_wait_ms, read as SEMI_CONTINUE_WAIT_MS (semiQuestion.ts:17);
+  - the timer boundedWait (:26-35).
+- Words that already exist:
+  - states.lifecycle.loading "Loading the report…", .error "Could not load this report. Try again.", .miss "No report for this lot yet." (report-presentation.json:87-89);
+  - retry.text "Try again" (mobile_parcel_detail.content.json);
+  - states.checked.ready / open "View report" / summary (report-presentation.json:139-142).
+- The precedent for a request flag: semi=answered (useParcelLookup.ts:40-44; route.ts:81).
+- Generators:
+  - generate-surface-registry.mjs (--emit-descriptors :1596, default run, --check);
+  - emit-mobile-surfaces.mjs --write;
+  - report-page-capture.ts (MOBILE_LIFECYCLE_STATES :78).
+
+#### 3. What the rulings and the mock settle, and the answers to v1 (a)-(f)
+- (a) The hand-off is unchanged from v1. The stored read and the compute run only on the parcelId form; a q hit sends page null and logs not_produced. The usage rows are identical before and after:
+  - new lot: 1;
+  - already counted: 0;
+  - tracked lot (a stub today, useTrackedLots.ts:52): same as the two rows above;
+  - at-limit new lot: 0, but the 403 wall moves from the search page to the report screen.
+  - The seam with 343 is route.ts:114-116 and consumer-lookup.ts:66 (343's) against lookup-flow.ts:83-90 (267's). 267 lands first.
+- O4 is now RULED (RR-0490 3 b). A failure or a miss that arrives while the lines play waits until they end. Then comes screen 4 (failure) or screen 5 (no report).
+- Give-up is RULED: 60 s from the pick (RR-0491, LD-2 A).
+  - How it meets RR-0176: RR-0176 removed the 35 s cap on a report that is still arriving. Between 23 and 60 s that still holds: screen 3, and the button appears the moment the page lands.
+  - RR-0491 adds a failure bound at 60 s; that bound is new, not the 35 s cap coming back.
+  - Owed: a dated note in Spec 126 §11a.7 and Spec 100 §4 saying that RR-0491 bounds RR-0176's "however long that takes" at 60 s from the pick. Also a card note on 267, whose title says "however long".
+  - The pick mark is the report screen's mount, milliseconds after the push. 465's push is the pick.
+- O3 Skip: the mock draws none. RR-0176 says the animation "always runs to completion", and the core draws no Skip when it is given no href (core.ts:399-403). Settled: no Skip, and none is passed.
+- O2 picture: the mock draws lines only. Settled: no scene, no new component kind.
+- O6 bar title: the mock draws the lot's address in the bar, taken from the checked view's address (what-we-checked.ts:45). Settled.
+- The label "Checks for this lot" is drawn VISIBLE in the mock. It conflicts with Spec 126:869 ("any section labels"). Left open as O8.
+- Words per screen:
+  - Screen 1: verbs and lines, server-built.
+  - Screen 2: states.checked.ready plus states.checked.open "View report".
+  - Screen 3: states.lifecycle.loading, centred (RR-0491's one change).
+  - Screen 4: states.lifecycle.error plus retry.text.
+  - Screen 5: states.lifecycle.miss plus NEW back_to_search.text "Back to search". The key lives in mobile_parcel_detail.content.json; its action is the existing `back` (useGoBack). It moves: the content file, ReportBinding.tsx:394 SCREEN_CONTENT_KEYS, the generated slice mobile/src/generated/surfaces/mobile_parcel_detail.json, reportPage.behaviour.test.tsx:156, reportScreens.golden.test.ts:285, props/miss.mobile.json, and reportScreen.mount.behaviour.test.tsx.
+- (b) When the lines show (RR-0485 item 5 and the mock's table). They are skipped when:
+  - the persisted cache holds a page (opened on this phone); or
+  - the parcelId answer brings a page with no checked view (a stored lot, or already counted: showsWhatWeChecked); or
+  - the checked view is null for an unknown lot or unusable pace (the producer's promise).
+  - Tracked lots: tracking is not built. A tracked lot is stored (MD:699), so the stored rule covers it once task-269 and task-265 land. No field now.
+- (d) The wait today: 11-23 s per compute, and M1 computed the same lot twice (21.7 s plus 21.0 s). After this plan: one compute behind the lines; screen 3 from 23 to 60 s; screen 4 at 60 s or on a failure.
+  - Timing: screen 4 comes after the 3 retries (MD:1409), or at 60 s if that comes first.
+  - 683 Danforth (compute null in 108 ms): lines to 23 s, then screen 5.
+
+#### 4. The change, file by file, in build order (one lane; 267 then 317 in the same commits)
+1. src/lib/parcels/lookup-flow.ts:79-90: `findOnly = parcelId === undefined`. The stored read and the compute are skipped when held or findOnly. Header note :5-6.
+2. src/app/api/parcels/lookup/route.ts:
+   - comments :13-19, :26-27;
+   - O1-A2: parse the fast flag like semi (:78-84);
+   - on the fast read, return the stored page if present; else, unless held, the checked view: buildTree({lifecycle:'loading', what_we_checked}) then viewOf on target mobile with no href. If O1-A2 is ruled, the fast read also skips the lines for an already-counted lot (a usageFor export, one read). The meter code is unchanged.
+   - OUTSIDE FILES LINE: src/app/api/parcels/lookup/types.ts (the response field `checked`, the X-4 a field, and the flag) and src/lib/entitlements/index.ts:559 (export usageFor), both needed only under A2.
+3. mobile/src/lib/schemas.ts:432-441: `checked` nullable and optional (the core's checked view shape).
+4. mobile/src/hooks/useParcelLookup.ts:107-116:
+   - the fast-read query (key ['parcel-checking', id], under A2);
+   - O5: no refetch on mount when the cache holds a page.
+5. mobile/src/components/surfaces/ReportBinding.tsx:
+   - reportScreenState (:399-403) becomes total over (data, checked, isFetching, isError, elapsedMs, gaveUp). Its outputs: view | checking | ready | holding | error | miss. Data with no page while a fetch is running is checking or loading, never miss (finding 23).
+   - checkedProps renders screens 1-5 from existing kinds only (View, Text, Button, ActivityIndicator); screen 3's spinner and words are centred.
+   - backProps gains the address title. With no address there is no title node at all.
+   - LifecycleState stays loading | miss | error. The ending is a separate field, so no new states.lifecycle.* key is invented.
+   - SCREEN_CONTENT_KEYS gains back_to_search.text (and checks.label if O8 is visible).
+6. mobile/src/components/surfaces/ReportPageHost.tsx:64-74:
+   - the clock starts at mount;
+   - the give-up timer at 60 s from mount, or never once a page is shown;
+   - Reduce Motion: all lines at once, one announcement of summary;
+   - no auto-open; no Skip.
+   - A late page that lands after the give-up stays in the cache. Try again shows it at once without a new compute, otherwise it refetches.
+7. mobile/app/(app)/parcel-tool/[parcelId].tsx:23-37: pass the fast read, isFetching, error and the cache skip. The wall stays the first branch when there is no view.
+8. mobile/src/constants/reportPage.ts: the line, tick, end and centred-hold classes.
+9. The 60 s give-up: per O7, either config.give_up_ms or a direct read of the existing slice value.
+10. Content:
+    - mobile_parcel_detail.content.json gains back_to_search.text (and checks.label per O8);
+    - report-presentation.json is unchanged.
+    - OUTSIDE FILES LINE: scripts/surfaces/emit-mobile-surfaces.mjs:120-127, only if O7 picks config.give_up_ms (the report slice writes config {} today).
+11. Census first, then emit, then registry. OUTSIDE FILES LINE for each:
+    1. scripts/surfaces/_schema/census/mobile-product.json, row mobile_parcel_detail (:6151): states :299-325 gain checking, ready, holding; dated notes; the evidence cites move (gate route.ts, states [parcelId].tsx).
+    2. scripts/surfaces/_schema/census/contracts.json, row contract_parcels_lookup (:22081):
+       - metering.why: a q hit sends no page; under A2 the fast read counts only a stored page it serves;
+       - the field whitelist gains `checked`; evidence cites move.
+    3. `node scripts/violations/generate-surface-registry.mjs --emit-descriptors`, which writes:
+       - mobile_parcel_detail.descriptor.json;
+       - contract_parcels_lookup.descriptor.json;
+       - src/lib/surfaces/generated/surface-descriptor.d.ts and validate-descriptor.mjs (expected byte-unchanged; if not, add them).
+       Never edit a descriptor by hand (surface-registry.infra.test.ts:277-281).
+    4. emit-mobile-surfaces.mjs --write, which writes mobile/src/generated/surfaces/mobile_parcel_detail.json.
+    5. report-page-capture.ts: MOBILE_LIFECYCLE_STATES (:78) gains checking, ready, holding, error_after, miss_after. It writes src/tests/fixtures/report-page/props/*.mobile.json (5 new; loading, miss and error move).
+    6. generate-surface-registry.mjs default run, which writes docs/reports/generated/127-surface-registry.md and 127-surface-review-queue.md; its --check must be clean.
+- Parity: the report detail is mobile only (identity.platforms ["mobile"]). There is no web/phone parity lock for its lifecycle; parity.golden.test.ts compares reading trees only. The pins that move are report-mobile.logic.test.ts:32 (the golden names), reportPage.behaviour.test.tsx:156 (the slice keys), reportScreens.golden.test.ts:285 (lifecycle refs) and report-checked.logic.test.ts (words; unchanged unless O8).
+12. Specs and queue:
+    - Spec 100 §3.2 note (the q path sends no page) and §4 note (the endings, 60 s, the skip rule).
+    - Spec 126 §11a.7 note (the app render; RR-0491 bounds RR-0176; Skip not drawn; O8 if visible).
+    - .cursor/MCFRONTEND-QUEUE.md: one follow-up row to MF-62 for both cards, the next free id at claim (MF-99 at this head, :5, unless 465 took it).
+
+FILES (both cards):
+- src/lib/parcels/lookup-flow.ts, src/app/api/parcels/lookup/route.ts, src/app/api/parcels/lookup/types.ts, src/lib/entitlements/index.ts
+- mobile/src/lib/schemas.ts, mobile/src/hooks/useParcelLookup.ts, mobile/src/components/surfaces/ReportBinding.tsx, mobile/src/components/surfaces/ReportPageHost.tsx, mobile/app/(app)/parcel-tool/[parcelId].tsx, mobile/src/constants/reportPage.ts
+- scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.content.json, scripts/surfaces/_schema/census/mobile-product.json, scripts/surfaces/_schema/census/contracts.json, scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.descriptor.json, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
+- mobile/src/generated/surfaces/mobile_parcel_detail.json, src/tests/fixtures/report-page/props, scripts/surfaces/report-page-capture.ts, scripts/surfaces/emit-mobile-surfaces.mjs (O7), docs/reports/generated/127-surface-registry.md, docs/reports/generated/127-surface-review-queue.md
+- src/tests/parcel-lookup-gate.infra.test.ts, src/tests/surfaces/report-mobile.logic.test.ts, src/tests/surfaces/report-failure.logic.test.ts (new)
+- mobile/__tests__/reportScreen.mount.behaviour.test.tsx, mobile/__tests__/reportPage.behaviour.test.tsx, mobile/__tests__/reportScreens.golden.test.ts, mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx, mobile/__tests__/useParcelLookup.test.ts, mobile/__tests__/reportChecked.behaviour.test.tsx (new)
+- docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, docs/specs/02-web-admin/126_maxbld_surface_standard.md, .cursor/MCFRONTEND-QUEUE.md
+
+#### 5. Tests first (red, then green)
+Both cards' acceptance lines are the process lines AC1-AC8. These tests serve AC2 (written into the plan) and AC6 (red first). Each is also tied to a scope item below.
+
+Server, src/tests/parcel-lookup-gate.infra.test.ts:
+- G1 "a q hit never runs the stored read or the compute": page null, meter not_produced, no insert (267 hand-off).
+- G2 "compute once per opened lot": q then parcelId=P-45 with a stored miss. Expect computeCustomerPageResponse called once and 1 insert.
+- G3 "meter counts unchanged" (it.each on parcelId): new lot counted 1; already counted 0; at limit 403 with 0; at limit with a counted lot 200 with 0. Each case's q call before it inserts 0.
+- Rewrite :234, :245 and :369 (q-path counting) with a dated note that keeps their titles.
+- G4 "683 Danforth": parcelId=5361889 with the compute mocked null. Expect 200, page null, meter not_produced (317, finding 31).
+- G5 (A2): the fast flag returns the checked view and no compute. A stored page is returned and counted. A held lot gets no checked view. An already-counted lot gets checked null.
+
+src/tests/surfaces/report-failure.logic.test.ts (new; a table over reportScreenState, total, 317 R2). Rows:
+- page, then view;
+- lines playing with no page, then checking;
+- lines done with a page, then ready;
+- lines done with no page and under 60 s, then holding;
+- an error during the lines, then checking until the end, then error (RR-0490 3 b);
+- 60 s passed, then error;
+- a miss during the lines, then miss at the end;
+- no checked view with a miss, then miss at once;
+- a cached page, then view with no lines.
+
+src/tests/surfaces/report-mobile.logic.test.ts: the golden names include the 5 new endings; the capture writes them byte for byte (317 R1).
+
+mobile/__tests__/reportChecked.behaviour.test.tsx (new, fake timers):
+- C1: verbs at delay_ms, facts at done_ms.
+- C2: page at 5 s, no "View report" until 23000; no auto-open; no Skip.
+- C3: no page at 30 s gives the centred spinner and "Loading the report…".
+- C4: no page at 60000 ms gives "Could not load this report. Try again." with the lines kept.
+- C5: a 500 at 8 s gives the failure only at 23000.
+- C6: a miss at 0.1 s gives "No report for this lot yet." and "Back to search" at 23000; a press calls back.
+- C7: a late page after the give-up, then Try again shows it with no fetch.
+- C8: Reduce Motion gives all lines and one announcement.
+
+mobile/__tests__/reportScreen.mount.behaviour.test.tsx:
+- M1: a cached miss while refetching shows no miss text.
+- M2: a cached page opens at once with no lines and no fetch (O5).
+- M3: the address is the bar title; with no address there is no title node.
+
+reportScreens.golden.test.ts: the miss refs are [states.lifecycle.miss, back_to_search.text]; components only from mapping.mobile.REPORT. reportPage.behaviour.test.tsx:156: the slice keys.
+
+The mobile jest files are run by no hook. Run them by hand or in Mobile CI and keep the output.
+
+#### 6. Limits, and how failure is caught
+- Not done:
+  - no change to the search box, index.tsx or lotMap.ts (465);
+  - no change to the meter rule (343);
+  - no change to the report page content;
+  - no migration and no new seed row (see O7);
+  - MAXBLD_WEB_LIVE stays false;
+  - no web failure page, because the web report render is not built (task-285, task-287);
+  - no scene picture.
+- Risks, and how the build catches each:
+  - A compute that ends after the give-up is still counted on the server. C7 keeps the counted report reachable with no second compute, and G3 shows no double count.
+  - The at-limit wall now shows after the compute (G3).
+  - A failing compute runs up to 4 times, per the ruled retries.
+  - Census and descriptor drift is caught by --check and surface-registry.infra.test.ts:277.
+  - Cite drift is caught by check-cites.
+  - Missing paths are caught by the close check.
+
+#### 7. Notes owed (backlog CLI only)
+- task-267: PLAN-267-v2; the new title (the address replaces "Checking your lot"); the Files line above; a note on "however long" against the 60 s give-up.
+- task-317: built in lane 267 (RR-0477, RR-0488); its Files line is folded into 267's.
+- task-343: the seam in section 3 (a).
+- task-465: the hand-off removes its O1 risk.
+- doc-16 A-MF62 (35 s, "updating"): a dated note through `backlog doc edit` that it is superseded by RR-0176 and RR-0491.
+- Spec dated notes and the queue row as in step 12.
+
+#### 8. Open choices (not decided)
+- O1, the source of the lines (L2-1, MD:1276):
+  - A1: the lines arrive with the page, so the lines start after the compute. This breaks "always to the end" timing and the 23 s overlap.
+  - A2: a fast parcelId read with one optional flag, the semi=answered precedent. It returns the stored page or the checked view and runs no compute. The flag and the response field `checked` (X-4 a, ruled) need his word under RR-0392.
+  - Rec A2. The mock's timeline (lines from 0 s while the report builds) needs it.
+- O5: no refetch-on-mount for a cached page (one compute per open), versus today's 60 s stale refetch. Rec no refetch.
+- O7, the 60 s value:
+  - (a) Read the existing registered 60 000 (maxbld_page_continue_wait_ms, via the semi slice). No database step; one value serves both waits; dated note.
+  - (b) A new seed row and config.give_up_ms. That is a database step, so its own card by RR-0477.
+  - (c) A typed number. Breaks Spec 128 Rule 3.
+  - Rec (a), with (b) as a later card if he wants the two waits apart.
+- O8, the "Checks for this lot" label:
+  - visible as drawn: a new key checks.label, plus a Spec 126 note that RR-0491 replaces :869 for this one label;
+  - or a screen-reader label only (the v8 aria-label, build.mjs:801).
+  - Rec visible as drawn, flagged to him with the :869 conflict named.
+- Settled since v1: O2, O3, O4, O6, O7-batch (task-317 is now in this lane).
+
+What this plan assumes of 465 (final for round 1; lane BL-MCFIX465 is building now):
+- A pick (Enter, a row tap, or a chip tap that submits) pushes /(app)/parcel-tool/<id> through parcelSearchRoute.
+- No search code reads `page`.
+- The web search mirrors the phone and the web report stays off.
+- The four new semi keys in lotMap.ts, and WallBinding, are not touched here.
+- On return the box clears (465's focus effect), so "Back to search" lands on an empty box.
+- Files both cards touch:
+  - census/mobile-product.json (different rows: 465 has :7154 and :7578, 267 has :6151);
+  - the --emit-descriptors run and the default registry run, with 127-surface-registry.md and 127-surface-review-queue.md;
+  - the emit-mobile-surfaces.mjs run (different slices);
+  - Spec 100 and Spec 126 (separate dated notes);
+  - the queue.
+- 267 rebases on 465's tip and reruns every generator.
+
+#### 9. UNVERIFIED
+- Whether the checked view (viewOf with no href) passes the mobile Zod schema without a core change.
+- Whether report_check_* and the citywide snapshot row exist on the test stack.
+- Whether surface-descriptor.d.ts moves on the emit.
+- Whether report-checked.logic.test.ts pins the states.checked key list.
+- The platform request timeout.
+- Nothing was run; this was read only.
+

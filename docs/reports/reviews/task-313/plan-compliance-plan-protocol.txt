@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-25T20:02:40.564Z file_sha256=c2c98dba4a8b6a0fd8c121815b237ff23a16c5894cefb8efe172975a2903f31b prompt_sha256=b840f4f039453bc061fc9da61d135c13cbb67858f3f49a9af5cbbccd4fb416df
+🔍 Lens review of docs/reports/reviews/task-313/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0499 "1a" pasted note "the gate checks the MaxBLD plan" — plan "Q1. A user with no plan, in card 1. - A: they go in to Lookup, and today's refusal notice shows when they search (F7). Cost: none." — under default A the gate M5 builds ("'enter' otherwise") never tests the parcel_tool plan, so a signed-in user with no plan enters the MaxBLD stack, contradicting "the gate checks the MaxBLD plan" and deferring the record entry the plan itself quotes (Spec 126:1087 "Sign in -> 'Subscribe at maxbld.ca' message") to card 2 — fix: make Q1 default B (a no-plan branch in decideMaxbldGate drawing the No plan notice) or obtain an operator word narrowing the ruling, quoted in the plan.
+
+BUG severity=HIGH — plan-protocol §4 "Output per increment: ~/Buildo-scratch/lanes-20261117/inc-plan/<inc>/seq-patch.json (delta only: new items with source, folds, removal candidates, status/dependsOn changes with reason) + SITTING.md + PASS lines." — plan "The task-313 card: a plan note, acceptance criteria, and the Files line via `backlog task edit`." — the plan's own deliverable list omits the seq-patch.json delta, the SITTING.md and every PASS line, so nothing here can be applied to sequence.json as the protocol requires — fix: add to the deliverables the seq-patch.json (task-313 status/dependsOn delta with reason), a SITTING.md carrying Q1-Q3, and one PASS line per gate.
+
+BUG severity=HIGH — plan-protocol §2 step D "Lenses on the artifacts each build task will touch (file:line), red-first tests named, exact commands. | PASS lines", and the 2026-11-20 note "a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce ... plus its separate grounder" — plan "The pre-commit related run does not pick all of these; the station suite does." — tests are named but no lens set, no grounder and no exact command line is named and no PASS line exists, so the build-pass gate has nothing to pass — fix: name the rule-lists.mjs lensSet ids and the Spec 08 §7 grounder, write each command verbatim (including the station-suite invocation), and record a PASS line per gate.
+
+DEFER severity=MED — plan-protocol §3 "Every step reports: tasks before, added (with source), removed-candidate, after. The count must not grow without a source per task." — plan "CUT TO LATER CARDS: Account and sign-out, and account deletion (271, card 2); the No plan page (357, card 2, unless Q1 is B)" — no before/added/removed/after counts are reported, so growth cannot be checked — fix: add the four counts with the source line beside each added or removed item.
+
+DEFER severity=MED — card Description "The mirror shows the row as waiting on the operator's renew, drop or answer word" and "Recommendation: renew with a named event, `expires when MF-47 is DONE`" — plan "The MF-49 queue row in the same commit (DoD #6)." — the plan edits an expired row without stating which of renew, drop or answer applies or what the new expiry text is, so the row edit is unspecified — fix: write the row's new status and expiry text into the plan and make the edit conditional on the operator's word.
+
+DEFER severity=MED — RR-0485 "no onboarding question, no report without pricing, loading animation always, Enter opens the lot" — plan M6 "status when 'connecting': \"Connecting…\"" — the ruling's "loading animation always" is answered by a static status row and no animation is named anywhere in M5 or M6 — fix: name the animation the Opening draws while 'loading', or log the operator word that a text status replaces it.
+
+DEFER severity=MED — plan-protocol §3 "Rulings: only when a search of the record finds none; the search is quoted." — plan "Q3. The Opening page departs from the mock in three ways ... - A: accept them; nothing new is added." — Q3 puts three departures to the operator with no quoted search showing the record is silent, and only one of the three (126:75) has a cited line — fix: quote the search for the Connecting… timing and the wordmark before asking, and record the found lines or their absence.
+
+DEFER severity=LOW — plan-protocol §3 "No new research topics. Only the sources in step A." — plan §1 "From chat, not in MD: \"The MAxbLD app should go from sign-in direclty to the search screen\"" — the front door is sourced from chat lines and phone-walk findings, none of them a step A source (gap-register/REGISTER.md, resolve-design/items.json, SCENARIO-SLICES.md, CoA regression, storage-outcome) — rationale: RR-0499 at MD:2598 carries the same words, so cite the MD line and drop the chat source.
+
+MET — RR-0499 "the lead-app screens stay in the code, unreachable, kept for the other app" — plan M1 and M4 — APP_PRODUCT is one leaf switch and LeadAppLayout keeps every lead line compiled and unreachable behind the MaxBLD branch.
+
+MET — Spec 116 :106 "moving `parcel-tool` out of the `(app)` gate without a per-product gate in the new place is a security regression" — plan M5 — MaxbldAppGate applies useParcelEntitlement plus decideMaxbldGate before <Slot, so parcel-tool never leaves (app) ungated.
+
+MET — RR-0477 "Keep anything with a database step or its own operator question on its own card." — plan "the version gate and any 2 s setting (they need a setting, which is a database step)" — the DB-step items are cut to their own cards rather than folded in.
+
+MET — plan-protocol §0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from)." — plan §1 "RR-0496 MD:2583" — each ruling the change rests on is cited with an MD file:line.
+
+MET — plan-protocol §5.5 "every task carries an estimate (MEASURED with source, or GUESS labelled)" — plan "GUESS estimate: 4 build days. Server 0.5; gate and AuthGate 1; the Opening surface 1.5" — the estimate is labelled GUESS and split by part.
+
+MET — RR-0482 "larger tasks and using existing components as well" — plan §3 "useParcelEntitlement; the server gate parcelToolAccess" — the plan reuses the existing entitlement hook, gate, ParcelShelf and wall pattern instead of new components.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 26   Unmet: 8
+Rules met: none
+
+---
+⏱  62365ms (62.4s)
+📊 Tokens — total: 25803, input: 12572, output: 13231, reasoning: 11644

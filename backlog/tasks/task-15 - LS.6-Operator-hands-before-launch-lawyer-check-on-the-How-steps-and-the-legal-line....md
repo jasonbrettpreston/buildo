@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T20:08:00Z'
+updated_date: '2026-11-25T19:49:00Z'
 due_date: '2026-11-26'
 labels:
   - 1-2
@@ -20,7 +20,7 @@ labels:
   - comp:STAT
   - comp:BLD
   - comp:HS
-milestone: m-2
+milestone: m-13
 dependencies: []
 references:
   - docs/reports/plan-import/raw/2026-11-19/sequence.json#1-2/LS.6
@@ -87,4 +87,6 @@ who (plan text): lane
 
 <!-- SECTION:NOTES:BEGIN -->
 Dated note 2026-11-19 (M-246, prior text kept; RR-0299 · task-15 · Backlog; operator, verbatim: "C12 - is a fake email address until launch")
+
+2026-11-25 (RR-0501, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2608): moved to the last increment (launch gate) by the operator's ruling on the Increment 1-C plan.
 <!-- SECTION:NOTES:END -->

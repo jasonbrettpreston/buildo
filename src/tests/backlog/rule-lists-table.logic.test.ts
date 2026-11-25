@@ -141,22 +141,22 @@ describe('V2.LIST round 5: an in-scope census entry with no route file is skippe
 });
 
 // V2.LIST round 7 (task-406; operator, 2026-11-20, "you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y", MORNING-DECISIONS.md:1520, item 3 put to him as "3. Exempt generated snapshots from review material. My recommendation: yes."):
-// the table's own exempt key lists the golden snapshot files that one existing check validates. The review material is the task range minus matchesAny(exempt) (the close check and the launch brief); list resolution is NOT changed.
+// the table's own exempt key lists the golden snapshot files that one existing check validates (and the generated phone copies of those goldens, which the generator's own --check proves: task-469, RR-0502). The review material is the task range minus matchesAny(exempt) (the close check and the launch brief); list resolution is NOT changed.
 describe('V2.LIST round 7: golden snapshot files are exempt from the review material, each glob names the check that proves it', () => {
-  const CHECKS = ['goldenProblems', 'screenArm', 'report-page-capture.ts --check'];
+  const CHECKS = ['goldenProblems', 'screenArm', 'report-page-capture.ts --check', 'emit-mobile-surfaces.mjs --check'];
   const raw = () => JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as { exempt: string[]; $comment: string[] };
   const matcher = async () => (await import(path.join(ROOT, 'scripts/analysis/mcbylaws/paths.mjs'))) as { matchesAny: (globs: string[], p: string) => boolean };
   it('a real golden file of each folder is exempt (the surface folders, the report folder, the report-page captures and their mobile views)', async () => {
     const { matchesAny } = await matcher();
     const ex = raw().exempt;
-    for (const p of ['src/tests/fixtures/surfaces/report/v21.web.json', 'src/tests/fixtures/surfaces/report/v21.pdf.json', 'src/tests/fixtures/surfaces/web_landing/static.web.json', 'src/tests/fixtures/surfaces/admin_media/hit.web.json', 'src/tests/fixtures/surfaces/mobile_parcel_search/hit.mobile.json', 'src/tests/fixtures/surfaces/admin_media/hit.admin.json', 'src/tests/fixtures/report-page/v21.mobile.json', 'src/tests/fixtures/report-page/entered.pdf.json', 'src/tests/fixtures/report-page/entered.web.json', 'src/tests/fixtures/report-page/v21.admin.json', 'src/tests/fixtures/report-page/props/error.mobile.json']) {
+    for (const p of ['src/tests/fixtures/surfaces/report/v21.web.json', 'src/tests/fixtures/surfaces/report/v21.pdf.json', 'src/tests/fixtures/surfaces/web_landing/static.web.json', 'src/tests/fixtures/surfaces/admin_media/hit.web.json', 'src/tests/fixtures/surfaces/mobile_parcel_search/hit.mobile.json', 'src/tests/fixtures/surfaces/admin_media/hit.admin.json', 'src/tests/fixtures/report-page/v21.mobile.json', 'src/tests/fixtures/report-page/entered.pdf.json', 'src/tests/fixtures/report-page/entered.web.json', 'src/tests/fixtures/report-page/v21.admin.json', 'src/tests/fixtures/report-page/props/error.mobile.json', 'mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json', 'mobile/__tests__/fixtures/surfaces/mobile_parcel_disambiguation_map.goldens.json', 'mobile/__tests__/fixtures/surfaces/mobile_parcel_semi_question.goldens.json', 'mobile/__tests__/fixtures/surfaces/mobile_parcel_wall.goldens.json']) {
       expect(matchesAny(ex, p), p).toBe(true);
     }
   });
   it('a code file, the manifest, a script or a nested golden-looking file is NOT exempt', async () => {
     const { matchesAny } = await matcher();
     const ex = raw().exempt;
-    for (const p of ['src/tests/fixtures/surfaces/x/evil.ts', 'src/tests/fixtures/report-page/run.mjs', 'src/tests/fixtures/surfaces/report/states.json', 'src/tests/fixtures/surfaces/x/y/a.mobile.json', 'src/tests/fixtures/report-page/props/notes.json', 'src/tests/fixtures/report-page/props/x/a.mobile.json', 'scripts/surfaces/report-page-capture.ts']) {
+    for (const p of ['src/tests/fixtures/surfaces/x/evil.ts', 'src/tests/fixtures/report-page/run.mjs', 'src/tests/fixtures/surfaces/report/states.json', 'src/tests/fixtures/surfaces/x/y/a.mobile.json', 'src/tests/fixtures/report-page/props/notes.json', 'src/tests/fixtures/report-page/props/x/a.mobile.json', 'scripts/surfaces/report-page-capture.ts', 'mobile/src/generated/surfaces/mobile_parcel_search.json', 'mobile/__tests__/fixtures/surfaces/x/a.goldens.json', 'mobile/__tests__/fixtures/surfaces/notes.json', 'mobile/__tests__/fixtures/parcelSearch.situations.json', 'mobile/__tests__/parcelScreens.golden.test.ts']) {
       expect(matchesAny(ex, p), p).toBe(false);
     }
   });
@@ -172,10 +172,51 @@ describe('V2.LIST round 7: golden snapshot files are exempt from the review mate
     const text = t.$comment.join('\n');
     const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const golden = t.exempt.filter((g) => !g.startsWith('docs/reports/'));
-    expect(golden.length).toBe(9);
+    expect(golden.length).toBe(10);
     const unnamed = (globs: string[], comment: string) => globs.filter((g) => !CHECKS.some((c) => new RegExp(esc(g) + '[^\\n]*proved by[^\\n]*' + esc(c)).test(comment)));
     expect(unnamed(golden, text)).toEqual([]);
     expect(unnamed([...golden, 'src/tests/fixtures/zzz/*.json'], text)).toEqual(['src/tests/fixtures/zzz/*.json']);
+  });
+  // task-469 (RR-0502, MORNING-DECISIONS.md:2613 "465 a"): the phone picture copies are exempt because emit-mobile-surfaces.mjs --check rebuilds each copy from its
+  // sources and compares it byte for byte. Proven both ways on a tmp copy of what the generator reads (the same set as emitCopy, surface-conformance.logic.test.ts).
+  it('the proving check goes red on a phone copy that does not match its sources; a clean copy is green', () => {
+    const SEARCH = 'mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json';
+    const STRAY = 'mobile/__tests__/fixtures/surfaces/zz.goldens.json';
+    // realpath: the emitter runs its main only when argv[1] equals its own resolved path, and the OS tmp dir may be a symlink (macOS /var -> /private/var).
+    const root = fs.realpathSync(tmp('emit'));
+    for (const rel of ['scripts/surfaces', 'scripts/seeds/logic_variables.json', 'src/tests/fixtures/surfaces', 'mobile/src/generated/surfaces', 'mobile/__tests__/fixtures/surfaces']) {
+      fs.cpSync(path.join(ROOT, rel), path.join(root, rel), { recursive: true });
+    }
+    const check = () => run('node', [path.join(root, 'scripts/surfaces/emit-mobile-surfaces.mjs'), '--check']);
+    const restore = (rel: string) => fs.copyFileSync(path.join(ROOT, rel), path.join(root, rel));
+    const ok = check();
+    expect(ok.status, ok.stderr).toBe(0);
+    expect(ok.stderr).toBe('');
+    expect(ok.stdout).toMatch(/^surfaces ok/);
+    // (b) a hand edit: one value in the goldens body changed, the $comment (and its input_sha) kept
+    const copy = JSON.parse(fs.readFileSync(path.join(root, SEARCH), 'utf8')) as { goldens: Record<string, unknown> };
+    const first = Object.keys(copy.goldens).sort()[0] as string;
+    copy.goldens[first] = { hand_edit: true };
+    fs.writeFileSync(path.join(root, SEARCH), JSON.stringify(copy, null, 2) + '\n');
+    const hand = check();
+    expect(hand.status).toBe(1);
+    expect(hand.stderr).toContain(`GEN-HAND-EDIT ${SEARCH}`);
+    restore(SEARCH);
+    expect(check().status).toBe(0);
+    // (c) a stale copy: one source golden changed, the copy not regenerated
+    const SRC = `src/tests/fixtures/surfaces/mobile_parcel_search/${first}.mobile.json`;
+    const src = JSON.parse(fs.readFileSync(path.join(root, SRC), 'utf8')) as Record<string, unknown>;
+    fs.writeFileSync(path.join(root, SRC), JSON.stringify({ ...src, zz_changed: 1 }, null, 2) + '\n');
+    const stale = check();
+    expect(stale.status).toBe(1);
+    expect(stale.stderr).toContain(`GEN-STALE ${SEARCH}`);
+    restore(SRC);
+    expect(check().status).toBe(0);
+    // (d) a stray copy no converted surface owns
+    fs.writeFileSync(path.join(root, STRAY), '{}\n');
+    const stray = check();
+    expect(stray.status).toBe(1);
+    expect(stray.stderr).toContain(`GEN-STRAY ${STRAY}`);
   });
 });
 
