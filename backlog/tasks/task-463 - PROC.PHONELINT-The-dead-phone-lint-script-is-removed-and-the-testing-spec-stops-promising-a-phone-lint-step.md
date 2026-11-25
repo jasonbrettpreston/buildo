@@ -3,10 +3,11 @@ id: TASK-463
 title: >-
   PROC.PHONELINT The dead phone lint script is removed and the testing spec
   stops promising a phone lint step
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-PLINT'
 created_date: '2026-11-24T18:43:00Z'
-updated_date: '2026-11-25T01:44:00Z'
+updated_date: '2026-11-25T01:45:00Z'
 labels:
   - ProcessImprovement
 milestone: m-1
@@ -17,6 +18,14 @@ references:
   - docs/reports/reviews/task-463/seat-integration-1.md
   - docs/reports/reviews/task-463/seat-reality-check-1.md
   - docs/reports/reviews/task-463/seat-regression-1.md
+  - compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md
+  - compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md
+  - compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md
+  - compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: fix
 ordinal: 157210
 ---
@@ -136,3 +145,9 @@ plan-ux#2 MED folded there is no phone li
 plan-error-paths#1 MED folded expect(s5.split('> D
 plan-error-paths#2 MED folded expect.arrayContaini
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-25 taken on the board at lane launch (lane BL-PLINT, worktree /Users/brettpreston_macmini/Buildo-wt-plint, branch wf2/plint), RR-0240
+<!-- SECTION:NOTES:END -->
