@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@operator'
 created_date: '2026-11-19T13:07:00Z'
-updated_date: '2026-11-25T20:01:00Z'
+updated_date: '2026-11-25T20:02:00Z'
 labels:
   - queue-row
   - McApp
@@ -15,7 +15,7 @@ milestone: m-2
 dependencies: []
 references:
   - .cursor/MCFRONTEND-QUEUE.md#L347 ROW:MF-49
-type: decision
+type: build
 project: McFrontend
 ordinal: 22012
 ---
