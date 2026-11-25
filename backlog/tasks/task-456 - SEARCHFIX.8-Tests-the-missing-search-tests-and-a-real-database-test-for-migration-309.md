@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SFX8'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-25T16:38:00Z'
+updated_date: '2026-11-25T16:43:00Z'
 labels:
   - SEARCHFIX-LATER
 milestone: m-1
@@ -223,4 +223,6 @@ rg#4 MED folded 454 lands first, the
 2026-11-25 red attempt (commit i): web tests of plan steps 3-9 staged with temporary unstaged source edits (geometry.ts cap and ft rounding, sliceConfig.ts clamp, entitlement route session bypass and uid parameter); D2 and X6 red with no edit; saved as red-web.out in the lane folder.
 
 2026-11-25 red proven (red-web.out, lane folder): 10 named cases failed, nothing else (1101 passed); sources restored, git diff --exit-code 0 on geometry.ts, sliceConfig.ts, entitlement/route.ts. The entitlement session-bypass red was a typed fallback context instead of deleting the 401 line, which would not typecheck. Green: src-sql-ledger.mjs --confirm refuses no recorded statements; the NAV-1 lock climbs && / || chains; one sign-up disclosure entry (RR-0478).
+
+2026-11-25 phone tests (commit ii, plan steps 1-2): smoke renders reports_left with its line text; gateStability adds the held unsure lot row. Phone typecheck passes. Red and green of these two are UNVERIFIED until the push station (the phone tests are outside the pre-commit related run and the lane runs no test runner, rule 18; precedent BL-SFX2 REPORT.md:21, BL-SFX3 REPORT.md:16). Red edits for the station: remove ...reportsLeft(s), at SearchBinding.tsx:238; change !ask to !(ask && isFetching) at [parcelId].tsx:34.
 <!-- SECTION:NOTES:END -->

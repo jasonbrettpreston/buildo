@@ -32,7 +32,8 @@ const show = (k: string, a = actions()) => {
   render(<SurfaceRenderer tree={searchProps(s) as SurfaceTree} content={SEARCH_SLICE.content} data={searchData(s)} actions={a} />);
   return a;
 };
-const GOLDEN_SITUATIONS = ['static', 'loading', 'redirect', 'ambiguous', 'miss', 'empty', 'schema_drift', 'rate_limited', 'unauthorized', 'error'];
+// task-456 X2 (mcfixreborn-g3 GROUNDER-A.md:102): reports_left joins the rendered situations (the A.6 line was a props golden only).
+const GOLDEN_SITUATIONS = ['static', 'loading', 'redirect', 'ambiguous', 'miss', 'empty', 'schema_drift', 'rate_limited', 'unauthorized', 'error', 'reports_left'];
 
 describe('MF-46 follow-up: "Report incorrect address match" (OUTPUT regression F1)', () => {
   it('the address list carries the report link; a press calls open_help with the topic and the typed address', () => {
@@ -54,6 +55,10 @@ describe('mobile render smoke (FE-33 mobile case)', () => {
     expect(screen.getByText('Lot Intelligence')).toBeTruthy();
     expect(screen.queryByLabelText('Account')).toBeNull();
     expect(screen.queryByTestId('parcel-search-account')).toBeNull();
+  });
+  it('reports_left: the line renders "6 of 10 reports left until 9 Dec 2026"', () => {
+    show('reports_left');
+    expect(within(screen.getByTestId('parcel-search-reports-left')).getByText('6 of 10 reports left until 9 Dec 2026')).toBeTruthy();
   });
   it('host props: keyboardShouldPersistTaps, the shelf padding, the top safe-area edge, the 448 column (rows 1-4)', () => {
     show('static');
