@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-25T14:44:34.809Z file_sha256=9837bc2028c1e80c08a05b7a09d66253cecdba92cbc14437268b335d23f89c95 prompt_sha256=6e6458c415992f87d9fc81fa1deaf0dc5f9cb11e0f25ab5421aaae088113092e
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx6b/docs/reports/lanes/2026-11-25/BL-SFX6B/in-out-code-review-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — src/lib/admin/parcel-lookup.ts "typeof row.min !== 'number' || typeof row.max !== 'number' || typeof row.default !== 'number'" — the guard also demands a seed `default` that readSearchSettings never reads, and because the module runs `for (const k of Object.values(SEARCH_SETTING_KEYS)) boundsOf(k);` at import time, one seed row carrying only min/max crashes the module on load and takes all three importing routes down before any request — validate min and max only (or actually use `default`). — narrows a load-time crash path that the reader does not need.
+
+DEFER severity=LOW — src/app/api/parcels/lookup/route.ts "settings = await readSearchSettings(pool);" — one shared five-key read means consumer search (and the admin lookup) answers the generic 500 when the entitlement key, which neither surface uses, is missing or out of bounds, while contract_parcels_lookup.descriptor.json lists only its own four keys under logic_variables, so the blast radius is invisible to a registry reader — list all five keys under each surface or let each route read the subset it uses. — bounded, but a single bad row takes out two surfaces.
+
+DEFER severity=LOW — src/tests/parcel-lookup-resolution.logic.test.ts "const ADMIN = { candidateCap: 10 } as Parameters<typeof resolveAddress>[1];" — the assertion is now redundant because candidateCap is a required member of the options, and its comment ("the cast keeps the call typed before the cap is a member of the options") states the opposite of the current type; the same cast plus stale comment is repeated in search-routing.logic.test.ts, src/tests/db/parcel-lookup.db.test.ts and src/tests/db/consumer-parcel-lookup.db.test.ts ("the admin form, no option") — drop the `as Parameters<...>` and rewrite the comments to say the object passes only the cap. — dead assertion plus misleading commentary against the touched type.
+
+DEFER severity=NIT — src/lib/admin/parcel-lookup.ts "export const UNLINKED_PROBE_ROWS = 11;" — nothing in this chunk imports it (parcel-lookup-resolution.logic.test.ts pins the literal 11: "expect(query.mock.calls[2]![1]).toEqual(['MAIN%', '12', 11]);"), so the export is unused surface and the test duplicates the constant — make it module-private or have the test import it (cannot see other files for a real consumer). — dead export, duplicated value.
+
+DEFER severity=NIT — src/lib/surfaces/generated/surface-descriptor.d.ts "the candidate cap); the server re */" — the emitted doc comment for the new candidate_cap field is cut mid-word, so the field's contract sentence is unreadable — raise the emitter's truncation cap or shorten the source text (scripts/surfaces/emit-mobile-surfaces.mjs is not in this chunk). — generated text, fix at the source.
+
+REJECT — src/app/api/parcels/lookup/route.ts "let settings: Awaited<ReturnType<typeof readSearchSettings>>;" — looks like a possibly-unassigned variable used after the try/catch — the catch returns internalError, so the only path out of the try is the completed assignment, and the build/typecheck confirms it.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL): none blocking; the four DEFER lines above are the follow-ups.
+
+---
+⏱  194199ms (194.2s)
+📊 Tokens — total: 71636, input: 32123, output: 39513, reasoning: 38751

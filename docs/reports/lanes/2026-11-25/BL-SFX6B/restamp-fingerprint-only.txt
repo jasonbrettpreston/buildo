@@ -1,0 +1,24 @@
+base 1faff1554 (the board head at launch); golden files changed: 23 (11 mobile, 11 web, the phone copy); fingerprint-only changes (the mobile_parcel_search descriptor fingerprint, and the input_sha in the generated phone copy, differ; every other byte equal): 23; other changes: 0
+mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json
+src/tests/fixtures/surfaces/mobile_parcel_search/ambiguous.mobile.json
+src/tests/fixtures/surfaces/mobile_parcel_search/ambiguous.web.json
+src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json
+src/tests/fixtures/surfaces/mobile_parcel_search/empty.web.json
+src/tests/fixtures/surfaces/mobile_parcel_search/error.mobile.json
+src/tests/fixtures/surfaces/mobile_parcel_search/error.web.json
+src/tests/fixtures/surfaces/mobile_parcel_search/loading.mobile.json
+src/tests/fixtures/surfaces/mobile_parcel_search/loading.web.json
+src/tests/fixtures/surfaces/mobile_parcel_search/miss.mobile.json
+src/tests/fixtures/surfaces/mobile_parcel_search/miss.web.json
+src/tests/fixtures/surfaces/mobile_parcel_search/rate_limited.mobile.json
+src/tests/fixtures/surfaces/mobile_parcel_search/rate_limited.web.json
+src/tests/fixtures/surfaces/mobile_parcel_search/redirect.mobile.json
+src/tests/fixtures/surfaces/mobile_parcel_search/redirect.web.json
+src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.mobile.json
+src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.web.json
+src/tests/fixtures/surfaces/mobile_parcel_search/schema_drift.mobile.json
+src/tests/fixtures/surfaces/mobile_parcel_search/schema_drift.web.json
+src/tests/fixtures/surfaces/mobile_parcel_search/static.mobile.json
+src/tests/fixtures/surfaces/mobile_parcel_search/static.web.json
+src/tests/fixtures/surfaces/mobile_parcel_search/unauthorized.mobile.json
+src/tests/fixtures/surfaces/mobile_parcel_search/unauthorized.web.json

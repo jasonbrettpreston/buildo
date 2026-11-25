@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-25T14:44:34.809Z file_sha256=4e043116214cf554fa9a6e1c2e71510095c565093997a9f3d33f7e4089804d4e prompt_sha256=5a22cfbc9b2015040d3745aa00686b77dab1d68db41d291bc2da426addba9b6a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx6b/docs/reports/lanes/2026-11-25/BL-SFX6B/in-out-code-review-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — src/tests/surfaces/surface-conformance.logic.test.ts new hunk "const strip = (rel: string): string => fs.readFileSync(path.join(REPO, rel), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');" — the line-comment stripper cuts at a `//` that sits inside a string literal (a URL in one of the five files), so a typed limit after that point on the same line is invisible to the TYPED scan — strip string literals before comments, or scan the source with a tokenizer, so the "the code types none of the search limits" guard cannot be silently bypassed.
+
+DEFER severity=LOW — "const slice = JSON.parse(E.buildOutputs(root).get('mobile/src/generated/surfaces/mobile_parcel_search.json'));" — the map lookup is any-typed and may be undefined, so a missing output fails as `SyntaxError: "undefined" is not valid JSON` instead of naming the missing slice, and `slice` is implicitly any — assert the value is a string first and parse into the typed `Json` shape the file uses elsewhere (`rj`, `read`).
+
+DEFER severity=LOW — "const TYPED = /LIMIT_PER_MIN|SLOW_QUERY_MS|limit:\s*\d|LIMIT 1[01]\b|slice\(0, 10\)|[>=]=? 10\b|SEARCH_CANDIDATE_LIMIT\s*=\s*\d|SEARCH_RECENT_MAX/;" — the `[>=]=? 10\b` branch matches any unrelated `= 10` or `>= 10` in the five inspected files (a pagination guard, an unrelated constant) while missing `< 10` and the no-space `>=10`, so the guard is simultaneously over- and under-inclusive — anchor it to the setting names only, since the RED plant loop below already proves each named form is caught.
+
+NIT — "'mobile/src/constants/parcelSearch.ts': []," — the test title promises "each file reads its setting", but this entry contributes no `must` string, so the file is only checked for absence of typed constants, not for reading a setting — drop the file from MUST or add the read it should contain, so the title and assertions agree.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  78650ms (78.7s)
+📊 Tokens — total: 26087, input: 9775, output: 16312, reasoning: 15783

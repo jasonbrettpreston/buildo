@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SFX6B'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-25T14:21:00Z'
+updated_date: '2026-11-25T14:48:00Z'
 labels:
   - SEARCHFIX-LATER
 milestone: m-1
@@ -280,4 +280,8 @@ rg#3 MED folded the phone takes a ch
 2026-11-25 second work-commit attempt refused by the related run (green.out kept as green-attempt2.out): (a) the gate value test used cap 4, outside the cap's own bounds 10 to 50 (PLAN Step 1), so the route answered 500 before the limiter; the route value test now uses cap 12 (the resolver test keeps cap 4, which it passes directly); (b) SV-SCREEN found the 11 web goldens of mobile_parcel_search fingerprint-stale (the plan named 22 fixture files; the phone capture rewrote only the 11 mobile ones): restamped with the golden builder src/tests/surfaces/surface-goldens.ts (its header: a one-line tsx caller rewrites them), written only for those 11; 23 golden files changed in all, every one fingerprint-only (restamp-fingerprint-only.txt).
 
 2026-11-25 push station on e8043789e (run ~/Buildo-scratch/push-station/runs/e8043789e-20261125-090023/): one failing assertion of 28,379, src/tests/step-conformance.infra.test.ts '§1.2a P4 — every tunable is externalized ... scripts/load-parcels.js': seed parcel_lookup_search_per_min is annotated CONSUMED by parcels (its clause named src/app/api/parcels/lookup/route.ts, and the clause matcher reads the path segment parcels as the step parcels). Plan grounder Cairn-Ground-P454 ruling of 2026-11-25 (~/Buildo-scratch/lanes-20261125/BL-SFX6B/pg-ruling3/RULING-STATION-FAIL.md): reword only the consumer clause of the four server rows (search, detail, entitlement read, slow query), the route path moved inside the parenthesis and the consumer named in words; no descriptor, config or Files-line change. Done in the fix commit with logic-variables-registry.md and the report-field inventory regenerated (the logic-variable groups file is unchanged, --check up to date). Also, from the work commit: the commit-msg McFrontend gate required the trailer McFrontend-Task: MF-35, the one the earlier commits on this surface carry (task-395, task-450).
+
+2026-11-25 push station: FAIL on e8043789e (~/Buildo-scratch/push-station/fail/e8043789edb81e3e3e85cadef2dd00dcc4afe6a6.fail; one failing assertion, step-conformance §1.2a P4, fixed in a6315e3d8); PASS on a6315e3d8 (~/Buildo-scratch/push-station/pass/a6315e3d82cc688ec09df5f9b20af161919364be.pass; output ~/Buildo-scratch/lanes-20261125/station-a6315e3d8.out; 28,379 passed, 0 failed; phone tests, phone typecheck and web typecheck rc=0). The phone jest red/green previously UNVERIFIED is now green at the station.
+
+2026-11-25 output review round 1 (the one code-review lens, DeepSeek, on the whole change 1faff1554..a6315e3d8, split by lens-input into 4 parts; context docs/reports/reviews/task-454/context-r3.md): 17 lines listed in docs/reports/lanes/2026-11-25/BL-SFX6B/FINDINGS.md (as the lens rated them: 1 MED, 11 LOW, 4 NIT, and one line, out-code-review-p1#1, that rates nothing and says the chunk is documentation only). The lane rules none of them: grounder owed.
 <!-- SECTION:NOTES:END -->

@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-25T14:44:34.809Z file_sha256=b5ca0172191df35e0c6df2e3aed41773a5eba89b56b88a4338a15d0bc0f57d66 prompt_sha256=7b8d471a030deedd880b631a0c0640e243a8230f24747f8ad5f11124ab63dc9b
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-sfx6b/docs/reports/lanes/2026-11-25/BL-SFX6B/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+BUG severity= none applicable, this chunk is documentation only.
+
+DEFER severity=LOW — docs/reports/generated/127-surface-registry.md:816 "debounce_ms, min_query_len, entitlement_stale_ms, lookup_retry_max, lookup_stale_ms, candidate_cap and recent_max" — the cell says "The eight page settings of the phone search and semi pages" but enumerates seven, and the one maxbld_page_ row it drops is maxbld_page_continue_wait_ms, the semi page setting the same cell names as in scope — name continue_wait_ms in the enumeration, or change "eight" to "seven", so the count and the list agree.
+
+DEFER severity=LOW — docs/reports/generated/127-surface-registry.md:816 "scripts/seeds/logic_variables.json — the six rows maxbld_page_<key>" — stale count left behind by the edit that raised the sibling text to eight; after this change the seed carries eight maxbld_page_ rows (candidate_cap, continue_wait_ms, debounce_ms, entitlement_stale_ms, lookup_retry_max, lookup_stale_ms, min_query_len, recent_max) — change "six" to "eight" in the citation.
+
+REJECT — docs/reference/logic-variables-registry.md:10 "Total: **1138** logic variables (1122 numeric, 11 JSONB, 5 string)." — looks like an arithmetic gap against the 1132 total of the pre-image, but 1116 + 6 new numeric rows added in this diff equals 1122 numeric, 1122 + 11 + 5 equals 1138, and the footer "1097 seed vars + 41 migration-only vars" is 1138 with 1097 = 1091 + 6 — the counts are consistent.
+
+REJECT — docs/reference/maxbld-report-field-inventory.json:232 "sha256": "7f7051ea17653faa" — reads like an unverifiable hash edit, but the md twin docs/reference/maxbld-report-field-inventory.md:115 carries the identical value "7f7051ea17653faa", so the JSON and the md agree and cannot drift silently.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none
+
+---
+⏱  45285ms (45.3s)
+📊 Tokens — total: 45733, input: 36076, output: 9657, reasoning: 9159
