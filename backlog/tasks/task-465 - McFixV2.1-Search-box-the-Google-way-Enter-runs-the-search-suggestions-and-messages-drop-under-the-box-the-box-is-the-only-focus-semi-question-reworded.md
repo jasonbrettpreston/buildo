@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MCFIX465'
 created_date: '2026-11-25T17:05:00Z'
-updated_date: '2026-11-25T18:40:00Z'
+updated_date: '2026-11-25T18:53:00Z'
 labels:
   - McFixV2
 milestone: m-1
@@ -130,7 +130,7 @@ Head read: 320b47a02 (wf2/board); the plan grounder re-read it at 4c22af6e8 (onl
   - No guard is built here: the compute and the meter are not to be touched (tasks 267, 343). O1 is ruled in section 8.
 - (b) What Enter does, by answer:
   - unique (including a held unsure lot): push /(app)/parcel-tool/<id>; the report screen redirects to the semi page as today.
-  - text_candidates with 2 or more rows: rows plus list.hint, no push. A capped list or a street with no number shows list.refine instead of list.hint: one line only (the refine line is task-450's, unchanged).
+  - text_candidates with 2 or more rows: rows plus list.hint, no push. A capped list or a street with no number shows list.refine instead of list.hint: one line only. The refine line is task-450's and unchanged: it shows with the rows while typing too (guidance, not an error); list.hint shows after Enter only.
   - text_candidates from a street with no number (task-450): rows plus list.refine.
   - no_match, after Enter only: "No lot found for {query}" in the drop-down (state 4; O10).
   - outside Toronto: refused before the network, shown in the drop-down after Enter only (RR-0483: the error comes on Enter; finding 32 complained of an error shown while typing). While typing nothing shows.
@@ -190,7 +190,7 @@ Head read: 320b47a02 (wf2/board); the plan grounder re-read it at 4c22af6e8 (onl
    - The dots and Continue stay (RR-0321).
 8. Content files: scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json and mobile_parcel_semi_question.content.json, as in 3(f).
 9. OUTSIDE FILES LINE, descriptors. The census file is the source of record and the descriptor files are emitted from it, so the edits below are made in the census rows and then emitted (see the census bullet):
-   - mobile_parcel_search.descriptor.json: states (:319-364) gain `suggest` (O8). Dated notes in docs.purpose (:5), checks parcelsearch_empty_state and parcelsearch_toronto_only, and the deviation. Re-point the SearchBinding/IDX line cites in errors.evidence and checks by hand: no tool catches a stale cite (the evidence at :266 already cites parcel-tool/index.tsx:287 in a 135-line file).
+   - mobile_parcel_search.descriptor.json: states (:319-364) gain a twelfth state, `partial`, whose golden is `suggest` (O8: the state names are a closed list, surface.schema.json:1999-2055, and the golden name is free, as reports_left under hit). Dated notes in docs.purpose (:5), checks parcelsearch_empty_state and parcelsearch_toronto_only, and the deviation. Re-point the SearchBinding/IDX line cites in errors.evidence and checks by hand: no tool catches a stale cite (the evidence at :266 already cites parcel-tool/index.tsx:287 in a 135-line file).
    - mobile_parcel_semi_question.descriptor.json: purpose (:5) gets a dated note on the new question.
    - scripts/surfaces/_schema/census/mobile-product.json: rows mobile_parcel_semi_question (:7154) and mobile_parcel_search (:7578) are JSON-identical to their descriptor files today (checked in memory). Edit the census rows first, then run generate-surface-registry.mjs --emit-descriptors (:1596), which writes both descriptor files from the census and rewrites src/lib/surfaces/generated/surface-descriptor.d.ts and validate-descriptor.mjs (expected byte-unchanged; if either differs, stop and add it to the Files line). Never hand-edit a descriptor file: generate-surface-registry.mjs --check prints DESCRIPTOR DRIFT and surface-registry.infra.test.ts:277-281 fails.
 10. OUTSIDE FILES LINE, fixtures and generated files:
@@ -221,7 +221,7 @@ mobile/__tests__/parcelSearchScreen.behaviour.test.tsx (mocked hook, fake timers
 - T9 "the box is empty on return": after a push, fire the captured focus callback (the file's useFocusEffect mock captures nothing and re-runs on a new callback: change it to capture, and keep the new effect's deps stable). Expect input value '' and chip '41 Derwyn Rd'; a focus with no earlier push leaves the box alone. (AC3)
 - T10 "map kinds open only on Enter or a tap": '78 Robert St' multi_parcel (5259138, 5438421) and 'King and Bay' intersection. No push while typing; submit pushes the disambiguate route with kind. (AC1)
 - T11 "a held unsure lot opens its lot route on Enter": '14 Norwood Ter', 5334051. (AC1)
-- T12 "a street with no number: Enter gives rows plus refine, no push": 'Gerrard St'. (AC2)
+- T12 "a street with no number: Enter gives rows plus refine, no push": 'Gerrard St'; the same rows with refine show while typing, before any Enter (the suggest golden). (AC2)
 - T13 "a chip tap submits": chip '41 Derwyn Rd' with a unique hit: one push, no Enter. T14 "a blank Enter does nothing": no state change, no push. T15 "a row label is the address, else the parcel id" (restates the c.address || c.parcelId fallback and getByLabelText('100114') of surfaceRenderer.smoke.test.tsx:101-115). T16 "Enter does not push while fetching; edit then retype pushes again" (restates :98). (AC1)
 - Every old case that types without Enter and expects a result is rewritten with a dated note that keeps its prior title: :88 unique navigates once, :98 no push while fetching and retype, :112 a tap selects and SELECT pushes, :124 nothing pre-checked, :134 an intersection auto-push, :142 a miss and an error record nothing and Retry calls refetch with no argument (kept: the error notice and Retry are unchanged), :154 a chip sets the input (now it submits), :174 the refine line (task-450 AC1), :184 the prompt carries min_query_len (task-450 AC4, now after Enter) and :80 outside Toronto. :71 and :164 stand.
 
@@ -270,7 +270,7 @@ Semi page:
 - O5 Outside Toronto with no comma. (a) Keep the stated limit (PSM:63-68): it reaches the server and shows "No lot found". (b) Refuse when the last words are a NON_TORONTO name after a street-type word. RULED (a): the card hands the no-comma case to the plan; (b) would invert the pinned STATED LIMITATION test (parcelSearchMatch.test.ts:247) and the notes at PSM:63-68 and in the descriptor, and needs a street-type word list (a new rule) that can refuse a real Toronto address. A no-comma outside address reaches the server and reads "No lot found for ..."; finding 29 is met for the comma form only.
 - O6 Map kinds while typing. One row (multi_parcel's printed address) and nothing for intersection, or nothing for any. RULED: one row (nothing opens while typing; a tap on the row opens the map page).
 - O7 Hide the count and chips while the drop-down is open (mock states 2-6). RULED: yes (mock states 2 to 5 draw neither).
-- O8 New states: add `suggest` only, or also `outside`. RULED: suggest only; the outside case keeps its named state, with submitted set.
+- O8 New states. RULED: no new state name. The typing render is the twelfth state under the existing name partial (a partial address, RR-0443 c) with golden suggest. `suggest` is not in the closed list (surface.schema.json:1999-2055) and adding one is not needed: fe.31 asks one golden per reachable state, screen-checks.mjs:264 refuses a name declared twice, and precedent maps a golden to the nearest unused name (the disambiguation map: hit, miss, empty, static; the semi page: ambiguous to ask, hit to answered; this page: hit to reports_left). The outside case keeps its named state, with submitted set. The refine line keeps its task-450 behaviour: it shows with the rows while typing (guidance, not an error; the mock state 2 draws only an uncapped numbered list), and list.hint shows after Enter only. So the suggest golden is a capped or no-number list with list.refine, and the ambiguous golden is Enter on a few numbered rows with list.hint; together they cover both content keys (parcelScreens.golden.test.ts:114-123).
 - O9 "Report incorrect address match" (ruled P35-D18 a; not drawn in the mock). Keep it inside the drop under the rows, or drop it. RULED: keep (P35-D18 a is ruled and nothing removes it; the mock is silent).
 - O10 The miss text. RULED: the mock's "No lot found for {query}" plus the hint (state 4; RR-0483 "can't find 41 derwyn"), as one key, search.miss, a template with the var query; templates already exist on both targets, so it is not a phone-only key.
 - O11 Semi answers. RULED: the mock's Yes, No and Not sure (state 7 as drawn; the foot exempts only street names and districts). Continue and the dots stay (RR-0321).

@@ -70,4 +70,4 @@ rg#10 CONFIRMED mobile/src/components/surfaces/SearchBinding.tsx:128 "(s: Search
 
 Counts: 55 ids ruled (27 lens, 28 seat); 42 CONFIRMED (0 CRITICAL, 3 HIGH, 25 MED, 13 LOW, 1 NIT), 13 REJECTED, 0 CONFLICT. Every CONFIRMED CRITICAL, HIGH and MED is folded (28 ids); of the 14 LOW and NIT, 13 are folded in a few words and 1 (in#9) is piled. Expected round line: Plan review round 1: 41 folded, 0 task, 0 ruling, 0 wontfix, 1 pile.
 
-Plan: task-465 sha256:b8e40a149a3f
+Plan: task-465 sha256:e55d31dbf803
