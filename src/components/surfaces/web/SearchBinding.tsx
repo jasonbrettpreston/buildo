@@ -224,6 +224,28 @@ const segmentsOf = (s: WebSituation, i: number): AddressSegment[] => {
 const msg = (key: string, testID: string, first: Ref | Template, second: WebNode[] = []): WebNode =>
   node('Stack', { key, className: L.msg }, [node('Text', { key: `${key}-text`, testID, className: L.msgTitle }, [first]), ...second]);
 
+/**
+ * task-465 (plan step 12, third addendum; NAV-6 of nav-by-route.logic.test.ts): one drop-down row. A lot row is a real link: its web route (/parcel-tool/<id>)
+ * is the href, which the renderer draws as Button component={Link} href; onClick keeps the action push for action-name parity with the phone. A map-kind
+ * row (multi_parcel) has no web route: the web never navigates to the core's disambiguate?q= path (maxbld-web.ts, MF-44 security S-7), so its href is
+ * undefined and it has no handler (rendered disabled).
+ */
+const webRow = (s: WebSituation, r: WebSituation['rows'][number], i: number): WebNode => {
+  const route = s.outcome === 'multi_parcel' ? undefined : parcelSearchPath('unique', { parcelId: r.parcelId, query: s.query }, WEB_BASE) ?? undefined;
+  return node('Button', {
+    key: r.parcelId,
+    testID: `parcel-candidate-${r.parcelId}`,
+    size: 'lg',
+    variant: 'subtle',
+    color: 'gray',
+    className: L.row,
+    ariaLabel: derived(`label.${i}`),
+    href: route,
+    onClick: route === undefined ? null : { action: 'push', route },
+  }, [node('Text', { key: 'row-text', component: 'span', className: L.rowText }, segmentsOf(s, i).map((seg, j) =>
+    node('Text', { key: `${r.parcelId}-${j}`, component: 'span', className: seg.differs ? L.segmentDiffers : L.segment }, [derived(`segments.${i}.${j}.text`)])))]);
+};
+
 /** task-465: the drop-down, block for block the phone's (SearchBinding.tsx drop()). */
 const drop = (s: WebSituation): WebNode[] => {
   const lines: WebNode[] = [
@@ -235,19 +257,7 @@ const drop = (s: WebSituation): WebNode[] => {
       ? [msg('outside-toronto', 'parcel-search-outside-toronto', content('search.outside_toronto.title'),
         [node('Text', { key: 'outside-toronto-sub', className: L.msgSub }, [content('search.outside_toronto')])])]
       : []),
-    ...s.rows.map((r, i) => node('Button', {
-      key: r.parcelId,
-      testID: `parcel-candidate-${r.parcelId}`,
-      size: 'lg',
-      variant: 'subtle',
-      color: 'gray',
-      className: L.row,
-      ariaLabel: derived(`label.${i}`),
-      // The web route of the row's lot (the situation's route is the app's). A map-kind row has no web route yet: the web never navigates to the
-      // core's disambiguate?q= path (maxbld-web.ts, MF-44 security S-7), so it renders without a handler (disabled).
-      onClick: s.outcome === 'multi_parcel' ? null : { action: 'push', route: parcelSearchPath('unique', { parcelId: r.parcelId, query: s.query }, WEB_BASE) },
-    }, [node('Text', { key: 'row-text', component: 'span', className: L.rowText }, segmentsOf(s, i).map((seg, j) =>
-      node('Text', { key: `${r.parcelId}-${j}`, component: 'span', className: seg.differs ? L.segmentDiffers : L.segment }, [derived(`segments.${i}.${j}.text`)])))])),
+    ...s.rows.map((r, i) => webRow(s, r, i)),
     ...(s.hint === 'several' ? [node('Text', { key: 'hint', testID: 'parcel-search-hint', className: L.hint }, [content('list.hint')])] : []),
     ...(s.hint === 'refine' ? [node('Text', { key: 'refine', testID: 'parcel-search-refine', className: L.hint }, [content('list.refine')])] : []),
     ...(s.rows.length > 0

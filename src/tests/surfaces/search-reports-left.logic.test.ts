@@ -92,10 +92,11 @@ describe('A.6 (b): the new state binds exactly the three served values', () => {
 });
 
 describe('A.6 (c): an undrawn state renders no line', () => {
-  it('the ten committed states (no entitlement data in their situations) carry no reports-left node, on either target', () => {
+  // Dated 2026-11-25 (task-465 McFixV2.1, O8; prior title kept: "the ten committed states ..."): + the typing state partial (golden suggest), 10 -> 11.
+  it('the eleven committed states (no entitlement data in their situations) carry no reports-left node, on either target', () => {
     for (const target of ['mobile', 'web']) {
       const others = goldens(target).filter((g) => g.state !== 'hit');
-      expect(others).toHaveLength(10);
+      expect(others).toHaveLength(11);
       for (const g of others) expect(lines(g), `${g.state}.${target}`).toEqual([]);
     }
   });

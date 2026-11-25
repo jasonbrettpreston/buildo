@@ -142,6 +142,7 @@
                       "ariaLabel": {
                         "derived": "label.0"
                       },
+                      "href": "/parcel-tool/100026",
                       "onClick": {
                         "action": "push",
                         "route": "/parcel-tool/100026"

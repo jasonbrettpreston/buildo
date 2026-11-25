@@ -105,24 +105,26 @@ describe('(a) every web golden renders with its situation', () => {
 describe('(b) the live switch off: every control disabled', () => {
   it('the input and every button are disabled with runtime.disabled, even with every callback supplied', () => {
     const all = { change_input: vi.fn(), set_input: vi.fn(), retry: vi.fn(), select: vi.fn(), push: vi.fn() };
-    // task-465: the typing state's ten rows are buttons (no radio cards any more).
-    render(provided(bind(SITUATIONS.suggest as WebSituation, { actions: all, runtime: { disabled: true } })));
+    // Dated 2026-11-25 (task-465, third addendum; prior lines kept as text: the ambiguous state's radio cards and SELECT were the buttons): the rows
+    // are real links now (a route, like the footer links: the live switch does not disable a link), so the buttons are the static page's chips.
+    render(provided(bind(SITUATIONS.static as WebSituation, { actions: all, runtime: { disabled: true } })));
     expect((screen.getByTestId('parcel-search-input') as HTMLInputElement).disabled).toBe(true);
     expect(screen.queryAllByRole('radio')).toHaveLength(0);
     const buttons = screen.getAllByRole('button');
-    expect(buttons.length).toBeGreaterThan(3);
+    expect(buttons.length).toBeGreaterThanOrEqual(3);
     for (const b of buttons) expect((b as HTMLButtonElement).disabled).toBe(true);
   });
   it('a button whose action has no callback is disabled (no dead control)', () => {
     render(provided(bind(SITUATIONS.ambiguous as WebSituation)));
     expect(screen.queryByTestId('parcel-search-account')).toBeNull();
-    for (const b of screen.getAllByRole('button')) expect((b as HTMLButtonElement).disabled).toBe(true);
+    for (const b of screen.queryAllByRole('button')) expect((b as HTMLButtonElement).disabled).toBe(true); // task-465: the rows are links, so there may be none
   });
 });
 
 describe('(c) actions reach the mount', () => {
   // Dated 2026-11-25 (task-465; prior title kept: "a chip sets the input; a card selects; SELECT pushes the web route of the checked lot").
-  it('a chip sets the input; a row tap pushes the web route of its lot; Enter in the field fires submit; no SELECT', () => {
+  // task-465 third addendum (NAV-6): a lot row is a real link to the web route of its lot (Button component={Link} href), never an imperative push.
+  it('a chip sets the input; a lot row is a link to the web route of its lot; a map-kind row has no web route; Enter in the field fires submit; no SELECT', () => {
     const set_input = vi.fn(); const push = vi.fn(); const submit = vi.fn();
     const st = SITUATIONS.static as WebSituation;
     render(provided(bind(st, { actions: { set_input } })));
@@ -132,9 +134,14 @@ describe('(c) actions reach the mount', () => {
     const amb = SITUATIONS.ambiguous as WebSituation;
     const first = amb.rows[0] as { parcelId: string };
     render(provided(bind(amb, { actions: { push, submit } })));
-    fireEvent.click(screen.getByTestId(`parcel-candidate-${first.parcelId}`));
-    expect(push).toHaveBeenCalledWith(`/parcel-tool/${encodeURIComponent(first.parcelId)}`);
+    const row = screen.getByTestId(`parcel-candidate-${first.parcelId}`) as HTMLAnchorElement;
+    expect([row.tagName, row.getAttribute('href')]).toEqual(['A', `/parcel-tool/${encodeURIComponent(first.parcelId)}`]);
     expect(screen.queryByTestId('parcel-search-select')).toBeNull();
+    const map = searchWebTree(SITUATIONS.navigating_multi_parcel as WebSituation);
+    const nodes = (n: Json): Json[] => [n, ...((n.children ?? []) as Json[]).filter((c) => c && typeof c === 'object' && 'component' in c).flatMap(nodes)];
+    const mapRow = nodes(map as unknown as Json).find((n) => n.props?.testID === 'parcel-candidate-100026') as Json;
+    expect([mapRow.props.href, mapRow.props.onClick]).toEqual([undefined, null]); // no web route: no link, no handler (S-7)
+    expect(JSON.stringify(map)).not.toContain('disambiguate');
     fireEvent.keyDown(screen.getByTestId('parcel-search-input'), { key: 'Enter' });
     expect(submit).toHaveBeenCalledTimes(1);
   });  // MF-46 follow-up (P35-D18 a, dated 2026-11-12): "Report incorrect address match" is a real link to Help & Support, the query in the fragment.

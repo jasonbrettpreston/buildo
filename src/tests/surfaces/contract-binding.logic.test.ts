@@ -37,7 +37,8 @@ describe('FE-32 (a) the contract kind is declared on both sides', () => {
     // at the end, so any further addition needs a dated edit of this pin.
     const nd = rj('scripts/surfaces/_schema/bindings.json').non_display_keys as string[];
     // MF-53 (dated 2026-11-11; plan v4 §3): + 19 react-native-maps prop names that carry no display text (initialRegion ... height), appended after MF-48's three.
-    expect([nd.length, nd.slice(47, 50), nd.slice(-4)]).toEqual([81, ['option', 'panel', 'pressBehavior'], ['numberOfLines', 'height', 'tabIndex', 'topic']]); // MF-76 (restacked onto 34520a43b): + tabIndex at the end
+    // McFixV2.1 (task-465; dated 2026-11-25; RR-0483 MD:2523; prior pin 81 and its last four ['numberOfLines', 'height', 'tabIndex', 'topic']): + onSubmitEditing at the end (the search field's Enter key, the action data {action: submit}, never text). 81 -> 82.
+    expect([nd.length, nd.slice(47, 50), nd.slice(-4)]).toEqual([82, ['option', 'panel', 'pressBehavior'], ['height', 'tabIndex', 'topic', 'onSubmitEditing']]); // MF-76 (restacked onto 34520a43b): + tabIndex at the end
     // MF-76 (dated 2026-11-11; plan v3 §3.4 WCAG 2.1.1): + tabIndex at the end (the landing sample region's keyboard stop, the number 0, never text).
     // MF-83 group 2 (dated 2026-11-14; FE-42): + viewBox, width, points, fill, stroke, strokeDasharray, x1, y1, x2, y2 (the lot-view svg props: strings, never display text). 71 -> 81.
     // MF-46 follow-up (dated 2026-11-12; Help & Support contact): + topic at the end (a mailto node's topic, a closed list, never text). 70 -> 71.
