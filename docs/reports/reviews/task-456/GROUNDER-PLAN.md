@@ -58,4 +58,4 @@ rg#4 CONFIRMED docs/reports/reviews/mcfixreborn-fold/FOLD-PLAN.md:137 "Wave 1, s
 rg#5 CONFIRMED src/tests/db/setup-testcontainer.ts:191 "BUILDO_TEST_DB_EXTERNAL=1 marks it as a disposable test DB" LOW: true: that flag points the run at an existing database (the shared test stack) where DROP CONSTRAINT takes an ACCESS EXCLUSIVE lock; folded: the file skips under it, one BEGIN to ROLLBACK, own parcel range 997000000.
 rg#6 CONFIRMED docs/reports/reviews/mcfixreborn-fold/FOLD-PLAN.md:139 "It needs the DB GO to apply." NIT: true, and I re-ran the path-filtered git log over all branches: only the base commit 9ff368586 shows; 454 is a plan with no code on any branch yet, so the scan is re-run on the build day; no plan edit.
 
-Plan: task-456 sha256:36f549f0f236
+Plan: task-456 sha256:fdbb4cffcabf

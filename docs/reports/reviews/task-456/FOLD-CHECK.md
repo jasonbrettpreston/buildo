@@ -10,7 +10,7 @@ On the board working tree (~/Buildo-wt-board, head a6a3fcb6d, branch wf2/board) 
 
 (3) PASS. The round block ends the plan field. The field holds exactly one line starting "Plan review round 1:" (26 folded, 0 task, 0 ruling, 0 wontfix, 1 pile), followed by the 17 outcome lines for the 2 HIGH and 15 MED ids, directly before the end marker.
 
-(4) PASS. planHash of the task as it stands is 36f549f0f236, equal to the last line of GROUNDER-PLAN.md ("Plan: task-456 sha256:36f549f0f236").
+(4) PASS. planHash of the task as it stands is fdbb4cffcabf, equal to the last line of GROUNDER-PLAN.md ("Plan: task-456 sha256:fdbb4cffcabf").
 
 (5) PASS. My replica of the grounder-file checks (grounderErrors is not exported) on the saved GROUNDER-PLAN.md gives 0 errors on 45 ids (28 lens ids and 17 seat ids). This covers the 3 Ruled lines, the 3 Seat lines (all three files read), quote length and 20th character, quote on the cited line, distinct quotes, and reasons of 30 or more characters. outcomeErrors in plan mode on the saved TRIAGE-PLAN.md and the folded task gives 0 errors on 27 CONFIRMED ids. The round line it requires ("Review round 1: ...") and the 17 HIGH and MED lines are present in the plan field.
 
@@ -18,4 +18,4 @@ On the board working tree (~/Buildo-wt-board, head a6a3fcb6d, branch wf2/board) 
 
 Verdict: PASS
 
-Plan: task-456 sha256:36f549f0f236
+Plan: task-456 sha256:fdbb4cffcabf
