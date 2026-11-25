@@ -3,11 +3,11 @@ id: TASK-452
 title: >-
   SEARCHFIX.4 Report-limit screen (subscription upgrade with more report room)
   and reactivate screen for an expired subscription, phone first
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-SFX4'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-25T00:21:00Z'
+updated_date: '2026-11-25T00:27:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -59,8 +59,8 @@ Files: src/tests/surfaces/page-arm.logic.test.ts, mobile/src/components/surfaces
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 A limit-reached or subscription-required 403 keeps its code, as two error classes (the limit one also keeps its limit and reset date); every other 403 stays today's ApiError, and ACCOUNT_DELETED still gives AccountDeletedError
-- [ ] #2 At the limit, once the entitlement read has answered, the search page and the report screen show the wall with the count, the reset date and the plan line (no top-up or upgrade control until the buying work, RR-0454 item 3); never the reactivate copy; a failed read shows the limit screen's error notice, "Something went wrong on our side. Please try again." (RR-0468); the count and date are the read's, not the 403's
-- [ ] #3 An expired subscription shows the reactivate state (the reactivate sentence, the plan line and Go to Tracked Lots); a subscription-required 403 with no plan or an active status keeps today's notice (the no-plan page is task-357, RR-0455 item 2); the same 403 with a failed read shows the limit screen's error notice (RR-0468)
+- [x] #2 At the limit, once the entitlement read has answered, the search page and the report screen show the wall with the count, the reset date and the plan line (no top-up or upgrade control until the buying work, RR-0454 item 3); never the reactivate copy; a failed read shows the limit screen's error notice, "Something went wrong on our side. Please try again." (RR-0468); the count and date are the read's, not the 403's
+- [x] #3 An expired subscription shows the reactivate state (the reactivate sentence, the plan line and Go to Tracked Lots); a subscription-required 403 with no plan or an active status keeps today's notice (the no-plan page is task-357, RR-0455 item 2); the same 403 with a failed read shows the limit screen's error notice (RR-0468)
 - [x] #4 The web is unchanged by this card: it keeps its one not-entitled notice and gets the limit and reactivate screens with the web switch-on (MB-44, task-123, MAXBLD_WEB_LIVE pinned false; RR-0455 item 1)
 <!-- AC:END -->
 
@@ -432,4 +432,6 @@ Output review round 2 (task-460 shape): one code-review lens over the whole task
 SEARCHFIX.4 built on the phone: work commit 4cf68ec45 (hooks: related run Test Files 4 passed, Tests 147 passed; GATE OK; POLICY CHECKS OK), D15 cite e4a9eea86, dated notes 1ce7b88ae, review records aa6de17b3. AC1 errors.ts/apiClient.ts classes (apiClient.test.ts); AC2 limit wall on search and report (parcelSearchScreen.behaviour, reportPage.behaviour, reportScreen.mount, wallScreens.golden); AC3 reactivate only for expired, status null keeps the notice (parcelSearchMatch.test.ts searchWall); AC4 no web file in the diff. Phone: full local run 59 suites 905/905. Web files outside the related run unverified until the push station.
 
 Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 2 pile; grounder docs/reports/lanes/2026-11-24/BL-SFX4/GROUNDER.md; triage docs/reports/lanes/2026-11-24/BL-SFX4/TRIAGE.md
+
+Review round 2: 0 fixed, 0 task, 0 ruling, 0 wontfix, 4 pile; grounder docs/reports/lanes/2026-11-24/BL-SFX4/GROUNDER.md; triage docs/reports/lanes/2026-11-24/BL-SFX4/TRIAGE.md
 <!-- SECTION:FINAL_SUMMARY:END -->
