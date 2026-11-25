@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MCFIX469'
 created_date: '2026-11-25T20:33:00Z'
-updated_date: '2026-11-25T21:04:00Z'
+updated_date: '2026-11-25T21:07:00Z'
 labels:
   - McFixV2
 milestone: m-1
@@ -37,8 +37,8 @@ Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logi
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The exempt list holds the phone generated picture copies, with the check that proves them named as the table requires
-- [ ] #2 A test shows a diff of only such a file resolves as exempt, and that the proving check goes red on a copy that does not match its sources
+- [x] #1 The exempt list holds the phone generated picture copies, with the check that proves them named as the table requires
+- [x] #2 A test shows a diff of only such a file resolves as exempt, and that the proving check goes red on a copy that does not match its sources
 - [ ] #3 task-465's output review input builds without the size refusal
 <!-- AC:END -->
 
@@ -231,4 +231,8 @@ rg#4 MED folded Every other lane mus
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-25 taken on the board at lane launch (lane BL-MCFIX469, worktree /Users/brettpreston_macmini/Buildo-wt-mcfix469, branch wf2/mcfix469), RR-0240
+
+Build (lane BL-MCFIX469, PLAN-469-v1 sections 4-5): tests T1-T4 written first in src/tests/backlog/rule-lists-table.logic.test.ts (V2.LIST round 7 describe); red proven by a commit attempt with only the test and task files staged (pre-commit related run refused it; lane record red.out).
+
+Red (red.out, refused commit attempt): T1 (count 9 not 10) and T2 (mobile_parcel_search.goldens.json not exempt) red as planned; T4 also failed on the first attempt for a test defect, not a product one: the emitter runs main only when argv[1] equals its resolved path and the OS tmp dir is a symlink on macOS, so the copy root is now realpath'd (the stdout 'surfaces ok' assertion caught the silent exit 0). Green: rule-lists.json gains the glob mobile/__tests__/fixtures/surfaces/*.goldens.json (last exempt element), its $comment line naming emit-mobile-surfaces.mjs --check, and the half line on the round-7 rule sentence; rule-lists.mjs validate ok (58 lists, 23 rows); page --check current; emit-mobile-surfaces.mjs --check on the lane tree: surfaces ok (5 surfaces, 33 goldens). AC3 (465 lens-input without the size refusal) is proven after the fold, on task-465.
 <!-- SECTION:NOTES:END -->
