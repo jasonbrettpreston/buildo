@@ -4,8 +4,9 @@ title: BTN.SPRING One shared press-spring part for primary buttons on the phone 
 status: LATER
 assignee: []
 created_date: '2026-11-24T17:30:00Z'
-updated_date: '2026-11-24T20:20:00Z'
-labels: []
+updated_date: '2026-11-25T19:40:00Z'
+labels:
+  - McApp
 milestone: m-2
 dependencies: []
 type: build

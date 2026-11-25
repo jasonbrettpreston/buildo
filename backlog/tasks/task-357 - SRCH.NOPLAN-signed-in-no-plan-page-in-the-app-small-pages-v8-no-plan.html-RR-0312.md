@@ -6,8 +6,9 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-19T22:02:00Z'
-updated_date: '2026-11-24T20:58:00Z'
-labels: []
+updated_date: '2026-11-25T19:40:00Z'
+labels:
+  - McApp
 milestone: m-1
 dependencies:
   - TASK-320

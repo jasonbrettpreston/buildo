@@ -7,6 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
+updated_date: '2026-11-25T19:40:00Z'
 due_date: '2026-11-26'
 labels:
   - 1-2
@@ -20,6 +21,7 @@ labels:
   - comp:STAT
   - comp:BLD
   - comp:HS
+  - McApp
 milestone: m-2
 dependencies:
   - TASK-269
