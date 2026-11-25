@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane-BL-LOAD4'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-25T17:05:00Z'
+updated_date: '2026-11-25T18:25:00Z'
 labels:
   - McFixV2
 milestone: m-1
@@ -110,4 +110,6 @@ HELD (operator 2026-11-20 "4. Hold the three unbuilt pages until the pilot resul
 Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder, 2026-11-20 (the lane verifies each cited fact before building): these are lifecycle states of the report screen: rows in the existing report lifecycle data (report-presentation.json) drawn by the existing ReportBinding; no new builder function and no move into the page-table builder (approved item 3 "Leave the reports as components"). Still required for 1·B (RR-0176 MD:785; RR-0179 MD:789). After the pilot folds; 317 after 267 stage 2 and LD-1, 2, 3, 5.
 
 McFixV2 addition 2026-11-25 (operator phone walk; rulings RR-0483, RR-0485, RR-0486 in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2523, :2533, :2538). Not yet planned. From the walk (finding 31): 683 Danforth Ave answered no page in 108 ms and the phone showed the plain no-report text; this card owns what the customer sees for a lot that cannot have a report.
+
+2026-11-25 (RR-0490, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2559, operator verbatim on that line): LD-1 A keep the built sentence; LD-3 B the animation finishes, then the failure shows, same screen as the give-up failure; LD-5 B a no-report screen (the frame with the address, no Try again). LD-2 give-up time: 60 seconds named, pending the mock he asked for (waiting state, then an error that fits the animation).
 <!-- SECTION:NOTES:END -->
