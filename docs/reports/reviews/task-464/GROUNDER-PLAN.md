@@ -1,0 +1,54 @@
+# Plan grounder ruling: task-464 (PLAN-464-v1), round 1
+Grounder: Cairn-Ground-P464
+Lane: BL-GENROW
+
+Separate plan grounder (Sonnet, operator RR-0385 item 1, MORNING-DECISIONS.md:1917, and RR-0385 item 3, :1919). It is not the planned lane, not a seat and not the orchestrator. It was read-only on every worktree: no file written, no test runner, no model call, no env file read. Board head read: 62dc1206e (branch wf2/board). The plan was written at eb8bbd768, and no rule-lists file moved between the two heads (last touch 74b06e6be). ROUND 1 (RR-0385 item 3): a CONFIRMED CRITICAL, HIGH or MED is folded into the plan; LOW and NIT are folded when the fold is a few words and makes a plan sentence true.
+
+The ruling that bounds the task is RR-0475 item 1 (decision-257; MORNING-DECISIONS.md:2481-2482, answering the question at :2472): one small card adds top-level generator scripts to the rule-list table so task-454 can launch. RR-0392 (:1975-1976): no other infrastructure. RR-0385 (:1476): "Let the grounder resolve them all as long as the result is compliant". Applied as ruled: one existing row gains one glob, with no new row, list, field or tool. A finding that asks for more is REJECTED or sits inside a fold of the plan text.
+
+Facts counted by running (git ls-files, ls, resolveTask and renderPage in memory on a copy of the table with the glob added):
+- scripts/generate-* has 18 top-level files: 11 .mjs and 7 .js. The planner's 9 is wrong, and the planner's own list of names (11) is right.
+- Top-level scripts/*.mjs is 17: the 11 generators plus 6 others (ai-env-check, audit_all_specs, harvest-tests, proxy-relay, task-init, wf8-worktree).
+- All 11 generators are refused today. After the edit each resolves to step-132, eng-back, eng-shared, plan-protocol, inc-S and ms-S.
+- The 6 others stay refused.
+- check-tasks goes from resolve 102 / not yet 205 to 103 / 204, 0 bad. task-454 resolves and gets 9 compliance references.
+- The page is byte-equal to the committed page (7222 characters) with the glob added. validateTable returns [].
+- The Files line resolves to the same six lists with or without the page entry.
+
+A rehearsal of the launch gate (planGateErrors) on the folded task text, the lens outputs, the seat files, this file and TRIAGE-PLAN.md, run in memory with the board's table plus the glob, returns 22 findings and 6 lists. The only errors left are the task's missing references to these records, which the orchestrator adds with the CLI.
+
+Totals: 22 ids ruled (11 lens, 11 seat), 16 CONFIRMED (0 CRITICAL, 0 HIGH, 5 MED, 8 LOW, 3 NIT), 6 REJECTED, 0 CONFLICT. All five MED are folded, with the 11 LOW and NIT ids also folded in a few words. The folds are FOLD-464.json (24 pairs, each old text occurs exactly once in the task file, none touches the PLAN:END marker), then the round block of ROUND-BLOCK.txt is appended with --append-plan. Lane name BL-GENROW is the planned name (UNVERIFIED: it must equal the lane name of the launch).
+
+Ruled: plan-error-paths.txt sha256:63d24ee107b6 findings:3
+Ruled: plan-plan-review-deepseek.txt sha256:6fd143588325 findings:8
+
+Seat: integration docs/reports/reviews/task-464/seat-integration-1.md sha256:8fa8dc42d10b
+Seat: reality-check docs/reports/reviews/task-464/seat-reality-check-1.md sha256:c89dadc3f0d2
+Seat: regression docs/reports/reviews/task-464/seat-regression-1.md sha256:e4d3d78e8bfd
+
+plan-error-paths#1 CONFIRMED .husky/pre-commit:25 "node scripts/generate-bylaw-provisions.mjs --check" MED: true; the plan says 9 files and then lists 11 names, and the 18 top-level generate files are 11 .mjs and 7 .js (run: git ls-files). The 102 to 103 count does not depend on it (run: 103 and 204). Folded with the census: sections 3, 4, 5, 7, 9 and the Description.
+plan-error-paths#2 REJECTED scripts/analysis/rule-lists.json:5 "Several rows may match: the lists are the union." Wrong: the edit is made once, by the lane, in one work commit; a repeated glob would add no list because rows union their lists, and validate plus the new literal test run after it, so a keyed edit is not a plan matter.
+plan-error-paths#3 CONFIRMED scripts/analysis/rule-lists.mjs:273 "matched by no row of scripts/analysis/rule-lists.json" LOW: true; a control that asserts only the exit code stays green for a refusal of another cause. Folded in a few words: the control also asserts the refusal text, as the red case does.
+plan-plan-review-deepseek#1 CONFIRMED .husky/pre-commit:39 "node scripts/generate-step-handbook.mjs --check" MED: HIGH overstated. True that 11 names sit under a heading that says 9 (run: scripts/generate-* is 18 files, 11 .mjs and 7 .js, so no .js file is in the red loop). Folded with the census: the test names all 11.
+plan-plan-review-deepseek#2 CONFIRMED .husky/pre-commit:44 "node scripts/analysis/rule-lists.mjs page --check" LOW: MED overstated. True that the page claim was a simulation; I ran renderPage with the new glob and it is byte-equal to the committed page, and page --check passes today. Folded in a few words: if it says stale at build time, page --write in the same work commit.
+plan-plan-review-deepseek#3 REJECTED src/tests/backlog/rule-lists.logic.test.ts:381 "the paths that matched no row on 2026-11-20 now resolve" Wrong: section 4 already runs validate and page --check at build, and the new case with 11 literal rows goes red the day the glob is lost; no unmerged branch touches the table or the test (regression seat). A rebase habit is the lane, not a plan edit.
+plan-plan-review-deepseek#4 REJECTED scripts/analysis/rule-lists.mjs:273 "(add a row to the table, or fix the Files line)" Wrong: AC 1 reads with no unmatched path, which is path resolution only, the thing this refusal is about; the compliance references and the dry run of task-454 are the orchestrator launch work (plan sections 6 and 9), so the AC needs no new wording.
+plan-plan-review-deepseek#5 CONFIRMED scripts/task-init.mjs:3 "Task Initializer — generates .cursor/active_task.md" LOW: MED overstated, a visible gap and not a defect. True that six top-level .mjs scripts still match no row (run: ai-env-check, audit_all_specs, harvest-tests, proxy-relay, task-init, wf8-worktree). Folded in a few words in section 5; no dated note, because a note edit moves the Plan hash after it is written.
+plan-plan-review-deepseek#6 REJECTED docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:992 "adds no scope its ruling did not name" Outside the card: the ruling names top-level generator scripts, and no generator is a .py, .ts or .sh file; a card for other kinds of top-level script is another ruling. The one clause in section 5 (fold of deepseek#5) already says the gap is wider than .mjs.
+plan-plan-review-deepseek#7 REJECTED scripts/analysis/rule-lists.mjs:150 "matches no tracked path" Duplicate of error-paths#2, rejected there: one edit in one work commit, and a doubled glob is benign because the rows union their lists; a guarded grep-then-insert is not a card matter.
+plan-plan-review-deepseek#8 REJECTED scripts/analysis/rule-lists.mjs:126 "export function validateTable(table, root) {" Wrong: the lens itself calls this acceptable; the 11 literal rows of the new case go red if the glob matches none of them, and no why wording can make a pattern glob checkable by validate.
+in#1 CONFIRMED .husky/pre-commit:40 "node scripts/generate-bylaw-handbook.mjs --check" MED: true, reproduced by running: 11 .mjs and 7 .js generators, 17 top-level .mjs, 6 of them not generators. Folded with the census (sections 2, 3, 4, 5, 7, 9 and the Description).
+in#2 CONFIRMED scripts/analysis/rule-lists.mjs:273 "refused: Files path(s) matched by no row" LOW: true; the real text begins refused: Files path(s) matched by no row of scripts/analysis/rule-lists.json and the exit is 3 (rule-lists.mjs:817). Folded: section 4 asserts that text for the red case and the control.
+in#3 CONFIRMED docs/specs/00_engineering_standards.md:178 "that write to the database MUST" LOW: true; section 9.1 scopes to the scripts/js pipeline scripts that write to the database (the Rule line is :178, the plan cited :177), and the .mjs generators are not that. Folded: the appended why sentence cites RR-0475 item 1 (decision-257) and the section 5 drift guard only, and section 1 says section 9 does not govern them.
+in#4 CONFIRMED scripts/hooks/check-lane-close.mjs:853 "const ownsTable = coveredBy(" NIT: true; the F10 comment is :852 and the const is :853, and validateTable opens at rule-lists.mjs:126 with the per-glob line at :150. Folded in a few words.
+rc#1 CONFIRMED .husky/pre-commit:43 "node scripts/generate-bylaw-layer2-input.mjs --check" MED: true; run in memory by the seat and again by me: the glob gives 11 files, all refused today and all resolving to step-132, eng-back and eng-shared afterwards. Folded with the census: the test names all 11.
+rc#2 CONFIRMED .husky/pre-commit:27 "node scripts/generate-sharing-phase.js --check" LOW: true; 17 minus 11 is 6, and the plan names exactly 6 as the extra files (run). Folded in a few words in section 3.
+rc#3 CONFIRMED scripts/analysis/rule-lists.mjs:817 "r.error) die(3, r.error);" NIT: true; the resolve CLI dies with exit 3 on a refusal (read at :817), which closes the seat UNVERIFIED. Folded in a few words in section 4 with the line.
+rg#1 CONFIRMED scripts/analysis/rule-lists.json:97 "the by-law engine: the paths the McBylaws" MED: true; the bylaw row reads layer23, which names none of the three by-law generators (git grep, 0 hits), so they get step-132 and not bylaw-133; the same overlap already exists for the by-law resolver script. Folded: section 5 states the residue, no row or list is added (RR-0392, RR-0475 item 1), and widening is a later card.
+rg#2 CONFIRMED docs/specs/00_engineering_standards.md:178 "wrap multi-row mutations in explicit transactions" LOW: true, the same fault as in#3 (section 9.1 binds .js pipeline scripts that write to the database). Folded once, in the new why sentence and the section 1 line.
+rg#3 CONFIRMED .husky/pre-commit:26 "node scripts/generate-ingest-batch.js --check" LOW: true; 7 .js generators, not 9 (run: git ls-files scripts/generate-*.js). Folded in a few words in section 2, with the census.
+rg#4 CONFIRMED docs/specs/01-pipeline/132_step_standard_handbook.md:448 "and runs every generator" NIT: true; run: .husky/pre-commit holds 6 of the 11 .mjs generators and the other 5 are only in package.json. Folded: the why sentence does not cite x-tooling.1, and section 1 says why.
+
+Counts: 22 ids ruled (11 lens, 11 seat); 16 CONFIRMED (0 CRITICAL, 0 HIGH, 5 MED, 8 LOW, 3 NIT), 6 REJECTED, 0 CONFLICT. Every CONFIRMED MED is folded (5 ids); all 11 LOW and NIT ids are folded in a few words, none piled. Expected round line: Plan review round 1: 16 folded, 0 task, 0 ruling, 0 wontfix, 0 pile.
+
+Plan: task-464 sha256:f2043b74501b

@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-25T12:38:04.383Z file_sha256=191f4e7f7dc904fec04180951ea60b40aa4ab301d9a45b8f85b2cb7daba1964c prompt_sha256=603aae394ebc15aae452e2726bca5ee9cb68ead80e48c0d1d55122a92d1b0e45
+🔍 Lens review of docs/reports/reviews/task-464/context-r1.md (model: deepseek-reasoner)
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts §4 "for each of the 9 files listed above (literal names), expect status 0 and the list ids to contain step-132" — §3 says the glob "matches 9 files:" but then enumerates 11 generator names, so the census (and the 102 to 103 check-tasks arithmetic that rests on it) is off by two, and the literal lock covers only whatever count the implementer picks — reconcile the list to the real set before pinning, so the lock count and the count-line claim agree — MED-risk line count is wrong but bounded (no open card names the extras, §5).
+
+DEFER severity=LOW — scripts/analysis/rule-lists.json §3(b) "Append one provenance sentence, as every earlier table card did" — neither the `why` sentence append nor the "This inserts the single glob `scripts/generate-*.mjs`" array insert is keyed, so a replayed edit (rebase, conflict re-resolution, a second lane on the same row) duplicates the glob and the sentence with no dedup key — guard by value (skip if the glob/sentence already exists) or state the edit is applied once by the resolved commit.
+
+DEFER severity=LOW — §4 "Control in the same case: `scripts/ai-env-check.mjs` gives status 3 before and after the edit." — the control asserts only exit code 3, not the refusal text, so a future change of refusal cause (a parse error, a new refusing row) keeps the control green while the narrowing is lost — assert the "matched by no row: scripts/ai-env-check.mjs" message as the red case does.
+
+REJECT — scripts/analysis/rule-lists.mjs §2 "validateTable (rule-lists.mjs:150) already refuses a literal glob that matches no tracked file." — looks unsafe because `scripts/generate-*.mjs` is a wildcard, not literal, so a glob that matches zero (or one) tracked file passes `validate` silently — handled: the literal-name test cases in §4 go red if the glob stops matching any of them, so the gap is caught at test time, not by validate.
+
+REJECT — src/tests/backlog/rule-lists.logic.test.ts §4 ":453-457 matches the count line with \d+." — looks unsafe because check-tasks moves resolve 102 / not-yet 205 to 103 / 204 — handled: the count assertion is a regex, not a literal, so the shift does not break the pinned test.
+
+REJECT — docs/reports/generated/rule-lists-by-kind.md §3(c) "renderPage (rule-lists.mjs:545-571) prints only the six `kinds`, and none of them names a generator." — looks unsafe that a Files-listed generated page is unchanged and could go stale — handled: `.husky/pre-commit:44` runs `page --check`, which fails closed if render output ever diverges.
+
+VERDICT: PASS on error-path safety
+Paths walked: resolveTask refusal for a non-generator (status 3), resolveTask resolution for the generator set (status 0), validateTable on the new wildcard glob, page --check / renderPage, check-tasks count line, glob+why re-apply (double-submit of the edit), test red-first proof   Unguarded: 2
+
+---
+⏱  45630ms (45.6s)
+📊 Tokens — total: 26915, input: 17613, output: 9302, reasoning: 8561

@@ -1,0 +1,18 @@
+# Plan triage: task-464 (one outcome line per CONFIRMED id; the fold is FOLD-464.json applied to the task, then the round block of ROUND-BLOCK.txt; round 1: MED folded, LOW and NIT folded in a few words)
+
+plan-error-paths#1 folded:"matches 11 files (git ls-files"
+plan-error-paths#3 folded:"Its stderr is asserted too: it contains"
+plan-plan-review-deepseek#1 folded:"for each of the 11 files listed above"
+plan-plan-review-deepseek#2 folded:"regenerates it in the same work commit"
+plan-plan-review-deepseek#5 folded:"The same refusal would fire for a card that names one of them"
+in#1 folded:"11 of them .mjs (the other 7 are .js"
+in#2 folded:"confirmed by the integration seat running resolve"
+in#3 folded:"it does not govern the .mjs generators"
+in#4 folded:"(rule-lists.mjs:126, the per-glob line :150)"
+rc#1 folded:"11 then gets step-132 and eng-back"
+rc#2 folded:"wf8-worktree (11 + 6 = 17)"
+rc#3 folded:"die(3, r.error), rule-lists.mjs:817"
+rg#1 folded:"The three by-law generators (generate-bylaw-handbook"
+rg#2 folded:"added by that ruling so that a Files line naming one resolves"
+rg#3 folded:"covers the 7 top-level .js generators"
+rg#4 folded:"Only 6 of the 11 .mjs generators are in .husky/pre-commit"
