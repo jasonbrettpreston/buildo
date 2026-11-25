@@ -8,6 +8,8 @@
 //       outside a commented allowlist, every content string it names present (templates filled), no raw ref left in the markup;
 //   (b) the run-time `disabled` option (the live switch is off) disables the input and every button;
 //   (c) actions reach the mount's callbacks (a chip sets the input; SELECT pushes the web route of the checked lot);
+//   Dated 2026-11-25 (task-465 McFixV2.1, RR-0487, RR-0495; prior text kept): a row tap pushes the web route of its lot and Enter fires submit; there
+//   is no SELECT, no radio card, no count badge and no prompt line.
 //   (d) RED: an unknown component, a missing content key, an unresolved ref and an unknown action each throw.
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import fs from 'node:fs';
@@ -27,10 +29,9 @@ const GOLDENS = fs.readdirSync(DIR).filter((f) => f.endsWith('.web.json')).sort(
 const provided = (el: ReactElement): ReactElement => h(AdminMantineProvider, { scheme: 'dark', children: el });
 const decode = (s: string): string => s.replace(/&#x27;|&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
 const bind = (s: WebSituation, extra: Json = {}): ReactElement => h(SearchBinding, { tree: searchWebTree(s), content: C, data: searchWebData(s), ...extra });
-// task-450 AC4 (L5): the minimum length comes from the generated slice's setting (config.min_query_len), never a typed 3; the prompt and the input
-// description are templates filled with it.
+// task-450 AC4 (L5): the minimum length comes from the generated slice's setting (config.min_query_len), never a typed 3; the input description is a
+// template filled with it. Dated 2026-11-25 (task-465, RR-0495; prior text kept as text: "the prompt and the input description"): the prompt is dropped.
 const MIN = String((JSON.parse(fs.readFileSync(path.join(ROOT, 'mobile/src/generated/surfaces/mobile_parcel_search.json'), 'utf8')) as Json).config.min_query_len);
-const PROMPT = (C['search.prompt'] as string).replace('{min}', MIN);
 const HINT = (C['search.input.hint'] as string).replace('{min}', MIN);
 
 // Console errors a library prints during a server render that are not defects of the binding. Empty today: any entry needs a comment naming why.
@@ -58,8 +59,9 @@ const textsOf = (n: unknown, s: WebSituation): string[] => {
 };
 
 describe('(a) every web golden renders with its situation', () => {
-  it('11 goldens: equal to searchWebTree(situation), rendered, every content string present, no raw ref, no console error', () => {
-    expect(GOLDENS).toHaveLength(11); // SRCH.A6 (task-320, dated 2026-11-19): 10 -> 11, the new state reports_left
+  // Dated 2026-11-25 (task-465; prior title kept: "11 goldens: ..."): 12, the typing state's golden suggest.
+  it('12 goldens: equal to searchWebTree(situation), rendered, every content string present, no raw ref, no console error', () => {
+    expect(GOLDENS).toHaveLength(12); // SRCH.A6 (task-320, dated 2026-11-19): 10 -> 11, the new state reports_left; task-465: 12, suggest
     for (const g of GOLDENS) {
       const s = SITUATIONS[g.situation] as WebSituation;
       expect(searchWebTree(s)).toEqual(g.props);
@@ -70,26 +72,29 @@ describe('(a) every web golden renders with its situation', () => {
     }
     expect(errors).toEqual([]);
   });
-  it('templates are filled: the 429 seconds, the candidate count and a chip label', () => {
+  // Dated 2026-11-25 (task-465; prior title kept: "templates are filled: the 429 seconds, the candidate count and a chip label"): the count badge is
+  // gone; the miss line is the new template.
+  it('templates are filled: the 429 seconds, the miss line and a chip label', () => {
     const rl = decode(renderToStaticMarkup(provided(bind(SITUATIONS.rate_limited as WebSituation))));
     expect(rl).toContain((C['search.ratelimit'] as string).replace('{seconds}', String((SITUATIONS.rate_limited as WebSituation).errors.retryAfterSeconds)));
-    const amb = SITUATIONS.ambiguous as WebSituation;
-    expect(decode(renderToStaticMarkup(provided(bind(amb))))).toContain((C['list.badge'] as string).replace('{count}', String(amb.candidates.length)));
+    const miss = SITUATIONS.miss as WebSituation;
+    expect(decode(renderToStaticMarkup(provided(bind(miss))))).toContain((C['search.miss'] as string).replace('{query}', miss.input));
     const st = SITUATIONS.static as WebSituation;
     expect(decode(renderToStaticMarkup(provided(bind(st))))).toContain(`aria-label="${(C['search.chip.label'] as string).replace('{query}', st.recent[0] as string)}"`);
-    // task-450 AC4 (L5): the prompt and the input description carry the setting's value, no "{min}" left and no typed 3 in the content.
-    expect([C['search.prompt'], C['search.input.hint']].every((t) => (t as string).includes('{min}') && !(t as string).includes('3'))).toBe(true);
+    // task-450 AC4 (L5): the input description carries the setting's value, no "{min}" left and no typed 3 in the content (task-465: the prompt is dropped).
+    expect([C['search.input.hint']].every((t) => (t as string).includes('{min}') && !(t as string).includes('3'))).toBe(true);
+    expect(C).not.toHaveProperty('search.prompt');
     const idle = decode(renderToStaticMarkup(provided(bind(WEB_STATIC_SITUATION))));
-    expect(idle).toContain(PROMPT);
     expect(idle).toContain(`aria-description="${HINT}"`);
     expect(idle).not.toContain('{min}');
     expect(errors).toEqual([]);
   });
-  it('the mount situations: idle (prompt, no chips), unauthorized (entitlement notice, no prompt), error (notice with Retry)', () => {
+  // Dated 2026-11-25 (task-465 O14, RR-0495; prior title kept: "the mount situations: idle (prompt, no chips), unauthorized (entitlement notice, no prompt), ...").
+  it('the mount situations: idle (no prompt line, no chips), unauthorized (entitlement notice), error (notice with Retry)', () => {
     const idle = decode(renderToStaticMarkup(provided(bind(WEB_STATIC_SITUATION))));
-    expect([idle.includes(PROMPT), idle.includes('parcel-search-suggestion')]).toEqual([true, false]);
+    expect([idle.includes('parcel-search-prompt'), idle.includes('parcel-search-suggestion'), idle.includes('parcel-search-drop')]).toEqual([false, false, false]);
     const no = decode(renderToStaticMarkup(provided(bind(WEB_UNAUTHORIZED_SITUATION))));
-    expect([no.includes(C['search.entitlement'] as string), no.includes(PROMPT)]).toEqual([true, false]);
+    expect([no.includes(C['search.entitlement'] as string), no.includes('parcel-search-prompt')]).toEqual([true, false]);
     const err = decode(renderToStaticMarkup(provided(bind(WEB_ERROR_SITUATION))));
     expect([err.includes(C['search.error'] as string), err.includes(C['search.retry.text'] as string)]).toEqual([true, true]);
     expect({ ...WEB_STATIC_SITUATION, recent: [] }).toEqual({ ...(SITUATIONS.static as WebSituation), recent: [] });
@@ -100,9 +105,11 @@ describe('(a) every web golden renders with its situation', () => {
 describe('(b) the live switch off: every control disabled', () => {
   it('the input and every button are disabled with runtime.disabled, even with every callback supplied', () => {
     const all = { change_input: vi.fn(), set_input: vi.fn(), retry: vi.fn(), select: vi.fn(), push: vi.fn() };
-    render(provided(bind(SITUATIONS.ambiguous as WebSituation, { actions: all, runtime: { disabled: true } })));
+    // task-465: the typing state's ten rows are buttons (no radio cards any more).
+    render(provided(bind(SITUATIONS.suggest as WebSituation, { actions: all, runtime: { disabled: true } })));
     expect((screen.getByTestId('parcel-search-input') as HTMLInputElement).disabled).toBe(true);
-    const buttons = screen.getAllByRole('button').concat(screen.getAllByRole('radio'));
+    expect(screen.queryAllByRole('radio')).toHaveLength(0);
+    const buttons = screen.getAllByRole('button');
     expect(buttons.length).toBeGreaterThan(3);
     for (const b of buttons) expect((b as HTMLButtonElement).disabled).toBe(true);
   });
@@ -114,20 +121,22 @@ describe('(b) the live switch off: every control disabled', () => {
 });
 
 describe('(c) actions reach the mount', () => {
-  it('a chip sets the input; a card selects; SELECT pushes the web route of the checked lot', () => {
-    const set_input = vi.fn(); const select = vi.fn(); const push = vi.fn();
+  // Dated 2026-11-25 (task-465; prior title kept: "a chip sets the input; a card selects; SELECT pushes the web route of the checked lot").
+  it('a chip sets the input; a row tap pushes the web route of its lot; Enter in the field fires submit; no SELECT', () => {
+    const set_input = vi.fn(); const push = vi.fn(); const submit = vi.fn();
     const st = SITUATIONS.static as WebSituation;
     render(provided(bind(st, { actions: { set_input } })));
     fireEvent.click(screen.getByTestId(`parcel-search-suggestion-${st.recent[0] as string}`));
     expect(set_input).toHaveBeenCalledWith(st.recent[0]);
     cleanup();
     const amb = SITUATIONS.ambiguous as WebSituation;
-    const first = amb.candidates[0] as { parcelId: string };
-    render(provided(bind({ ...amb, selectedParcelId: first.parcelId }, { actions: { select, push } })));
+    const first = amb.rows[0] as { parcelId: string };
+    render(provided(bind(amb, { actions: { push, submit } })));
     fireEvent.click(screen.getByTestId(`parcel-candidate-${first.parcelId}`));
-    expect(select).toHaveBeenCalledWith(first.parcelId);
-    fireEvent.click(screen.getByTestId('parcel-search-select'));
     expect(push).toHaveBeenCalledWith(`/parcel-tool/${encodeURIComponent(first.parcelId)}`);
+    expect(screen.queryByTestId('parcel-search-select')).toBeNull();
+    fireEvent.keyDown(screen.getByTestId('parcel-search-input'), { key: 'Enter' });
+    expect(submit).toHaveBeenCalledTimes(1);
   });  // MF-46 follow-up (P35-D18 a, dated 2026-11-12): "Report incorrect address match" is a real link to Help & Support, the query in the fragment.
   // Dated 2026-11-24 (task-450 AC6, B.7 doc-2:49; prior title kept: "...with topic address_match..."): the topic is wrong-lot ("Wrong address or lot").
   it('the report link opens /help with topic wrong-lot and the encoded input in the fragment', () => {

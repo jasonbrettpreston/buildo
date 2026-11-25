@@ -81,11 +81,12 @@ const STATES: Json[] = rj(DESCRIPTOR).states;
 const pair = (golden: string): [Json, Json] => [rj(path.join(DIR, `${golden}.web.json`)), rj(path.join(DIR, `${golden}.mobile.json`))];
 
 describe('FE-07 search parity: web vs mobile goldens of mobile_parcel_search', () => {
-  it('the descriptor declares both targets and all 11 states have a web and a mobile golden', () => {
+  // Dated 2026-11-25 (task-465 McFixV2.1; prior title kept: "... all 11 states ..."): 12 states, the typing state `partial` with the golden `suggest`.
+  it('the descriptor declares both targets and all 12 states have a web and a mobile golden', () => {
     expect(rj(DESCRIPTOR).identity.platforms).toEqual(['mobile', 'web']);
     // Dated 2026-11-19 (task-353 SUITE.FIX-2): 10 -> 11 states. SRCH.A6 (task-320, commit ace05ccee; operator RR-0307) added the state `hit` with the
     // golden `reports_left` (reports_left.web.json and reports_left.mobile.json, both tracked, so the web/mobile pair the loop below checks holds).
-    expect(STATES.map((s) => s.golden)).toEqual(['loading', 'redirect', 'ambiguous', 'miss', 'empty', 'schema_drift', 'rate_limited', 'unauthorized', 'error', 'static', 'reports_left']);
+    expect(STATES.map((s) => s.golden)).toEqual(['loading', 'redirect', 'ambiguous', 'miss', 'empty', 'schema_drift', 'rate_limited', 'unauthorized', 'error', 'static', 'reports_left', 'suggest']);
     for (const s of STATES) for (const t of ['web', 'mobile']) expect(fs.existsSync(path.join(DIR, `${s.golden}.${t}.json`)), `${s.golden}.${t}`).toBe(true);
   });
   it('every state: the same refs, actions, block order and situation on both targets (non-vacuous)', () => {
@@ -128,11 +129,14 @@ describe('FE-07 search parity RED: one planted change in one target is reported'
   });
   it('a renamed action, a swapped block and a different situation', () => {
     const bad = clone(w);
-    const col = bad.props.children[0].children as Json[];
-    [col[1], col[2]] = [col[2] as Json, col[1] as Json];
+    // Dated 2026-11-25 (task-465; prior plant kept as text: the column children 1 and 2 swapped): the ambiguous column holds the header and the box
+    // only (the chips and the count hide while the drop-down is open), so two drop-down rows are swapped instead.
+    const drop = bad.props.children[0].children[1].children[1].children as Json[];
+    [drop[0], drop[1]] = [drop[1] as Json, drop[0] as Json];
     bad.situation = 'static';
-    const select = JSON.stringify(bad).replace('"action":"select"', '"action":"choose"');
-    const lines = parityProblems('ambiguous', JSON.parse(select), m);
+    // Dated 2026-11-25 (task-465; prior plant kept as text: the action select renamed): the rows carry push, so a push is renamed.
+    const renamed = JSON.stringify(bad).replace('"action":"push"', '"action":"choose"');
+    const lines = parityProblems('ambiguous', JSON.parse(renamed), m);
     expect(lines.some((l) => l.startsWith('ambiguous: actions differ'))).toBe(true);
     expect(lines.some((l) => l.startsWith('ambiguous: block order differs'))).toBe(true);
     expect(lines).toContain('ambiguous: situation differs: static / ambiguous');

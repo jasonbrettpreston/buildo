@@ -12,6 +12,9 @@
 // never on a result count (operator ruling 2026-09-16): `unique` opens the lot, `text_candidates` shows the address list here, the map kinds
 // open `disambiguate` (MF-53). MaxBLD is its own product (Spec 116 OD5): nothing here may reference a lead-gen concept, and the query is
 // never logged or tracked.
+// Dated 2026-11-25 (task-465 McFixV2.1; RR-0483 MORNING-DECISIONS.md:2523, RR-0485 :2533 item 6, RR-0487 :2543; prior text kept): nothing opens
+// while typing. Enter (the submit action) or a chip tap runs the typed text at once (no debounce wait); a tap on a drop-down row opens that row's page.
+// `unique` and the map kinds open only for a submitted query. After a page was opened, the next focus of this screen empties the box (finding 21).
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { SurfaceRenderer, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
@@ -34,17 +37,13 @@ import { useAuthStore } from '@/store/authStore';
 export default function ParcelSearchScreen() {
   const router = useRouter();
   const [input, setInput] = useState('');
-  const [selectedParcelId, setSelectedParcelId] = useState<string | null>(null);
+  // task-465: the text run with Enter or a chip tap; cleared by the next keystroke. Prior state (kept as text): selectedParcelId, the checked card.
+  const [submitted, setSubmitted] = useState<string | null>(null);
   const recent = useRecentSearchesStore((s) => s.recent);
   const addRecent = useRecentSearchesStore((s) => s.add);
 
   // Debounce (config.debounce_ms) so typeahead exploration does not burn the 60/min rate bucket.
   const debounced = useDebouncedValue(input, SEARCH_DEBOUNCE_MS);
-
-  // P35-D17 a (nothing pre-checked; OUTPUT fold MEDIUM 1): a new debounced query clears the checked address card.
-  useEffect(() => {
-    setSelectedParcelId(null);
-  }, [debounced]);
 
   // SRCH.A6 (task-320; RR-0307): the reports-left line reads the served count (GET /api/parcels/entitlement) and re-reads it each time this screen gains
   // focus, so the number is current after a report was produced. A failed read or no plan leaves `data` undefined or null: no line (v8 draws none).
@@ -59,7 +58,8 @@ export default function ParcelSearchScreen() {
   );
 
   // The Toronto-only rule (operator ruling 2026-09-16 (b)): an out-of-Toronto address is refused visibly and never sent ('' disables the hook).
-  const { data, isFetching, error, refetch } = useParcelSearch(searchQueryArg(debounced));
+  // task-465: a submitted text is queried at once, so Enter never waits for the debounce.
+  const { data, isFetching, error, refetch } = useParcelSearch(searchQueryArg(submitted ?? debounced));
   // task-452 SEARCHFIX.4: a refused lookup (limit, expired) shows the wall in place of the page once the entitlement read has answered; while the read is
   // pending ('wait') the page shows its loading state (neither the notice nor the miss copy). A failed read shows the wall's error state (round 2,
   // RR-0468); a plain 403 or no plan keep today's notice.
@@ -70,32 +70,46 @@ export default function ParcelSearchScreen() {
     () => buildSearchSituation({
       input,
       debounced,
+      submitted,
       data: waiting ? undefined : data,
       error: waiting ? null : error,
       isFetching: waiting || isFetching,
       schemaDrift: error instanceof ParcelLookupSchemaError,
       recent,
-      selectedParcelId,
       cap: SEARCH_CANDIDATE_LIMIT,
       minQueryLen: SEARCH_MIN_QUERY_LEN,
       entitlement: entitlement ? { reportsLeft: entitlement.reportsLeft, reportsLimit: entitlement.reportsLimit, resetsOnDisplay: entitlement.resetsOnDisplay } : null,
     }),
-    [input, debounced, data, error, isFetching, recent, selectedParcelId, entitlement, waiting],
+    [input, debounced, submitted, data, error, isFetching, recent, entitlement, waiting],
   );
 
-  // A search is recorded only when it opens a page (P35-D16 a): the lot, SELECT, the map page. One navigation, one record.
+  // A search is recorded only when it opens a page (P35-D16 a): the lot, a row tap, the map page. One navigation, one record. task-465: the submitted
+  // text is recorded when there is one (an Enter before the debounce), and the next focus of this screen empties the box (pushedRef).
+  const pushedRef = useRef(false);
   const navigate = useCallback(
     (route: string) => {
-      addRecent(debounced);
+      addRecent(submitted ?? debounced);
+      pushedRef.current = true;
       router.push(route);
     },
-    [addRecent, debounced, router],
+    [addRecent, submitted, debounced, router],
   );
 
   // `unique` navigates straight to the lot; the map kinds to the map surface. The ref stops the screen bouncing the user forward again when they
   // navigate BACK with the query still in the box; it is cleared the moment the outcome stops being navigable, so retyping navigates again.
   const goBack = useGoBack();
   const navigatedForRef = useRef<string | null>(null);
+  // task-465 (finding 21, mock "Coming back from a report: Empty box"): only after this screen opened a page; a tab switch or any other focus keeps a
+  // half-typed address. Stable deps, so a re-render never re-runs it.
+  useFocusEffect(
+    useCallback(() => {
+      if (!pushedRef.current) return;
+      pushedRef.current = false;
+      navigatedForRef.current = null;
+      setInput('');
+      setSubmitted(null);
+    }, []),
+  );
   const route = situation.route;
   useEffect(() => {
     if (isFetching) return;
@@ -110,17 +124,30 @@ export default function ParcelSearchScreen() {
 
   const actions = useMemo(
     () => ({
-      change_input: (text: string) => setInput(text),
-      set_input: (value: string) => setInput(value),
+      change_input: (text: string) => {
+        setInput(text);
+        setSubmitted(null);
+      },
+      // task-465: a chip is a saved address: a tap sets the text and runs it, as typing it and pressing Enter.
+      set_input: (value: string) => {
+        setInput(value);
+        setSubmitted(value.trim() === '' ? null : value.trim());
+      },
+      // task-465 (RR-0483): Enter runs the typed text; a blank box does nothing.
+      submit: () => {
+        const text = input.trim();
+        if (text !== '') setSubmitted(text);
+      },
       retry: () => void refetch(),
-      select: (parcelId: string) => setSelectedParcelId(parcelId),
+      // The address cards are gone (RR-0487); the action stays in the renderer's set for the map page and the semi page.
+      select: () => undefined,
       push: (to: string) => navigate(to),
       // The search page renders no back control; the action exists for the shared renderer's action set. Guarded as #64 so it can never strand a cold open.
       back: goBack,
       // MF-46 follow-up (P35-D18 a): "Report incorrect address match" opens Help & Support in the in-app browser sheet (task-362; openBrowserAsync).
       open_help: openHelp,
     }),
-    [refetch, navigate, goBack],
+    [input, refetch, navigate, goBack],
   );
 
   if (wall) return <SurfaceRenderer tree={wall.tree} content={wall.content} data={wall.data} actions={wall.actions} />;

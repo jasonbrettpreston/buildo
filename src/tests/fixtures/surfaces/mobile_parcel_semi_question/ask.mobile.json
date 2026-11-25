@@ -82,7 +82,7 @@
                 "props": {
                   "key": "question",
                   "testID": "parcel-semi-question",
-                  "className": "mt-6 w-full text-lg font-bold leading-6 text-report-ink",
+                  "className": "mt-6 w-full text-[26px] leading-[32px] font-bold text-report-ink",
                   "role": "header"
                 },
                 "children": [
@@ -97,7 +97,7 @@
                   "key": "answer-yes",
                   "testID": "parcel-semi-answer-yes",
                   "variant": "outline",
-                  "className": "mt-3 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-4 py-4 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
+                  "className": "mt-3 h-auto sm:h-auto min-h-[48px] w-full flex-col items-start justify-start rounded-[20px] px-4 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
                   "role": "radio",
                   "accessibilityState": {
                     "checked": false
@@ -132,7 +132,7 @@
                         "component": "Text",
                         "props": {
                           "key": "card-title",
-                          "className": "flex-1 text-base font-normal text-report-ink"
+                          "className": "flex-1 text-[15px] leading-[20px] font-normal text-report-muted"
                         },
                         "children": [
                           {
@@ -150,7 +150,7 @@
                   "key": "answer-no",
                   "testID": "parcel-semi-answer-no",
                   "variant": "outline",
-                  "className": "mt-3 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-4 py-4 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
+                  "className": "mt-3 h-auto sm:h-auto min-h-[48px] w-full flex-col items-start justify-start rounded-[20px] px-4 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
                   "role": "radio",
                   "accessibilityState": {
                     "checked": false
@@ -185,7 +185,7 @@
                         "component": "Text",
                         "props": {
                           "key": "card-title",
-                          "className": "flex-1 text-base font-normal text-report-ink"
+                          "className": "flex-1 text-[15px] leading-[20px] font-normal text-report-muted"
                         },
                         "children": [
                           {
@@ -203,7 +203,7 @@
                   "key": "answer-not_sure",
                   "testID": "parcel-semi-answer-not_sure",
                   "variant": "outline",
-                  "className": "mt-3 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-4 py-4 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
+                  "className": "mt-3 h-auto sm:h-auto min-h-[48px] w-full flex-col items-start justify-start rounded-[20px] px-4 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky",
                   "role": "radio",
                   "accessibilityState": {
                     "checked": false
@@ -238,7 +238,7 @@
                         "component": "Text",
                         "props": {
                           "key": "card-title",
-                          "className": "flex-1 text-base font-normal text-report-ink"
+                          "className": "flex-1 text-[15px] leading-[20px] font-normal text-report-muted"
                         },
                         "children": [
                           {
@@ -290,8 +290,8 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json": "9d458370736e5834",
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "891740a4455c7e9f"
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json": "abc67c4ffcdca858",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "386287c9836498eb"
     }
   }
 }

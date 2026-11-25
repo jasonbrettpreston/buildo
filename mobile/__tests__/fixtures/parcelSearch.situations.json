@@ -1,5 +1,5 @@
 {
-  "$comment": "MF-35 (plan v3 §2.1, §7): the named render situations of the parcel search page, the input of searchProps (SearchBinding.tsx). A committed golden names one of these by `situation`; the others are the named test cases of parcelScreens.golden.test.ts. Each value has the shape of SearchSituation (mobile/src/lib/parcelSearchMatch.ts); parcelSearchMatch.test.ts rebuilds several of them with buildSearchSituation from the hook values, so a situation here cannot drift from the helper. Parcel ids are synthetic.",
+  "$comment": "MF-35 (plan v3 §2.1, §7): the named render situations of the parcel search page, the input of searchProps (SearchBinding.tsx). A committed golden names one of these by `situation`; the others are the named test cases of parcelScreens.golden.test.ts. Each value has the shape of SearchSituation (mobile/src/lib/parcelSearchMatch.ts); parcelSearchMatch.test.ts rebuilds several of them with buildSearchSituation from the hook values, so a situation here cannot drift from the helper. Parcel ids are synthetic. Dated 2026-11-25 (task-465 McFixV2.1; prior shape kept as text: each situation carried selectedParcelId and showPrompt, both removed, RR-0487 and RR-0495): each situation carries submitted (the text run with Enter or a chip tap), rows, hint, showOutside, showChips and showCount; suggest is the typing state (rows under the box, nothing opens); typing_unique (was none_checked) types an exact address without Enter; deleting is the first delete; short_query_enter (was prompt_type_more) is Enter on a 2-character query, the miss line (RR-0495).",
   "static": {
     "input": "",
     "query": "",
@@ -15,13 +15,17 @@
     "candidates": [],
     "overCap": false,
     "showMiss": false,
-    "showPrompt": true,
     "recent": [
       "Queen & Spadina",
       "26 Hurlingham Cres",
       "Bathurst St"
     ],
-    "selectedParcelId": null,
+    "submitted": null,
+    "rows": [],
+    "hint": null,
+    "showOutside": false,
+    "showChips": true,
+    "showCount": true,
     "route": null
   },
   "loading": {
@@ -39,9 +43,13 @@
     "candidates": [],
     "overCap": false,
     "showMiss": false,
-    "showPrompt": false,
     "recent": [],
-    "selectedParcelId": null,
+    "submitted": "26 Hurlingham Cres",
+    "rows": [],
+    "hint": null,
+    "showOutside": false,
+    "showChips": false,
+    "showCount": true,
     "route": null
   },
   "redirect": {
@@ -59,14 +67,79 @@
     "candidates": [],
     "overCap": false,
     "showMiss": false,
-    "showPrompt": false,
     "recent": [
       "Bathurst St"
     ],
-    "selectedParcelId": null,
+    "submitted": "26 Hurlingham Cres",
+    "rows": [
+      {
+        "parcelId": "100026",
+        "address": "26 Hurlingham Cres",
+        "route": "/(app)/parcel-tool/100026"
+      }
+    ],
+    "hint": null,
+    "showOutside": false,
+    "showChips": false,
+    "showCount": false,
     "route": "/(app)/parcel-tool/100026"
   },
   "ambiguous": {
+    "input": "18 Preston",
+    "query": "18 Preston",
+    "outcome": "text_candidates",
+    "isFetching": false,
+    "errors": {
+      "rateLimited": false,
+      "retryAfterSeconds": null,
+      "entitlement": false,
+      "unexpected": false,
+      "schemaDrift": false
+    },
+    "candidates": [
+      {
+        "parcelId": "100181",
+        "address": "18 Preston Pl"
+      },
+      {
+        "parcelId": "100182",
+        "address": "18 Preston St"
+      },
+      {
+        "parcelId": "100183",
+        "address": "18 Preston Rd"
+      }
+    ],
+    "overCap": false,
+    "showMiss": false,
+    "recent": [
+      "Queen & Spadina"
+    ],
+    "submitted": "18 Preston",
+    "rows": [
+      {
+        "parcelId": "100181",
+        "address": "18 Preston Pl",
+        "route": "/(app)/parcel-tool/100181"
+      },
+      {
+        "parcelId": "100182",
+        "address": "18 Preston St",
+        "route": "/(app)/parcel-tool/100182"
+      },
+      {
+        "parcelId": "100183",
+        "address": "18 Preston Rd",
+        "route": "/(app)/parcel-tool/100183"
+      }
+    ],
+    "hint": "several",
+    "showOutside": false,
+    "showChips": false,
+    "showCount": false,
+    "route": null
+  },
+  "suggest": {
     "input": "Bathurst St",
     "query": "Bathurst St",
     "outcome": "text_candidates",
@@ -122,11 +195,64 @@
     ],
     "overCap": true,
     "showMiss": false,
-    "showPrompt": false,
-    "recent": [
-      "Queen & Spadina"
+    "recent": [],
+    "submitted": null,
+    "rows": [
+      {
+        "parcelId": "100100",
+        "address": "100 Bathurst St",
+        "route": "/(app)/parcel-tool/100100"
+      },
+      {
+        "parcelId": "100102",
+        "address": "102 Bathurst St",
+        "route": "/(app)/parcel-tool/100102"
+      },
+      {
+        "parcelId": "100104",
+        "address": "104 Bathurst St",
+        "route": "/(app)/parcel-tool/100104"
+      },
+      {
+        "parcelId": "100001",
+        "address": "1 Bathurst St",
+        "route": "/(app)/parcel-tool/100001"
+      },
+      {
+        "parcelId": "100010",
+        "address": "10 Bathurst St",
+        "route": "/(app)/parcel-tool/100010"
+      },
+      {
+        "parcelId": "100106",
+        "address": "106 Bathurst St",
+        "route": "/(app)/parcel-tool/100106"
+      },
+      {
+        "parcelId": "100108",
+        "address": "108 Bathurst St",
+        "route": "/(app)/parcel-tool/100108"
+      },
+      {
+        "parcelId": "100110",
+        "address": "110 Bathurst St",
+        "route": "/(app)/parcel-tool/100110"
+      },
+      {
+        "parcelId": "100112",
+        "address": "112 Bathurst St",
+        "route": "/(app)/parcel-tool/100112"
+      },
+      {
+        "parcelId": "100114",
+        "address": "",
+        "route": "/(app)/parcel-tool/100114"
+      }
     ],
-    "selectedParcelId": "100102",
+    "hint": "refine",
+    "showOutside": false,
+    "showChips": false,
+    "showCount": false,
     "route": null
   },
   "miss": {
@@ -144,9 +270,13 @@
     "candidates": [],
     "overCap": false,
     "showMiss": true,
-    "showPrompt": false,
     "recent": [],
-    "selectedParcelId": null,
+    "submitted": "zzzz qqqq",
+    "rows": [],
+    "hint": null,
+    "showOutside": false,
+    "showChips": false,
+    "showCount": false,
     "route": null
   },
   "empty": {
@@ -164,13 +294,17 @@
     "candidates": [],
     "overCap": false,
     "showMiss": false,
-    "showPrompt": false,
     "recent": [
       "Queen & Spadina",
       "26 Hurlingham Cres",
       "Bathurst St"
     ],
-    "selectedParcelId": null,
+    "submitted": "100 City Centre Dr, Mississauga",
+    "rows": [],
+    "hint": null,
+    "showOutside": true,
+    "showChips": false,
+    "showCount": false,
     "route": null
   },
   "schema_drift": {
@@ -188,9 +322,13 @@
     "candidates": [],
     "overCap": false,
     "showMiss": false,
-    "showPrompt": false,
     "recent": [],
-    "selectedParcelId": null,
+    "submitted": "26 Hurlingham Cres",
+    "rows": [],
+    "hint": null,
+    "showOutside": false,
+    "showChips": false,
+    "showCount": true,
     "route": null
   },
   "rate_limited": {
@@ -208,9 +346,13 @@
     "candidates": [],
     "overCap": false,
     "showMiss": false,
-    "showPrompt": false,
     "recent": [],
-    "selectedParcelId": null,
+    "submitted": "26 Hurlingham Cres",
+    "rows": [],
+    "hint": null,
+    "showOutside": false,
+    "showChips": false,
+    "showCount": true,
     "route": null
   },
   "unauthorized": {
@@ -228,9 +370,13 @@
     "candidates": [],
     "overCap": false,
     "showMiss": false,
-    "showPrompt": false,
     "recent": [],
-    "selectedParcelId": null,
+    "submitted": "26 Hurlingham Cres",
+    "rows": [],
+    "hint": null,
+    "showOutside": false,
+    "showChips": false,
+    "showCount": true,
     "route": null
   },
   "error": {
@@ -248,9 +394,13 @@
     "candidates": [],
     "overCap": false,
     "showMiss": false,
-    "showPrompt": false,
     "recent": [],
-    "selectedParcelId": null,
+    "submitted": "26 Hurlingham Cres",
+    "rows": [],
+    "hint": null,
+    "showOutside": false,
+    "showChips": false,
+    "showCount": true,
     "route": null
   },
   "rate_limited_zero": {
@@ -268,9 +418,13 @@
     "candidates": [],
     "overCap": false,
     "showMiss": false,
-    "showPrompt": false,
     "recent": [],
-    "selectedParcelId": null,
+    "submitted": "26 Hurlingham Cres",
+    "rows": [],
+    "hint": null,
+    "showOutside": false,
+    "showChips": false,
+    "showCount": true,
     "route": null
   },
   "fetching_with_candidates": {
@@ -299,16 +453,66 @@
         "address": "104 Bathurst St"
       }
     ],
-    "overCap": false,
+    "overCap": true,
     "showMiss": false,
-    "showPrompt": false,
     "recent": [],
-    "selectedParcelId": null,
+    "submitted": null,
+    "rows": [
+      {
+        "parcelId": "100100",
+        "address": "100 Bathurst St",
+        "route": "/(app)/parcel-tool/100100"
+      },
+      {
+        "parcelId": "100102",
+        "address": "102 Bathurst St",
+        "route": "/(app)/parcel-tool/100102"
+      },
+      {
+        "parcelId": "100104",
+        "address": "104 Bathurst St",
+        "route": "/(app)/parcel-tool/100104"
+      }
+    ],
+    "hint": "refine",
+    "showOutside": false,
+    "showChips": false,
+    "showCount": false,
     "route": null
   },
-  "none_checked": {
-    "input": "Bathurst St",
-    "query": "Bathurst St",
+  "typing_unique": {
+    "input": "26 Hurlingham Cres",
+    "query": "26 Hurlingham Cres",
+    "outcome": "unique",
+    "isFetching": false,
+    "errors": {
+      "rateLimited": false,
+      "retryAfterSeconds": null,
+      "entitlement": false,
+      "unexpected": false,
+      "schemaDrift": false
+    },
+    "candidates": [],
+    "overCap": false,
+    "showMiss": false,
+    "recent": [],
+    "submitted": null,
+    "rows": [
+      {
+        "parcelId": "100026",
+        "address": "26 Hurlingham Cres",
+        "route": "/(app)/parcel-tool/100026"
+      }
+    ],
+    "hint": null,
+    "showOutside": false,
+    "showChips": false,
+    "showCount": false,
+    "route": null
+  },
+  "deleting": {
+    "input": "18 Presto",
+    "query": "18 Preston",
     "outcome": "text_candidates",
     "isFetching": false,
     "errors": {
@@ -320,26 +524,30 @@
     },
     "candidates": [
       {
-        "parcelId": "100100",
-        "address": "100 Bathurst St"
+        "parcelId": "100181",
+        "address": "18 Preston Pl"
       },
       {
-        "parcelId": "100102",
-        "address": "102 Bathurst St"
+        "parcelId": "100182",
+        "address": "18 Preston St"
       },
       {
-        "parcelId": "100104",
-        "address": "104 Bathurst St"
+        "parcelId": "100183",
+        "address": "18 Preston Rd"
       }
     ],
     "overCap": false,
     "showMiss": false,
-    "showPrompt": false,
     "recent": [],
-    "selectedParcelId": null,
+    "submitted": null,
+    "rows": [],
+    "hint": null,
+    "showOutside": false,
+    "showChips": false,
+    "showCount": true,
     "route": null
   },
-  "prompt_type_more": {
+  "short_query_enter": {
     "input": "26",
     "query": "26",
     "outcome": "idle",
@@ -353,10 +561,14 @@
     },
     "candidates": [],
     "overCap": false,
-    "showMiss": false,
-    "showPrompt": true,
+    "showMiss": true,
     "recent": [],
-    "selectedParcelId": null,
+    "submitted": "26",
+    "rows": [],
+    "hint": null,
+    "showOutside": false,
+    "showChips": false,
+    "showCount": false,
     "route": null
   },
   "blank_idle": {
@@ -374,9 +586,13 @@
     "candidates": [],
     "overCap": false,
     "showMiss": false,
-    "showPrompt": false,
     "recent": [],
-    "selectedParcelId": null,
+    "submitted": null,
+    "rows": [],
+    "hint": null,
+    "showOutside": false,
+    "showChips": false,
+    "showCount": true,
     "route": null
   },
   "outside_toronto": {
@@ -394,9 +610,13 @@
     "candidates": [],
     "overCap": false,
     "showMiss": false,
-    "showPrompt": false,
     "recent": [],
-    "selectedParcelId": null,
+    "submitted": "100 City Centre Dr, Mississauga",
+    "rows": [],
+    "hint": null,
+    "showOutside": true,
+    "showChips": false,
+    "showCount": false,
     "route": null
   },
   "typing_ahead": {
@@ -414,9 +634,13 @@
     "candidates": [],
     "overCap": false,
     "showMiss": false,
-    "showPrompt": false,
     "recent": [],
-    "selectedParcelId": null,
+    "submitted": null,
+    "rows": [],
+    "hint": null,
+    "showOutside": false,
+    "showChips": false,
+    "showCount": true,
     "route": null
   },
   "navigating_intersection": {
@@ -434,9 +658,13 @@
     "candidates": [],
     "overCap": false,
     "showMiss": false,
-    "showPrompt": false,
     "recent": [],
-    "selectedParcelId": null,
+    "submitted": "Queen & Spadina",
+    "rows": [],
+    "hint": null,
+    "showOutside": false,
+    "showChips": false,
+    "showCount": true,
     "route": "/(app)/parcel-tool/disambiguate?q=Queen%20%26%20Spadina&kind=intersection"
   },
   "navigating_multi_parcel": {
@@ -454,9 +682,19 @@
     "candidates": [],
     "overCap": false,
     "showMiss": false,
-    "showPrompt": false,
     "recent": [],
-    "selectedParcelId": null,
+    "submitted": "26 Hurlingham Cres",
+    "rows": [
+      {
+        "parcelId": "100026",
+        "address": "26 Hurlingham Cres",
+        "route": "/(app)/parcel-tool/disambiguate?q=26%20Hurlingham%20Cres&kind=multi_parcel"
+      }
+    ],
+    "hint": null,
+    "showOutside": false,
+    "showChips": false,
+    "showCount": false,
     "route": "/(app)/parcel-tool/disambiguate?q=26%20Hurlingham%20Cres&kind=multi_parcel"
   },
   "navigating_unlinked": {
@@ -474,9 +712,13 @@
     "candidates": [],
     "overCap": false,
     "showMiss": false,
-    "showPrompt": false,
     "recent": [],
-    "selectedParcelId": null,
+    "submitted": "26 Hurlingham Cres",
+    "rows": [],
+    "hint": null,
+    "showOutside": false,
+    "showChips": false,
+    "showCount": true,
     "route": "/(app)/parcel-tool/disambiguate?q=26%20Hurlingham%20Cres&kind=unlinked"
   },
   "reports_left": {
@@ -494,13 +736,17 @@
     "candidates": [],
     "overCap": false,
     "showMiss": false,
-    "showPrompt": true,
     "recent": [
       "Queen & Spadina",
       "26 Hurlingham Cres",
       "Bathurst St"
     ],
-    "selectedParcelId": null,
+    "submitted": null,
+    "rows": [],
+    "hint": null,
+    "showOutside": false,
+    "showChips": true,
+    "showCount": true,
     "route": null,
     "entitlement": {
       "reportsLeft": 6,

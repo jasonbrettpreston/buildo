@@ -26,15 +26,17 @@ const NO_ERRORS: WebSituation['errors'] = { rateLimited: false, retryAfterSecond
 /** The idle page (the descriptor's `static` state) with no recent searches: the web keeps no search history (no store; MF-44 security S-4). */
 export const WEB_STATIC_SITUATION: WebSituation = {
   input: '', query: '', outcome: 'idle', isFetching: false, errors: NO_ERRORS, candidates: [], overCap: false,
-  showMiss: false, showPrompt: true, recent: [], selectedParcelId: null, route: null,
+  showMiss: false, recent: [], submitted: null, rows: [], hint: null, showOutside: false, showChips: true, showCount: true, route: null,
 };
+// Dated 2026-11-25 (task-465 O14, RR-0495; prior text kept: showPrompt true, selectedParcelId null; the two spreads below set
+// showPrompt false): the prompt line is dropped on both targets; the situation carries the phone's new fields.
 
 /** A signed-in user without an active parcel_tool plan: the descriptor's own `unauthorized` state (the entitlement notice, no prompt). */
 export const WEB_UNAUTHORIZED_SITUATION: WebSituation = {
-  ...WEB_STATIC_SITUATION, errors: { ...NO_ERRORS, entitlement: true }, showPrompt: false,
+  ...WEB_STATIC_SITUATION, errors: { ...NO_ERRORS, entitlement: true },
 };
 
 /** The segment's error boundary: the descriptor's own `error` state (the error notice and Retry, which resets the boundary). */
 export const WEB_ERROR_SITUATION: WebSituation = {
-  ...WEB_STATIC_SITUATION, errors: { ...NO_ERRORS, unexpected: true }, showPrompt: false,
+  ...WEB_STATIC_SITUATION, errors: { ...NO_ERRORS, unexpected: true },
 };

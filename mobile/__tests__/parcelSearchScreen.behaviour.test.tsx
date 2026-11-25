@@ -6,6 +6,10 @@
 // must-survive rows 8, 10, 11, 22, 27, 28): the field shows typed text at once; 400 ms debounce; the mockHook gets '' outside Toronto; unique navigates
 // once and records once; Back with the same query neither re-pushes nor re-records; a candidate tap selects and does not push; SELECT pushes and
 // records; the map kinds push the disambiguate route; a miss, an error and outside Toronto record nothing; there is no in-bar account button (A.13).
+// Dated 2026-11-25 (task-465 McFixV2.1; RR-0483 MORNING-DECISIONS.md:2523, RR-0485 :2533 item 6, RR-0487 :2543, RR-0495; prior text above kept):
+// nothing opens while typing. Enter (submitEditing) or a tap on a drop-down row opens a lot; the miss and the outside-Toronto line show after Enter
+// only; the first delete clears the rows; the box is empty when the screen regains focus after it opened a page. The old cases that typed without
+// Enter and expected a page are rewritten below with their prior titles kept in a dated note.
 require('react-native-css-interop/test');
 import * as React from 'react';
 import { act, fireEvent, render, screen, within } from '@testing-library/react-native';
@@ -20,9 +24,11 @@ jest.mock('expo-web-browser', () => ({ openBrowserAsync: (u: string) => mockOpen
 // reports-left re-read on focus), reads useAuthStore (index.tsx:54, whose import chain loads @react-native-async-storage, a native module that is null under jest:
 // "Test suite failed to run") and reads useParcelEntitlement (index.tsx:55). The mocks below supply the three, the signed-out shape (no token, so no re-read and no line);
 // the reports-left line itself is pinned by the search goldens (reports_left) and the entitlement hook by its own tests, not here.
+// task-465 T9: the focus callbacks are captured so a test can fire "the screen gained focus again" (focusAgain below); each still runs on mount.
+const mockFocus = new Set<() => void>();
 jest.mock('expo-router', () => {
   const R = jest.requireActual('react');
-  return { useRouter: () => ({ push: mockPush, navigate: mockNavigate }), useFocusEffect: (cb: () => void) => R.useEffect(cb, [cb]) };
+  return { useRouter: () => ({ push: mockPush, navigate: mockNavigate }), useFocusEffect: (cb: () => void) => { mockFocus.add(cb); R.useEffect(cb, [cb]); } };
 });
 jest.mock('@/store/authStore', () => ({ useAuthStore: (select: (s: { accessToken: string | null }) => unknown) => select({ accessToken: null }) }));
 jest.mock('react-native-safe-area-context', () => {
@@ -51,15 +57,22 @@ const Screen = require('../app/(app)/parcel-tool/index').default as React.Compon
 const { useRecentSearchesStore } = require('@/store/recentSearchesStore') as typeof import('@/store/recentSearchesStore');
 
 // Dated 2026-11-24 (task-450 SEARCHFIX.2, Q19): the payloads carry the server's resolution; a payload without it now reads as no_match.
-const hit = (parcelId: string) => ({ match: { parcelId, matchType: 'exact' }, candidates: [], warnings: [], parcel: null, resolution: 'unique' });
 const list = { match: null, candidates: [{ parcelId: 'P1', address: '1 Bathurst St' }, { parcelId: 'P2', address: '2 Bathurst St' }], warnings: [], parcel: null, resolution: 'text_candidates' };
 const type = (text: string) => { fireEvent.changeText(screen.getByTestId('parcel-search-input'), text); act(() => { jest.advanceTimersByTime(400); }); };
+/** task-465: the Enter key of the search field. */
+const enter = () => { act(() => { fireEvent(screen.getByTestId('parcel-search-input'), 'submitEditing'); }); };
+/** task-465 T9: the screen gains focus again (every captured focus callback runs, as expo-router does on focus). */
+const focusAgain = () => { act(() => { for (const cb of [...mockFocus]) cb(); }); };
+const rows = (...r: [string, string][]) => ({ match: null, candidates: r.map(([parcelId, address]) => ({ parcelId, address })), warnings: [], parcel: null, resolution: 'text_candidates' });
+const elm = rows(['5106944', '383 Elm Ave'], ['5461541', '383 Elmwood Ave'], ['5191692', '383 Elm Grove Ave']);
+const hitAt = (parcelId: string, address: string) => ({ match: { parcelId, matchType: 'exact', address }, candidates: [], warnings: [], parcel: null, resolution: 'unique' });
 
 beforeEach(() => {
   jest.useFakeTimers();
   mockPush.mockClear();
   mockOpenBrowser.mockReset().mockResolvedValue({ type: 'dismiss' });
   mockCalls.length = 0;
+  mockFocus.clear();
   mockHook = { data: undefined, isFetching: false, error: null, refetch: jest.fn() };
   mockNavigate.mockClear();
   mockEntitlement = { data: undefined, isFetching: false, isError: false, refetch: jest.fn() };
@@ -77,91 +90,218 @@ describe('parcel search screen behaviour (rows 8, 10, 11, 22, 27, 28)', () => {
     act(() => { jest.advanceTimersByTime(1); });
     expect(mockCalls).toContain('26 Hurlingham Cres');
   });
-  it('outside Toronto: the hook gets "", the notice shows, nothing is pushed or recorded', () => {
+  // Dated 2026-11-25 (task-465 T7; prior title kept: "outside Toronto: the hook gets "", the notice shows, nothing is pushed or recorded").
+  it('T7 outside Toronto inside the box: nothing while typing; after Enter the line shows in the drop-down; the hook gets "" throughout; no push or record', () => {
     render(<Screen />);
     type('100 City Centre Dr, Mississauga');
     expect(mockCalls.at(-1)).toBe('');
-    expect(screen.getByTestId('parcel-search-outside-toronto')).toBeTruthy();
+    expect(screen.queryByTestId('parcel-search-outside-toronto')).toBeNull();
+    enter();
+    expect(mockCalls.at(-1)).toBe('');
+    expect(within(screen.getByTestId('parcel-search-drop')).getByTestId('parcel-search-outside-toronto')).toBeTruthy();
+    expect(screen.getByText('Outside Toronto')).toBeTruthy();
+    expect(mockCalls.filter((q) => q !== '')).toEqual([]);
     expect(mockPush).not.toHaveBeenCalled();
     expect(useRecentSearchesStore.getState().recent).toEqual([]);
   });
-  it('unique navigates once and records once; a re-render with the same route does not re-push (Back)', () => {
+  it('T1 typing an exact address never navigates; its one row shows under the box', () => {
+    render(<Screen />);
+    mockHook = { ...mockHook, data: hitAt('5293897', '41 Derwyn Rd') };
+    type('41 Derwyn Rd');
+    act(() => { jest.advanceTimersByTime(400); });
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(screen.getByTestId('parcel-candidate-5293897')).toBeTruthy();
+    expect(useRecentSearchesStore.getState().recent).toEqual([]);
+  });
+  // Dated 2026-11-25 (task-465 T2; prior title kept: "unique navigates once and records once; a re-render with the same route does not re-push (Back)").
+  it('T2 Enter on a unique opens the lot once and records it; a re-render does not re-push (Back)', () => {
     const { rerender } = render(<Screen />);
-    mockHook = { ...mockHook, data: hit('100026') };
-    type('26 Hurlingham Cres');
+    mockHook = { ...mockHook, data: hitAt('5293897', '41 Derwyn Rd') };
+    type('41 Derwyn Rd');
+    enter();
     expect(mockPush).toHaveBeenCalledTimes(1);
-    expect(mockPush).toHaveBeenCalledWith('/(app)/parcel-tool/100026');
-    expect(useRecentSearchesStore.getState().recent).toEqual(['26 Hurlingham Cres']);
+    expect(mockPush).toHaveBeenCalledWith('/(app)/parcel-tool/5293897');
+    expect(useRecentSearchesStore.getState().recent).toEqual(['41 Derwyn Rd']);
     rerender(<Screen />);
     expect(mockPush).toHaveBeenCalledTimes(1);
   });
-  it('no push while fetching; edit then retype pushes again', () => {
+  it('T3 Enter before the debounce queries the typed text at once', () => {
+    render(<Screen />);
+    mockHook = { ...mockHook, data: hitAt('5476455', '679 Queen St W') };
+    fireEvent.changeText(screen.getByTestId('parcel-search-input'), '679 Queen St W');
+    act(() => { jest.advanceTimersByTime(100); });
+    enter();
+    expect(mockCalls).toContain('679 Queen St W');
+    expect(mockPush).toHaveBeenCalledWith('/(app)/parcel-tool/5476455');
+    expect(useRecentSearchesStore.getState().recent).toEqual(['679 Queen St W']);
+  });
+  // Dated 2026-11-25 (task-465 T16; prior title kept: "no push while fetching; edit then retype pushes again").
+  it('T16 Enter does not push while fetching; edit then retype and Enter pushes again', () => {
     const { rerender } = render(<Screen />);
-    mockHook = { ...mockHook, data: hit('100026'), isFetching: true };
+    mockHook = { ...mockHook, data: hitAt('100026', '26 Hurlingham Cres'), isFetching: true };
     type('26 Hurlingham Cres');
+    enter();
     expect(mockPush).not.toHaveBeenCalled();
     mockHook = { ...mockHook, isFetching: false };
     rerender(<Screen />);
     expect(mockPush).toHaveBeenCalledTimes(1);
     mockHook = { ...mockHook, data: undefined };
     type('26 Hurlingham Cr');
-    mockHook = { ...mockHook, data: hit('100026') };
+    mockHook = { ...mockHook, data: hitAt('100026', '26 Hurlingham Cres') };
     type('26 Hurlingham Cres');
+    expect(mockPush).toHaveBeenCalledTimes(1);
+    enter();
     expect(mockPush).toHaveBeenCalledTimes(2);
   });
-  it('the address list: a tap selects (no push, no record); SELECT pushes the selected lot and records the query', () => {
+  // Dated 2026-11-25 (task-465 T4; prior titles kept: "the address list: a tap selects (no push, no record); SELECT pushes the selected lot and records the
+  // query" and "OUTPUT fold MEDIUM 1 (P35-D17 a, nothing pre-checked): a new debounced query clears the checked card, even when the same lot is listed again").
+  it('T4 a tap on a row opens that lot and records the query; there is no Select button and no radio card', () => {
     render(<Screen />);
-    mockHook = { ...mockHook, data: list };
-    type('Bathurst St');
-    expect(screen.getByTestId('parcel-search-select').props.accessibilityState).toMatchObject({ disabled: true });
-    fireEvent.press(screen.getByTestId('parcel-candidate-P2'));
+    mockHook = { ...mockHook, data: elm };
+    type('383 El');
     expect(mockPush).not.toHaveBeenCalled();
-    expect(useRecentSearchesStore.getState().recent).toEqual([]);
-    fireEvent.press(screen.getByTestId('parcel-search-select'));
-    expect(mockPush).toHaveBeenCalledWith('/(app)/parcel-tool/P2');
-    expect(useRecentSearchesStore.getState().recent).toEqual(['Bathurst St']);
-  });
-  it('OUTPUT fold MEDIUM 1 (P35-D17 a, nothing pre-checked): a new debounced query clears the checked card, even when the same lot is listed again', () => {
-    render(<Screen />);
-    mockHook = { ...mockHook, data: list };
-    type('Bathurst St');
-    fireEvent.press(screen.getByTestId('parcel-candidate-P2'));
-    expect(screen.getByTestId('parcel-candidate-P2').props.accessibilityState).toMatchObject({ checked: true });
-    type('Bathurst Street');
-    expect(screen.getByTestId('parcel-candidate-P2').props.accessibilityState).toMatchObject({ checked: false });
-    expect(screen.getByTestId('parcel-search-select').props.accessibilityState).toMatchObject({ disabled: true });
-  });
-  it('an intersection pushes the map route (the list never renders) and records', () => {
-    render(<Screen />);
-    mockHook = { ...mockHook, data: { match: null, candidates: [], warnings: [], parcel: null } };
-    type('Queen & Spadina');
-    expect(mockPush).toHaveBeenCalledWith('/(app)/parcel-tool/disambiguate?q=Queen%20%26%20Spadina&kind=intersection');
+    expect(screen.queryByTestId('parcel-search-select')).toBeNull();
     expect(screen.queryAllByRole('radio')).toHaveLength(0);
-    expect(useRecentSearchesStore.getState().recent).toEqual(['Queen & Spadina']);
+    fireEvent.press(screen.getByTestId('parcel-candidate-5191692'));
+    expect(mockPush).toHaveBeenCalledWith('/(app)/parcel-tool/5191692');
+    expect(useRecentSearchesStore.getState().recent).toEqual(['383 El']);
   });
-  it('a miss and an error record nothing; Retry calls refetch with no argument', () => {
+  it('T5 Enter on several matches keeps the rows and shows the hint; a capped list shows the refine line instead', () => {
     render(<Screen />);
-    mockHook = { ...mockHook, data: { match: null, candidates: [], warnings: [], parcel: null } };
-    type('zzzz qqqq');
+    mockHook = { ...mockHook, data: elm };
+    type('383 El');
+    expect(screen.queryByTestId('parcel-search-hint')).toBeNull();
+    enter();
+    expect(screen.getByTestId('parcel-search-hint')).toBeTruthy();
+    expect(screen.getByTestId('parcel-candidate-5106944')).toBeTruthy();
+    expect(mockPush).not.toHaveBeenCalled();
+    const ten = rows(...Array.from({ length: 10 }, (_, i): [string, string] => [`P${i}`, `12 Elm ${['Ave', 'St', 'Rd', 'Cres', 'Dr', 'Blvd', 'Crt', 'Pl', 'Way', 'Ln'][i]}`]));
+    mockHook = { ...mockHook, data: ten };
+    type('12 Elm');
+    enter();
+    expect(screen.getByTestId('parcel-search-refine')).toBeTruthy();
+    expect(screen.queryByTestId('parcel-search-hint')).toBeNull();
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+  // Dated 2026-11-25 (task-465 T6; prior title kept: "a miss and an error record nothing; Retry calls refetch with no argument").
+  it('T6 a miss shows only after Enter, as "No lot found for ..."; a miss and an error record nothing; Retry calls refetch with no argument', () => {
+    render(<Screen />);
+    mockHook = { ...mockHook, data: { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match' } };
+    type('108 Zzzz St');
+    expect(screen.queryByTestId('parcel-search-empty')).toBeNull();
+    enter();
+    expect(within(screen.getByTestId('parcel-search-drop')).getByText('No lot found for 108 Zzzz St')).toBeTruthy();
     expect(screen.getByTestId('parcel-search-empty')).toBeTruthy();
+    expect(screen.getByText('Check the house number and street name.')).toBeTruthy();
     mockHook = { ...mockHook, data: undefined, error: new Error('network') };
-    type('zzzz qqqqq');
+    type('108 Zzzz Str');
     fireEvent.press(screen.getByTestId('parcel-search-retry'));
     expect(mockHook.refetch).toHaveBeenCalledWith();
     expect(useRecentSearchesStore.getState().recent).toEqual([]);
     expect(mockPush).not.toHaveBeenCalled();
   });
-  it('a chip sets the input (the debounce still applies); there is no in-bar account button (A.13)', () => {
-    useRecentSearchesStore.getState().add('Bathurst St');
+  it('T17 a short Enter shows the miss line: No lot found for 26, nothing fetched, no push (RR-0495)', () => {
     render(<Screen />);
-    fireEvent.press(screen.getByTestId('parcel-search-suggestion-Bathurst St'));
-    expect(screen.getByTestId('parcel-search-input').props.value).toBe('Bathurst St');
-    expect(mockCalls).not.toContain('Bathurst St');
-    act(() => { jest.advanceTimersByTime(400); });
-    expect(mockCalls).toContain('Bathurst St');
+    type('26');
+    enter();
+    expect(screen.getByTestId('parcel-search-empty')).toBeTruthy();
+    expect(screen.getByText('No lot found for 26')).toBeTruthy();
+    expect(mockHook.refetch).not.toHaveBeenCalled();
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('parcel-search-prompt')).toBeNull();
+  });
+  it('T8 the first delete clears the list', () => {
+    render(<Screen />);
+    mockHook = { ...mockHook, data: elm };
+    type('383 El');
+    expect(screen.getByTestId('parcel-candidate-5106944')).toBeTruthy();
+    fireEvent.changeText(screen.getByTestId('parcel-search-input'), '383 E');
+    expect(screen.queryByTestId('parcel-candidate-5106944')).toBeNull();
+    expect(screen.queryByTestId('parcel-search-drop')).toBeNull();
+  });
+  it('T9 the box is empty when the screen regains focus after it opened a page; a focus with no earlier push leaves the box alone', () => {
+    render(<Screen />);
+    type('41 Derw');
+    focusAgain();
+    expect(screen.getByTestId('parcel-search-input').props.value).toBe('41 Derw');
+    mockHook = { ...mockHook, data: hitAt('5293897', '41 Derwyn Rd') };
+    type('41 Derwyn Rd');
+    enter();
+    expect(mockPush).toHaveBeenCalledTimes(1);
+    focusAgain();
+    expect(screen.getByTestId('parcel-search-input').props.value).toBe('');
+    expect(screen.getByTestId('parcel-search-suggestion-41 Derwyn Rd')).toBeTruthy();
+    focusAgain();
+    expect(mockPush).toHaveBeenCalledTimes(1);
+  });
+  // Dated 2026-11-25 (task-465 T10; prior title kept: "an intersection pushes the map route (the list never renders) and records").
+  it('T10 the map kinds open only on Enter: multi_parcel and an intersection push the disambiguate route with its kind', () => {
+    render(<Screen />);
+    mockHook = { ...mockHook, data: { match: null, candidates: [{ parcelId: '5259138', address: '78 Robert St' }, { parcelId: '5438421', address: '78 Robert St' }], warnings: [], parcel: null, resolution: 'multi_parcel' } };
+    type('78 Robert St');
+    expect(mockPush).not.toHaveBeenCalled();
+    enter();
+    expect(mockPush).toHaveBeenLastCalledWith('/(app)/parcel-tool/disambiguate?q=78%20Robert%20St&kind=multi_parcel');
+    mockHook = { ...mockHook, data: { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match' } };
+    type('King and Bay');
+    expect(mockPush).toHaveBeenCalledTimes(1);
+    enter();
+    expect(mockPush).toHaveBeenLastCalledWith('/(app)/parcel-tool/disambiguate?q=King%20and%20Bay&kind=intersection');
+    expect(screen.queryAllByRole('radio')).toHaveLength(0);
+    expect(useRecentSearchesStore.getState().recent).toEqual(['King and Bay', '78 Robert St']);
+  });
+  it('T11 a held unsure lot opens its lot route on Enter (the report screen redirects to the semi page)', () => {
+    render(<Screen />);
+    mockHook = { ...mockHook, data: hitAt('5334051', '14 Norwood Ter') };
+    type('14 Norwood Ter');
+    enter();
+    expect(mockPush).toHaveBeenCalledWith('/(app)/parcel-tool/5334051');
+  });
+  // Dated 2026-11-25 (task-465 T12; prior title kept: "task-450 AC1 (ruled B): a street with no house number shows the refine line and keeps the rows").
+  it('T12 a street with no number: the refine line shows with the rows while typing and after Enter; no push (task-450 AC1, ruled B)', () => {
+    render(<Screen />);
+    mockHook = { ...mockHook, data: list };
+    type('Gerrard St');
+    expect(screen.getByTestId('parcel-search-refine')).toBeTruthy();
+    expect(screen.getByTestId('parcel-candidate-P1')).toBeTruthy();
+    enter();
+    expect(screen.getByTestId('parcel-search-refine')).toBeTruthy();
+    expect(screen.getByTestId('parcel-candidate-P2')).toBeTruthy();
+    expect(mockPush).not.toHaveBeenCalled();
+    type('2 Gerrard St');
+    expect(screen.queryByTestId('parcel-search-refine')).toBeNull();
+  });
+  // Dated 2026-11-25 (task-465 T13; prior title kept: "a chip sets the input (the debounce still applies); there is no in-bar account button (A.13)").
+  it('T13 a chip tap runs its address at once (one push, no Enter); there is no in-bar account button (A.13)', () => {
+    useRecentSearchesStore.getState().add('41 Derwyn Rd');
+    mockHook = { ...mockHook, data: hitAt('5293897', '41 Derwyn Rd') };
+    render(<Screen />);
+    fireEvent.press(screen.getByTestId('parcel-search-suggestion-41 Derwyn Rd'));
+    expect(screen.getByTestId('parcel-search-input').props.value).toBe('41 Derwyn Rd');
+    expect(mockCalls).toContain('41 Derwyn Rd');
+    expect(mockPush).toHaveBeenCalledTimes(1);
+    expect(mockPush).toHaveBeenCalledWith('/(app)/parcel-tool/5293897');
     expect(screen.queryByTestId('parcel-search-account')).toBeNull();
   });
-  it('task-362 AC5: the address list report link opens Help in the in-app browser sheet with the topic and the typed address (search.html:235)', () => {
+  it('T14 a blank Enter does nothing', () => {
+    render(<Screen />);
+    const before = JSON.stringify(screen.toJSON());
+    enter();
+    fireEvent.changeText(screen.getByTestId('parcel-search-input'), '   ');
+    enter();
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('parcel-search-drop')).toBeNull();
+    fireEvent.changeText(screen.getByTestId('parcel-search-input'), '');
+    expect(JSON.stringify(screen.toJSON())).toBe(before);
+  });
+  it('T15 a row label is the address, else the parcel id', () => {
+    render(<Screen />);
+    mockHook = { ...mockHook, data: rows(['100114', ''], ['100116', '116 Bathurst St']) };
+    type('11 Bathurst');
+    expect(screen.getByLabelText('100114')).toBeTruthy();
+    expect(screen.getByLabelText('116 Bathurst St')).toBeTruthy();
+  });
+  it('task-362 AC5: the drop-down report link opens Help in the in-app browser sheet with the topic and the typed address (search.html:235)', () => {
     render(<Screen />);
     mockHook = { ...mockHook, data: list };
     type('Bathurst St');
@@ -171,22 +311,13 @@ describe('parcel search screen behaviour (rows 8, 10, 11, 22, 27, 28)', () => {
     expect(mockOpenBrowser).toHaveBeenCalledWith('https://maxbld.ca/help#topic=wrong-lot&q=Bathurst%20St');
     expect(mockPush).not.toHaveBeenCalled();
   });
-  it('task-450 AC1 (ruled B): a street with no house number shows the refine line and keeps the rows', () => {
-    render(<Screen />);
-    mockHook = { ...mockHook, data: list };
-    type('Bathurst St');
-    expect(screen.getByTestId('parcel-search-refine')).toBeTruthy();
-    expect(screen.getByTestId('parcel-candidate-P1')).toBeTruthy();
-    expect(screen.getByTestId('parcel-candidate-P2')).toBeTruthy();
-    type('2 Bathurst St');
-    expect(screen.queryByTestId('parcel-search-refine')).toBeNull();
-  });
-  it('task-450 AC4 (L5): the prompt carries the minimum length from the setting, not a typed 3', () => {
+  // Dated 2026-11-25 (task-465, RR-0495; prior title kept: "task-450 AC4 (L5): the prompt carries the minimum length from the setting, not a typed 3"):
+  // the prompt line is dropped; the setting still fills {min} in the field's accessibility hint.
+  it('task-450 AC4 (L5): the field hint carries the minimum length from the setting, not a typed 3', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { SEARCH_MIN_QUERY_LEN } = require('@/components/surfaces/SearchBinding') as typeof import('@/components/surfaces/SearchBinding');
     render(<Screen />);
-    type('12');
-    expect(screen.getByText('Type at least ' + SEARCH_MIN_QUERY_LEN + ' characters to search.')).toBeTruthy();
+    expect(screen.getByTestId('parcel-search-input').props.accessibilityHint).toBe('Enter at least ' + SEARCH_MIN_QUERY_LEN + ' characters to search for a lot');
   });
 });
 

@@ -31,8 +31,10 @@ const cards = (t: Node): Node[] => all(t).filter((n) => n.props.role === 'radio'
 
 describe('the question heading spans the cards (the one change)', () => {
   const h = byKey(ask, 'question')!;
-  it('is 18/24 bold ink with the full width of its column and no measure of its own', () => {
-    expect(classes(h)).toEqual(expect.arrayContaining(['w-full', 'text-lg', 'font-bold', 'leading-6', 'text-report-ink']));
+  // Dated 2026-11-25 (task-465 McFixV2.1; RR-0485 "1 inside", finding 19, the approved mock state 7 .semi h3 26/32 bold; prior title kept: "is 18/24
+  // bold ink with the full width of its column and no measure of its own").
+  it('is 26/32 bold ink with the full width of its column and no measure of its own', () => {
+    expect(classes(h)).toEqual(expect.arrayContaining(['w-full', 'text-[26px]', 'font-bold', 'leading-[32px]', 'text-report-ink']));
     expect(classes(h).filter((c) => /^(max-w|px|mx|ml|mr|pl|pr)-/.test(c))).toEqual([]);
   });
   it('is a child of the same column as the three cards, and that column adds no inset beyond the page gutter', () => {
@@ -53,7 +55,9 @@ describe('the answer cards are the v8 radio cards', () => {
       const [dot, text] = row.children.filter(isNode);
       expect(dot!.component).toBe('View');
       expect(text!.component).toBe('Text');
-      expect(classes(text)).toEqual(expect.arrayContaining(['text-base', 'font-normal']));
+      // Dated 2026-11-25 (task-465, mock state 7 .ans div 15/20; prior line kept as text: text-base font-normal): the answers are 15/20, lighter.
+      expect(classes(text)).toEqual(expect.arrayContaining(['text-[15px]', 'leading-[20px]', 'font-normal', 'text-report-muted']));
+      expect(classes(c)).toEqual(expect.arrayContaining(['min-h-[48px]']));
     }
   });
   it('the dot is the mock ring: 22 px, 2 px field border; chosen: a 7 px ink ring and the card edge is ink', () => {
@@ -62,6 +66,18 @@ describe('the answer cards are the v8 radio cards', () => {
     expect(classes(dot(answered, 'answer-yes'))).toEqual(expect.arrayContaining(['h-[22px]', 'w-[22px]', 'rounded-full', 'border-[7px]', 'border-report-ink']));
     expect(classes(byKey(answered, 'answer-yes'))).toEqual(expect.arrayContaining(['border-report-ink']));
     expect(cards(answered).filter((c) => c.props.accessibilityState.checked === true)).toHaveLength(1);
+  });
+});
+
+describe('task-465: the question is the focus (RR-0485 "1 inside"; the approved mock state 7)', () => {
+  const px = (n: Node | undefined): number => Number(/^text-\[(\d+)px\]$/.exec(classes(n).find((c) => /^text-\[\d+px\]$/.test(c)) ?? '')?.[1] ?? NaN);
+  it('the heading px is larger than every answer px (a class check; the rendered sizes are measured on the phone walk)', () => {
+    const h = px(byKey(ask, 'question'));
+    expect(h).toBe(26);
+    for (const c of cards(ask)) {
+      const [, text] = c.children.filter(isNode)[0]!.children.filter(isNode);
+      expect(px(text)).toBeLessThan(h);
+    }
   });
 });
 
@@ -113,7 +129,8 @@ describe('the shared files move only by addition', () => {
   });
   it('the semi keys are their own (semi-prefixed) and the binding reads them, not the shared card, heading or select', () => {
     const lot = read('mobile/src/constants/lotMap.ts');
-    for (const k of ['semiTop', 'semiBack', 'semiHeading', 'semiCard', 'semiCardChecked', 'semiCardRow', 'semiDot', 'semiDotChecked', 'semiCardText', 'semiSelect', 'semiRetry', 'semiLoadingText']) expect(lot).toMatch(new RegExp(`^  ${k}:`, 'm'));
+    // task-465: + the semi page's own question and answer keys (the wall keeps semiHeading and semiCard*).
+    for (const k of ['semiTop', 'semiBack', 'semiHeading', 'semiCard', 'semiCardChecked', 'semiCardRow', 'semiDot', 'semiDotChecked', 'semiCardText', 'semiSelect', 'semiRetry', 'semiLoadingText', 'semiQuestionHeading', 'semiAnswerCard', 'semiAnswerCardChecked', 'semiAnswerText']) expect(lot).toMatch(new RegExp(`^  ${k}:`, 'm'));
     const b = read('mobile/src/components/surfaces/SemiQuestionBinding.tsx');
     for (const k of ['L.noticeHeading', 'L.card,', 'L.cardChecked', 'L.select,', 'L.cardArea']) expect(b).not.toContain(k);
   });

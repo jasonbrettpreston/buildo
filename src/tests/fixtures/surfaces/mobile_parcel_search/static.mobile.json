@@ -88,54 +88,67 @@
               {
                 "component": "View",
                 "props": {
-                  "key": "pill",
-                  "className": "flex-row items-center gap-1 rounded-full border border-report-field bg-report-card py-1 pl-4 pr-1"
+                  "key": "box",
+                  "testID": "parcel-search-box",
+                  "className": "w-full overflow-hidden rounded-[26px] border border-report-field bg-report-card"
                 },
                 "children": [
                   {
-                    "component": "Icon",
+                    "component": "View",
                     "props": {
-                      "key": "search-icon",
-                      "icon": "Search",
-                      "size": 18,
-                      "color": "#4d4841"
+                      "key": "bar",
+                      "className": "min-h-[52px] flex-row items-center gap-2 py-1 pl-4 pr-[6px]"
                     },
-                    "children": []
-                  },
-                  {
-                    "component": "Input",
-                    "props": {
-                      "key": "input",
-                      "testID": "parcel-search-input",
-                      "className": "flex-1 min-h-[44px] rounded-none border-0 bg-transparent dark:bg-transparent px-2 py-3 text-base font-normal text-report-ink shadow-none placeholder:text-report-soft",
-                      "value": {
-                        "derived": "input"
-                      },
-                      "onChangeText": {
-                        "action": "change_input"
-                      },
-                      "placeholder": {
-                        "content": "search.input.placeholder"
-                      },
-                      "placeholderTextColor": "#4d4841",
-                      "autoCapitalize": "none",
-                      "autoCorrect": false,
-                      "returnKeyType": "search",
-                      "accessibilityLabel": {
-                        "content": "search.input.label"
-                      },
-                      "accessibilityHint": {
-                        "text": {
-                          "content": "search.input.hint"
+                    "children": [
+                      {
+                        "component": "Icon",
+                        "props": {
+                          "key": "search-icon",
+                          "icon": "Search",
+                          "size": 18,
+                          "color": "#4d4841"
                         },
-                        "vars": {
-                          "min": {
-                            "derived": "min_query_len"
+                        "children": []
+                      },
+                      {
+                        "component": "Input",
+                        "props": {
+                          "key": "input",
+                          "testID": "parcel-search-input",
+                          "className": "flex-1 h-[44px] min-h-[44px] rounded-none border-0 bg-transparent dark:bg-transparent px-0 py-0 text-[16px] font-normal text-report-ink shadow-none placeholder:text-report-soft",
+                          "value": {
+                            "derived": "input"
+                          },
+                          "onChangeText": {
+                            "action": "change_input"
+                          },
+                          "onSubmitEditing": {
+                            "action": "submit"
+                          },
+                          "placeholder": {
+                            "content": "search.input.placeholder"
+                          },
+                          "placeholderTextColor": "#4d4841",
+                          "autoCapitalize": "none",
+                          "autoCorrect": false,
+                          "returnKeyType": "search",
+                          "accessibilityLabel": {
+                            "content": "search.input.label"
+                          },
+                          "accessibilityHint": {
+                            "text": {
+                              "content": "search.input.hint"
+                            },
+                            "vars": {
+                              "min": {
+                                "derived": "min_query_len"
+                              }
+                            }
                           }
-                        }
+                        },
+                        "children": []
                       }
-                    },
-                    "children": []
+                    ]
                   }
                 ]
               },
@@ -143,7 +156,7 @@
                 "component": "View",
                 "props": {
                   "key": "chips",
-                  "className": "mt-3 flex-row flex-wrap gap-2"
+                  "className": "mt-2 flex-row flex-wrap justify-center gap-[6px]"
                 },
                 "children": [
                   {
@@ -151,8 +164,8 @@
                     "props": {
                       "key": "chip-Queen & Spadina",
                       "testID": "parcel-search-suggestion-Queen & Spadina",
-                      "variant": "outline",
-                      "className": "min-h-[44px] rounded-full px-3 bg-report-button dark:bg-report-button border-report-button-border dark:border-report-button-border active:bg-report-sky dark:active:bg-report-sky",
+                      "variant": "ghost",
+                      "className": "h-auto sm:h-auto min-h-[44px] px-0 bg-transparent dark:bg-transparent active:bg-transparent dark:active:bg-transparent",
                       "accessibilityRole": "button",
                       "accessibilityLabel": {
                         "text": {
@@ -173,14 +186,23 @@
                     },
                     "children": [
                       {
-                        "component": "Text",
+                        "component": "View",
                         "props": {
-                          "key": "chip-text",
-                          "className": "text-[15px] font-semibold text-report-ink"
+                          "key": "chip-pill",
+                          "className": "min-h-[32px] flex-row items-center rounded-full border border-report-button-border px-3"
                         },
                         "children": [
                           {
-                            "derived": "recent.0"
+                            "component": "Text",
+                            "props": {
+                              "key": "chip-text",
+                              "className": "text-[13px] leading-[18px] font-normal text-report-muted"
+                            },
+                            "children": [
+                              {
+                                "derived": "recent.0"
+                              }
+                            ]
                           }
                         ]
                       }
@@ -191,8 +213,8 @@
                     "props": {
                       "key": "chip-26 Hurlingham Cres",
                       "testID": "parcel-search-suggestion-26 Hurlingham Cres",
-                      "variant": "outline",
-                      "className": "min-h-[44px] rounded-full px-3 bg-report-button dark:bg-report-button border-report-button-border dark:border-report-button-border active:bg-report-sky dark:active:bg-report-sky",
+                      "variant": "ghost",
+                      "className": "h-auto sm:h-auto min-h-[44px] px-0 bg-transparent dark:bg-transparent active:bg-transparent dark:active:bg-transparent",
                       "accessibilityRole": "button",
                       "accessibilityLabel": {
                         "text": {
@@ -213,14 +235,23 @@
                     },
                     "children": [
                       {
-                        "component": "Text",
+                        "component": "View",
                         "props": {
-                          "key": "chip-text",
-                          "className": "text-[15px] font-semibold text-report-ink"
+                          "key": "chip-pill",
+                          "className": "min-h-[32px] flex-row items-center rounded-full border border-report-button-border px-3"
                         },
                         "children": [
                           {
-                            "derived": "recent.1"
+                            "component": "Text",
+                            "props": {
+                              "key": "chip-text",
+                              "className": "text-[13px] leading-[18px] font-normal text-report-muted"
+                            },
+                            "children": [
+                              {
+                                "derived": "recent.1"
+                              }
+                            ]
                           }
                         ]
                       }
@@ -231,8 +262,8 @@
                     "props": {
                       "key": "chip-Bathurst St",
                       "testID": "parcel-search-suggestion-Bathurst St",
-                      "variant": "outline",
-                      "className": "min-h-[44px] rounded-full px-3 bg-report-button dark:bg-report-button border-report-button-border dark:border-report-button-border active:bg-report-sky dark:active:bg-report-sky",
+                      "variant": "ghost",
+                      "className": "h-auto sm:h-auto min-h-[44px] px-0 bg-transparent dark:bg-transparent active:bg-transparent dark:active:bg-transparent",
                       "accessibilityRole": "button",
                       "accessibilityLabel": {
                         "text": {
@@ -253,14 +284,23 @@
                     },
                     "children": [
                       {
-                        "component": "Text",
+                        "component": "View",
                         "props": {
-                          "key": "chip-text",
-                          "className": "text-[15px] font-semibold text-report-ink"
+                          "key": "chip-pill",
+                          "className": "min-h-[32px] flex-row items-center rounded-full border border-report-button-border px-3"
                         },
                         "children": [
                           {
-                            "derived": "recent.2"
+                            "component": "Text",
+                            "props": {
+                              "key": "chip-text",
+                              "className": "text-[13px] leading-[18px] font-normal text-report-muted"
+                            },
+                            "children": [
+                              {
+                                "derived": "recent.2"
+                              }
+                            ]
                           }
                         ]
                       }
@@ -271,29 +311,9 @@
               {
                 "component": "Text",
                 "props": {
-                  "key": "prompt",
-                  "testID": "parcel-search-prompt",
-                  "className": "mt-10 text-center text-base font-normal text-report-soft"
-                },
-                "children": [
-                  {
-                    "text": {
-                      "content": "search.prompt"
-                    },
-                    "vars": {
-                      "min": {
-                        "derived": "min_query_len"
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "component": "Text",
-                "props": {
                   "key": "legal",
                   "testID": "parcel-search-legal",
-                  "className": "mt-3 text-[13px] leading-[18px] font-normal text-report-muted"
+                  "className": "mt-6 text-center text-[11px] leading-[15px] font-normal text-report-soft"
                 },
                 "children": [
                   {
@@ -309,8 +329,8 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "33c06b5ae3b585b0"
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "3893aa2731eac197",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "4071cba8122fcf0c"
     }
   }
 }

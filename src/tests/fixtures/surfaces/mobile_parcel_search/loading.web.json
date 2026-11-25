@@ -69,58 +69,71 @@
             ]
           },
           {
-            "component": "Group",
+            "component": "Stack",
             "props": {
-              "key": "pill",
-              "className": "flex-nowrap items-center gap-1 rounded-full border border-zinc-800 bg-zinc-900 py-1 pl-4 pr-1"
+              "key": "box",
+              "testID": "parcel-search-box",
+              "className": "w-full gap-0 overflow-hidden rounded-[26px] border border-zinc-800 bg-zinc-900"
             },
             "children": [
               {
-                "component": "TextInput",
+                "component": "Group",
                 "props": {
-                  "key": "input",
-                  "testID": "parcel-search-input",
-                  "className": "flex-1 ph-no-capture",
-                  "size": "lg",
-                  "variant": "unstyled",
-                  "value": {
-                    "derived": "input"
-                  },
-                  "onChange": {
-                    "action": "change_input"
-                  },
-                  "placeholder": {
-                    "content": "search.input.placeholder"
-                  },
-                  "ariaLabel": {
-                    "content": "search.input.label"
-                  },
-                  "ariaDescription": {
-                    "text": {
-                      "content": "search.input.hint"
+                  "key": "bar",
+                  "className": "flex-nowrap items-center gap-2 py-1 pl-4 pr-1"
+                },
+                "children": [
+                  {
+                    "component": "TextInput",
+                    "props": {
+                      "key": "input",
+                      "testID": "parcel-search-input",
+                      "className": "flex-1 ph-no-capture",
+                      "size": "lg",
+                      "variant": "unstyled",
+                      "value": {
+                        "derived": "input"
+                      },
+                      "onChange": {
+                        "action": "change_input"
+                      },
+                      "onSubmit": {
+                        "action": "submit"
+                      },
+                      "placeholder": {
+                        "content": "search.input.placeholder"
+                      },
+                      "ariaLabel": {
+                        "content": "search.input.label"
+                      },
+                      "ariaDescription": {
+                        "text": {
+                          "content": "search.input.hint"
+                        },
+                        "vars": {
+                          "min": {
+                            "derived": "min_query_len"
+                          }
+                        }
+                      },
+                      "autoComplete": "off"
                     },
-                    "vars": {
-                      "min": {
-                        "derived": "min_query_len"
-                      }
-                    }
+                    "children": []
                   },
-                  "autoComplete": "off"
-                },
-                "children": []
-              },
-              {
-                "component": "Loader",
-                "props": {
-                  "key": "spinner",
-                  "testID": "parcel-search-spinner",
-                  "size": "sm",
-                  "color": "yellow",
-                  "ariaLabel": {
-                    "content": "search.searching"
+                  {
+                    "component": "Loader",
+                    "props": {
+                      "key": "spinner",
+                      "testID": "parcel-search-spinner",
+                      "size": "sm",
+                      "color": "yellow",
+                      "ariaLabel": {
+                        "content": "search.searching"
+                      }
+                    },
+                    "children": []
                   }
-                },
-                "children": []
+                ]
               }
             ]
           }
@@ -227,8 +240,8 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "33c06b5ae3b585b0"
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "3893aa2731eac197",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "4071cba8122fcf0c"
     }
   }
 }

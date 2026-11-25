@@ -69,84 +69,184 @@
             ]
           },
           {
-            "component": "Group",
+            "component": "Stack",
             "props": {
-              "key": "pill",
-              "className": "flex-nowrap items-center gap-1 rounded-full border border-zinc-800 bg-zinc-900 py-1 pl-4 pr-1"
+              "key": "box",
+              "testID": "parcel-search-box",
+              "className": "w-full gap-0 overflow-hidden rounded-[26px] border border-zinc-800 bg-zinc-900"
             },
             "children": [
               {
-                "component": "TextInput",
+                "component": "Group",
                 "props": {
-                  "key": "input",
-                  "testID": "parcel-search-input",
-                  "className": "flex-1 ph-no-capture",
-                  "size": "lg",
-                  "variant": "unstyled",
-                  "value": {
-                    "derived": "input"
-                  },
-                  "onChange": {
-                    "action": "change_input"
-                  },
-                  "placeholder": {
-                    "content": "search.input.placeholder"
-                  },
-                  "ariaLabel": {
-                    "content": "search.input.label"
-                  },
-                  "ariaDescription": {
-                    "text": {
-                      "content": "search.input.hint"
-                    },
-                    "vars": {
-                      "min": {
-                        "derived": "min_query_len"
-                      }
-                    }
-                  },
-                  "autoComplete": "off"
-                },
-                "children": []
-              }
-            ]
-          },
-          {
-            "component": "Group",
-            "props": {
-              "key": "chips",
-              "className": "mt-3 gap-2"
-            },
-            "children": [
-              {
-                "component": "Button",
-                "props": {
-                  "key": "chip-Bathurst St",
-                  "testID": "parcel-search-suggestion-Bathurst St",
-                  "size": "lg",
-                  "variant": "outline",
-                  "color": "gray",
-                  "className": "rounded-full font-mono text-xs font-normal",
-                  "ariaLabel": {
-                    "text": {
-                      "content": "search.chip.label"
-                    },
-                    "vars": {
-                      "query": {
-                        "derived": "recent.0"
-                      }
-                    }
-                  },
-                  "onClick": {
-                    "action": "set_input",
-                    "value": {
-                      "derived": "recent.0"
-                    }
-                  }
+                  "key": "bar",
+                  "className": "flex-nowrap items-center gap-2 py-1 pl-4 pr-1"
                 },
                 "children": [
                   {
-                    "derived": "recent.0"
+                    "component": "TextInput",
+                    "props": {
+                      "key": "input",
+                      "testID": "parcel-search-input",
+                      "className": "flex-1 ph-no-capture",
+                      "size": "lg",
+                      "variant": "unstyled",
+                      "value": {
+                        "derived": "input"
+                      },
+                      "onChange": {
+                        "action": "change_input"
+                      },
+                      "onSubmit": {
+                        "action": "submit"
+                      },
+                      "placeholder": {
+                        "content": "search.input.placeholder"
+                      },
+                      "ariaLabel": {
+                        "content": "search.input.label"
+                      },
+                      "ariaDescription": {
+                        "text": {
+                          "content": "search.input.hint"
+                        },
+                        "vars": {
+                          "min": {
+                            "derived": "min_query_len"
+                          }
+                        }
+                      },
+                      "autoComplete": "off"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "component": "Stack",
+                "props": {
+                  "key": "drop",
+                  "testID": "parcel-search-drop",
+                  "className": "w-full gap-0 border-t border-zinc-800"
+                },
+                "children": [
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "100026",
+                      "testID": "parcel-candidate-100026",
+                      "size": "lg",
+                      "variant": "subtle",
+                      "color": "gray",
+                      "className": "h-auto w-full justify-start rounded-none border-t border-zinc-800 px-4 py-2",
+                      "ariaLabel": {
+                        "derived": "label.0"
+                      },
+                      "onClick": {
+                        "action": "push",
+                        "route": "/parcel-tool/100026"
+                      }
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "row-text",
+                          "component": "span",
+                          "className": "text-[15px] font-medium text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100026-0",
+                              "component": "span",
+                              "className": "text-[15px] font-bold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.0.0.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100026-1",
+                              "component": "span",
+                              "className": "text-[15px] font-bold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.0.1.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100026-2",
+                              "component": "span",
+                              "className": "text-[15px] font-bold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.0.2.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100026-3",
+                              "component": "span",
+                              "className": "text-[15px] font-bold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.0.3.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100026-4",
+                              "component": "span",
+                              "className": "text-[15px] font-bold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.0.4.text"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "report",
+                      "testID": "parcel-search-report",
+                      "size": "lg",
+                      "variant": "subtle",
+                      "color": "gray",
+                      "className": "mt-2 self-center rounded-xl text-xs font-normal text-zinc-400 underline",
+                      "onClick": {
+                        "action": "open_help",
+                        "topic": "wrong-lot",
+                        "q": {
+                          "derived": "input"
+                        }
+                      }
+                    },
+                    "children": [
+                      {
+                        "content": "list.report"
+                      }
+                    ]
                   }
                 ]
               }
@@ -255,8 +355,8 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "33c06b5ae3b585b0"
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "3893aa2731eac197",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "4071cba8122fcf0c"
     }
   }
 }

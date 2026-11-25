@@ -54,6 +54,15 @@ export const LOT_MAP_LAYOUT = {
   semiDot: 'h-[22px] w-[22px] rounded-full border-2 border-report-field bg-report-card',
   semiDotChecked: 'h-[22px] w-[22px] rounded-full border-[7px] border-report-ink bg-report-card',
   semiCardText: 'flex-1 text-base font-normal text-report-ink',
+  // task-465 (McFixV2.1; RR-0485 "1 inside", finding 19, the approved mock state 7 .semi h3 / .ans div): the question is the focus, 26/32 bold; the
+  // answers are smaller and lighter, 15/20 at 48 px. New keys, because the report-limit wall (WallBinding.tsx) reads semiHeading, semiCard,
+  // semiCardChecked and semiCardText and has no ruling for a new look.
+  semiQuestionHeading: 'mt-6 w-full text-[26px] leading-[32px] font-bold text-report-ink',
+  semiAnswerCard:
+    'mt-3 h-auto sm:h-auto min-h-[48px] w-full flex-col items-start justify-start rounded-[20px] px-4 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky',
+  semiAnswerCardChecked:
+    'mt-3 h-auto sm:h-auto min-h-[48px] w-full flex-col items-start justify-start rounded-[20px] px-4 py-3 bg-report-card dark:bg-report-card border-report-ink dark:border-report-ink active:bg-report-sky dark:active:bg-report-sky',
+  semiAnswerText: 'flex-1 text-[15px] leading-[20px] font-normal text-report-muted',
   semiSelect: 'mt-6 min-h-[48px] w-full rounded-xl',
   semiRetry: 'mt-3 min-h-[48px] w-full rounded-xl bg-report-button dark:bg-report-button border-report-button-border dark:border-report-button-border',
   semiLoadingText: 'mt-6 text-base font-normal text-report-muted',

@@ -26,6 +26,8 @@ const actions = (): jest.Mocked<SurfaceActions> => ({
   change_input: jest.fn(), set_input: jest.fn(), retry: jest.fn(), select: jest.fn(), push: jest.fn(), back: jest.fn(),
   // MF-46 follow-up (dated 2026-11-12): the search host passes open_help ("Report incorrect address match" on the address list).
   open_help: jest.fn(),
+  // task-465 (RR-0483): the search field's Enter key (onSubmitEditing) fires submit.
+  submit: jest.fn(),
 });
 const show = (k: string, a = actions()) => {
   const s = S[k] as SearchSituation;
@@ -33,7 +35,8 @@ const show = (k: string, a = actions()) => {
   return a;
 };
 // task-456 X2 (mcfixreborn-g3 GROUNDER-A.md:102): reports_left joins the rendered situations (the A.6 line was a props golden only).
-const GOLDEN_SITUATIONS = ['static', 'loading', 'redirect', 'ambiguous', 'miss', 'empty', 'schema_drift', 'rate_limited', 'unauthorized', 'error', 'reports_left'];
+// task-465: suggest (the typing state, the drop-down rows) joins them.
+const GOLDEN_SITUATIONS = ['static', 'loading', 'redirect', 'ambiguous', 'suggest', 'miss', 'empty', 'schema_drift', 'rate_limited', 'unauthorized', 'error', 'reports_left'];
 
 describe('MF-46 follow-up: "Report incorrect address match" (OUTPUT regression F1)', () => {
   it('the address list carries the report link; a press calls open_help with the topic and the typed address', () => {
@@ -70,7 +73,8 @@ describe('mobile render smoke (FE-33 mobile case)', () => {
     const input = screen.getByTestId('parcel-search-input');
     expect([input.props.returnKeyType, input.props.autoCapitalize, input.props.autoCorrect]).toEqual(['search', 'none', false]);
     expect(input.props.accessibilityLabel).toBe('Search a Toronto address');
-    expect(screen.getByTestId('parcel-search-prompt')).toBeTruthy();
+    // Dated 2026-11-25 (task-465 O14, RR-0495; prior line kept as text: the idle page showed parcel-search-prompt): the prompt line is dropped.
+    expect(screen.queryByTestId('parcel-search-prompt')).toBeNull();
   });
   it('the chips carry the legacy role, label and testID and set the input', () => {
     const a = show('static');
@@ -99,19 +103,26 @@ describe('mobile render smoke (FE-33 mobile case)', () => {
     expect(screen.getByTestId('parcel-search-entitlement')).toBeTruthy();
     expect(screen.queryByTestId('parcel-search-empty')).toBeNull();
   });
-  it('the address list: radio cards, the checked card, the amber word, the label fallback; a tap selects, SELECT pushes', () => {
-    const a = show('ambiguous');
-    const radios = screen.getAllByRole('radio');
-    expect(radios).toHaveLength(10);
-    expect(screen.getByTestId('parcel-candidate-100102').props.accessibilityState).toMatchObject({ checked: true });
+  // Dated 2026-11-25 (task-465 McFixV2.1, RR-0487; prior title kept: "the address list: radio cards, the checked card, the amber word, the label
+  // fallback; a tap selects, SELECT pushes"): the rows are plain taps under the box; no radio, no checked card, no count badge, no Select.
+  it('the drop-down rows: ten rows, the label fallback, the refine line; a tap pushes the lot of that row; no radio and no Select', () => {
+    const a = show('suggest');
+    expect(screen.queryAllByRole('radio')).toHaveLength(0);
+    expect(within(screen.getByTestId('parcel-search-drop')).getAllByLabelText(/Bathurst St|100114/)).toHaveLength(10);
     expect(screen.getByLabelText('100114')).toBeTruthy();
-    expect(screen.getByText('candidates', { exact: false }).props.children).toContain('10 candidates');
+    expect(screen.queryByText('candidates', { exact: false })).toBeNull();
+    expect(screen.queryByTestId('parcel-search-select')).toBeNull();
     fireEvent.press(screen.getByTestId('parcel-candidate-100100'));
-    expect(a.select).toHaveBeenCalledWith('100100');
-    expect(a.push).not.toHaveBeenCalled();
-    fireEvent.press(screen.getByTestId('parcel-search-select'));
-    expect(a.push).toHaveBeenCalledWith('/(app)/parcel-tool/100102');
+    expect(a.push).toHaveBeenCalledWith('/(app)/parcel-tool/100100');
+    expect(a.select).not.toHaveBeenCalled();
     expect(screen.getByTestId('parcel-search-refine')).toBeTruthy();
+  });
+  it('task-465: Enter in the field (onSubmitEditing) calls submit with no argument; the miss line reads "No lot found for ..." with its hint', () => {
+    const a = show('miss');
+    fireEvent(screen.getByTestId('parcel-search-input'), 'submitEditing');
+    expect(a.submit).toHaveBeenCalledWith();
+    expect(screen.getByText('No lot found for zzzz qqqq')).toBeTruthy();
+    expect(screen.getByText('Check the house number and street name.')).toBeTruthy();
   });
   it('typing calls change_input with the text; there is no account button (A.13)', () => {
     const a = show('static');
