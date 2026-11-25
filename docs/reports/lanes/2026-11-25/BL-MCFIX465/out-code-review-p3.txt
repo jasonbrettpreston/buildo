@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-25T21:34:32.248Z file_sha256=e786481677fa8d325ba0d96c03600cc85320b9dc491b788435648531bf95199f prompt_sha256=fdaf993ff36b2b4ccaddb0835e05027ea962f78e4d20036a6ce0ed46782f7395
+🔍 Lens review of docs/reports/lanes/2026-11-25/BL-MCFIX465/in-out-code-review-p3.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11138 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22902 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 35385 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 47195 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 58533 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 70323 chars, answer 0 chars, 90s
+DEFER severity=MED — src/components/surfaces/web/SearchBinding.tsx "pill: 'flex-nowrap items-center gap-1 rounded-full border border-zinc-800 bg-zinc-900 py-1 pl-4 pr-1'," — the only user of L.pill (pill()) was deleted, and L.card/L.cardChecked/L.cardText/L.select/L.refine lost their only users (addressList/tail) while remaining in WEB_SEARCH_LAYOUT — delete these entries, or if a test reads WEB_SEARCH_LAYOUT members, confirm and add a shrink pin.
+
+DEFER severity=MED — src/components/surfaces/web/SearchBinding.tsx "if (!['change_input', 'set_input', 'retry', 'select', 'push', 'submit'].includes(name)) throw new Error(`SearchBinding: unknown action \"${name}\"`);" — the select button that emitted `{ action: 'select', parcelId }` is deleted, so `select` is now a dead action, yet it is still allow-listed and still required by `select: (parcelId: string) => void;`, forcing every WebActions implementer to keep a method nothing calls — remove `select` from the allow-list, the switch, and WebActions.
+
+DEFER severity=MED — src/tests/semi-question-design.logic.test.ts "const px = (n: Node | undefined): number => Number(/^text-\\[(\\d+)px\\]$/.exec(classes(n).find((c) => /^text-\\[\\d+px\\]$/.test(c)) ?? '')?.[1] ?? NaN);" — px passes a possible-undefined node to classes(), and the neighbouring first test does `const h = byKey(ask, 'question')!; expect(classes(h))`, implying classes takes a non-null Node, so this is a TS2345 (and a runtime crash if classes dereferences n) — guard `if (!n) return NaN;` before `classes(n)` or widen classes to accept `Node | undefined` (cannot see the classes signature to be sure).
+
+DEFER severity=LOW — src/components/surfaces/web/SearchBinding.tsx "submitted: string | null;" — `submitted` is added to WebSituation and set in WEB_STATIC_SITUATION but never read anywhere in the pasted tree (the miss line reads `derived('input')`), and `rows[].route` is declared but webRow recomputes the route with parcelSearchPath and ignores `r.route`; the `overCap: boolean` field likewise lost its only reader (old tail's `s.overCap`) — read these or drop them.
+
+DEFER severity=LOW — src/components/surfaces/web/SearchBinding.tsx "[CONTRACT]: { candidates: s.candidates, errors: { '429': { retryAfterSeconds: s.errors.retryAfterSeconds } } }," — no node references `contract('candidates.*')` any more (the deleted select button was the only one; webRow uses `r.parcelId` directly), so the candidates block in searchWebData is now unused contract data — drop it or confirm the renderer requires it.
+
+DEFER severity=LOW — src/components/surfaces/web/SearchBinding.tsx "const f = ctx.actions[name as keyof WebActions];" — the switch body that maps `submit` to a runner is not in the diff, so I cannot see whether Enter resolves to `ctx.actions.submit` or falls through to undefined; verify a `submit` case exists so the new onSubmit wiring actually fires.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- Dead layout constants left in WEB_SEARCH_LAYOUT (L.pill, L.card, L.cardChecked, L.cardText, L.select, L.refine) after their only users were removed
+- Dead `select` action kept in the handler allow-list and in WebActions though nothing emits it
+- px() in semi-question-design.logic.test.ts likely passes undefined to classes(), a type/runtime error
+
+---
+⏱  101926ms (101.9s)
+📊 Tokens — total: 56110, input: 34255, output: 21855, reasoning: 20975

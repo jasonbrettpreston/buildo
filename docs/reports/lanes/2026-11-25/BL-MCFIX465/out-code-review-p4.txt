@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-25T21:34:32.251Z file_sha256=fd4aa2d5dcc6131d92f4fdee3e79fc2624a11a7a27b9df820b98f9adf95a6ed0 prompt_sha256=c68390f63c971dfd67ce3733175adfb263d9347c4d7e00e0427576af6b520b5b
+🔍 Lens review of docs/reports/lanes/2026-11-25/BL-MCFIX465/in-out-code-review-p4.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11501 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23977 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 35855 chars, answer 0 chars, 45s
+BUG-free pass with test-quality findings only:
+
+```
+DEFER severity=MED — src/tests/surfaces/search-web-binding.ui.test.tsx "for (const b of screen.queryAllByRole('button')) expect((b as HTMLButtonElement).disabled).toBe(true); // task-465: the rows are links, so there may be none" — with the radio cards gone the ambiguous tree may render zero buttons, so the test named "a button whose action has no callback is disabled (no dead control)" can pass while asserting nothing — capture the list first and pin a non-zero count, e.g. const btns = screen.queryAllByRole('button'); expect(btns.length).toBeGreaterThan(0); before the disabled loop (or render the static chips where buttons are known to exist)
+DEFER severity=MED — src/tests/surfaces/search-web-binding.ui.test.tsx "const mapRow = nodes(map as unknown as Json).find((n) => n.props?.testID === 'parcel-candidate-100026') as Json;" — an unchecked as Json over a possibly-undefined find result, so a missing or renamed row throws TypeError inside the test instead of failing with a named assertion — assert the find result is defined (expect(mapRow, 'the multi_parcel row is drawn').toBeDefined()) before reading props.href / props.onClick
+DEFER severity=LOW — src/tests/surfaces/search-web-binding.ui.test.tsx "const set_input = vi.fn(); const push = vi.fn(); const submit = vi.fn();" — push is now passed into the binding but never asserted, so the test title's claim "never an imperative push" is unproven and the mock is dead weight — add expect(push).not.toHaveBeenCalled(); after the row href assertion (or drop push from the object)
+DEFER severity=LOW — src/tests/surfaces/search-web-binding.ui.test.tsx "expect(decode(renderToStaticMarkup(provided(bind(miss))))).toContain((C['search.miss'] as string).replace('{query}', miss.input));" — if the search.miss template no longer carries the {query} token the replace is a no-op and the "templates are filled: the miss line" assertion silently degrades to matching the literal across all states — add expect(C['search.miss'] as string).toContain('{query}') (and expect(decoded).not.toContain('{query}')) so the fill is actually proven, or check cannot see
+DEFER severity=LOW — src/tests/surfaces/search-parity.golden.test.ts "const drop = bad.props.children[0].children[1].children[1].children as Json[];" — four unchecked index/as hops into the golden and a swap "[drop[0], drop[1]] = [drop[1] as Json, drop[0] as Json];" that silently writes undefined (or re-swaps the same node) when the drop-down holds fewer than two rows, turning the planted ""ambiguous: block order differs"" expectation into a confusing TypeError or a false failure — assert drop.length >= 2 and that both entries are component nodes before swapping
+DEFER severity=LOW — src/tests/surfaces/search-web-binding.ui.test.tsx "expect(buttons.length).toBeGreaterThanOrEqual(3);" — the count that used to be padded by the radio cards and SELECT now rests entirely on the static page's recent chips, so the disabled-switch test fails if SITUATIONS.static.recent has fewer than three entries — pin the count to (SITUATIONS.static as WebSituation).recent.length, or assert the chips' testIDs explicitly
+DEFER severity=LOW — src/tests/surfaces/search-web-binding.ui.test.tsx "const first = amb.rows[0] as { parcelId: string };" — same unchecked-lookup class as mapRow, rows[0] can be undefined and then first.parcelId throws inside the template literal — assert amb.rows.length > 0 (or use non-null-free expect(amb.rows[0]).toBeDefined()) first
+```
+
+VERDICT: PASS on code correctness
+
+Top 3 defects (if FAIL): none (no CRIT or HIGH findings)
+
+---
+⏱  53502ms (53.5s)
+📊 Tokens — total: 25822, input: 14498, output: 11324, reasoning: 10410

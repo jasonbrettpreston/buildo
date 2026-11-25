@@ -1,0 +1,254 @@
+LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:ac8f623d8f09a980f557f38bbb36ac5d560fceccd66b23041555b99202ac9cfc part 1 of 1 chunk 4 of 4
+NO RULE LIST: the lens template alone judges the material under review. The material is chunk 4 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/surfaces/parcel-legacy-oracle.logic.test.ts","src/tests/surfaces/search-parity.golden.test.ts","src/tests/surfaces/search-reports-left.logic.test.ts","src/tests/surfaces/search-web-binding.ui.test.tsx","src/tests/surfaces/site-footer.logic.test.ts","src/tests/surfaces/surface-conformance.logic.test.ts","src/tests/surfaces/surface-validate.logic.test.ts"]
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/surfaces/parcel-legacy-oracle.logic.test.ts b/src/tests/surfaces/parcel-legacy-oracle.logic.test.ts
+index 32d2e803a51e333f09f299e19a5e4b13eb5554ce..b4334d5fcb73d2e0492208d9d914b993809c6890 100644
+--- a/src/tests/surfaces/parcel-legacy-oracle.logic.test.ts
++++ b/src/tests/surfaces/parcel-legacy-oracle.logic.test.ts
+@@ -29,6 +29,10 @@ export const INTENTIONALLY_CHANGED: Record<string, string> = {
+   'accessibilityLabel=Open lot at ${c.address || c.parcelId}': 'a tap now selects a radio card labelled with the address; SELECT opens the lot (accepted 2026-11-09 item 1, P35-D17 a)',
+   'Parcel {c.parcelId}': 'the radio cards carry the address only, as the layout (accepted 2026-11-09 item 1; plan v3 §2.2)',
+   'More than {SEARCH_CANDIDATE_LIMIT} lots match. Add a house number to narrow it down.': 'the refine line becomes "Add a house number to narrow it down." at every row count, because it now also shows for a street with no house number next to a shorter list (RR-0443 c, MORNING-DECISIONS.md:2284 "they need to select from the available addresses that are close"; task-450 QUESTIONS-RULED.md Q8.2)',
++  // McFixV2.1 (task-465; dated 2026-11-25): three ruled changes.
++  'parcel-search-prompt': 'the type-more prompt line is dropped; Enter on a too-short entry shows the No lot found line (operator RR-0495, MORNING-DECISIONS.md:2579, verbatim "correct"; task-465)',
++  'Type at least {SEARCH_MIN_QUERY_LEN} characters to search.': 'the type-more prompt line is dropped (operator RR-0495, MORNING-DECISIONS.md:2579, verbatim "correct"; task-465)',
++  'No parcel found for that address.': 'the miss line becomes "No lot found for <the typed text>" under the box after Enter (task-465 card item 3; operator RR-0483, MD:2523 "can\'t find 41 derwyn"; RR-0487, MD:2543, the approved mock state 4)',
+ };
+ 
+ const fill = (s: string): string => s.replace(/\$?\{([A-Z_]+)\}/g, (m, k: string) => CONFIG[k] ?? m).replace(/\$?\{[^}]+\}/g, '{}');
+diff --git a/src/tests/surfaces/search-parity.golden.test.ts b/src/tests/surfaces/search-parity.golden.test.ts
+index 881f9643d8899a36633c75af75869430a7064823..99b91eb056f92a13df2e5e9d4b5bbe913376ccc1 100644
+--- a/src/tests/surfaces/search-parity.golden.test.ts
++++ b/src/tests/surfaces/search-parity.golden.test.ts
+@@ -81,11 +81,12 @@ const STATES: Json[] = rj(DESCRIPTOR).states;
+ const pair = (golden: string): [Json, Json] => [rj(path.join(DIR, `${golden}.web.json`)), rj(path.join(DIR, `${golden}.mobile.json`))];
+ 
+ describe('FE-07 search parity: web vs mobile goldens of mobile_parcel_search', () => {
+-  it('the descriptor declares both targets and all 11 states have a web and a mobile golden', () => {
++  // Dated 2026-11-25 (task-465 McFixV2.1; prior title kept: "... all 11 states ..."): 12 states, the typing state `partial` with the golden `suggest`.
++  it('the descriptor declares both targets and all 12 states have a web and a mobile golden', () => {
+     expect(rj(DESCRIPTOR).identity.platforms).toEqual(['mobile', 'web']);
+     // Dated 2026-11-19 (task-353 SUITE.FIX-2): 10 -> 11 states. SRCH.A6 (task-320, commit ace05ccee; operator RR-0307) added the state `hit` with the
+     // golden `reports_left` (reports_left.web.json and reports_left.mobile.json, both tracked, so the web/mobile pair the loop below checks holds).
+-    expect(STATES.map((s) => s.golden)).toEqual(['loading', 'redirect', 'ambiguous', 'miss', 'empty', 'schema_drift', 'rate_limited', 'unauthorized', 'error', 'static', 'reports_left']);
++    expect(STATES.map((s) => s.golden)).toEqual(['loading', 'redirect', 'ambiguous', 'miss', 'empty', 'schema_drift', 'rate_limited', 'unauthorized', 'error', 'static', 'reports_left', 'suggest']);
+     for (const s of STATES) for (const t of ['web', 'mobile']) expect(fs.existsSync(path.join(DIR, `${s.golden}.${t}.json`)), `${s.golden}.${t}`).toBe(true);
+   });
+   it('every state: the same refs, actions, block order and situation on both targets (non-vacuous)', () => {
+@@ -128,11 +129,14 @@ describe('FE-07 search parity RED: one planted change in one target is reported'
+   });
+   it('a renamed action, a swapped block and a different situation', () => {
+     const bad = clone(w);
+-    const col = bad.props.children[0].children as Json[];
+-    [col[1], col[2]] = [col[2] as Json, col[1] as Json];
++    // Dated 2026-11-25 (task-465; prior plant kept as text: the column children 1 and 2 swapped): the ambiguous column holds the header and the box
++    // only (the chips and the count hide while the drop-down is open), so two drop-down rows are swapped instead.
++    const drop = bad.props.children[0].children[1].children[1].children as Json[];
++    [drop[0], drop[1]] = [drop[1] as Json, drop[0] as Json];
+     bad.situation = 'static';
+-    const select = JSON.stringify(bad).replace('"action":"select"', '"action":"choose"');
+-    const lines = parityProblems('ambiguous', JSON.parse(select), m);
++    // Dated 2026-11-25 (task-465; prior plant kept as text: the action select renamed): the rows carry push, so a push is renamed.
++    const renamed = JSON.stringify(bad).replace('"action":"push"', '"action":"choose"');
++    const lines = parityProblems('ambiguous', JSON.parse(renamed), m);
+     expect(lines.some((l) => l.startsWith('ambiguous: actions differ'))).toBe(true);
+     expect(lines.some((l) => l.startsWith('ambiguous: block order differs'))).toBe(true);
+     expect(lines).toContain('ambiguous: situation differs: static / ambiguous');
+diff --git a/src/tests/surfaces/search-reports-left.logic.test.ts b/src/tests/surfaces/search-reports-left.logic.test.ts
+index 2824294681f3c168032a5041a416a84481369112..127041ac6631b3b25ad702c78eb5bbc7ab960200 100644
+--- a/src/tests/surfaces/search-reports-left.logic.test.ts
++++ b/src/tests/surfaces/search-reports-left.logic.test.ts
+@@ -92,10 +92,11 @@ describe('A.6 (b): the new state binds exactly the three served values', () => {
+ });
+ 
+ describe('A.6 (c): an undrawn state renders no line', () => {
+-  it('the ten committed states (no entitlement data in their situations) carry no reports-left node, on either target', () => {
++  // Dated 2026-11-25 (task-465 McFixV2.1, O8; prior title kept: "the ten committed states ..."): + the typing state partial (golden suggest), 10 -> 11.
++  it('the eleven committed states (no entitlement data in their situations) carry no reports-left node, on either target', () => {
+     for (const target of ['mobile', 'web']) {
+       const others = goldens(target).filter((g) => g.state !== 'hit');
+-      expect(others).toHaveLength(10);
++      expect(others).toHaveLength(11);
+       for (const g of others) expect(lines(g), `${g.state}.${target}`).toEqual([]);
+     }
+   });
+diff --git a/src/tests/surfaces/search-web-binding.ui.test.tsx b/src/tests/surfaces/search-web-binding.ui.test.tsx
+index 6e2f90fb0c0374ff9a77c5e9449bc9a7d493d5e3..d29a22c704f1baf805193877ff2b587feabdbacf 100644
+--- a/src/tests/surfaces/search-web-binding.ui.test.tsx
++++ b/src/tests/surfaces/search-web-binding.ui.test.tsx
+@@ -8,6 +8,8 @@
+ //       outside a commented allowlist, every content string it names present (templates filled), no raw ref left in the markup;
+ //   (b) the run-time `disabled` option (the live switch is off) disables the input and every button;
+ //   (c) actions reach the mount's callbacks (a chip sets the input; SELECT pushes the web route of the checked lot);
++//   Dated 2026-11-25 (task-465 McFixV2.1, RR-0487, RR-0495; prior text kept): a row tap pushes the web route of its lot and Enter fires submit; there
++//   is no SELECT, no radio card, no count badge and no prompt line.
+ //   (d) RED: an unknown component, a missing content key, an unresolved ref and an unknown action each throw.
+ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+ import fs from 'node:fs';
+@@ -27,10 +29,9 @@ const GOLDENS = fs.readdirSync(DIR).filter((f) => f.endsWith('.web.json')).sort(
+ const provided = (el: ReactElement): ReactElement => h(AdminMantineProvider, { scheme: 'dark', children: el });
+ const decode = (s: string): string => s.replace(/&#x27;|&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+ const bind = (s: WebSituation, extra: Json = {}): ReactElement => h(SearchBinding, { tree: searchWebTree(s), content: C, data: searchWebData(s), ...extra });
+-// task-450 AC4 (L5): the minimum length comes from the generated slice's setting (config.min_query_len), never a typed 3; the prompt and the input
+-// description are templates filled with it.
++// task-450 AC4 (L5): the minimum length comes from the generated slice's setting (config.min_query_len), never a typed 3; the input description is a
++// template filled with it. Dated 2026-11-25 (task-465, RR-0495; prior text kept as text: "the prompt and the input description"): the prompt is dropped.
+ const MIN = String((JSON.parse(fs.readFileSync(path.join(ROOT, 'mobile/src/generated/surfaces/mobile_parcel_search.json'), 'utf8')) as Json).config.min_query_len);
+-const PROMPT = (C['search.prompt'] as string).replace('{min}', MIN);
+ const HINT = (C['search.input.hint'] as string).replace('{min}', MIN);
+ 
+ // Console errors a library prints during a server render that are not defects of the binding. Empty today: any entry needs a comment naming why.
+@@ -58,8 +59,9 @@ const textsOf = (n: unknown, s: WebSituation): string[] => {
+ };
+ 
+ describe('(a) every web golden renders with its situation', () => {
+-  it('11 goldens: equal to searchWebTree(situation), rendered, every content string present, no raw ref, no console error', () => {
+-    expect(GOLDENS).toHaveLength(11); // SRCH.A6 (task-320, dated 2026-11-19): 10 -> 11, the new state reports_left
++  // Dated 2026-11-25 (task-465; prior title kept: "11 goldens: ..."): 12, the typing state's golden suggest.
++  it('12 goldens: equal to searchWebTree(situation), rendered, every content string present, no raw ref, no console error', () => {
++    expect(GOLDENS).toHaveLength(12); // SRCH.A6 (task-320, dated 2026-11-19): 10 -> 11, the new state reports_left; task-465: 12, suggest
+     for (const g of GOLDENS) {
+       const s = SITUATIONS[g.situation] as WebSituation;
+       expect(searchWebTree(s)).toEqual(g.props);
+@@ -70,26 +72,29 @@ describe('(a) every web golden renders with its situation', () => {
+     }
+     expect(errors).toEqual([]);
+   });
+-  it('templates are filled: the 429 seconds, the candidate count and a chip label', () => {
++  // Dated 2026-11-25 (task-465; prior title kept: "templates are filled: the 429 seconds, the candidate count and a chip label"): the count badge is
++  // gone; the miss line is the new template.
++  it('templates are filled: the 429 seconds, the miss line and a chip label', () => {
+     const rl = decode(renderToStaticMarkup(provided(bind(SITUATIONS.rate_limited as WebSituation))));
+     expect(rl).toContain((C['search.ratelimit'] as string).replace('{seconds}', String((SITUATIONS.rate_limited as WebSituation).errors.retryAfterSeconds)));
+-    const amb = SITUATIONS.ambiguous as WebSituation;
+-    expect(decode(renderToStaticMarkup(provided(bind(amb))))).toContain((C['list.badge'] as string).replace('{count}', String(amb.candidates.length)));
++    const miss = SITUATIONS.miss as WebSituation;
++    expect(decode(renderToStaticMarkup(provided(bind(miss))))).toContain((C['search.miss'] as string).replace('{query}', miss.input));
+     const st = SITUATIONS.static as WebSituation;
+     expect(decode(renderToStaticMarkup(provided(bind(st))))).toContain(`aria-label="${(C['search.chip.label'] as string).replace('{query}', st.recent[0] as string)}"`);
+-    // task-450 AC4 (L5): the prompt and the input description carry the setting's value, no "{min}" left and no typed 3 in the content.
+-    expect([C['search.prompt'], C['search.input.hint']].every((t) => (t as string).includes('{min}') && !(t as string).includes('3'))).toBe(true);
++    // task-450 AC4 (L5): the input description carries the setting's value, no "{min}" left and no typed 3 in the content (task-465: the prompt is dropped).
++    expect([C['search.input.hint']].every((t) => (t as string).includes('{min}') && !(t as string).includes('3'))).toBe(true);
++    expect(C).not.toHaveProperty('search.prompt');
+     const idle = decode(renderToStaticMarkup(provided(bind(WEB_STATIC_SITUATION))));
+-    expect(idle).toContain(PROMPT);
+     expect(idle).toContain(`aria-description="${HINT}"`);
+     expect(idle).not.toContain('{min}');
+     expect(errors).toEqual([]);
+   });
+-  it('the mount situations: idle (prompt, no chips), unauthorized (entitlement notice, no prompt), error (notice with Retry)', () => {
++  // Dated 2026-11-25 (task-465 O14, RR-0495; prior title kept: "the mount situations: idle (prompt, no chips), unauthorized (entitlement notice, no prompt), ...").
++  it('the mount situations: idle (no prompt line, no chips), unauthorized (entitlement notice), error (notice with Retry)', () => {
+     const idle = decode(renderToStaticMarkup(provided(bind(WEB_STATIC_SITUATION))));
+-    expect([idle.includes(PROMPT), idle.includes('parcel-search-suggestion')]).toEqual([true, false]);
++    expect([idle.includes('parcel-search-prompt'), idle.includes('parcel-search-suggestion'), idle.includes('parcel-search-drop')]).toEqual([false, false, false]);
+     const no = decode(renderToStaticMarkup(provided(bind(WEB_UNAUTHORIZED_SITUATION))));
+-    expect([no.includes(C['search.entitlement'] as string), no.includes(PROMPT)]).toEqual([true, false]);
++    expect([no.includes(C['search.entitlement'] as string), no.includes('parcel-search-prompt')]).toEqual([true, false]);
+     const err = decode(renderToStaticMarkup(provided(bind(WEB_ERROR_SITUATION))));
+     expect([err.includes(C['search.error'] as string), err.includes(C['search.retry.text'] as string)]).toEqual([true, true]);
+     expect({ ...WEB_STATIC_SITUATION, recent: [] }).toEqual({ ...(SITUATIONS.static as WebSituation), recent: [] });
+@@ -100,34 +105,45 @@ describe('(a) every web golden renders with its situation', () => {
+ describe('(b) the live switch off: every control disabled', () => {
+   it('the input and every button are disabled with runtime.disabled, even with every callback supplied', () => {
+     const all = { change_input: vi.fn(), set_input: vi.fn(), retry: vi.fn(), select: vi.fn(), push: vi.fn() };
+-    render(provided(bind(SITUATIONS.ambiguous as WebSituation, { actions: all, runtime: { disabled: true } })));
++    // Dated 2026-11-25 (task-465, third addendum; prior lines kept as text: the ambiguous state's radio cards and SELECT were the buttons): the rows
++    // are real links now (a route, like the footer links: the live switch does not disable a link), so the buttons are the static page's chips.
++    render(provided(bind(SITUATIONS.static as WebSituation, { actions: all, runtime: { disabled: true } })));
+     expect((screen.getByTestId('parcel-search-input') as HTMLInputElement).disabled).toBe(true);
+-    const buttons = screen.getAllByRole('button').concat(screen.getAllByRole('radio'));
+-    expect(buttons.length).toBeGreaterThan(3);
++    expect(screen.queryAllByRole('radio')).toHaveLength(0);
++    const buttons = screen.getAllByRole('button');
++    expect(buttons.length).toBeGreaterThanOrEqual(3);
+     for (const b of buttons) expect((b as HTMLButtonElement).disabled).toBe(true);
+   });
+   it('a button whose action has no callback is disabled (no dead control)', () => {
+     render(provided(bind(SITUATIONS.ambiguous as WebSituation)));
+     expect(screen.queryByTestId('parcel-search-account')).toBeNull();
+-    for (const b of screen.getAllByRole('button')) expect((b as HTMLButtonElement).disabled).toBe(true);
++    for (const b of screen.queryAllByRole('button')) expect((b as HTMLButtonElement).disabled).toBe(true); // task-465: the rows are links, so there may be none
+   });
+ });
+ 
+ describe('(c) actions reach the mount', () => {
+-  it('a chip sets the input; a card selects; SELECT pushes the web route of the checked lot', () => {
+-    const set_input = vi.fn(); const select = vi.fn(); const push = vi.fn();
++  // Dated 2026-11-25 (task-465; prior title kept: "a chip sets the input; a card selects; SELECT pushes the web route of the checked lot").
++  // task-465 third addendum (NAV-6): a lot row is a real link to the web route of its lot (Button component={Link} href), never an imperative push.
++  it('a chip sets the input; a lot row is a link to the web route of its lot; a map-kind row has no web route; Enter in the field fires submit; no SELECT', () => {
++    const set_input = vi.fn(); const push = vi.fn(); const submit = vi.fn();
+     const st = SITUATIONS.static as WebSituation;
+     render(provided(bind(st, { actions: { set_input } })));
+     fireEvent.click(screen.getByTestId(`parcel-search-suggestion-${st.recent[0] as string}`));
+     expect(set_input).toHaveBeenCalledWith(st.recent[0]);
+     cleanup();
+     const amb = SITUATIONS.ambiguous as WebSituation;
+-    const first = amb.candidates[0] as { parcelId: string };
+-    render(provided(bind({ ...amb, selectedParcelId: first.parcelId }, { actions: { select, push } })));
+-    fireEvent.click(screen.getByTestId(`parcel-candidate-${first.parcelId}`));
+-    expect(select).toHaveBeenCalledWith(first.parcelId);
+-    fireEvent.click(screen.getByTestId('parcel-search-select'));
+-    expect(push).toHaveBeenCalledWith(`/parcel-tool/${encodeURIComponent(first.parcelId)}`);
++    const first = amb.rows[0] as { parcelId: string };
++    render(provided(bind(amb, { actions: { push, submit } })));
++    const row = screen.getByTestId(`parcel-candidate-${first.parcelId}`) as HTMLAnchorElement;
++    expect([row.tagName, row.getAttribute('href')]).toEqual(['A', `/parcel-tool/${encodeURIComponent(first.parcelId)}`]);
++    expect(screen.queryByTestId('parcel-search-select')).toBeNull();
++    const map = searchWebTree(SITUATIONS.navigating_multi_parcel as WebSituation);
++    const nodes = (n: Json): Json[] => [n, ...((n.children ?? []) as Json[]).filter((c) => c && typeof c === 'object' && 'component' in c).flatMap(nodes)];
++    const mapRow = nodes(map as unknown as Json).find((n) => n.props?.testID === 'parcel-candidate-100026') as Json;
++    expect([mapRow.props.href, mapRow.props.onClick]).toEqual([undefined, null]); // no web route: no link, no handler (S-7)
++    expect(JSON.stringify(map)).not.toContain('disambiguate');
++    fireEvent.keyDown(screen.getByTestId('parcel-search-input'), { key: 'Enter' });
++    expect(submit).toHaveBeenCalledTimes(1);
+   });  // MF-46 follow-up (P35-D18 a, dated 2026-11-12): "Report incorrect address match" is a real link to Help & Support, the query in the fragment.
+   // Dated 2026-11-24 (task-450 AC6, B.7 doc-2:49; prior title kept: "...with topic address_match..."): the topic is wrong-lot ("Wrong address or lot").
+   it('the report link opens /help with topic wrong-lot and the encoded input in the fragment', () => {
+diff --git a/src/tests/surfaces/site-footer.logic.test.ts b/src/tests/surfaces/site-footer.logic.test.ts
+index c83b3692e87279ffd4f3ed7cb07af3cd4e1044e9..0797d800289fd30109b01dd124c666f7264fd37e 100644
+--- a/src/tests/surfaces/site-footer.logic.test.ts
++++ b/src/tests/surfaces/site-footer.logic.test.ts
+@@ -51,7 +51,8 @@ describe('T1 one builder, three users', () => {
+ 
+ describe('T2 the web search tree ends with the footer node, five items in the v8 order', () => {
+   it('eleven goldens: the last child of the screen is the footer', () => {
+-    expect(GOLDENS).toHaveLength(11); // SRCH.A6 (task-320; dated 2026-11-19): 10 -> 11, the state hit (golden reports_left)
++    // Dated 2026-11-25 (task-465 McFixV2.1; prior pin 11, title kept): + the typing state partial (golden suggest): 11 -> 12.
++    expect(GOLDENS).toHaveLength(12); // SRCH.A6 (task-320; dated 2026-11-19): 10 -> 11, the state hit (golden reports_left)
+     for (const f of GOLDENS) {
+       const g = rj(`${SEARCH_DIR}/${f}`);
+       const tree = searchWebTree(SITUATIONS[g.situation] as WebSituation) as unknown as Json;
+diff --git a/src/tests/surfaces/surface-conformance.logic.test.ts b/src/tests/surfaces/surface-conformance.logic.test.ts
+index cb79db70eb07d41d9827c2159006ab823af829bf..46bb3d31750319e98bb99dda9197efb88a65393b 100644
+--- a/src/tests/surfaces/surface-conformance.logic.test.ts
++++ b/src/tests/surfaces/surface-conformance.logic.test.ts
+@@ -263,7 +263,8 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
+     // SEARCHFIX.3 (task-451; dated 2026-11-24; H Q2/H Q4 GROUNDER-QUESTIONS.md:75, :77; doc-2 B.6 (doc-2:48); plan rulings 8.1 b and 8.3): 427 -> 436 strings: +8 nav strings (nav.home "MaxBLD" and nav.sign_in "Log in" in web_help, web_terms, web_privacy and web_maxbld_error .content.json, the plain-page header links) and +1 net in mobile_parcel_disambiguation_map.content.json (unlinked.report and unlinked.stop added, select.label retired); goldens unchanged (100); measured with surface-validate --check before (427) and after (436).
+     // SEARCHFIX.4 (task-452; dated 2026-11-24; RR-0444 MD:2290, RR-0455 MD:2357-2358): + the wall S-096 mobile_parcel_wall (converted 17 -> 18, in scope 33 -> 34; 2 mobile goldens rate_limited and unauthorized, 100 -> 102; +7 strings in mobile_parcel_wall.content.json, 436 -> 443; the second screens row, S-page 1 -> 2 of 2); measured with surface-validate --check before and after.
+     // SEARCHFIX.4 round 2 (task-452; dated 2026-11-24; RR-0468 MD:2426-2430, Spec 128 rule 12): + the wall's error state (1 mobile golden, 102 -> 103; +1 string wall.error, 443 -> 444); measured with surface-validate --check before and after.
+-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (18 surfaces, 103 goldens)' }, { findings: [], note: 'S-sbind ok (18 surfaces, 444 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
++    // McFixV2.1 (task-465; dated 2026-11-25; RR-0483 MD:2523, RR-0487 MD:2543, RR-0495 MD:2578-2579): + the search typing state partial (golden suggest, 2 goldens, 103 -> 105); search content -5 keys (list.rail, list.badge, list.select, list.select.label, search.prompt) +3 (list.hint, search.miss.hint, search.outside_toronto.title), 444 -> 442 strings.
++    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (18 surfaces, 105 goldens)' }, { findings: [], note: 'S-sbind ok (18 surfaces, 442 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
+   });
+   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
+     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
+diff --git a/src/tests/surfaces/surface-validate.logic.test.ts b/src/tests/surfaces/surface-validate.logic.test.ts
+index f1106a3cbbb4d14b30c5ec8fb1d2a2b4dbf8991a..351036832d0ebe286bff8d3e2b0e038dbaa3c4ed 100644
+--- a/src/tests/surfaces/surface-validate.logic.test.ts
++++ b/src/tests/surfaces/surface-validate.logic.test.ts
+@@ -92,7 +92,8 @@ describe('FE-13 surface-validate gate: real tree', () => {
+     // SEARCHFIX.3 (task-451; dated 2026-11-24; H Q2/H Q4 GROUNDER-QUESTIONS.md:75, :77; doc-2 B.6 (doc-2:48); plan rulings 8.1 b and 8.3): 427 -> 436 strings: +8 nav strings (nav.home "MaxBLD" and nav.sign_in "Log in" in web_help, web_terms, web_privacy and web_maxbld_error .content.json, the plain-page header links) and +1 net in mobile_parcel_disambiguation_map.content.json (unlinked.report and unlinked.stop added, select.label retired); goldens unchanged (100); measured with surface-validate --check before (427) and after (436).
+     // SEARCHFIX.4 (task-452; dated 2026-11-24; RR-0444 MD:2290, RR-0455 MD:2357-2358): + the wall S-096 mobile_parcel_wall (converted 17 -> 18, in scope 33 -> 34; 2 mobile goldens rate_limited and unauthorized, 100 -> 102; +7 strings in mobile_parcel_wall.content.json, 436 -> 443; the second screens row, S-page 1 -> 2 of 2); measured with surface-validate --check before and after.
+     // SEARCHFIX.4 round 2 (task-452; dated 2026-11-24; RR-0468 MD:2426-2430, Spec 128 rule 12): + the wall's error state (1 mobile golden, 102 -> 103; +1 string wall.error, 443 -> 444); measured with surface-validate --check before and after.
+-    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 34 in scope: converted 18, pending 3, parked 9, report 4) · S-screen ok (18 surfaces, 103 goldens) · S-sbind ok (18 surfaces, 444 strings) · S-page ok (2 of 2 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
++    // McFixV2.1 (task-465; dated 2026-11-25; RR-0483 MD:2523, RR-0487 MD:2543, RR-0495 MD:2578-2579): + the search typing state partial (golden suggest, 2 goldens, 103 -> 105); search content -5 keys (list.rail, list.badge, list.select, list.select.label, search.prompt) +3 (list.hint, search.miss.hint, search.outside_toronto.title), 444 -> 442 strings.
++    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 34 in scope: converted 18, pending 3, parked 9, report 4) · S-screen ok (18 surfaces, 105 goldens) · S-sbind ok (18 surfaces, 442 strings) · S-page ok (2 of 2 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
+     expect(r.stdout.startsWith('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · ')).toBe(true);
+     expect(r.stdout).toContain('S-desc ok (examined 34 in scope:');
+   });
+

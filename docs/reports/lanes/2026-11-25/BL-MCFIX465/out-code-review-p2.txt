@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-25T21:34:32.250Z file_sha256=1f9fb2bafae264206408819e66f760d903a26448d81237aa32e84adb8e0dd5b4 prompt_sha256=a6e2de35a5c031a204e935bdd151a16d4bf02b2a28ca0dd7bc6c11bc2003f78f
+🔍 Lens review of docs/reports/lanes/2026-11-25/BL-MCFIX465/in-out-code-review-p2.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11564 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22817 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33533 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44876 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 56086 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 67123 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 78211 chars, answer 0 chars, 105s
+DEFER severity=MED — mobile/src/lib/parcelSearchMatch.ts "const lot = (parcelId: string): string => parcelSearchRoute('unique', { parcelId, query }) ?? '';" — a null route is silently coerced to the empty string and the row then renders with "onPress: { action: 'push', route: r.route }", so a tap would push '' with nothing logged (same coercion on the multi_parcel row) — make SearchRow.route nullable and drop or disable the row when it is null, or log the null instead of masking it.
+
+DEFER severity=LOW — mobile/app/(app)/parcel-tool/index.tsx "select: () => undefined," — the only tree this host renders no longer names select (the rows push r.route directly), so this is a reachable-by-nothing no-op that would swallow a select dispatch if a tree ever named it — delete it once SurfaceActions.select is optional, or throw/log on dispatch.
+
+DEFER severity=LOW — mobile/src/constants/parcelSearch.ts "pill: 'flex-row items-center gap-1 rounded-full border border-report-field bg-report-card py-1 pl-4 pr-1'," — the pill() builder it fed was deleted from SearchBinding and no line in the diff reads L.pill any more, likewise listHeader, rail, badge, card, cardChecked, cardRow, cardText, miss, missText, prompt and refine — remove the orphaned keys (PARCEL_SEARCH_ICON.miss and .button look orphaned with them; confirm no other file reads PARCEL_SEARCH_LAYOUT).
+
+DEFER severity=LOW — mobile/src/components/surfaces/SearchBinding.tsx "[CONTRACT]: { candidates: s.candidates, errors: { '429': { retryAfterSeconds: s.errors.retryAfterSeconds } } }," — no node in the new tree resolves candidates.N (labels and segments are derived, rows carry r.route, the old select used contract("candidates.${i}.parcelId")), so this contract branch is now dead data — drop it or confirm against the descriptor that candidates is still required.
+
+DEFER severity=LOW — mobile/src/components/surfaces/SearchBinding.tsx "node('Icon', { key: `${key}-icon`, icon: 'Info', size: I.msg, color: H.textMuted })," — "Info" is a new name in this file's icon vocabulary (the others are Search, Ban, AlertTriangle, MapPin, Check, ArrowRight) and I cannot see the renderer's icon registry here, so an unknown name would draw a blank icon silently — have the grounder confirm SurfaceRenderer resolves "Info".
+
+DEFER severity=NIT — mobile/src/lib/parcelSearchMatch.ts "overCap: boolean;" — the field is now read only inside the builder (the binding reads hint === 'refine'), so it is dead to every consumer of SearchSituation — keep it only if the truth-table fixtures pin it, otherwise inline it.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  114699ms (114.7s)
+📊 Tokens — total: 52479, input: 30086, output: 22393, reasoning: 21745

@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-25T21:34:32.251Z file_sha256=8d29bb60c45d0e34e13892421536c11be72f111db664aaa91e1d5c2bf8ce03b1 prompt_sha256=1f392aef68bff6a7fd7d5d310d07a79086d367f48a759d2f7a92409eabcc5ab5
+🔍 Lens review of docs/reports/lanes/2026-11-25/BL-MCFIX465/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11720 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 24761 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 37192 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 49891 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 61986 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 74391 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 86059 chars, answer 0 chars, 105s
+DEFER severity=LOW — mobile/__tests__/fixtures/parcelSearch.situations.json (fetching_with_candidates) `"overCap": true,` — overCap is true with only three candidates (100100/100102/100104), but the builder sets overCap by `candidates.length >= cap` (the added truth-table pins 9 rows to false, 10 to true), so this hand-authored state is unreachable and the `"hint": "refine"` renders the refine line for a non-cap result — either give the case its 10-candidate list or set overCap false and drop the refine hint.
+
+DEFER severity=LOW — mobile/__tests__/fixtures/parcelSearch.situations.json (suggest) `"parcelId": "100114", "address": "", "route": "/(app)/parcel-tool/100114"` — one suggest row carries an empty address, so the typing golden renders a blank pin row and no assertion tests that empty case, which reads like a typo for a real Bathurst number — give 100114 a street address (or add an explicit assertion if the blank row is intended).
+
+DEFER severity=LOW — mobile/__tests__/parcelSearchMatch.test.ts `expect(M.buildSearchSituation({ ...base, input: '', debounced: '' })).toEqual(M.buildSearchSituation({ ...base }));` — base already holds `input: ''` and `debounced: ''`, so the two calls are identical and the assertion cannot prove the stated "a blank submit is never made" — set `submitted: ''` (or a whitespace submit) and assert showMiss and rows stay empty.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  113657ms (113.7s)
+📊 Tokens — total: 56830, input: 32051, output: 24779, reasoning: 24406
