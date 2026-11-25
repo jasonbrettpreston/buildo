@@ -227,4 +227,6 @@ rg#4 MED folded 454 lands first, the
 2026-11-25 phone tests (commit ii, plan steps 1-2): smoke renders reports_left with its line text; gateStability adds the held unsure lot row. Phone typecheck passes. Red and green of these two are UNVERIFIED until the push station (the phone tests are outside the pre-commit related run and the lane runs no test runner, rule 18; precedent BL-SFX2 REPORT.md:21, BL-SFX3 REPORT.md:16). Red edits for the station: remove ...reportsLeft(s), at SearchBinding.tsx:238; change !ask to !(ask && isFetching) at [parcelId].tsx:34.
 
 2026-11-25 migration 309 database test written (commit iii, plan step 10): src/tests/db/migration-309-parcel-maxbld-scenarios.db.test.ts; self-skips with no DATABASE_URL and under BUILDO_TEST_DB_EXTERNAL=1; one BEGIN/ROLLBACK, savepoints per case, both directions by DROP CONSTRAINT inside SAVEPOINT d. NOT RUN by the lane (no database connection); the orchestrator runs it in a throwaway container (RR-0475 item 4, MORNING-DECISIONS.md:2481). AC #4 stays open until db-green.out. Migration 309 unchanged.
+
+2026-11-25 work commits 2606cb7ab (web tests, ledger, factories), 5580aaa76 (phone tests), f7498e8c5 (database test); the launch review context context-r2.md committed with the work as the brief asks. Station owed (RR-0467) before the output review.
 <!-- SECTION:NOTES:END -->
