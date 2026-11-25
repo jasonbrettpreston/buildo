@@ -1,13 +1,13 @@
 ---
 id: TASK-313
 title: >-
-  MF-49 MaxBLD mobile app: a separate Expo project in a monorepo (Spec 116
-  section 3)
+  MF-49 MaxBLD mobile app: the front door, inside the one Expo project (McApp
+  card 1)
 status: LATER
 assignee:
   - '@operator'
 created_date: '2026-11-19T13:07:00Z'
-updated_date: '2026-11-25T20:56:00Z'
+updated_date: '2026-11-25T21:05:00Z'
 labels:
   - queue-row
   - McApp
