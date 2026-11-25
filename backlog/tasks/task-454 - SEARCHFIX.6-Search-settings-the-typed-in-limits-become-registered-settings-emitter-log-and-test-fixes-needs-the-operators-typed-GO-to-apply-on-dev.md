@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-25T02:52:00Z'
+updated_date: '2026-11-25T13:19:00Z'
 labels:
   - SEARCHFIX-LATER
 milestone: m-1
@@ -21,6 +21,15 @@ references:
   - docs/reports/reviews/task-454/seat-integration-1.md
   - docs/reports/reviews/task-454/seat-reality-check-1.md
   - docs/reports/reviews/task-454/seat-regression-1.md
+  - compliance:step-132 docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:surface-136 docs/specs/02-web-admin/136_mcfrontend_handbook.md
+  - compliance:mobile-90 docs/specs/03-mobile/90_mobile_engineering_protocol.md
+  - compliance:mobile-98 docs/specs/03-mobile/98_mobile_testing_protocol.md
+  - compliance:mobile-99 docs/specs/03-mobile/99_mobile_state_architecture.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: fix
 ordinal: 150110
 ---
