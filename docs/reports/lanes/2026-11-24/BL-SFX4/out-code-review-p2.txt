@@ -1,23 +1,18 @@
-◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
-REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T21:00:23.943Z file_sha256=caccef246ac1ed53c8981c3eb7dde85adafeb30f03d70c03b12b4b4eda1ce616 prompt_sha256=5488fb3e81f5c115a4487a56ff2a38169a1cb64af777a54cb506ab1e3ed03fd2
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-25T00:17:54.668Z file_sha256=3c96b14f0e29d04290c3022679b96cee59ee146265a4b7533c19326ca59eefce prompt_sha256=c34e4022548f9909ad8bff3517718998e0968706fc27a2422a209f46ee83cc1d
 🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX4/in-out-code-review-p2.txt (model: deepseek-reasoner)
 
-[deepseek-review] deepseek-reasoner working… reasoning 11543 chars, answer 0 chars, 15s
-[deepseek-review] deepseek-reasoner working… reasoning 23687 chars, answer 0 chars, 30s
-[deepseek-review] deepseek-reasoner working… reasoning 35450 chars, answer 0 chars, 45s
-[deepseek-review] deepseek-reasoner working… reasoning 47575 chars, answer 0 chars, 60s
-BUG/DEFER list:
-
-DEFER severity=MED — mobile/__tests__/apiClient.test.ts:70 "import { fetchWithAuth, AccountDeletedError, ApiError, NetworkError, ReportLimitError, SubscriptionRequiredError } from '@/lib/apiClient';" against mobile/__tests__/parcelSearchMatch.test.ts:33 "import { ApiError, RateLimitError, ReportLimitError, SubscriptionRequiredError } from '@/lib/errors';" — the same two classes are taken from two different modules, so the suites only prove class identity within themselves; if apiClient.ts declares its own ReportLimitError/SubscriptionRequiredError instead of re-exporting errors.ts's, fetchWithAuth throws a constructor that searchWall's instanceof never matches and both suites still pass — I cannot see either module, so have the grounder confirm, and fix by importing from one module and asserting the thrown constructor is the errors.ts class.
-
-DEFER severity=LOW — docs/reports/generated/127-surface-review-queue.md (card S-096, row 2) "| reads | `entitlements` | `user_id` · `product` · `status` · `plan_key` · `current_period_end` | `user_id` · `product` · `status` · `stripe_subscription_id` · `current_period_end` · ..." — plan_key is claimed as a touched column but is absent from the same row's introspected full column list, so either the descriptor names a column the table does not have or the introspected list is stale — regenerate both lists from one introspection run so a phantom column cannot survive.
-
-DEFER severity=NIT — mobile/__tests__/fixtures/wall.situations.json:11 "  \"named\": []" — the file's own comment says "Each committed golden names its state and its situation" yet this list is empty while two goldens exist, and no consumer is visible in this chunk — if the capture script does not read it, delete the key, otherwise populate it from the goldens map.
-
-REJECT — docs/reports/generated/127-surface-review-queue.md "It is 1 of 12 entr(ies) in feature `F14`. Removing it deletes 4 owned component(s): ... · `mobile/src/components/surfaces/WallBinding.tsx`." — the 3 to 4 bump looks like an unbacked off-by-one — the list in the same line gains exactly one entry (WallBinding.tsx), so count and list agree, and the S-096 card's "It owns no component" is consistent with the binding surface owning it.
+[deepseek-review] deepseek-reasoner working… reasoning 10995 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22833 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 34535 chars, answer 0 chars, 45s
+DEFER severity=MED — docs/reports/generated/127-surface-review-queue.md (card-s-096, Q2) "`user_id` · `product` · `status` · `plan_key` · `current_period_end`" against its own introspection "`user_id` · `product` · `status` · `stripe_subscription_id` · `current_period_end` · `trial_started_at` · ..." — the touched-columns list names `plan_key`, but the cell labeled "Full column list (introspected)" omits it, so either the wall's descriptor reads a column that does not exist or the "full" list is stale — reconcile the touch list against the introspected set before this card is trusted.
+DEFER severity=LOW — docs/reports/generated/127-surface-review-queue.md (card-s-096, Q9) "It is 1 of 6 entr(ies) in feature `F01`. It owns no component." versus card-s-083 "`mobile/src/components/surfaces/WallBinding.tsx`" — WallBinding.tsx is the wall's own code file (RR-0469), yet this diff attributes it to `binding_mobile_list` while S-096 claims it owns no component, so S-096's removal claim and the binding's are out of step — confirm which surface owns WallBinding.tsx and make Q9 match.
+NIT — mobile/__tests__/apiClient.test.ts "const bare = await fetchWithAuth('/api/parcels/lookup?parcelId=PCL-1').catch((e) => e);" — the test title says "keeps the class and code", but the `bare` case only asserts `toMatchObject({ code: 'REPORT_LIMIT_REACHED', reportsLimit: null, resetsOn: null })` and never checks it is still a `ReportLimitError` — add `expect(bare).toBeInstanceOf(ReportLimitError);` so the class half of the claim is actually asserted.
+REJECT — mobile/__tests__/apiClient.test.ts "import { fetchWithAuth, AccountDeletedError, ApiError, NetworkError, ReportLimitError, SubscriptionRequiredError } from '@/lib/apiClient';" — the two new symbols' definition site looks wrong — cannot see apiClient.ts/errors.ts in this chunk, but the four pre-existing symbols import from the same `@/lib/apiClient` module and no new module path is introduced, so leave the existence of the exports to the grounder.
 
 VERDICT: PASS on code correctness
+Top 3 defects (if FAIL): none (PASS)
 
 ---
-⏱  73151ms (73.2s)
-📊 Tokens — total: 55450, input: 39840, output: 15610, reasoning: 15046
+⏱  50609ms (50.6s)
+📊 Tokens — total: 47535, input: 37360, output: 10175, reasoning: 9608

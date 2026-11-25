@@ -1,27 +1,26 @@
-◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
-REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T21:00:23.942Z file_sha256=a456e936973f56ee5c37e7ab900f91a1d17c2bbcdfc4192cc1d4fd15fa3ec073 prompt_sha256=aabc11ed3f105300b67f41aa375a44e6a307d624b24051364a02a68b0fc51e3f
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-25T00:17:54.669Z file_sha256=988852c1792e4dd8e653c06142603fdfd7cd401d9fceafd9edcfcda047c44ee9 prompt_sha256=898059cfc6e4850ed43c723c9b6fecb71548bfb2ccb63dbc418e7e7b89a5b4c9
 🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX4/in-out-code-review-p4.txt (model: deepseek-reasoner)
 
-[deepseek-review] deepseek-reasoner working… reasoning 11211 chars, answer 0 chars, 15s
-[deepseek-review] deepseek-reasoner working… reasoning 23002 chars, answer 0 chars, 30s
-[deepseek-review] deepseek-reasoner working… reasoning 35778 chars, answer 0 chars, 45s
-[deepseek-review] deepseek-reasoner working… reasoning 46344 chars, answer 2241 chars, 60s
-DEFER severity=LOW — scripts/surfaces/wall-golden-capture.ts:56 "if (fs.existsSync(DIR)) for (const f of fs.readdirSync(DIR)) if (!names.includes(f.replace(/\.mobile\.json$/, ''))) problems.push(`STRAY ${f}`);" — `--write` never removes a stray golden, so after a situation is retired the gate stays red no matter how many times `--write` runs, and the same run prints "wrote N goldens" while exiting 1 — unlink stray files in the `--write` branch (and keep printing them) so the writer can repair the directory it owns.
-
-DEFER severity=LOW — scripts/surfaces/wall-golden-capture.ts:23 "const fixture = JSON.parse(fs.readFileSync(path.join(REPO, 'mobile/__tests__/fixtures/wall.situations.json'), 'utf8')) as {" — the cast is unchecked, so a malformed fixture fails as a raw TypeError (for example `Object.keys(undefined)` at the `fixture.goldens` read) rather than the named error the script already uses two lines later — validate that `goldens` and `inputs` are objects and throw `new Error('wall-golden-capture: unreadable fixture')`.
-
-DEFER severity=LOW — src/tests/surfaces/page-arm.logic.test.ts:88 "const WALL_SCREEN = TABLE.screens[WALL] as Json;" followed by `WALL_SCREEN.binding` at line 91 — no presence check, so a missing `mobile_parcel_wall` row crashes the whole file at module scope with "cannot read properties of undefined" instead of a finding naming the row — read it through a helper that throws `no screens row mobile_parcel_wall` or assert it before building `files`.
-
-DEFER severity=LOW — src/tests/surfaces/static-page.logic.test.ts:96 "t.screens.mobile_parcel_semi_question.sections[2].parts[0].role = role;" — the new positive test and the plant both address the notice part by array position, so a table reorder silently tests a different part and a shortened `sections` throws a TypeError instead of failing the assertion — locate the notice text part by its kind/role or assert the index path exists first.
-
-NIT — src/tests/surfaces/static-page.logic.test.ts:130 "const b = read(BINDINGS[ID] as string);" — `ID` comes from `Object.keys(BINDINGS)`, so the cast asserts something the type already guarantees (or, under `noUncheckedIndexedAccess`, hides a null that cannot occur) — use `BINDINGS[ID]!` or map over `Object.entries(BINDINGS)`.
-
-NIT — src/tests/surfaces/static-page.logic.test.ts:113 "expect(Object.keys(SCREENS)).toEqual(IDS);" — this equality is JSON row order dependent while the rest of the block is per-id, so adding a third screens row anywhere but the end fails for the wrong reason — compare sorted keys (`Object.keys(SCREENS).sort()` against `IDS`) so the pin is about membership, matching how the loop below already works per id.
-
-REJECT — scripts/surfaces/wall-golden-capture.ts:29 "const g = fixture.goldens[name]!;" — the non-null assertion looks like a hidden null — it is safe because `name` only ever comes from `Object.keys(fixture.goldens)` in `main`, and the reachable gap (missing `situation` input) is handled by the explicit throw on the next line.
+[deepseek-review] deepseek-reasoner working… reasoning 11164 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22638 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33664 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44471 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 55109 chars, answer 0 chars, 75s
+DEFER severity=LOW — scripts/surfaces/wall-golden-capture.ts "if (fs.existsSync(DIR)) for (const f of fs.readdirSync(DIR)) if (!names.includes(f.replace(/\.mobile\.json$/, ''))) problems.push(`STRAY ${f}`);" — a stray golden is reported and sets exit 1 even in --write mode, and nothing deletes it, so a renamed state leaves the script failing forever while stdout still says "wrote N goldens" — in the --write branch unlink each stray before reporting it.
+DEFER severity=LOW — src/tests/surfaces/static-page.logic.test.ts "expect(Object.keys(SCREENS)).toEqual(IDS);" — pins static-page.json key order to the literal order of the local BINDINGS record, so a benign reorder of the table fails with an order-only diff that has nothing to do with this card — compare sorted keys (Object.keys(SCREENS).sort() vs IDS.sort()).
+DEFER severity=LOW — scripts/surfaces/wall-golden-capture.ts "const fixture = JSON.parse(fs.readFileSync(path.join(REPO, 'mobile/__tests__/fixtures/wall.situations.json'), 'utf8')) as {" — an unreadable or reshaped fixture surfaces as a bare TypeError from Object.keys(fixture.goldens) with a stack, unlike the clean "no input" throw in goldenText — validate goldens/inputs exist and throw a named error before the loop.
+NIT — scripts/surfaces/wall-golden-capture.ts "// (semi-question-golden-capture.ts) on this surface. Run from the repo root with the mobile path aliases:" — the header sentence has no verb, so the file does not state what it follows — write "follows the semi page's capture (semi-question-golden-capture.ts)".
+REJECT — scripts/surfaces/wall-golden-capture.ts "const g = fixture.goldens[name]!;" — the non-null assertion looks like it hides a missing golden — name comes from Object.keys(fixture.goldens), so the index always exists.
+REJECT — src/tests/surfaces/search-reports-left.logic.test.ts "const hookLine = rt('mobile/src/hooks/useParcelLookup.ts').split('\n').findIndex((l) => l.startsWith('export function useParcelEntitlement(')) + 1;" — a missed rename would yield 0 and look like a silent pass — the next line expect(hookLine).toBeGreaterThan(0) fails first, so the miss is loud.
+REJECT — src/tests/surfaces/page-arm.logic.test.ts "expect(pageArm(c).findings).toEqual([`SV-PAGE ${TABLE_PATH}: 2 screen(s) read, 3 expected (the binding modules that call the page builder)`]);" — 3 expected against 2 screens reads like an off-by-one — the third expected module is the injected OtherBinding that also calls pageProps, so 2 of 3 is the intended RED.
+REJECT — scripts/surfaces/wall-golden-capture.ts "fingerprint: { files: Object.fromEntries(files.map((f) => [f, sha16(path.join(REPO, f)) as string])) }" — the unchecked `as string` looks like a cast hiding a non-string — sha16 is imported untyped from report-checks.mjs under the same @ts-expect-error pattern, and the value is only serialised to JSON.
 
 VERDICT: PASS on code correctness
 
+Top 3 defects (if FAIL):
+- none
+
 ---
-⏱  60944ms (60.9s)
-📊 Tokens — total: 31851, input: 18731, output: 13120, reasoning: 12317
+⏱  89408ms (89.4s)
+📊 Tokens — total: 47383, input: 29749, output: 17634, reasoning: 16846
