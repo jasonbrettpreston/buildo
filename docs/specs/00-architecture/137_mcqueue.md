@@ -149,6 +149,8 @@ Dated note 2026-11-21 (M-246, prior text kept; task-423 PROTOCOL.SIMPLE, lane BL
 
 Dated note 2026-11-20 (M-246, prior text kept; task-399 FOLD.ADOPT, lane BL-OUTCOME; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1517`: "don't makr the task complete until it actually works"): a lane build or fix task's closing commit is refused unless the lane directory holds TRIAGE.md with one outcome line per CONFIRMED or CONFLICT id of GROUNDER.md (forms fixed, task, ruling, wontfix, pile; see the Spec 08 rule 6 note of the same date) and the task's Final Summary shows the round line and the CRITICAL, HIGH and MED outcomes. TRIAGE.md is required only when GROUNDER.md holds such an id. Rule 3 (the two-commit close) is otherwise unchanged.
 
+Dated note 2026-11-25 (M-246, prior text kept; RR-0477, decision-259; operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`:2496 "batch items that touch the same files or the same kind of file and need no database step. Keep anything with a database step or its own operator question on its own card."): one card may hold several similar items under that test.
+
 ## 5. The weekly snapshot
 
 A procedure. No tool and no code.
