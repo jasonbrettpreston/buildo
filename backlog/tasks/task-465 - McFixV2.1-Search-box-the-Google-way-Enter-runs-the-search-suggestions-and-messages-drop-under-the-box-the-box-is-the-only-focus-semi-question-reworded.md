@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MCFIX465'
 created_date: '2026-11-25T17:05:00Z'
-updated_date: '2026-11-25T18:53:00Z'
+updated_date: '2026-11-25T18:59:00Z'
 labels:
   - McFixV2
 milestone: m-1
@@ -332,4 +332,6 @@ rg#5 MED folded The answer labels be
 2026-11-25: plan PLAN-465-v1 by Cairn-Plan-465 set on the card (planner hand-back saved at ~/Buildo-scratch/lanes-20261125/mcfixv2-465/PLAN.md). Files line owes every OUTSIDE FILES LINE path of the plan section 4; the plan grounder rules that.
 
 2026-11-25 taken on the board at lane launch (lane BL-MCFIX465, worktree /Users/brettpreston_macmini/Buildo-wt-mcfix465, branch wf2/mcfix465), RR-0240
+
+2026-11-25 (RR-0495, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2579, operator verbatim "correct" to the lane's option a): the type-more prompt line is dropped; Enter on a too-short entry shows the No lot found line. The plan grounder folds the exact plan text.
 <!-- SECTION:NOTES:END -->
