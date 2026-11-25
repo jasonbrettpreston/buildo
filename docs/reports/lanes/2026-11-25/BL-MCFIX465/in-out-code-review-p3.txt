@@ -1,5 +1,5 @@
-LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:555338b77642601f2f59ce68b7be00c729f7d38edc76e9436e19e697a4dbbda4 part 1 of 1 chunk 3 of 4
-NO RULE LIST: the lens template alone judges the material under review. The material is chunk 3 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/surfaces/_schema/bindings.json","scripts/surfaces/_schema/census/mobile-product.json","scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json","scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json","scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json","scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json","src/components/surfaces/web/SearchBinding.tsx","src/lib/surfaces/maxbld-web.ts","src/tests/semi-question-design.logic.test.ts","src/tests/surfaces/admin-media.golden.test.ts","src/tests/surfaces/contract-binding.logic.test.ts","src/tests/surfaces/nav-by-route.logic.test.ts"]
+LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:75df59a912fba06757a2eb881b612f37d1b1e80546b33db0e5883be794cb3e2d part 1 of 1 chunk 3 of 4
+NO RULE LIST: the lens template alone judges the material under review. The material is chunk 3 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/surfaces/_schema/bindings.json","scripts/surfaces/_schema/census/mobile-product.json","scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json","scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json","scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json","scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json","src/components/surfaces/web/SearchBinding.tsx","src/lib/surfaces/maxbld-web.ts","src/tests/semi-question-design.logic.test.ts","src/tests/surfaces/admin-media.golden.test.ts","src/tests/surfaces/contract-binding.logic.test.ts"]
 
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
@@ -665,29 +665,4 @@ index 3848561717880cc6fe667d9761b9390257fd0615..104cd5ee15f0dde6ee25561801dbf10f
      // MF-76 (dated 2026-11-11; plan v3 §3.4 WCAG 2.1.1): + tabIndex at the end (the landing sample region's keyboard stop, the number 0, never text).
      // MF-83 group 2 (dated 2026-11-14; FE-42): + viewBox, width, points, fill, stroke, strokeDasharray, x1, y1, x2, y2 (the lot-view svg props: strings, never display text). 71 -> 81.
      // MF-46 follow-up (dated 2026-11-12; Help & Support contact): + topic at the end (a mailto node's topic, a closed list, never text). 70 -> 71.
-diff --git a/src/tests/surfaces/nav-by-route.logic.test.ts b/src/tests/surfaces/nav-by-route.logic.test.ts
-index 480f6138d57c1de2224122d347ee06cfac536e8f..2bf3b5fe576df6e3fda5ebe373ced57a27306615 100644
---- a/src/tests/surfaces/nav-by-route.logic.test.ts
-+++ b/src/tests/surfaces/nav-by-route.logic.test.ts
-@@ -304,7 +304,7 @@ interface Allow { file: string; rule: string; component: string; handler: string
- const SIGN_IN = 'mobile/app/(auth)/sign-in.tsx';
- const SIGN_UP = 'mobile/app/(auth)/sign-up.tsx';
- const LOGIN_FORM = 'src/components/auth/LoginForm.tsx';
--const WEB_SEARCH = 'src/components/surfaces/web/SearchBinding.tsx';
-+// task-465 (dated 2026-11-25): the WEB_SEARCH constant (src/components/surfaces/web/SearchBinding.tsx) went with its one entry, audit 46 (below).
- const ALLOW: Allow[] = [
-   // --- The six audited VIOLATIONS, named exceptions (operator 2026-11-11 "yes"). Audit #3 is one control that breaks two rules. ---
-   // Dated 2026-11-12 (MF-48 Stage B with MF-74; operator "Ball y"): #3 is FIXED and its two entries leave the list (the list only shrinks). The
-@@ -336,8 +336,9 @@ const ALLOW: Allow[] = [
-   { file: SIGN_UP, rule: 'NAV-1', component: 'Pressable', handler: "setMethod('phone')", count: 1, kind: 'disclosure', audit: 21,
-     why: 'opens the sign-up phone bottom sheet (a sheet is a self-contained task, ios.md:14), gated off by PHONE_AUTH_ENABLED; the same control as the sign-in phone button (audit 17)' },
-   // --- Audited FLAGs the rules reach: a real router call missing a guard; not navigation by state. Owed by the named row. ---
--  { file: WEB_SEARCH, rule: 'NAV-6', component: 'node:Button#select', handler: 'action:push', count: 1, kind: 'flag', audit: 46,
--    why: 'owed: MF-44 (Button component={Link} href={route}, disabled while route is null; unwired while MAXBLD_WEB_LIVE=false)' },
-+  // Dated 2026-11-25 (task-465 McFixV2.1, plan third addendum; prior entry kept as text: { file: WEB_SEARCH, rule: 'NAV-6', component: 'node:Button#select',
-+  // handler: 'action:push', count: 1, kind: 'flag', audit: 46, why: 'owed: MF-44 (Button component={Link} href={route}, ...)' }): the Select button is gone and
-+  // the drop-down rows meet what it owed: a lot row is a web binding Button with an href key (Button component={Link} href), so NAV-6 finds nothing.
-   // --- Audited OK: a real mechanism the rule's shape reaches. ---
-   { file: 'src/app/login/page.tsx', rule: 'NAV-6', component: 'button', handler: "router.push(safeRedirectPath(params.get('redirect')))", count: 1, kind: 'ok', audit: 27,
-     why: 'Continue as Dev (dev mode only): a programmatic move to a computed, same-origin-guarded target (src/lib/auth/safe-redirect.ts, protected), not a link' },
 

@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MCFIX465'
 created_date: '2026-11-25T17:05:00Z'
-updated_date: '2026-11-25T21:45:00Z'
+updated_date: '2026-11-25T22:07:00Z'
 labels:
   - McFixV2
 milestone: m-1
@@ -360,4 +360,6 @@ Merge of wf2/board (2026-11-25, 7be07be67, task-469 folded): the card conflicted
 Output review round 1 (2026-11-25, lane BL-MCFIX465): code-review lens over 2fd2f6042..HEAD in 4 chunks (context-r3.md), outputs in docs/reports/lanes/2026-11-25/BL-MCFIX465/ (out-code-review-p1..p4.txt, FINDINGS.md): CRITICAL 0, HIGH 0, MED 6, LOW 15, NIT 1. Grounder owed: nothing is fixed or folded before it rules (RR-0359).
 
 Round 1 fix (2026-11-25, lane BL-MCFIX465; output grounder Cairn-Ground-O465 CONFIRMED out-code-review-p4#1 MED, LANE-STEPS PART A): search-web-binding.ui.test.tsx :118 and :120: the no-dead-control case renders the static page (its recent chips are the buttons) and pins at least three buttons before the disabled loop. Red: commit attempt with SearchBinding.tsx:427 '|| click === undefined' removed in the tree (red2.out); green: the landed commit with it restored byte-identical (green3.out).
+
+Output review round 2 (2026-11-25, lane BL-MCFIX465): code-review lens over 2fd2f6042..HEAD (fix ab8c2911e, station PASS) in 4 chunks, context-r4.md; outputs re-made under the same names in docs/reports/lanes/2026-11-25/BL-MCFIX465/: CRITICAL 0, HIGH 0, MED 2, LOW 12, NIT 7. Round-2 grounder owed; round-1 GROUNDER.md and TRIAGE.md stay outside the repo.
 <!-- SECTION:NOTES:END -->

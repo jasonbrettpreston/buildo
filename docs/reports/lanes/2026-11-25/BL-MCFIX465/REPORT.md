@@ -45,3 +45,8 @@ STATUS: ready for the station run (work commit b3791a88c); output review not sta
 - Material: 2fd2f6042..HEAD over the Files line, launch excludes plus mobile/__tests__/fixtures/surfaces/*.goldens.json; 41 files, 4 chunks (lens-input).
 - Lens: code-review (the brief's one output lens; no compliance lens: every list is output_off). Outputs out-code-review-p1..p4.txt with inputs in-out-code-review-p1..p4.txt; FINDINGS.md.
 - Counts: CRITICAL 0, HIGH 0, MED 6, LOW 15, NIT 1. Nothing ruled, fixed or folded: grounder owed (RR-0359).
+
+## Round 1 fix and output review round 2 (2026-11-25)
+- Round 1 grounder (Cairn-Ground-O465): 22 ids, 16 CONFIRMED (1 MED, 14 LOW, 1 NIT), 6 REJECTED; round-1 GROUNDER.md and TRIAGE.md kept outside the repo (lane scratch og-r1/).
+- Fix: out-code-review-p4#1 MED fixed ab8c2911e (search-web-binding.ui.test.tsx :118, :120): red red2.out (commit attempt, SearchBinding.tsx:427 plant), green green3.out (landed; the first green attempt was refused FAIL:C:no-mf-task until the McFrontend-Task: MF-35 trailer was added). Station PASS on ab8c2911e (covers the merge 2af96802f).
+- Round 2: same material rules on 2fd2f6042..HEAD (41 files, 4 chunks), context-r4.md; every review file re-made under the same names. Counts: CRITICAL 0, HIGH 0, MED 2, LOW 12, NIT 7. Repeats and new ids are listed in FINDINGS.md. Nothing fixed or folded: round-2 grounder owed.
