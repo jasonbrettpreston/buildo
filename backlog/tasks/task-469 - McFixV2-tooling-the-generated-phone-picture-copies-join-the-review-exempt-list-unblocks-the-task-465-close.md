@@ -3,11 +3,11 @@ id: TASK-469
 title: >-
   McFixV2 tooling: the generated phone picture copies join the review exempt
   list (unblocks the task-465 close)
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-MCFIX469'
 created_date: '2026-11-25T20:33:00Z'
-updated_date: '2026-11-25T21:07:00Z'
+updated_date: '2026-11-25T21:32:00Z'
 labels:
   - McFixV2
 milestone: m-1
@@ -24,6 +24,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-25/BL-MCFIX469/REPORT.md
+  - docs/reports/lanes/2026-11-25/BL-MCFIX469/GROUNDER.md
+  - docs/reports/lanes/2026-11-25/BL-MCFIX469/TRIAGE.md
 type: fix
 ordinal: 163210
 ---
@@ -236,3 +239,11 @@ Build (lane BL-MCFIX469, PLAN-469-v1 sections 4-5): tests T1-T4 written first in
 
 Red (red.out, refused commit attempt): T1 (count 9 not 10) and T2 (mobile_parcel_search.goldens.json not exempt) red as planned; T4 also failed on the first attempt for a test defect, not a product one: the emitter runs main only when argv[1] equals its resolved path and the OS tmp dir is a symlink on macOS, so the copy root is now realpath'd (the stdout 'surfaces ok' assertion caught the silent exit 0). Green: rule-lists.json gains the glob mobile/__tests__/fixtures/surfaces/*.goldens.json (last exempt element), its $comment line naming emit-mobile-surfaces.mjs --check, and the half line on the round-7 rule sentence; rule-lists.mjs validate ok (58 lists, 23 rows); page --check current; emit-mobile-surfaces.mjs --check on the lane tree: surfaces ok (5 surfaces, 33 goldens). AC3 (465 lens-input without the size refusal) is proven after the fold, on task-465.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed (work commit 1293cbf16, station pass 1293cbf16): scripts/analysis/rule-lists.json exempt gains mobile/__tests__/fixtures/surfaces/*.goldens.json with its $comment line naming the proving check emit-mobile-surfaces.mjs --check (and the half line on the round-7 rule sentence); tests T1 to T4 in src/tests/backlog/rule-lists-table.logic.test.ts (named check and count 10; the four phone copies exempt; look-alikes not; the check red on a hand-edited, stale or stray copy and green on a clean one). Red red.out, green in the landed commit (33 passed). Folded onto wf2/board at 7be07be67. AC3 is proven on task-465.
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 2 pile; grounder docs/reports/lanes/2026-11-25/BL-MCFIX469/GROUNDER.md; triage docs/reports/lanes/2026-11-25/BL-MCFIX469/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->
