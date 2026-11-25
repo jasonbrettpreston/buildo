@@ -21,7 +21,6 @@ import {
   PARCEL_SEARCH_ICON as I,
   PARCEL_SEARCH_LAYOUT as L,
   SEARCH_BOTTOM_PADDING,
-  SEARCH_CANDIDATE_LIMIT,
   SEARCH_MAX_WIDTH,
 } from '@/constants/parcelSearch';
 import { REPORT_HEX as R } from '@/constants/reportPage';
@@ -32,11 +31,14 @@ import { reportsLeftShown } from '@/lib/parcelSearchCore';
 export const SEARCH_SLICE: { surface: string; config: Record<string, number>; bounds: Record<string, SliceBound>; content: Record<string, string> } = slice;
 
 // CR3-10 (OUTPUT fold LOW): the screen reads the debounce and the minimum length from the slice, i.e. from the descriptor's config.debounce_ms and
-// config.min_query_len (their one declared home), and the cap (not a descriptor config value) from the constants file, all through the binding.
+// config.min_query_len (their one declared home), and the cap (task-454: config.candidate_cap, no longer the constants file), all through the binding.
 // FIX.CONFIG-BOUNDS (task-395): both numbers go through sliceNumber, which applies the registered bounds the slice carries (maxbld_page_debounce_ms, maxbld_page_min_query_len). They are the only copies: the typed constants in constants/parcelSearch.ts are gone.
 export const SEARCH_DEBOUNCE_MS = sliceNumber(SEARCH_SLICE, 'debounce_ms');
 export const SEARCH_MIN_QUERY_LEN = sliceNumber(SEARCH_SLICE, 'min_query_len');
-export { SEARCH_CANDIDATE_LIMIT };
+// task-454 SEARCHFIX.6 (MORNING-DECISIONS.md:1494 "register them"; Spec 128 Rule 3): the candidate cap is the registered setting maxbld_page_candidate_cap
+// (config.candidate_cap of the slice, bounds 10 to 50, fail), the number the server reads too; the phone takes a change at the next app build. Prior text:
+// the cap was the typed constant SEARCH_CANDIDATE_LIMIT = 10 of constants/parcelSearch.ts, re-exported here.
+export const SEARCH_CANDIDATE_LIMIT = sliceNumber(SEARCH_SLICE, 'candidate_cap');
 
 export type Ref = { content: string } | { contract: string } | { derived: string };
 export type Template = { text: Ref; vars: Record<string, Ref> };

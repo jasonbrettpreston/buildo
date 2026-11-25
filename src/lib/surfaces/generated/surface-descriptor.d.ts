@@ -344,6 +344,10 @@ export type SurfaceDescriptor = {
   lookup_retry_max?: "UNRESEARCHED" | number;
   /** FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): how long a lookup read (typeahead search or detail by parcel) stays fresh, in milliseconds. */
   lookup_stale_ms?: "UNRESEARCHED" | number;
+  /** task-454 SEARCHFIX.6 (Spec 128 Rule 3; operator, verbatim, 2026-11-20: "yes follow the rules register them.", MORNING-DECISIONS.md:1494): the most addresses a search lists before it asks for a house number (the candidate cap); the server re */
+  candidate_cap?: "UNRESEARCHED" | number;
+  /** task-454 SEARCHFIX.6 (Spec 128 Rule 3; operator, verbatim, 2026-11-20: "yes follow the rules register them.", MORNING-DECISIONS.md:1494): how many recent searches the search page keeps and shows as chips (0 = none). */
+  recent_max?: "UNRESEARCHED" | number;
 };
   sharing: {
   answer: "UNRESEARCHED" | "sole" | "shared" | "none";

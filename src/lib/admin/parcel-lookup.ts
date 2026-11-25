@@ -1,7 +1,8 @@
 // 🔗 SPEC LINK: docs/specs/02-web-admin/89_parcel_cost_model_tool.md §3 (API) + §4 (normative mapping)
 //
 // Business logic for the Parcel Cost Model Tool lookup (route stays thin — standards §10.3):
-//   resolveAddress()   — free-text → exact parcel | ≤10 candidates (Spec 54 normalized keys)
+//   resolveAddress()   — free-text → exact parcel | at most candidateCap candidates (Spec 54 normalized keys)
+//   readSearchSettings() — task-454: the five server search settings in one read (rate limits, slow-query mark, candidate cap)
 //   fetchParcelById()  — ONE row, explicit projection of ALL mapped columns (raw SQL: the Spec 88
 //                        cost columns are absent from drizzle schema.ts — known mig-206 drift)
 //   fetchCoaProjects() — nearby CoA list by neighbourhood_id (undecided-first)
@@ -11,6 +12,8 @@
 // Parameterized SQL ONLY ($1…) — user input is never interpolated into SQL strings.
 
 import { query } from '@/lib/db/client';
+import type { Queryable } from '@/lib/entitlements';
+import seedJson from '../../../scripts/seeds/logic_variables.json';
 import { normalizeAddressNumber, parseLinearName } from '@/lib/parcels/address';
 import { logWarn } from '@/lib/logger';
 import type { LotMapSeed } from '@/lib/parcels/lot-map';
@@ -128,6 +131,73 @@ function ident(col: string): string {
   return `"${col}"`;
 }
 
+// ── task-454 SEARCHFIX.6: the search settings (Spec 128 Rule 3) ──────────────
+// Operator, verbatim, 2026-11-20: "yes follow the rules register them." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1494). The limits the
+// lookup and entitlement routes typed (60 and 30 a minute, 30 a minute, the 500 ms slow-query mark, the cap of 10) are registered logic variables with
+// seed bounds (scripts/seeds/logic_variables.json, the one source). One read per request; every caller passes the result in (resolveAddress reads nothing).
+/** The five server keys, spelled out so the variable-effect scan sees them read here. */
+export const SEARCH_SETTING_KEYS = {
+  search_per_min: 'parcel_lookup_search_per_min',
+  detail_per_min: 'parcel_lookup_detail_per_min',
+  entitlement_per_min: 'parcel_entitlement_read_per_min',
+  slow_query_ms: 'parcel_lookup_slow_query_ms',
+  candidate_cap: 'maxbld_page_candidate_cap',
+} as const;
+export type SearchSettings = { [K in keyof typeof SEARCH_SETTING_KEYS]: number };
+
+export class SearchSettingsError extends Error {
+  constructor(readonly bad: string[]) {
+    super(`logic_variables missing, not a whole number or outside the seed bounds: ${bad.join(', ')}`);
+    this.name = 'SearchSettingsError';
+  }
+}
+
+type SeedRow = { min?: number; max?: number; default?: number };
+const SEED = seedJson as unknown as Record<string, SeedRow>;
+/** The seed bounds of one key (the seed is the bound authority; a key without bounds throws, here and at load). */
+const boundsOf = (k: string): { min: number; max: number } => {
+  const row = SEED[k];
+  if (!row || typeof row.min !== 'number' || typeof row.max !== 'number' || typeof row.default !== 'number') throw new Error(`logic_variables seed has no bounds for ${k}`);
+  return { min: row.min, max: row.max };
+};
+for (const k of Object.values(SEARCH_SETTING_KEYS)) boundsOf(k); // fail at load on a seed without bounds
+
+/**
+ * The five settings in ONE read (the readLotSizeSettings shape, through db.query so a route passes pool). A row that is missing, not a whole number
+ * or outside its seed bounds throws SearchSettingsError naming the keys (fail closed: the route's generic 500, no data, no database text).
+ */
+export async function readSearchSettings(db: Queryable): Promise<SearchSettings> {
+  const keys = Object.values(SEARCH_SETTING_KEYS);
+  const res = await db.query<{ variable_key: string; variable_value: string | number | null }>(
+    'SELECT variable_key, variable_value FROM logic_variables WHERE variable_key = ANY($1::text[])',
+    [keys],
+  );
+  const raw = new Map(res.rows.map((r) => [r.variable_key, r.variable_value === null ? NaN : Number(r.variable_value)]));
+  const bad: string[] = [];
+  const read = (k: string): number => {
+    const v = raw.get(k) ?? NaN;
+    const b = boundsOf(k);
+    if (!Number.isInteger(v) || v < b.min || v > b.max) bad.push(k);
+    return v;
+  };
+  const out: SearchSettings = {
+    search_per_min: read(SEARCH_SETTING_KEYS.search_per_min),
+    detail_per_min: read(SEARCH_SETTING_KEYS.detail_per_min),
+    entitlement_per_min: read(SEARCH_SETTING_KEYS.entitlement_per_min),
+    slow_query_ms: read(SEARCH_SETTING_KEYS.slow_query_ms),
+    candidate_cap: read(SEARCH_SETTING_KEYS.candidate_cap),
+  };
+  if (bad.length) throw new SearchSettingsError(bad);
+  return out;
+}
+
+/**
+ * task-454 (PLAN-454-v1 Step 3): the row window of the unlinked read. It is a probe window, NOT a setting: its rows only decide whether one address
+ * is printed (the `one` test below), never the length of a list. No new setting without a ruling (RR-0392, MORNING-DECISIONS.md:1975); Spec 128
+ * Rule 3 names debounce, page size, stale time and rate limit.
+ */
+export const UNLINKED_PROBE_ROWS = 11;
+
 // ── Address resolution (Spec 89 §3; Spec 54 keys) ────────────────────────────
 /**
  * MF-53 (Spec 100 §2.6 dated note 2026-11-11; operator ruling 2026-09-16, "we should know the difference and just present the right one"):
@@ -138,7 +208,7 @@ export type ParcelResolution = 'unique' | 'text_candidates' | 'multi_parcel' | '
 export interface Resolution {
   match: ParcelMatch | null;
   candidates: ParcelCandidate[];
-  /** true when >10 parcels share the address (e.g. a large condo) — the list is truncated. */
+  /** true when more than candidateCap parcels share the address (e.g. a large condo) — the list is truncated. */
   truncated?: boolean;
   /** MF-53: added; match / candidates / truncated are unchanged on every outcome (the admin tool reads only those, Spec 89 §3). */
   resolution: ParcelResolution;
@@ -308,18 +378,23 @@ const displayAddress = `TRIM(COALESCE(address_number, '') || ' ' || COALESCE(lin
  * with NO lot link (`unlinked`), else `no_match`. The admin call leaves it off and keeps today's two reads (PLAN panel regression MEDIUM-3).
  * `opts.matchMistyped` (task-333 SRCH.FUZZY, the consumer route only): on that final miss, read the permit pipeline's address matcher (below).
  */
-/** The exact read on the parcels normalized keys (idx_parcels_address); one statement, also read by the SEARCHFIX.1 letter and dash fallback. */
-function readExact(num: string, streetName: string): Promise<{ parcel_id: string; address: string }[]> {
+/**
+ * The exact read on the parcels normalized keys (idx_parcels_address); one statement, also read by the SEARCHFIX.1 letter and dash fallback.
+ * task-454: the window is the cap plus one row (a row past the cap means more exist: truncated), a bound parameter, never typed in the statement.
+ */
+function readExact(num: string, streetName: string, cap: number): Promise<{ parcel_id: string; address: string }[]> {
   return query<{ parcel_id: string; address: string }>(
     `SELECT parcel_id, ${displayAddress} AS address
        FROM parcels
        WHERE addr_num_normalized = $1 AND street_name_normalized = $2
-       ORDER BY parcel_id LIMIT 11`,
-    [num, streetName],
+       ORDER BY parcel_id LIMIT $3`,
+    [num, streetName, cap + 1],
   );
 }
 
 /**
+ * task-454: `opts.candidateCap` (required, no default number) is the setting maxbld_page_candidate_cap the route read (readSearchSettings); the resolver
+ * reads no setting itself, so the raw-first re-entry below adds no read.
  * SEARCHFIX.1 (task-449): `keepPeriods` (an argument, not an option) runs the reads on the street key with its periods kept. A query holding a period
  * whose raw key differs from the stripped one is first run that way (exact, typeahead and unlinked reads only: no matcher, no fallback), and that
  * result is returned unless it is no_match; only then does the stripped key run every step. Raw first, so a stored key with a period (". GASPAR CRT")
@@ -327,7 +402,7 @@ function readExact(num: string, streetName: string): Promise<{ parcel_id: string
  */
 export async function resolveAddress(
   q: string,
-  opts: { classifyUnlinked?: boolean; matchMistyped?: boolean } = {},
+  opts: { classifyUnlinked?: boolean; matchMistyped?: boolean; candidateCap: number },
   keepPeriods = false,
 ): Promise<Resolution> {
   if (!keepPeriods && q.includes('.') && parseFreeTextAddress(q, true).streetName !== parseFreeTextAddress(q).streetName) {
@@ -337,12 +412,13 @@ export async function resolveAddress(
   const { num, streetName } = parseFreeTextAddress(q, keepPeriods);
   const typed = typedDirection(q);
   const typedType = typedStreetType(q);
+  const cap = opts.candidateCap;
   if (!streetName) return { match: null, candidates: [], resolution: 'no_match', lotMap: null };
 
   // 1) Exact match on the parcels normalized keys (idx_parcels_address).
   if (num) {
-    let exact = await readExact(num, streetName);
-    const exactTruncated = exact.length > 10; // LIMIT 11 → an 11th row means more exist (Gemini fold); read before the guard narrows
+    let exact = await readExact(num, streetName, cap);
+    const exactTruncated = exact.length > cap; // the window is cap + 1 → a row past the cap means more exist (Gemini fold); read before the guard narrows
     const exactG = guardByDirection(exact, exactTruncated ? null : typed); // a truncated window cannot prove a narrowed row is the only one: unchanged (output review r2 #2)
     if (exactG.conflict) return conflictList(exactG.rows);
     exact = exactG.rows;
@@ -362,7 +438,7 @@ export async function resolveAddress(
     if (exact.length > 1) {
       return {
         match: null,
-        candidates: exact.slice(0, 10).map((r) => ({ parcelId: r.parcel_id, address: r.address })),
+        candidates: exact.slice(0, cap).map((r) => ({ parcelId: r.parcel_id, address: r.address })),
         truncated: exactTruncated,
         ...classifyRows(exact, num, exactTruncated),
       };
@@ -385,12 +461,12 @@ export async function resolveAddress(
        AND (ap.address_status IS NULL OR UPPER(ap.address_status) IN ('CURRENT', 'NONE'))
        AND UPPER(ap.maint_stage) = 'REGULAR'
        AND ap.retired_at IS NULL
-     ORDER BY address LIMIT 10`,
-    [likePrefix(streetName), num || null],
+     ORDER BY address LIMIT $3`,
+    [likePrefix(streetName), num || null, cap],
   );
-  // SEARCHFIX.1 (ST1, AC #2): a window of 10 may be cut short (no overflow probe), so it cannot prove a narrowed row is the only one on the typed
-  // side: unchanged, the list ("Gerrard St W"). The exact path's own truncation rule (above), on the typeahead's LIMIT 10.
-  const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);
+  // SEARCHFIX.1 (ST1, AC #2): a full window (the cap) may be cut short (no overflow probe), so it cannot prove a narrowed row is the only one on the
+  // typed side: unchanged, the list ("Gerrard St W"). The exact path's own truncation rule (above), on the typeahead's window (task-454: the cap).
+  const typeaheadG = guardByDirection(typeahead, typeahead.length >= cap ? null : typed);
   if (typeaheadG.conflict) return conflictList(typeaheadG.rows);
   typeahead = typeaheadG.rows;
   if (typeahead.length === 1) {
@@ -407,7 +483,8 @@ export async function resolveAddress(
     };
   }
   const candidates = typeahead.map((r) => ({ parcelId: r.parcel_id, address: r.address }));
-  // The typeahead LIMIT 10 has no overflow probe: measured 0 (street, number) keys reach more than 10 linked lots (MF-53 plan v4 §8 item 8).
+  // The typeahead window has no overflow probe: measured 0 (street, number) keys reach more than 10 linked lots (MF-53 plan v4 §8 item 8), which is
+  // why the cap setting's minimum is 10 (task-454: a lower cap would cut this list with no warning).
   if (typeahead.length > 1) return { match: null, candidates, ...classifyRows(typeahead, num, false) };
 
   // 3) MF-53 unlinked (consumer only): live points with this number and NO lot link. Skipped for a street carrying a LIKE wildcard, so the
@@ -423,8 +500,8 @@ export async function resolveAddress(
          AND UPPER(ap.maint_stage) = 'REGULAR'
          AND ap.retired_at IS NULL
          AND NOT EXISTS (SELECT 1 FROM parcel_address_points pap WHERE pap.address_point_id = ap.address_point_id)
-       ORDER BY address, ap.address_point_id LIMIT 11`,
-      [likePrefix(streetName), num],
+       ORDER BY address, ap.address_point_id LIMIT $3`,
+      [likePrefix(streetName), num, UNLINKED_PROBE_ROWS],
     );
     if (unlinked.length > 0) {
       const first = unlinked[0]!; // unlinked.length > 0 was tested on the line above, so unlinked[0] exists
@@ -453,8 +530,8 @@ export async function resolveAddress(
        WHERE addr_num_normalized = $1
          AND levenshtein(normalize_address(street_name_normalized), normalize_address($2))
              <= (SELECT variable_value FROM logic_variables WHERE variable_key = 'enrich_heritage_address_levenshtein_threshold')
-       ORDER BY levenshtein(normalize_address(street_name_normalized), normalize_address($2)), address, parcel_id LIMIT 10`,
-      [num, streetName],
+       ORDER BY levenshtein(normalize_address(street_name_normalized), normalize_address($2)), address, parcel_id LIMIT $3`,
+      [num, streetName, cap],
     );
     if (near.length > 0) {
       return { match: null, candidates: near.map((r) => ({ parcelId: r.parcel_id, address: r.address })), resolution: 'text_candidates', lotMap: null };
@@ -468,8 +545,8 @@ export async function resolveAddress(
     const nums = [...new Set(bare.slice(1).filter((n): n is string => Boolean(n)).map((n) => normalizeAddressNumber(n)))];
     const seen = new Set<string>();
     const rows: { parcel_id: string; address: string }[] = [];
-    for (const n of nums) for (const r of await readExact(n, streetName)) if (!seen.has(r.parcel_id)) { seen.add(r.parcel_id); rows.push(r); }
-    if (rows.length > 0) return conflictList(rows.slice(0, 10));
+    for (const n of nums) for (const r of await readExact(n, streetName, cap)) if (!seen.has(r.parcel_id)) { seen.add(r.parcel_id); rows.push(r); }
+    if (rows.length > 0) return conflictList(rows.slice(0, cap));
   }
   return { match: null, candidates, resolution: 'no_match', lotMap: null };
 }

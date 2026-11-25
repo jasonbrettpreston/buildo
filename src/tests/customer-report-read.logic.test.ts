@@ -87,7 +87,12 @@ const ROWS = (extra: Json = {}): Json[] => [
 ];
 const CURRENT_LOT: Lot = { parcel: PARCEL_ROW, stamp: STAMP, present: true, rows: ROWS() };
 const GATED_LOT: Lot = { ...CURRENT_LOT, stamp: { ...STAMP, lot_gate: 'under_min_area' }, rows: [] };
-const script = (lot: Lot, switchOn = true) => async (text: string) => {
+/** task-454 SEARCHFIX.6: the lookup route reads its search settings rows first (readSearchSettings, the shared ANY read, told apart by its bound keys); the seed defaults. */
+const SEARCH_SETTINGS = { rows: Object.entries({ parcel_lookup_search_per_min: '60', parcel_lookup_detail_per_min: '30', parcel_entitlement_read_per_min: '30', parcel_lookup_slow_query_ms: '500', maxbld_page_candidate_cap: '10' }).map(([variable_key, variable_value]) => ({ variable_key, variable_value })) };
+const isSearchSettings = (text: string, params: unknown): boolean =>
+  /FROM logic_variables WHERE variable_key = ANY/.test(text) && Array.isArray(params) && Array.isArray(params[0]) && (params[0] as unknown[]).includes('parcel_lookup_search_per_min');
+const script = (lot: Lot, switchOn = true) => async (text: string, params?: unknown) => {
+  if (isSearchSettings(text, params)) return SEARCH_SETTINGS;
   if (/FROM logic_variables/.test(text)) return { rows: switchOn ? [{ variable_value: '1' }] : [] };
   if (/FROM parcels WHERE parcel_id/.test(text)) return { rows: lot.parcel ? [lot.parcel] : [] };
   if (/FROM bylaw_resolution_lot_stamps/.test(text)) return { rows: lot.stamp ? [lot.stamp] : [] };
@@ -335,13 +340,15 @@ describe('T7 the route: the real lookup route over the real read module', () => 
     expect((poolQuery.mock.calls as Array<[string]>).filter(([t]) => /parcel_maxbld_scenarios|bylaw_resolution_lot_stamps/.test(t))).toEqual([]);
   });
   it('a thrown read is a 500 with no payload, not a miss', async () => {
-    poolQuery.mockImplementation(async (text: string) => {
+    poolQuery.mockImplementation(async (text: string, params?: unknown) => {
+      if (isSearchSettings(text, params)) return SEARCH_SETTINGS;
       if (/FROM entitlements/.test(text)) return { rows: [], rowCount: 0 };
       throw new Error('db down');
     });
     const r = await call();
     expect(r.status).toBe(500);
     expect(r.body.data).toBeNull();
+    expect(JSON.stringify(r.body)).not.toContain('db down');
   });
   it('the route meters only a produced page: its meter branch is guarded by page === null (source pin)', () => {
     expect(read('src/app/api/parcels/lookup/route.ts')).toMatch(/body\.page === null\) meter = 'not_produced'/);

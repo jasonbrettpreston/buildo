@@ -13,6 +13,9 @@ import { assembleConsumerPayload, CONSUMER_HEADLINE_COLS } from '@/lib/parcels/c
 import { ConsumerParcelSchema } from '@/app/api/parcels/lookup/types';
 import { T3_GROUPS } from '@/lib/admin/parcel-lookup';
 
+/** task-454: every resolveAddress call passes the cap setting (default 10); the admin form, no option. */
+const ADMIN = { candidateCap: 10 } as Parameters<typeof resolveAddress>[1];
+
 const sq = (x0: number, y0: number, side: number): string => JSON.stringify({
   type: 'Polygon', coordinates: [[[x0, y0], [x0 + side, y0], [x0 + side, y0 + side], [x0, y0 + side], [x0, y0]]],
 });
@@ -43,7 +46,7 @@ describe.skipIf(!dbAvailable())('Spec 100 consumer parcel-lookup — live DB', (
       ],
     );
 
-    const res = await resolveAddress('999 Consumertest Ave');
+    const res = await resolveAddress('999 Consumertest Ave', ADMIN);
     expect(res.match).not.toBeNull();
     expect(res.match!.matchType).toBe('exact');
 
@@ -74,7 +77,7 @@ describe.skipIf(!dbAvailable())('Spec 100 consumer parcel-lookup — live DB', (
         [`CLKP-TEST-A${id}`, sq(46 + id * 0.01, 46, 0.0002), num, streetName],
       );
     }
-    const res = await resolveAddress('12 Ambitest Rd');
+    const res = await resolveAddress('12 Ambitest Rd', ADMIN);
     expect(res.match).toBeNull();
     expect(res.candidates.length).toBeGreaterThanOrEqual(2);
     expect(res.candidates.length).toBeLessThanOrEqual(10);

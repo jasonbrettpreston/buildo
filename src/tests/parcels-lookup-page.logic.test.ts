@@ -63,11 +63,17 @@ const call = async (qs = 'parcelId=P-48'): Promise<{ status: number; body: Body 
   return { status: res.status, body: (await res.json()) as Body };
 };
 
+/** task-454 SEARCHFIX.6: the lookup route reads its search settings rows first (readSearchSettings, the shared ANY read, told apart by its bound keys); the seed defaults. */
+const SEARCH_SETTINGS = { rows: Object.entries({ parcel_lookup_search_per_min: '60', parcel_lookup_detail_per_min: '30', parcel_entitlement_read_per_min: '30', parcel_lookup_slow_query_ms: '500', maxbld_page_candidate_cap: '10' }).map(([variable_key, variable_value]) => ({ variable_key, variable_value })) };
+const isSearchSettings = (text: string, params: unknown): boolean =>
+  /FROM logic_variables WHERE variable_key = ANY/.test(text) && Array.isArray(params) && Array.isArray(params[0]) && (params[0] as unknown[]).includes('parcel_lookup_search_per_min');
+
 beforeEach(() => {
   vi.clearAllMocks();
   // The transitional lead_gen path (unmetered): the page logic is the same on both access paths and needs no meter mock.
   vi.mocked(getCurrentUserContext).mockResolvedValue({ uid: UID, subscription_status: 'active' } as never);
-  poolQuery.mockImplementation(async (text: string) => {
+  poolQuery.mockImplementation(async (text: string, params?: unknown) => {
+    if (isSearchSettings(text, params)) return SEARCH_SETTINGS;
     if (/FROM entitlements WHERE user_id = \$1 AND product = \$2/.test(text)) return { rows: [], rowCount: 0 };
     throw new Error(`unexpected pool query: ${text}`);
   });
@@ -168,7 +174,8 @@ describe('T-B3 (6) EI-D1 at the producer: a legacy value can never ride the page
 // and flip this pin (Spec 100 §3.2 dated note 2026-11-12, MF-48 Stage B).
 describe('T-B3 (7) the meter is unchanged by a page today (owner MB-94 c / MB-44)', () => {
   it('a parcel_tool hit with a served page and no evaluated legacy option is served and not counted', async () => {
-    poolQuery.mockImplementation(async (text: string) => {
+    poolQuery.mockImplementation(async (text: string, params?: unknown) => {
+    if (isSearchSettings(text, params)) return SEARCH_SETTINGS;
       if (/FROM entitlements WHERE user_id = \$1 AND product = \$2/.test(text)) return { rows: [{ status: 'active', trial_started_at: null }], rowCount: 1 };
       throw new Error(`unexpected pool query: ${text}`);
     });

@@ -2,7 +2,7 @@
 // 🔗 SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §7 + §11b.7 rules 5-6 (MF-45, dated note 2026-11-11)
 //
 // GET /api/parcels/lookup — CONSUMER (mobile) read-only lookup for the Parcel Cost Tool.
-// ?q=<address> (free-text → exact | ≤10 candidates) XOR ?parcelId=<id> (direct — candidate click).
+// ?q=<address> (free-text → exact | at most the candidate cap setting of candidates) XOR ?parcelId=<id> (direct — candidate click).
 // A miss OR an unknown parcelId is a valid 200 result (match:null, parcel:null), NOT a 404
 // (Spec 100 §2.6 — the shape drives the client state machine).
 //
@@ -18,7 +18,11 @@
 //   SRCH.METER-2 (task-360, 2026-11-19): that unsure lot's `page` is not sent either (null; neither the stored read nor the compute runs, meter semi_pending) until
 //   the request carries semi=answered, so a page that is sent is a page that is counted. Prior text: the page was sent and only the meter said semi_pending.
 //   A new lot past the allowance → 403 REPORT_LIMIT_REACHED, no payload. Fail closed: a meter error is a 500, never an unmetered payload.
-// Rate: `parcels-search:${uid}` 60/min on the q path; `parcels-lookup:${uid}` 30/min on parcelId.
+// Rate: `parcels-search:${uid}` on the q path and `parcels-lookup:${uid}` on parcelId, a 60 s window; the per-minute counts are the settings
+//   parcel_lookup_search_per_min (default 60) and parcel_lookup_detail_per_min (default 30). task-454 SEARCHFIX.6 (operator, verbatim, 2026-11-20: "yes
+//   follow the rules register them.", MORNING-DECISIONS.md:1494; Spec 128 Rule 3): they, the slow-query mark (parcel_lookup_slow_query_ms) and the
+//   candidate cap (maxbld_page_candidate_cap) are read in ONE read (readSearchSettings) after the parse and before the limiter, whose number comes from
+//   it; a missing or out-of-bounds row is the generic 500. Prior text: "60/min on the q path; 30/min on parcelId" (typed constants).
 // MF-48 Stage B (Spec 100 §3.2 dated note 2026-11-12, B-3 a): a hit also carries `page`, the mobile report page view built by MF-57's core from the
 //   lot's producer response (src/lib/parcels/report-page.ts); null for every lot until MB-44 serves one. The meter is unchanged by it.
 // Response: the WHITELIST (Spec 100 §3.2) — Tier 1 cost menu + headline areas, Tier 2 neighbourhood;
@@ -49,15 +53,12 @@ import {
 import { openReport } from '@/lib/entitlements';
 import { logInfo, logWarn } from '@/lib/logger';
 import { hasEvaluatedOption } from '@/lib/parcels/consumer-lookup';
-import { runLookupFlow } from '@/lib/parcels/lookup-flow';
+import { readSearchSettings, runLookupFlow } from '@/lib/parcels/lookup-flow';
 import { parcelToolAccess } from '@/lib/parcels/tool-gate';
 import { ConsumerParcelLookupQuerySchema } from './types';
 
 const TAG = '[api/parcel-lookup]';
-const SLOW_QUERY_MS = 500;
-const RATE_WINDOW_SEC = 60;
-const SEARCH_LIMIT_PER_MIN = 60; // q path — typeahead exploration is chatty (Spec 100 §3)
-const LOOKUP_LIMIT_PER_MIN = 30; // parcelId path — detail budget kept separate
+const RATE_WINDOW_SEC = 60; // the window of both buckets ("a minute"); the counts are settings (task-454)
 
 export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   // 1. Auth — Firebase uid + profile (Bearer for mobile). The first call (Spec 90 §11).
@@ -82,17 +83,25 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   if (!parsed.success) return badRequestZod(parsed.error);
   const { q, parcelId, semi } = parsed.data;
 
-  // 4. Rate limit — separate buckets so heavy searching cannot exhaust the detail budget.
+  // 4. The search settings (task-454): one read; the limiter's number comes from it. A bad row throws to the generic 500 (no data, no database text).
+  let settings: Awaited<ReturnType<typeof readSearchSettings>>;
+  try {
+    settings = await readSearchSettings(pool);
+  } catch (cause) {
+    return internalError(cause, { route: 'GET /api/parcels/lookup' });
+  }
+
+  // 5. Rate limit — separate buckets so heavy searching cannot exhaust the detail budget (q: chatty typeahead exploration, Spec 100 §3).
   const rl = q
-    ? { key: `parcels-search:${ctx.uid}`, limit: SEARCH_LIMIT_PER_MIN }
-    : { key: `parcels-lookup:${ctx.uid}`, limit: LOOKUP_LIMIT_PER_MIN };
+    ? { key: `parcels-search:${ctx.uid}`, limit: settings.search_per_min }
+    : { key: `parcels-lookup:${ctx.uid}`, limit: settings.detail_per_min };
   const rateLimit = await withRateLimit(request, { key: rl.key, limit: rl.limit, windowSec: RATE_WINDOW_SEC });
   if (!rateLimit.allowed) return rateLimited(rateLimit.remaining);
 
   const t0 = Date.now();
   try {
     // The flow (resolve, map, lot row, page, response, boundary parse) lives in src/lib/parcels/lookup-flow.ts (Standard 10.3); the meter and the log stay here (RR-0331).
-    const { response, body, parcelRef, pageSource, computeMs } = await runLookupFlow({ q, parcelId, semi });
+    const { response, body, parcelRef, pageSource, computeMs } = await runLookupFlow({ q, parcelId, semi, candidateCap: settings.candidate_cap });
 
     // Meter (MF-45; RR-0278 2026-11-19): only a hit whose report is produced (`page` sent) on the parcel_tool path counts. Candidates, a miss, a
     // map or a dangling id show no report and count nothing; nor does an unsure lot before its semi question (SEMI-B, the app asks it before the
@@ -134,7 +143,7 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
       page_source: pageSource, // LOAD.1: stored, computed or none
       compute_ms: computeMs, // LOAD.1: the compute entry's time when it ran (about 0 while the switch is off), null when W served the page
     });
-    if (duration_ms > SLOW_QUERY_MS) {
+    if (duration_ms > settings.slow_query_ms) {
       logWarn(TAG, 'slow_query', { duration_ms, outcome });
     }
 

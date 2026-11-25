@@ -2683,6 +2683,34 @@
               "minimum": 0
             }
           ]
+        },
+        "candidate_cap": {
+          "x-draft-optional": true,
+          "description": "task-454 SEARCHFIX.6 (Spec 128 Rule 3; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", MORNING-DECISIONS.md:1494): the most addresses a search lists before it asks for a house number (the candidate cap); the server reads the same setting at every lookup.",
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this yet. Counted by the registry."
+            },
+            {
+              "type": "integer",
+              "minimum": 0
+            }
+          ]
+        },
+        "recent_max": {
+          "x-draft-optional": true,
+          "description": "task-454 SEARCHFIX.6 (Spec 128 Rule 3; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", MORNING-DECISIONS.md:1494): how many recent searches the search page keeps and shows as chips (0 = none).",
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this yet. Counted by the registry."
+            },
+            {
+              "type": "integer",
+              "minimum": 0
+            }
+          ]
         }
       },
       "allOf": [
@@ -2891,6 +2919,76 @@
                   "properties": {
                     "name": {
                       "const": "maxbld_page_lookup_stale_ms"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "description": "task-454 SEARCHFIX.6 (Spec 128 Rule 3; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", MORNING-DECISIONS.md:1494): when candidate_cap holds a number, config.logic_variables names its registered logic variable maxbld_page_candidate_cap with min, max and on_invalid; the generator resolves the slice number from that seed row.",
+          "if": {
+            "required": [
+              "candidate_cap"
+            ],
+            "properties": {
+              "candidate_cap": {
+                "type": "integer"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "logic_variables"
+            ],
+            "properties": {
+              "logic_variables": {
+                "contains": {
+                  "required": [
+                    "name",
+                    "min",
+                    "max",
+                    "on_invalid"
+                  ],
+                  "properties": {
+                    "name": {
+                      "const": "maxbld_page_candidate_cap"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "description": "task-454 SEARCHFIX.6 (Spec 128 Rule 3; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", MORNING-DECISIONS.md:1494): when recent_max holds a number, config.logic_variables names its registered logic variable maxbld_page_recent_max with min, max and on_invalid; the generator resolves the slice number from that seed row.",
+          "if": {
+            "required": [
+              "recent_max"
+            ],
+            "properties": {
+              "recent_max": {
+                "type": "integer"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "logic_variables"
+            ],
+            "properties": {
+              "logic_variables": {
+                "contains": {
+                  "required": [
+                    "name",
+                    "min",
+                    "max",
+                    "on_invalid"
+                  ],
+                  "properties": {
+                    "name": {
+                      "const": "maxbld_page_recent_max"
                     }
                   }
                 }

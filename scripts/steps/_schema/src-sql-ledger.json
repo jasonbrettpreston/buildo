@@ -1748,14 +1748,15 @@
     },
     "src/lib/admin/parcel-lookup.ts": {
       "class": "interpolated",
-      "statements": 2,
+      "statements": 3,
       "interpolated": 4,
       "unparsed": [],
       "skipped": 0,
       "resolve_errors": 0,
       "fingerprints": [
         "22a0943b35395c6b",
-        "818814fc5fc9ee0c"
+        "818814fc5fc9ee0c",
+        "b5a1b0d462a3ba3c"
       ],
       "reads": {
         "address_points": [

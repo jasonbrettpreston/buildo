@@ -5531,7 +5531,7 @@
     "status": "exists",
     "docs": {
       "purpose": "Lets an admin look up one property by address or internal ID and see everything the system has calculated about it — zoning limits, buildable size, renovation and addition cost estimates, and nearby comparable committee-of-adjustment decisions. This is the data behind the admin Parcel Cost Model Tool.",
-      "data_story": "It reads 4 tables — `parcels`, `address_points`, `parcel_address_points` and `coa_applications` and writes nothing. Its response is an explicit pick-by-name projection of 157 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `src/features/admin-flight-center/api/useParcelLookup.ts`.",
+      "data_story": "It reads 6 tables — `parcels`, `address_points`, `parcel_address_points`, `coa_applications`, `profiles` (the admin check) and `logic_variables` (the candidate cap and the slow-query mark, task-454) — and writes nothing. Its response is an explicit pick-by-name projection of 157 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `src/features/admin-flight-center/api/useParcelLookup.ts`.",
       "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
     },
     "evidence": {
@@ -5599,7 +5599,7 @@
     },
     "inputs": {
       "answer": "app_outputs",
-      "why": "It reads 5 table(s) directly; 4 of them are materialised by named pipeline steps (address_points, classify_coa_scope, link_parcel_addresses), so its inputs are the pipeline's outputs rather than another contract.",
+      "why": "It reads 6 table(s) directly; 4 of them are materialised by named pipeline steps (address_points, classify_coa_scope, link_parcel_addresses), so its inputs are the pipeline's outputs rather than another contract.",
       "evidence": [
         "src/lib/admin/parcel-lookup.ts:194-205",
         "scripts/load-address-points.js",
@@ -6047,6 +6047,20 @@
             "migrations/226_profiles_admin_bootstrap.sql:25",
             "docs/reference/data-lineage-map.md — no `## `profiles`` section: no in-chain pipeline step declares a write to it (the map is derived from each step's emitMeta)"
           ]
+        },
+        {
+          "table": "logic_variables",
+          "columns": [
+            "variable_key",
+            "variable_value"
+          ],
+          "producing_steps": "none",
+          "chain_position": "n/a",
+          "owner_spec": "docs/specs/02-web-admin/128_surface_standard_policy.md",
+          "evidence": [
+            "src/lib/admin/parcel-lookup.ts — readSearchSettings (task-454: maxbld_page_candidate_cap, parcel_lookup_slow_query_ms)",
+            "src/app/api/admin/parcels/lookup/route.ts"
+          ]
         }
       ]
     },
@@ -6247,12 +6261,29 @@
       ]
     },
     "config": {
-      "answer": "none",
-      "why": "It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.",
+      "answer": "logic_variables",
+      "why": "task-454 SEARCHFIX.6 (operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1494; Spec 128 Rule 3): the candidate cap (maxbld_page_candidate_cap, passed into resolveAddress) and the slow-query mark (parcel_lookup_slow_query_ms, the slow_query warning and breadcrumb) are logic variables read in one read (readSearchSettings, the consumer lookup's reader) inside the handler's try, failing closed (500) when a row is missing, not a whole number or outside the seed bounds. Prior text: \"It consumes no tunable: no logic_variables read and no env-var-driven threshold in the handler or the libs it calls.\"",
       "evidence": [
-        "src/app/api/admin/parcels/lookup/route.ts — read in full 2026-09-15; no loadMarketplaceConfigs / logic_variables read"
+        "src/app/api/admin/parcels/lookup/route.ts — readSearchSettings(pool) inside the try (task-454)",
+        "src/lib/admin/parcel-lookup.ts — readSearchSettings, SEARCH_SETTING_KEYS",
+        "scripts/seeds/logic_variables.json maxbld_page_candidate_cap / parcel_lookup_slow_query_ms"
       ],
-      "logic_variables": [],
+      "logic_variables": [
+        {
+          "name": "maxbld_page_candidate_cap",
+          "min": 10,
+          "max": 50,
+          "on_invalid": "fail",
+          "why": "readSearchSettings (src/lib/admin/parcel-lookup.ts) reads it with the other search settings in one read; a missing row, a value that is not a whole number or one outside min and max throws and the route answers the generic 500."
+        },
+        {
+          "name": "parcel_lookup_slow_query_ms",
+          "min": 50,
+          "max": 10000,
+          "on_invalid": "fail",
+          "why": "readSearchSettings (src/lib/admin/parcel-lookup.ts) reads it with the other search settings in one read; a missing row, a value that is not a whole number or one outside min and max throws and the route answers the generic 500."
+        }
+      ],
       "retired": []
     },
     "sharing": {
@@ -22037,7 +22068,7 @@
         "ambiguous: src/lib/admin/parcel-lookup.ts:362-369 (>1 exact -> candidates, match null) surfaced at src/app/api/parcels/lookup/route.ts:86-88",
         "miss: src/lib/admin/parcel-lookup.ts:340 (no street name) and src/app/api/parcels/lookup/route.ts:96 (unknown parcelId -> 200 match:null, parcel:null)",
         "partial: src/lib/parcels/consumer-lookup.ts:77-79, 100-102, 111-113, 133-136 (tier-stratified safeParse degradation -> warnings[] entries, payload still returned)",
-        "degraded: src/app/api/parcels/lookup/route.ts:120-122 (slow_query logWarn above SLOW_QUERY_MS=500, route.ts:41)",
+        "degraded: src/app/api/parcels/lookup/route.ts (slow_query logWarn above the setting parcel_lookup_slow_query_ms, default 500 ms; task-454)",
         "unauthorized: src/app/api/parcels/lookup/route.ts:54 (401) and route.ts:59 (403 inactive subscription)",
         "rate_limited: src/app/api/parcels/lookup/route.ts:76",
         "error: src/app/api/parcels/lookup/route.ts:126-128"
@@ -22486,7 +22517,8 @@
           "chain_position": "n/a",
           "owner_spec": "docs/specs/02-web-admin/128_surface_standard_policy.md",
           "evidence": [
-            "src/lib/parcels/lot-map.ts — readLotMapLimits (MF-53, migration 307)"
+            "src/lib/parcels/lot-map.ts — readLotMapLimits (MF-53, migration 307)",
+            "src/lib/admin/parcel-lookup.ts — readSearchSettings (task-454: the search settings)"
           ]
         }
       ]
@@ -22757,11 +22789,14 @@
     },
     "config": {
       "answer": "logic_variables",
-      "why": "Dated 2026-11-11 (MF-53; DECISIONS-v3 item 2 b, operator \"b\"): the choose-your-lot map neighbour radius and limit are logic variables read on the unlinked-with-pin path only, failing closed (500) outside the seed bounds. The lookup route's own literal caps (LIMIT 11 / 10, 60/min, 30/min) are not yet registered: the follow-up card of the same ruling moves them to admin settings.",
+      "why": "Dated 2026-11-11 (MF-53; DECISIONS-v3 item 2 b, operator \"b\"): the choose-your-lot map neighbour radius and limit are logic variables read on the unlinked-with-pin path only, failing closed (500) outside the seed bounds. task-454 SEARCHFIX.6 (operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1494; Spec 128 Rule 3): the route's two rate limits (parcel_lookup_search_per_min on the q path, parcel_lookup_detail_per_min on the parcelId path; a 60 s window), the slow-query mark (parcel_lookup_slow_query_ms) and the candidate cap (maxbld_page_candidate_cap: the exact read takes cap + 1 rows, the typeahead and the mistyped-street reads take the cap) are logic variables read in one read (readSearchSettings) after the query parse and before the rate limit, failing closed (500) when a row is missing, not a whole number or outside the seed bounds. Prior text: \"The lookup route's own literal caps (LIMIT 11 / 10, 60/min, 30/min) are not yet registered: the follow-up card of the same ruling moves them to admin settings.\"",
       "evidence": [
         "src/lib/parcels/lot-map.ts — readLotMapLimits",
         "scripts/seeds/logic_variables.json parcel_map_neighbour_radius_m / parcel_map_neighbour_limit",
-        "migrations/307_parcel_map_logic_variables.sql"
+        "migrations/307_parcel_map_logic_variables.sql",
+        "src/lib/admin/parcel-lookup.ts — readSearchSettings, SEARCH_SETTING_KEYS (task-454)",
+        "src/app/api/parcels/lookup/route.ts — readSearchSettings(pool) before withRateLimit (task-454)",
+        "scripts/seeds/logic_variables.json parcel_lookup_search_per_min / parcel_lookup_detail_per_min / parcel_lookup_slow_query_ms / maxbld_page_candidate_cap"
       ],
       "logic_variables": [
         {
@@ -22775,6 +22810,34 @@
           "min": 1,
           "max": 50,
           "on_invalid": "fail"
+        },
+        {
+          "name": "parcel_lookup_search_per_min",
+          "min": 1,
+          "max": 600,
+          "on_invalid": "fail",
+          "why": "readSearchSettings (src/lib/admin/parcel-lookup.ts) reads it with the other search settings in one read; a missing row, a value that is not a whole number or one outside min and max throws and the route answers the generic 500."
+        },
+        {
+          "name": "parcel_lookup_detail_per_min",
+          "min": 1,
+          "max": 300,
+          "on_invalid": "fail",
+          "why": "readSearchSettings (src/lib/admin/parcel-lookup.ts) reads it with the other search settings in one read; a missing row, a value that is not a whole number or one outside min and max throws and the route answers the generic 500."
+        },
+        {
+          "name": "parcel_lookup_slow_query_ms",
+          "min": 50,
+          "max": 10000,
+          "on_invalid": "fail",
+          "why": "readSearchSettings (src/lib/admin/parcel-lookup.ts) reads it with the other search settings in one read; a missing row, a value that is not a whole number or one outside min and max throws and the route answers the generic 500."
+        },
+        {
+          "name": "maxbld_page_candidate_cap",
+          "min": 10,
+          "max": 50,
+          "on_invalid": "fail",
+          "why": "readSearchSettings (src/lib/admin/parcel-lookup.ts) reads it with the other search settings in one read; a missing row, a value that is not a whole number or one outside min and max throws and the route answers the generic 500."
         }
       ],
       "retired": []
@@ -22986,7 +23049,8 @@
           "chain_position": "n/a",
           "owner_spec": "docs/specs/02-web-admin/86_control_panel.md",
           "evidence": [
-            "src/lib/entitlements/index.ts:408-411"
+            "src/lib/entitlements/index.ts:408-411",
+            "src/lib/admin/parcel-lookup.ts — readSearchSettings (task-454: parcel_entitlement_read_per_min)"
           ]
         },
         {
@@ -23056,7 +23120,7 @@
       "entitlement": "none",
       "flag": "none",
       "permission": "none",
-      "rate_bucket": "parcels-entitlement:<uid> 30/min (src/app/api/parcels/entitlement/route.ts:31-36)"
+      "rate_bucket": "parcels-entitlement:<uid>, 60 s window, the count is the setting parcel_entitlement_read_per_min (default 30/min; task-454) (src/app/api/parcels/entitlement/route.ts)"
     },
     "render": {
       "targets": [
@@ -23175,10 +23239,12 @@
     },
     "config": {
       "answer": "logic_variables",
-      "why": "The two monthly allowances are logic variables with seed bounds 1-1000; a value outside them shows the counts as null (a display degrades; the lookup meter fails closed).",
+      "why": "The two monthly allowances are logic variables with seed bounds 1-1000; a value outside them shows the counts as null (a display degrades; the lookup meter fails closed). task-454 SEARCHFIX.6 (operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1494; Spec 128 Rule 3): the read limit of the bucket parcels-entitlement:{uid} (a 60 s window) is the logic variable parcel_entitlement_read_per_min, read through readSearchSettings after auth and before the rate limit; a missing, non-whole or out-of-bounds row (of it or of any search setting read with it) is the generic 500.",
       "evidence": [
         "src/lib/entitlements/index.ts:408-411",
-        "scripts/seeds/logic_variables.json parcel_tool_report_limit_plan / parcel_tool_report_limit_trial"
+        "scripts/seeds/logic_variables.json parcel_tool_report_limit_plan / parcel_tool_report_limit_trial",
+        "src/app/api/parcels/entitlement/route.ts — readSearchSettings(pool) before withRateLimit (task-454)",
+        "scripts/seeds/logic_variables.json parcel_entitlement_read_per_min"
       ],
       "logic_variables": [
         {
@@ -23192,6 +23258,13 @@
           "min": 1,
           "max": 1000,
           "on_invalid": "fail"
+        },
+        {
+          "name": "parcel_entitlement_read_per_min",
+          "min": 1,
+          "max": 300,
+          "on_invalid": "fail",
+          "why": "readSearchSettings (src/lib/admin/parcel-lookup.ts) reads it with the other search settings in one read; a missing row, a value that is not a whole number or one outside min and max throws and the route answers the generic 500."
         }
       ],
       "retired": []

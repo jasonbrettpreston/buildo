@@ -17,6 +17,9 @@ import {
 } from '@/lib/admin/parcel-lookup';
 import { ParcelPayloadSchema, GROUP_KEYS } from '@/app/api/admin/parcels/lookup/types';
 
+/** task-454: every resolveAddress call passes the cap setting (default 10); the admin form, no option. */
+const ADMIN = { candidateCap: 10 } as Parameters<typeof resolveAddress>[1];
+
 const sq = (x0: number, y0: number, side: number): string => JSON.stringify({
   type: 'Polygon', coordinates: [[[x0, y0], [x0 + side, y0], [x0 + side, y0 + side], [x0, y0 + side], [x0, y0]]],
 });
@@ -37,7 +40,7 @@ describe.skipIf(!dbAvailable())('Spec 89 parcel-lookup — live DB', () => {
   it('SMOKE: real address resolves → full payload Zod-valid → all 9 groups populated (<500ms budget)', async () => {
     if (!realData) return; // fresh DB — fixture cases below still run
     const t0 = Date.now();
-    const res = await resolveAddress('26 Hurlingham Cres');
+    const res = await resolveAddress('26 Hurlingham Cres', ADMIN);
     expect(res.match).not.toBeNull();
     expect(res.match!.matchType).toBe('exact');
 
@@ -65,7 +68,7 @@ describe.skipIf(!dbAvailable())('Spec 89 parcel-lookup — live DB', () => {
 
   it('SMOKE: typeahead — partial street resolves to candidates with the production status filter', async () => {
     if (!realData) return;
-    const res = await resolveAddress('Hurlingham Cres'); // no number → typeahead path
+    const res = await resolveAddress('Hurlingham Cres', ADMIN); // no number → typeahead path
     // Either a unique typeahead match or a candidate list — never a silent empty on a real street.
     expect(res.match !== null || res.candidates.length > 0).toBe(true);
   }, 30_000);
@@ -130,7 +133,7 @@ describe.skipIf(!dbAvailable())('Spec 89 parcel-lookup — live DB', () => {
   });
 
   it('injection attempt resolves to a safe miss (parameterized SQL)', async () => {
-    const res = await resolveAddress(`26 Hurlingham'; DROP TABLE parcels; --`);
+    const res = await resolveAddress(`26 Hurlingham'; DROP TABLE parcels; --`, ADMIN);
     expect(res.match === null || res.match.matchType === 'exact' || res.match.matchType === 'typeahead').toBe(true);
     const { rows: [c] } = await pool.query(`SELECT count(*)::int AS n FROM information_schema.tables WHERE table_name='parcels'`);
     expect(c.n).toBe(1); // parcels still exists

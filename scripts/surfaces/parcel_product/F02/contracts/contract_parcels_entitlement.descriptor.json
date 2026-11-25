@@ -110,7 +110,8 @@
         "chain_position": "n/a",
         "owner_spec": "docs/specs/02-web-admin/86_control_panel.md",
         "evidence": [
-          "src/lib/entitlements/index.ts:408-411"
+          "src/lib/entitlements/index.ts:408-411",
+          "src/lib/admin/parcel-lookup.ts — readSearchSettings (task-454: parcel_entitlement_read_per_min)"
         ]
       },
       {
@@ -180,7 +181,7 @@
     "entitlement": "none",
     "flag": "none",
     "permission": "none",
-    "rate_bucket": "parcels-entitlement:<uid> 30/min (src/app/api/parcels/entitlement/route.ts:31-36)"
+    "rate_bucket": "parcels-entitlement:<uid>, 60 s window, the count is the setting parcel_entitlement_read_per_min (default 30/min; task-454) (src/app/api/parcels/entitlement/route.ts)"
   },
   "render": {
     "targets": [
@@ -299,10 +300,12 @@
   },
   "config": {
     "answer": "logic_variables",
-    "why": "The two monthly allowances are logic variables with seed bounds 1-1000; a value outside them shows the counts as null (a display degrades; the lookup meter fails closed).",
+    "why": "The two monthly allowances are logic variables with seed bounds 1-1000; a value outside them shows the counts as null (a display degrades; the lookup meter fails closed). task-454 SEARCHFIX.6 (operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1494; Spec 128 Rule 3): the read limit of the bucket parcels-entitlement:{uid} (a 60 s window) is the logic variable parcel_entitlement_read_per_min, read through readSearchSettings after auth and before the rate limit; a missing, non-whole or out-of-bounds row (of it or of any search setting read with it) is the generic 500.",
     "evidence": [
       "src/lib/entitlements/index.ts:408-411",
-      "scripts/seeds/logic_variables.json parcel_tool_report_limit_plan / parcel_tool_report_limit_trial"
+      "scripts/seeds/logic_variables.json parcel_tool_report_limit_plan / parcel_tool_report_limit_trial",
+      "src/app/api/parcels/entitlement/route.ts — readSearchSettings(pool) before withRateLimit (task-454)",
+      "scripts/seeds/logic_variables.json parcel_entitlement_read_per_min"
     ],
     "logic_variables": [
       {
@@ -316,6 +319,13 @@
         "min": 1,
         "max": 1000,
         "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_entitlement_read_per_min",
+        "min": 1,
+        "max": 300,
+        "on_invalid": "fail",
+        "why": "readSearchSettings (src/lib/admin/parcel-lookup.ts) reads it with the other search settings in one read; a missing row, a value that is not a whole number or one outside min and max throws and the route answers the generic 500."
       }
     ],
     "retired": []

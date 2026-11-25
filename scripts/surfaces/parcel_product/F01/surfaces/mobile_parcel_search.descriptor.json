@@ -10,7 +10,7 @@
     "files": [
       "mobile/app/(app)/parcel-tool/index.tsx:1",
       "mobile/src/lib/parcelSearchMatch.ts:1 — the match-type branch, extracted so it is testable without a renderer",
-      "mobile/src/constants/parcelSearch.ts:1 — config.debounce_ms / config.min_query_len / the candidate cap",
+      "mobile/src/constants/parcelSearch.ts:1 — the layout tokens; config.debounce_ms, config.min_query_len and the candidate cap are config values of the slice (task-395, task-454), read in SearchBinding.tsx",
       "src/app/(maxbld)/parcel-tool/page.tsx:1 — the web mount (MF-44): gate first, then SearchPageClient.tsx; no lookup request while the live switch is off"
     ],
     "contracts": [
@@ -426,13 +426,15 @@
   },
   "config": {
     "answer": "logic_variables",
-    "why": "The six page settings of the phone search and semi pages are REGISTERED logic variables (Spec 128 Rule 3; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1494): debounce_ms, min_query_len, entitlement_stale_ms, lookup_retry_max and lookup_stale_ms are rows maxbld_page_<key> in scripts/seeds/logic_variables.json (min, max, a stated on_invalid, a why), declared here in config.logic_variables. The generator (scripts/surfaces/emit-mobile-surfaces.mjs) resolves each slice number from its row and refuses a mismatch or an out-of-range value; the phone reads only the generated slice, through the one reader (mobile/src/lib/sliceConfig.ts), which applies the bounds. The values are unchanged: debounce_ms 400, min_query_len 3, entitlement_stale_ms 0, lookup_retry_max 3, lookup_stale_ms 60000. Only the phone applies them at run time; no web binding reads these keys today.",
+    "why": "The eight page settings of the phone search and semi pages are REGISTERED logic variables (Spec 128 Rule 3; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1494): debounce_ms, min_query_len, entitlement_stale_ms, lookup_retry_max, lookup_stale_ms, candidate_cap and recent_max (the last two added by task-454 SEARCHFIX.6) are rows maxbld_page_<key> in scripts/seeds/logic_variables.json (min, max, a stated on_invalid, a why), declared here in config.logic_variables. The generator (scripts/surfaces/emit-mobile-surfaces.mjs) resolves each slice number from its row and refuses a mismatch or an out-of-range value; the phone reads only the generated slice, through the one reader (mobile/src/lib/sliceConfig.ts), which applies the bounds. The values are unchanged: debounce_ms 400, min_query_len 3, entitlement_stale_ms 0, lookup_retry_max 3, lookup_stale_ms 60000, candidate_cap 10, recent_max 3. The phone takes a change at the next app build. Only the phone applies them at run time, except candidate_cap, which the server also reads from the same row at every lookup (maxbld_page_candidate_cap, readSearchSettings); no web binding reads these keys today.",
     "evidence": [
       "mobile/src/components/surfaces/SearchBinding.tsx:37-38 — SEARCH_DEBOUNCE_MS and SEARCH_MIN_QUERY_LEN read from the slice through sliceNumber (bounds applied); the debounce is consumed at mobile/app/(app)/parcel-tool/index.tsx:42",
       "scripts/seeds/logic_variables.json — the six rows maxbld_page_<key>",
       "scripts/surfaces/emit-mobile-surfaces.mjs — PAGE_SETTINGS and pageSettingBounds (the slice number is resolved from the seed row)",
       "scripts/surfaces/_schema/surface.schema.json — the per-key config rules that require the config.logic_variables entry",
-      "src/app/api/parcels/lookup/types.ts:42 — the server range 3 to 120 of min_query_len"
+      "src/app/api/parcels/lookup/types.ts:42 — the server range 3 to 120 of min_query_len",
+      "mobile/src/components/surfaces/SearchBinding.tsx — SEARCH_CANDIDATE_LIMIT read from the slice through sliceNumber (config.candidate_cap, task-454)",
+      "mobile/src/store/recentSearchesStore.ts — the recent count read from the slice through sliceNumber (config.recent_max, task-454)"
     ],
     "logic_variables": [
       {
@@ -469,6 +471,20 @@
         "max": 600000,
         "on_invalid": "clamp",
         "why": "Registered logic variable maxbld_page_lookup_stale_ms (scripts/seeds/logic_variables.json); min and max mirror the row and the generator refuses a difference. range has NO SOURCE (envelope: media_list_cache_seconds 0 to 600 s, in ms). A value outside the bounds reads as the nearest bound on the phone, with a warning naming the key."
+      },
+      {
+        "name": "maxbld_page_candidate_cap",
+        "min": 10,
+        "max": 50,
+        "on_invalid": "fail",
+        "why": "Registered logic variable maxbld_page_candidate_cap (scripts/seeds/logic_variables.json); min and max mirror the row and the generator refuses a difference. value 10 from Spec 100 section 2 item 6 (\"candidates (<=10)\"); maximum 50 has NO SOURCE (the response-size envelope of parcel_map_neighbour_limit); minimum 10 because the typeahead has no overflow probe. on_invalid fail: the server reads the same row and fails closed (500); the generator refuses a slice value outside the row."
+      },
+      {
+        "name": "maxbld_page_recent_max",
+        "min": 0,
+        "max": 10,
+        "on_invalid": "clamp",
+        "why": "Registered logic variable maxbld_page_recent_max (scripts/seeds/logic_variables.json); min and max mirror the row and the generator refuses a difference. value 3 from MF-35 P35-D16 a (\"max 3\"); range 0 to 10 has NO SOURCE (the range of maxbld_page_lookup_retry_max); 0 keeps no chips. A value outside the bounds reads as the nearest bound on the phone, with a warning naming the key."
       }
     ],
     "retired": [],
@@ -476,7 +492,9 @@
     "min_query_len": 3,
     "entitlement_stale_ms": 0,
     "lookup_retry_max": 3,
-    "lookup_stale_ms": 60000
+    "lookup_stale_ms": 60000,
+    "candidate_cap": 10,
+    "recent_max": 3
   },
   "sharing": {
     "answer": "shared",

@@ -32,9 +32,7 @@ import {
 } from '@/lib/parcelSearchMatch';
 import { ApiError, RateLimitError, ReportLimitError, SubscriptionRequiredError } from '@/lib/errors';
 import { shouldHideAppTabBar } from '@/lib/appShell';
-import {
-  SEARCH_CANDIDATE_LIMIT,
-} from '@/constants/parcelSearch';
+import { SEARCH_CANDIDATE_LIMIT } from '@/components/surfaces/SearchBinding'; // task-454: the cap setting through sliceNumber
 import searchSlice from '@/generated/surfaces/mobile_parcel_search.json';
 import type { ConsumerParcelLookupResult } from '@/lib/schemas';
 
@@ -65,6 +63,7 @@ describe('the SEARCH archetype parameters match the descriptor', () => {
     expect(searchSlice.config.debounce_ms).toBe(400); // FIX.CONFIG-BOUNDS (task-395): the typed second copy is gone; the slice is the one home
     expect(searchSlice.config.min_query_len).toBe(3);
     expect(SEARCH_CANDIDATE_LIMIT).toBe(10);
+    expect(searchSlice.config.candidate_cap).toBe(SEARCH_CANDIDATE_LIMIT); // task-454: the registered setting maxbld_page_candidate_cap
   });
 
   it('the client minimum never rises above the server minimum', () => {

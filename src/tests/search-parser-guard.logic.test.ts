@@ -37,7 +37,9 @@ import { findUndocumentedBangs } from './non-null-assertion-comment.logic.test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const opts = { classifyUnlinked: true, matchMistyped: true } as const; // the consumer route's call
+const opts = { classifyUnlinked: true, matchMistyped: true, candidateCap: 10 } as const; // the consumer route's call (task-454: with the cap setting, default 10)
+/** task-454: the admin route's call passes only the cap (no option); the cast keeps the call typed before the cap is a member of the options. */
+const ADMIN = { candidateCap: 10 } as Parameters<typeof resolveAddress>[1];
 const E = { parcel_id: 'E1', address: '100 Queen St E' };
 const W = { parcel_id: 'W1', address: '100 Queen St W' };
 
@@ -118,7 +120,7 @@ describe('A.4 the guard after the match (resolveAddress)', () => {
   it('the exact read is still keyed on the stripped street (the join key is untouched)', async () => {
     state.exact['100|QUEEN'] = [E, W];
     await resolveAddress('100 Queen St W', opts);
-    expect(dbQuery.mock.calls[0]![1]).toEqual(['100', 'QUEEN']);
+    expect(dbQuery.mock.calls[0]![1]).toEqual(['100', 'QUEEN', 11]); // task-454: the exact window is the cap + 1
   });
 
   it("no direction typed: today's result exactly (both rows, the list)", async () => {
@@ -212,7 +214,7 @@ describe('A.4 the guard after the match (resolveAddress)', () => {
   it('end to end with a unit: 100 Queen St W Unit 4 returns the W lot', async () => {
     state.exact['100|QUEEN'] = [E, W];
     const out = await resolveAddress('100 Queen St W Unit 4', opts);
-    expect(dbQuery.mock.calls[0]![1]).toEqual(['100', 'QUEEN']);
+    expect(dbQuery.mock.calls[0]![1]).toEqual(['100', 'QUEEN', 11]); // task-454: the exact window is the cap + 1
     expect(out.match?.parcelId).toBe('W1');
   });
 
@@ -224,7 +226,7 @@ describe('A.4 the guard after the match (resolveAddress)', () => {
 
   it('the admin call (no options) takes the same guard and reads only match, candidates, truncated', async () => {
     state.exact['100|QUEEN'] = [E, W];
-    const out = await resolveAddress('100 Queen St W');
+    const out = await resolveAddress('100 Queen St W', ADMIN);
     expect(out.match?.parcelId).toBe('W1');
     expect(out.candidates).toEqual([]);
   });

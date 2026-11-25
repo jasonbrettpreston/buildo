@@ -1,6 +1,6 @@
 // SPEC LINK: docs/specs/01-pipeline/132_step_standard_handbook.md core.8 (every number an admin surface uses is a registered logic variable; unit constants and definitional windows are pinned, min = max);
 //            docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.44 (the conversion factor is content/settings, never code; operator 2026-11-14, MORNING-DECISIONS.md:241);
-//            ONE-13 a (MORNING-DECISIONS.md:738: lots under 50 m2 or over 5,000 m2 show Not yet evaluated).
+//            ONE-13 a (MORNING-DECISIONS.md:738); the 50 and 5,000 words: backlog/decisions/decision-37 (RR-0167).
 //
 // FIX.PROJ (task-372; D2 and D9 of the BL-GROUND verdicts): the report projection reads the square-feet factor and the lot-size window from the
 // registered, pinned logic variables, never from a number typed in code. Tests written FIRST (red before the readers exist).

@@ -1324,7 +1324,13 @@ const GROUP_ORDER = [
       "maxbld_page_entitlement_stale_ms",
       "maxbld_page_lookup_retry_max",
       "maxbld_page_lookup_stale_ms",
-      "maxbld_page_continue_wait_ms"
+      "maxbld_page_continue_wait_ms",
+      "parcel_lookup_search_per_min",
+      "parcel_lookup_detail_per_min",
+      "parcel_entitlement_read_per_min",
+      "parcel_lookup_slow_query_ms",
+      "maxbld_page_candidate_cap",
+      "maxbld_page_recent_max"
     ]
   },
   {
