@@ -1,0 +1,53 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-25T02:14:12.265Z file_sha256=6153a7761ee499fbd2e14fe9959c37ff6232cf4e1b1e71e603c11c016de2d53c prompt_sha256=d52f47ef4e224ffb337abd7df1f395de6fd36515aa7ed2f29a4ba54b0b7091e8
+🔍 Lens review of docs/reports/reviews/task-454/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — (B) Stage (iii) "c1 to c4" — the dev apply has no mirror of the test-stack `r-restore`; the plan rehearses an undo on teststack but leaves the dev apply unundoable except by manual SQL — port the same `r-restore` (delete only what c1 found absent) to stage (iii) under the same GO so dev rollback is symmetric and scripted.
+
+BUG severity=HIGH — (B) Step 3 "calls readSearchSettings() after the parse, before the rate limit" — the limiter's *value* comes from that same read, so whatever window exists while a row is missing (the OQ#1 "push before apply" answer) has every request hitting the DB **unthrottled**, and the reader throws → 500 for each; a phone retry loop or a health checker becomes an unrate-limited DB hammer — require the apply-before-push order, or put a static limiter ahead of the settings read.
+
+BUG severity=HIGH — (B) Step 5 L8 "writeOutputs(root) … unlinks GEN-STRAY files" — the plan only proves removal in a *tmp* copy ("in a tmp copy of the slice dir … removes a stray x.json"), so the first real-repo `--write` is the first time hand-authored files are in reach and the only thing stopping their deletion is an undescribed GEN-STRAY enumeration — scope the unlink to an explicit manifest the writer itself emits, and refuse to unlink anything outside it, proven on a repo-shaped copy (a non-stray file must survive).
+
+BUG severity=MED — (B) Stage (ii) c1 "lists every seed key missing on the target" — it reports *absent* keys but never range-checks *present* ones; any of the six keys already on dev at an out-of-bounds value (or 0) makes readSearchSettings throw 500 on the first post-push request — extend c1 to `SELECT variable_key, value FROM logic_variables WHERE variable_key IN (<six>)` and reject any present row outside 1–600 / 1–300 / 1–300 / 50–10000 / 2–50 / 0–10.
+
+BUG severity=MED — (B) Step 1 bounds rows (1–600, 1–300, 1–300, 50–10000, 2–50) — none includes 0, so with `on_invalid: fail` the operator can never turn a limiter off via the setting, which undercuts the "simple and easy turning stuff off" rule this plan invokes — allow 0 where the limiter treats 0 as "off" (and say so in `on_invalid`), or state in the description that disabling is deliberately unsupported.
+
+BUG severity=MED — (B) Step 4 "Delete parcelSearch.ts:17-28" — the plan names five readers (SearchBinding:24,39, index.tsx:79, recentSearchesStore:11,55) but does not say the full mobile src was grepped; a sixth importer of `SEARCH_CANDIDATE_LIMIT`/`SEARCH_RECENT_MAX` breaks the build and violates import-free — run `grep -rn 'SEARCH_CANDIDATE_LIMIT\|SEARCH_RECENT_MAX' mobile/src` and stage the delete after the last reader switches.
+
+BUG severity=MED — (A) "Reader shape … seed bounds at load" + Step 3 "Copy lot-map.ts:62-87 exactly" — the bound lives in the pushed code, so a future code push that narrows the range (e.g., 1–600 → 1–100) rejects an in-DB value and 500s every request until the row is re-written — read min/max from the row itself, or name the bound-version coupling in the seed description so a tightening push cannot silently brick a valid row.
+
+BUG severity=MED — (B) Step 2 L4 + Step 5 L4 "the check at :51 skips `v < ENTRY_FROM[k]`" — skipping the *entry requirement* is not the same as *emitting* the 0; if the emitter builds output from required entries, `debounce_ms: 0` is silently dropped and the phone reads `undefined`, so AC#2 is unproven — after regenerate, `grep -n '"debounce_ms": 0' mobile/src/generated/surfaces/mobile_parcel_search.json` (and any other zero-valued key) before the step is considered done.
+
+BUG severity=MED — (B) Step 2 C-10 regex `/LIMIT_PER_MIN|SLOW_QUERY_MS|limit:\s*\d|LIMIT 1[01]\b|slice\(0, 10\)|[>=]=? 10\b|SEARCH_CANDIDATE_LIMIT = |SEARCH_RECENT_MAX/` — this is keyed on identifier shapes, so a rewrite `const SEARCH_LIMIT = 60;` or `const RECENT = 3;` passes even though the number is typed and AC#1's "a test fails when the code types the number" does not hold — add raw-literal matches (`\b60\b`, `\b30\b`, `\b500\b`, `slice(0, 3)`, `splice(3`) to the comment-stripped scan, or narrow AC#1's claim.
+
+BUG severity=MED — (B) Step 2 C-10 scopes the scan to five files (lookup, entitlement, parcel-lookup.ts, parcelSearch.ts, store) — any other route or constants file with a typed limit (e.g., a report route, another `mobile/src/constants/*.ts` cap) is not caught, so the "register or type" rule only holds inside the named set — run the same regex once codebase-wide in the pre-fold, or list the other candidates and their file:line status.
+
+BUG severity=MED — (B) Step 1 "recent_max 0 turns the chips off" + Step 4 store — the plan does not say whether the store stops *writing* at 0 or only stops *displaying*; if the write path keeps appending while the display hides them, recents accumulate unbounded in MMKV — confirm the store's push/trim path uses the same cap, not just the render path.
+
+BUG severity=MED — (B) Step 1 "on_invalid: fail" (×5 server rows) + Step 1 "the panel shows the DB text (control-panel.ts:358)" — once the panel exposes these rows, an operator saving an out-of-bounds value writes a row the reader rejects and every subsequent request 500s — confirm the panel's write path rejects out-of-bounds values (checked against the same seed bounds) before these rows become panel-editable; otherwise a panel edit takes search down.
+
+BUG severity=MED — (B) Step 6 "Restamp the golden fingerprints only" — "only" is undefined and (E) lists "The golden restamp command" as unverified, so a restamp can re-bless unrelated fixture drift and hide a real regression — restamp only the `mobile_parcel_search` fixture/golden entries whose bytes changed for the two new config keys, and diff the restamp before commit.
+
+BUG severity=MED — (B) Stage (ii) c2 "from the pinned tree (header :30-33)" + (E) "Whether the board tip is 9de5c2129 or 8df2315ec" — if RG_BRANCH resolves to a tree whose `scripts/seeds/logic_variables.json` does not yet carry the six keys, c2 inserts nothing, the dev apply is a no-op, and the subsequent code push 500s; the tip being uncertain makes this a live risk — pin the sha before c2 and `git show $RG_BRANCH:scripts/seeds/logic_variables.json | grep -c 'parcel_lookup_search_per_min\|maxbld_page_candidate_cap\|maxbld_page_recent_max'` must read 3 at the GO.
+
+DEFER severity=LOW — (A) Step 4 `SEARCH_CANDIDATE_LIMIT = sliceNumber(SEARCH_SLICE, 'candidate_cap')` — if the slice is absent (stale generated JSON) `sliceNumber` can return `undefined` and `.slice(0, undefined)` renders the full server-returned list, silently disabling the cap; the surface-conformance check asserts the *call exists*, not the runtime value — bounded by the server's LIMIT 50, so safe to defer.
+
+DEFER severity=LOW — (B) Step 1 `parcel_lookup_slow_query_ms` min 50 — no rate limit is stated on the slow-query log path, so a 50 ms floor on a loaded dev/test DB could flood the log — bounded to a log channel with no customer effect; safe to revisit if volume appears.
+
+DEFER severity=LOW — (B) Stage (ii) mocks listed in (A) `search-parser-guard:20-30; parcel-lookup-resolution:12` — if any returns `{rows: []}` for the new settings query it triggers the throw and fails with a mock error, not the assertion under test — low impact once the mocks are matched to the six keys; note it in the mock-update sweep rather than the plan.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- No rollback on dev: stage (iii) c1–c4 has no mirror of the test-stack `r-restore`, so a bad dev apply leaves only manual SQL.
+- Ordering: readSearchSettings + limiter-value-from-that-read means the push-before-apply answer turns every request into an unrate-limited DB hammer for the window.
+- writeOutputs unlink is proven only on a tmp copy; the first real-repo run is the first time hand-authored files are at risk.
+
+Top 3 unverified data premises:
+- Present-out-of-bounds rows on dev — `SELECT variable_key, value FROM logic_variables WHERE variable_key IN ('parcel_lookup_search_per_min','parcel_lookup_detail_per_min','parcel_entitlement_read_per_min','parcel_lookup_slow_query_ms','maxbld_page_candidate_cap','maxbld_page_recent_max');` (expect zero rows before apply; any present row must sit inside its seed range).
+- Dev already holds the task-395 / task-372 rows the loader would leave at old descriptions — `SELECT variable_key, description FROM logic_variables WHERE variable_key LIKE 'maxbld_page_%';` (drives OQ#2 the operator is asked but does not itself verify).
+- The pinned tree c2 loads actually carries the six keys — `git rev-parse $RG_BRANCH` plus `git show $RG_BRANCH:scripts/seeds/logic_variables.json | grep -c 'parcel_lookup_search_per_min\|maxbld_page_candidate_cap\|maxbld_page_recent_max'` must read 3 at the GO.
+
+---
+⏱  188307ms (188.3s)
+📊 Tokens — total: 47343, input: 23973, output: 23370, reasoning: 20940

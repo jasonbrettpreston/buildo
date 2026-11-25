@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-25T02:14:12.266Z file_sha256=6153a7761ee499fbd2e14fe9959c37ff6232cf4e1b1e71e603c11c016de2d53c prompt_sha256=bbb4c1031453f824da250c4c7e395c13d1be2ab3671819a22f6084e399852ab5
+🔍 Lens review of docs/reports/reviews/task-454/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=<CRIT|HIGH> — none raised: see DEFER lines below
+DEFER severity=MED — plan, (D) OPERATOR QUESTIONS 1 "Every server reader fails closed, so search returns 500 on any dev app at this commit until the rows exist" vs design "No customer effect today: the limits work as typed." — a dev app shows the generic error on search (and on the entitlement read at first view) and a retry repeats it until the GO'd apply — put the plan's own recommendation into the stages: no push any dev app can read until the apply in stage (iii) has run, so this is an ordering, not an operator option.
+DEFER severity=MED — plan, (D) OPERATOR QUESTIONS 2 "If they are present, S2 and D3 reach dev only through a migration file, which the card rules out." vs design "stale wording corrected" — the control panel on dev keeps the old descriptions and still does not say "Takes effect at the next app build", so the truthful label the card names is not visible where the setting is read — have the apply's c2 update the description text on the rows c1 finds present, or name the panel wording as owed on a later card so the operator knows it is not fixed.
+DEFER severity=LOW — plan, step 1 "| maxbld_page_candidate_cap | 10 | 2–50 | fail |" vs design "the cap of 10" — with the cap set to 2 a person at an address with three or more parcels is shown two and has no way to reach the rest — the default 10 keeps today's list, so the risk is bounded to an operator lowering the setting.
+REJECT — plan, (A) FACTS "500 body is fixed | error-mapping.ts:80-85 | `'An unexpected error occurred'`" — a failed search shows a generic sentence with no cause — it matches the approved posture (fail closed, and criterion #4 forbids database text in the 500 body), so this is the design, not a defect.
+
+VERDICT: PASS on the person's experience
+States checked: search first view with the settings read, typed search loading, answered candidate list at the cap, many-lot list with the cap lowered, recent chips with recent_max 0, search 500 before the seed rows exist, entitlement read 500 at first view, control panel row text on dev before and after the apply   Dead ends found: 0 (1 conditional on a push landing before the apply, see the first DEFER)
+
+---
+⏱  154414ms (154.4s)
+📊 Tokens — total: 41222, input: 23086, output: 18136, reasoning: 17590

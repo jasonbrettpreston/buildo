@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-security.md model=deepseek-reasoner at=2026-11-25T02:14:12.266Z file_sha256=6153a7761ee499fbd2e14fe9959c37ff6232cf4e1b1e71e603c11c016de2d53c prompt_sha256=678f31e4a74583347941348baabe0f0651402ad74a74ef0e31dc4a410d3cb885
+🔍 Lens review of docs/reports/reviews/task-454/context-r1.md (model: deepseek-reasoner)
+
+Touches auth (per-uid rate limits), entitlements, admin (the parcel-lookup reader) and PII (owner uid in a new success log); money only through shared DB availability.
+
+BUG severity=HIGH — src/app/api/parcels/lookup/route.ts (PLAN step 3) "The lookup route calls `readSearchSettings()` after the parse, before the rate limit (keeps 401 first)." — a self-registered user firing requests after the limiter's 429 still forces one settings query per request on this route and on entitlement/route.ts ("The entitlement route does the same for its limit"), and while the rows are absent every such request throws a 500 after that query, so the 60/min limit stops bounding DB work and a plain loop can hold pool connections the report path shares — check the limiter first, then read the settings, memoised per process with the seed bounds validated at boot.
+DEFER severity=LOW — scripts/seeds/logic_variables.json (seed table) "| maxbld_page_candidate_cap | 10 | 2–50 | fail |" — if the operator sets 50, an authenticated harvester pulls 3,000 address rows a minute at the unchanged 60/min limit instead of 600, five times the PII per request — keep the default at 10 and pin the max to the observed need, not the map neighbour envelope.
+DEFER severity=LOW — entitlement/route.ts (PLAN step 3) "It adds `TAG`, `t0` and the success logInfo (lot-size/route.ts:43-45 shape)." with L6 "{ uid: ctx.uid, duration_ms }" — every entitlement read writes a per-user line, a durable activity trail and log growth that the uid-keyed limiter only partly bounds — keep it, but align log retention with the user-data retention and avoid widening the payload later.
+REJECT — plan collision note "Its \"ignores a uid\" cases go past auth and will hit `readSearchSettings`." — a client-supplied uid reaching the entitlement read looks like IDOR — the route reads ctx.uid from the session and this change adds no client id, so no caller can read another user's entitlement.
+REJECT — PLAN step 3 "Every LIMIT 10/11 becomes `LIMIT $n`, bound to cap or cap+1." — SQL assembled around a config value looks injectable — the value is an integer validated in bounds at load and bound as a parameter, so there is no path from a settings row or a request to the query text.
+
+VERDICT: FAIL on exploitability
+Surfaces touched: auth, entitlements, admin, PII
+
+---
+⏱  100513ms (100.5s)
+📊 Tokens — total: 33808, input: 23077, output: 10731, reasoning: 10160

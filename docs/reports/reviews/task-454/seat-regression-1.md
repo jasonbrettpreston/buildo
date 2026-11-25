@@ -1,0 +1,42 @@
+# Seat: regression: task-454 plan (PLAN-454-v1)
+Saved by: the orchestrator, from the seat's hand-back message, verbatim. The seat ran as a read-only agent and wrote no file in the repo; no word of the findings below is the orchestrator's.
+
+
+Basis: board wf2/board head ece69a003 (the plan's "tip uncertain" note: HEAD here is ece69a003). Read: the task-454 file (whole), FINDINGS-PLAN.md, Spec 128 Rule 3 and MD:1490-1496 (the 2026-11-20 "yes follow the rules register them" ruling), consumer-parcel-lookup.infra.test.ts:70-85, parcels-entitlement.infra.test.ts:60-75, parcels-lot-size-route.infra.test.ts:187, parcel-lookup-resolution.logic.test.ts:55-62, search-routing.logic.test.ts:183-195, search-parser-guard.logic.test.ts:180-190, mobile/src/constants/parcelSearch.ts, emit-mobile-surfaces.mjs:40-150, test.yml, db-tests.yml and setup-testcontainer.ts:388-395, migrate.js:315-335, Spec 100:47, Spec 99:175, and git history by pickaxe. Ran only `emit-mobile-surfaces.mjs --check` (read-only). No tests, no database, no dotenv.
+
+Checked and clean:
+- Behaviour change (typed limits to rows, 500 when a row is missing): the plan names it itself in its "Answer to item 4" and Operator question 1. The fail-closed shape is a copy of lot-map.ts and lot-size-entry.ts. Basis: MD:1494 "yes follow the rules register them." and Spec 128 Rule 3. I found no standing operator word dropped without a ruling. The card line "No customer effect today: the limits work as typed" does contradict the plan between the push and the dev apply. plan-ux#2 already raised this, so I do not repeat it. Only the plan's own text records the change, and the card Description still says "no customer effect".
+- Other environments: CI test.yml runs on main and PR and uses mocks only, so it needs no rows. db-tests.yml and src/tests/db/setup-testcontainer.ts:393 run `node scripts/migrate.js`, and migrate.js:327-331 calls the seed loader. So parcel-lookup.db.test.ts and consumer-parcel-lookup.db.test.ts (real resolveAddress) get the rows. Mobile CI reads the committed generated slice. The test stack and dev get the rows only through the plan's stage (ii) and (iii) loader runs. This matters for McTest and the phone run: the stack must be seeded before any run against it.
+- Callers of resolveAddress and fetchParcelById: src/app/api/admin/parcels/lookup/route.ts:23-29, src/lib/parcels/lookup-flow.ts:11, and the type-only import in consumer-lookup.ts:14. No script or pipeline step runs the functions. scripts/ and census hits are descriptor and ledger JSON only. The admin route and the customer route both go through resolveAddress, so one reader covers both.
+- L8 deletes nothing today: `--check` prints "surfaces ok (5 surfaces, 33 goldens)" (no GEN-STRAY). Stray scope is only `*.json` in mobile/src/generated/surfaces and `*.goldens.json` in mobile/__tests__/fixtures/surfaces (emit:126-129). Those folders hold only the 5 slices and 4 golden files.
+- L4 changes no committed output today: the check is currently clean, and the change only allows a 0 that is now rejected.
+- Other open work: of the unmerged branches filtered on the plan's files since 2026-11-18, only wf1/inc1b-gates 76fab5e70 (see rg#5) and wf2/board-move (base) show up. The task-456 collision is already in the plan's own section.
+
+## rg#1 HIGH: an existing 60/30 lock is not on the plan's file list and is not replaced
+Plan: (C) Tests list and Step 2. consumer-parcel-lookup.infra.test.ts is named nowhere.
+Evidence: src/tests/consumer-parcel-lookup.infra.test.ts:76-79: `it('the two rate buckets: search 60/min (q) + lookup 30/min (parcelId)'` with `expect(src).toMatch(/SEARCH_LIMIT_PER_MIN\s*=\s*60/)` and `/LOOKUP_LIMIT_PER_MIN\s*=\s*30/`. It was added by 628654586 (2026-07-11, P23 Parcel Cost Tool, Spec 100) and is still in this commit. Step 3 deletes both constants, so the pre-commit hook goes red on an unplanned file. C-10's new regex also bans `LIMIT_PER_MIN`, so the two tests would contradict each other. parcels-entitlement.infra.test.ts:65-69 locks only the bucket key (`toMatchObject({ key: ... })`), never the 30.
+Fix: add consumer-parcel-lookup.infra.test.ts to Files. Rewrite :76-81 to keep the bucket keys and drop the number regexes. The number lock moves to rg#2.
+
+## rg#2 MED: after the rewrite nothing proves the route passes the row's value as the limit
+Plan: Step 2 (C-10 scan, "a missing settings row gives 500") and AC#1.
+Evidence: the planned locks prove only that the number is absent from source, that the keys and bounds are in the seed, and that a missing row gives 500. The default 60/30/30 is then pinned only inside the seed JSON. The precedent the plan copies pins the value through the mock: src/tests/parcels-lot-size-route.infra.test.ts:187 `expect(vi.mocked(withRateLimit).mock.calls[0]?.[1]).toEqual({ key: ..., limit: 5, windowSec: 86_400 })`. For the cap, parcel-lookup-resolution.logic.test.ts:60 (11 rows to `toHaveLength(10)`) and search-parser-guard:187,254 would still pass if the code kept a typed 10, as long as the mock row says 10.
+Fix: in the gate and entitlement tests, mock the settings row to a non-default value (say 7), assert `withRateLimit` receives `limit: 7` for the search, detail and entitlement buckets, and assert `windowSec: 60`. Also add one resolveAddress case with cap 3 (4 rows read, 3 candidates, truncated). Use non-default values so a typed number cannot pass.
+
+## rg#3 MED: the rule text that states the typed numbers is not updated, and phone and server can differ
+Plan: Step 1 (the description line "the phone takes it at the next app build") and (E) UNVERIFIED, which leaves docs/specs/03-mobile/99_mobile_state_architecture.md open.
+Evidence: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:47: "Ambiguity -> 200 with `candidates` (<=10)". docs/specs/03-mobile/99_mobile_state_architecture.md:175: "at most `SEARCH_RECENT_MAX` = 3". The seed's bound for the cap is 2-50, so a setting above 10 contradicts the Spec 100 line. Also parcelSearch.ts:17-18 cites "Spec 100 section 2 item 6 states candidates (<=10)" and "the operator's 2026-09-16 ruling says: ask for a house number, do not list". The only record of the build lag is a text in a DB row that the loader will not update on dev. An installed app keeps its built-in slice of 10 and 3, so after a settings change the phone and the server differ. If the server cap is 20, the phone shows 10. If it is 5, the server sends 5.
+Fix: add Spec 100:47 and Spec 99:175 to Files with dated notes (prior text kept). The notes say the cap and recent_max are registered settings, that the phone takes them at the next build, and that Spec 100's "<=10" is the default and the bound is the registered range. Or lower the cap max to 10 and say so in the plan.
+
+## rg#4 LOW: pinned SQL text and counts the plan treats only as "mocks and call indexes"
+Plan: (A) "Unlisted mocks break" and Step 3 (`LIMIT $n`).
+Evidence: src/tests/search-routing.logic.test.ts:190 `expect(sql).toContain('LIMIT 10');` (added by 2d9597374, task-333 SRCH.FUZZY, 2026-11-19) breaks once the SQL is `LIMIT $n`. It is a text assertion, not a call index. search-parser-guard.logic.test.ts:187 and :254 (`toHaveLength(10)`, from 29bac2f69, task-69, "direction guard skips a truncated exact window") and the :181 "11 rows read" case lock the cap+1 window. The plan lists the file for mocks only.
+Fix: Step 2 states that :190 becomes `toContain('LIMIT $')` plus a params check (cap), and that the :181 and :254 cases keep `cap+1` rows. A red proof for each is recorded.
+
+## rg#5 LOW: unmerged branch edits the same seed file
+Plan: Collisions section (names task-456 only).
+Evidence: `git show --stat 76fab5e70` (wf1/inc1b-gates, 2026-11-20, "the three compliance gates refuse on bypass") shows `scripts/seeds/logic_variables.json | 10 +`. It is not an ancestor of the board head. The conflict is textual only, near the file's end. The fingerprint and `logic-vars-docs` regeneration (Step 6) is exactly where it would hurt.
+Fix: add one line to the plan: rebase and rerun Step 6 if that branch lands first. No design change.
+
+Not verified (not asked or out of reach): the content of the six maxbld_page_* rows on dev (no database, per the brief). plan-ux#3 and plan-error-paths#3 already cover the description rewrites against rows on dev.
+
+STATUS: 5 findings (1 HIGH, 2 MED, 2 LOW); the plan's fail-closed change is recorded in the plan but the old 60/30 source lock sits in an unlisted file and the spec lines that state 10 and 3 are not updated.
