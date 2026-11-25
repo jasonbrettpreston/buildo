@@ -40,3 +40,12 @@ Status line (Spec 137 rule 3): task-456 RUNNING · work commits landed on wf2/sf
 - Findings (rule-lists.mjs findings): 7 = 2 MED, 4 LOW, 1 NIT; 0 CRITICAL, 0 HIGH. Listed in FINDINGS.md. Not triaged, not fixed: GROUNDER OWED (a separate grounder rules them).
 - No compliance or engineering lens for this task (every list is output_off).
 - The migration 309 db test is still to be run by the orchestrator in a throwaway container; AC #4 stays open.
+
+## Close, round 1 (records only, 2026-11-25)
+- Station: STATION PASS on 5e4d68bc1 (~/Buildo-scratch/push-station/pass/5e4d68bc1af5ea71a644e463ea8acffad67199ce.pass): 28,397 passed, 0 failed; the phone tests and both typechecks rc=0, so the two new phone cases are green.
+- Migration 309 db test: the orchestrator ran it in a throwaway container (RR-0475 item 4, MORNING-DECISIONS.md:2481); db-green.out (this folder) line 1748: src/tests/db/migration-309-parcel-maxbld-scenarios.db.test.ts (10 tests), all passed, the DROP CONSTRAINT cases being the red direction inside the database. Migration 309 is unchanged (git diff 8abc92777..HEAD -- migrations/ is empty). AC #4 is met.
+- The same run executed every db test: 8 tests in 5 other files failed (pricing-tables, compute-parcel-cost-estimates-violations, media-assets, proof-slice, and the by-law resolution step's migration test; names in db-green.out). They come from container seed and schema drift, outside this diff (none is on the Files line).
+- Grounder Cairn-Ground-O456 (GROUNDER.md in this folder, copied byte for byte): 7 ids, 1 CONFIRMED (out-code-review-p1#4, LOW, pile), 6 REJECTED; no CRITICAL, HIGH or MED stands, so no fix commit and no round 2. TRIAGE.md (this folder, byte for byte) records the pile line.
+- The McFrontend-Task: MF-53 trailer on 2606cb7ab was ruled correct by the grounder.
+- UNVERIFIED: the red runs of the two phone cases (plan steps 1-2) were never seen; only their green is shown (station).
+- Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 1 pile; grounder docs/reports/lanes/2026-11-25/BL-SFX8/GROUNDER.md; triage docs/reports/lanes/2026-11-25/BL-SFX8/TRIAGE.md
