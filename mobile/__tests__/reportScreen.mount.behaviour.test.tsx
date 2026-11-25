@@ -11,6 +11,9 @@
 //        Carried over from the retired W-0 / EI-D1 lock (parcelDetailW0Hide.behaviour.test.tsx, retired with the old screen, MF-74 Q2 i): no
 //        legacy size or cost label or value renders in any state, even when a server still sent a legacy menu and legacy headlines.
 //   T-B2 Back: with history it goes back; on a cold open (deep link, no history) it replaces with the Lookup route; it has a role and a label.
+// task-267 (dated 2026-11-25, PLAN-267-v2 section 5, M1-M3): the route reads useReportScreen (the fast read, the report read and the clock); the mock
+// returns its stable signals. Retry is the hook's retry (prior text: the lookup's refetch). M1 a cached miss from an earlier visit is not this visit's
+// answer; M2 a cached page opens at once with no lines and a refetch behind it brings back none; M3 the bar names the lot.
 require('react-native-css-interop/test');
 import * as React from 'react';
 import fs from 'node:fs';
@@ -26,13 +29,13 @@ jest.mock('expo-router', () => ({
   useRouter: () => ({ replace: mockReplace, back: mockBack, push: jest.fn(), canGoBack: () => mockCanGoBack }),
   useLocalSearchParams: () => mockParams,
 }));
-type Hook = { data: unknown; isError: boolean; refetch: jest.Mock; error?: unknown };
-let mockHook: Hook = { data: undefined, isError: false, refetch: jest.fn() };
+type Hook = { data: unknown; isError: boolean; retry: jest.Mock; error?: unknown; [k: string]: unknown };
+let mockHook: Hook = { data: undefined, isError: false, retry: jest.fn() };
 // task-452: the entitlement read the route's wall waits on (useWallState).
 let mockEntitlement: { data: unknown; isFetching: boolean; isError: boolean } = { data: undefined, isFetching: false, isError: false };
 const mockIds: unknown[] = [];
 const mockSemi: unknown[] = [];
-jest.mock('@/hooks/useParcelLookup', () => ({ useParcelLookup: (id: unknown, semi?: unknown) => { mockIds.push(id); mockSemi.push(semi); return mockHook; }, useParcelEntitlement: () => mockEntitlement }));
+jest.mock('@/hooks/useParcelLookup', () => ({ useReportScreen: (id: unknown, semi?: unknown) => { mockIds.push(id); mockSemi.push(semi); return { ...{ checked: null, elapsedMs: 0, lineElapsedMs: 0, gaveUp: false, answeredThisVisit: true, opened: false, linesFull: false, open: jest.fn(), retry: jest.fn(), address: null, isError: false, isFetching: false, error: null }, ...mockHook }; }, useParcelEntitlement: () => mockEntitlement }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Screen = require('../app/(app)/parcel-tool/[parcelId]').default as React.ComponentType;
@@ -55,14 +58,14 @@ const LEGACY = /Max build FSI|Max buildable GFA|As-of-right|Max build storeys|Co
 
 beforeEach(() => {
   mockReplace.mockClear(); mockBack.mockClear(); mockCanGoBack = true; mockIds.length = 0; mockSemi.length = 0; mockParams = { parcelId: 'PIN-777' };
-  mockHook = { data: undefined, isError: false, refetch: jest.fn() };
+  mockHook = { data: undefined, isError: false, retry: jest.fn() };
   mockEntitlement = { data: undefined, isFetching: false, isError: false };
 });
 const noLegacy = (): void => expect(screen.queryAllByText(LEGACY)).toEqual([]);
 
 describe('T-B1 the lot route mounts the REPORT host on the lookup query', () => {
   it('a served page: the v21 page renders (the golden view), the lookup is keyed on the route parcelId, no legacy text', () => {
-    mockHook = { data: hit(VIEW), isError: false, refetch: jest.fn() };
+    mockHook = { data: hit(VIEW), isError: false, retry: jest.fn() };
     render(<Screen />);
     expect(mockIds).toContain('PIN-777');
     expect(screen.getByTestId('report-page')).toBeTruthy();
@@ -75,7 +78,7 @@ describe('T-B1 the lot route mounts the REPORT host on the lookup query', () => 
     ['an older server (no page key)', { ...hit(null), page: undefined }],
     ['a miss', { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match', map: null, page: null }],
   ])('%s: the approved miss text, no page, no legacy text', (_n, data) => {
-    mockHook = { data, isError: false, refetch: jest.fn() };
+    mockHook = { data, isError: false, retry: jest.fn() };
     render(<Screen />);
     expect(screen.getByText(LIFE.miss!)).toBeTruthy();
     expect(screen.queryByTestId('report-page')).toBeNull();
@@ -87,15 +90,15 @@ describe('T-B1 the lot route mounts the REPORT host on the lookup query', () => 
     expect(screen.getByTestId('report-spinner')).toBeTruthy();
   });
   it('an error with nothing cached: the error text and Retry ("Try again"); a press refetches once', () => {
-    mockHook = { data: undefined, isError: true, refetch: jest.fn() };
+    mockHook = { data: undefined, isError: true, retry: jest.fn() };
     render(<Screen />);
     expect(screen.getByText(LIFE.error!)).toBeTruthy();
     expect(within(screen.getByTestId('report-retry')).getByText(OWN['retry.text']!)).toBeTruthy();
     fireEvent.press(screen.getByTestId('report-retry'));
-    expect(mockHook.refetch).toHaveBeenCalledTimes(1);
+    expect(mockHook.retry).toHaveBeenCalledTimes(1);
   });
   it('offline: an error with a cached page still shows the page, never the error', () => {
-    mockHook = { data: hit(VIEW), isError: true, refetch: jest.fn() };
+    mockHook = { data: hit(VIEW), isError: true, retry: jest.fn() };
     render(<Screen />);
     expect(screen.getByTestId('report-page')).toBeTruthy();
     expect(screen.queryByText(LIFE.error!)).toBeNull();
@@ -108,7 +111,7 @@ describe('T-B1 the lot route mounts the REPORT host on the lookup query', () => 
 const unsureHit = (page: Json | null) => ({ ...hit(page), lotForm: { detected: 'semi_half', basis: 'o4_two_parcel_abut', unsure: true } });
 describe('SRCH.METER-2 the held report screen', () => {
   it('a settled unsure lot with page null shows the loading state, not the miss text, and redirects to the question once', () => {
-    mockHook = { data: unsureHit(null), isError: false, refetch: jest.fn() };
+    mockHook = { data: unsureHit(null), isError: false, retry: jest.fn() };
     render(<Screen />);
     expect(screen.getByText(LIFE.loading!)).toBeTruthy();
     expect(screen.queryByText(LIFE.miss!)).toBeNull();
@@ -116,13 +119,13 @@ describe('SRCH.METER-2 the held report screen', () => {
   });
   it('an answered unsure lot (semi=answered) with its page shows the report and does not redirect', () => {
     mockParams = { parcelId: 'PIN-777', semi: 'answered' };
-    mockHook = { data: unsureHit(VIEW), isError: false, refetch: jest.fn() };
+    mockHook = { data: unsureHit(VIEW), isError: false, retry: jest.fn() };
     render(<Screen />);
     expect(screen.getByTestId('report-page')).toBeTruthy();
     expect(mockReplace).not.toHaveBeenCalled();
   });
   it('a clear lot with page null still shows the miss text (only the unsure, unanswered case is held)', () => {
-    mockHook = { data: { ...hit(null), lotForm: { detected: 'detached', basis: 'o4_not_met', unsure: false } }, isError: false, refetch: jest.fn() };
+    mockHook = { data: { ...hit(null), lotForm: { detected: 'detached', basis: 'o4_not_met', unsure: false } }, isError: false, retry: jest.fn() };
     render(<Screen />);
     expect(screen.getByText(LIFE.miss!)).toBeTruthy();
     expect(mockReplace).not.toHaveBeenCalled();
@@ -140,7 +143,7 @@ describe('SRCH.METER-2 the held report screen', () => {
 
 describe('T-B2 Back is a route (FE-36; NAV-AUDIT #3, the MF-53 rule)', () => {
   it('with history: router.back(); the control is a labelled button', () => {
-    mockHook = { data: hit(null), isError: false, refetch: jest.fn() };
+    mockHook = { data: hit(null), isError: false, retry: jest.fn() };
     render(<Screen />);
     const back = screen.getByTestId('report-back');
     expect(back.props.accessibilityRole).toBe('button');
@@ -162,7 +165,7 @@ describe('T-B2 Back is a route (FE-36; NAV-AUDIT #3, the MF-53 rule)', () => {
 describe('task-452 the report route draws the wall', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { ReportLimitError } = require('@/lib/errors') as typeof import('@/lib/errors');
-  const refused = (): void => { mockHook = { data: undefined, isError: true, error: new ReportLimitError(10, '2026-12-09T05:00:00.000Z'), refetch: jest.fn() }; };
+  const refused = (): void => { mockHook = { data: undefined, isError: true, error: new ReportLimitError(10, '2026-12-09T05:00:00.000Z'), retry: jest.fn() }; };
   it('a limit 403 with an answered read shows the wall with the read\'s count and date, Back, and not the error text', () => {
     refused();
     mockEntitlement = { data: { status: 'active', reportsLimit: 10, resetsOnDisplay: '9 Dec 2026' }, isFetching: false, isError: false };
@@ -188,5 +191,41 @@ describe('task-452 the report route draws the wall', () => {
     expect(within(screen.getByTestId('parcel-wall-error')).getByText('Something went wrong on our side. Please try again.')).toBeTruthy();
     expect(screen.getByTestId('report-back')).toBeTruthy();
     expect(screen.queryByText(LIFE.error as string)).toBeNull();
+  });
+});
+
+// task-267 (PLAN-267-v2 section 5): M1-M3.
+const CHECKED = rj('src/tests/fixtures/report-page/props/ready.mobile.json').checked as { min_ms: number };
+describe('task-267 the loading screen on the real route', () => {
+  it('M1 a cached miss from an earlier visit shows no miss text until this visit\'s answer', () => {
+    mockHook = { data: hit(null), isError: false, retry: jest.fn(), answeredThisVisit: false, checked: CHECKED, elapsedMs: 3000, lineElapsedMs: 3000 };
+    const view = render(<Screen />);
+    expect(screen.queryByText(LIFE.miss!)).toBeNull();
+    expect(screen.getByText(OWN['checks.label']!)).toBeTruthy();
+    mockHook = { ...mockHook, answeredThisVisit: true, elapsedMs: 3100, lineElapsedMs: 3100 };
+    view.rerender(<Screen />);
+    expect(screen.getByText(LIFE.miss!)).toBeTruthy();
+    expect(screen.getByText(OWN['back_to_search.text']!)).toBeTruthy();
+  });
+  it('M2 a cached page opens at once with no lines; the silent refetch behind it brings back no lines or checking state', () => {
+    mockHook = { data: hit(VIEW), isError: false, retry: jest.fn(), answeredThisVisit: false };
+    const view = render(<Screen />);
+    expect(screen.getByTestId('report-page')).toBeTruthy();
+    expect(screen.queryByText(OWN['checks.label']!)).toBeNull();
+    mockHook = { ...mockHook, isFetching: true };
+    view.rerender(<Screen />);
+    expect(screen.getByTestId('report-page')).toBeTruthy();
+    expect(screen.queryByText(OWN['checks.label']!)).toBeNull();
+    expect(screen.queryByTestId('report-spinner')).toBeNull();
+  });
+  it('M3 the lot\'s address is the bar title; with no address there is no title node', () => {
+    mockHook = { data: undefined, isError: false, retry: jest.fn(), address: '48 Larchmere Avenue' };
+    const view = render(<Screen />);
+    expect(screen.getByTestId('report-title')).toBeTruthy();
+    expect(screen.getByText('48 Larchmere Avenue')).toBeTruthy();
+    view.unmount();
+    mockHook = { data: undefined, isError: false, retry: jest.fn(), address: null };
+    render(<Screen />);
+    expect(screen.queryByTestId('report-title')).toBeNull();
   });
 });

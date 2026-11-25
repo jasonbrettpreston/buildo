@@ -1,4 +1,6 @@
 {
   "retry.text": "Try again",
-  "back.text": "Back"
+  "back.text": "Back",
+  "back_to_search.text": "Back to search",
+  "checks.label": "Checks for this lot"
 }

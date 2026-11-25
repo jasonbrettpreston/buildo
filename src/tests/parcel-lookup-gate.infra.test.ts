@@ -14,6 +14,10 @@
 //   task-454 SEARCHFIX.6 (MORNING-DECISIONS.md:1494 "register them"; Spec 128 Rule 3): the two rate limits, the slow-query mark and the candidate cap are
 //   read from their settings rows (one read, readSearchSettings); a missing or out-of-bounds row is the generic 500 with no database text; a
 //   non-default row moves the limiter, the cap and the warning. Every 500 body is checked for the raw error text (Std 2.1; g3 GROUNDER-E C1).
+//   task-267 LOAD.2 (PLAN-267-v2 section 5; RR-0485, MD:2533; the 2026-11-25 phone walk, findings 22, 23, 30 and M1): the search only finds the lot. A q hit
+//   runs neither the stored read nor the compute and sends page null (meter not_produced); the report is computed once, on the parcelId read the pick opens.
+//   Dated 2026-11-25 (prior text kept in the tests' history): the q-path counting tests below now count on a parcelId call; their q call asserts page null,
+//   no insert and meter not_produced, so no lock is dropped. G1-G5 pin the hand-off and the fast read (fast=1: the stored page or whatWeChecked, no compute).
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { NextRequest } from 'next/server';
@@ -51,6 +55,8 @@ vi.mock('@/lib/parcels/report-page', async (orig) => {
 });
 // SRCH.METER-2 (task-360): the one-lot compute at the pick (LOAD.1, task-266) is mocked so a test can prove it is NOT run for a held (unsure, unanswered) lot.
 vi.mock('@/lib/parcels/report-compute', () => ({ computeCustomerPageResponse: vi.fn(async () => null) }));
+// task-267 G5: the What we checked read of the fast read (its SQL is pinned in report-checked-producer.logic.test.ts); the default answers null.
+vi.mock('@/lib/parcels/what-we-checked', async (orig) => ({ ...(await orig<typeof import('@/lib/parcels/what-we-checked')>()), readWhatWeChecked: vi.fn(async () => null) }));
 const logInfo = vi.fn();
 const logWarn = vi.fn();
 vi.mock('@/lib/logger', () => ({ logInfo: (...a: unknown[]) => logInfo(...a), logWarn: (...a: unknown[]) => logWarn(...a), logError: vi.fn() }));
@@ -64,6 +70,7 @@ import { resolveLotMap } from '@/lib/parcels/lot-map';
 import { readLotForm } from '@/lib/parcels/lot-form';
 import { readCustomerPageResponse } from '@/lib/parcels/report-page';
 import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';
+import { readWhatWeChecked } from '@/lib/parcels/what-we-checked';
 import fs from 'node:fs';
 import path from 'node:path';
 import { GET } from '@/app/api/parcels/lookup/route';
@@ -75,7 +82,7 @@ const PERIOD_END = new Date('2026-12-05T10:00:00.000Z');
 const ROW = { parcel_id: 'P-45', lot_size_sqm: 400, neighbourhood_id: null, __display_address: '5 Elm St' };
 const RAW_Q = '5 elm st secret-typed-text';
 
-type Body = { data: { parcel: unknown; match: unknown; page?: unknown; lotForm?: unknown } | null; error: { code: string; details?: Record<string, unknown> } | null };
+type Body = { data: { parcel: unknown; match: unknown; page?: unknown; lotForm?: unknown; whatWeChecked?: unknown } | null; error: { code: string; details?: Record<string, unknown> } | null };
 const req = (qs: string): NextRequest => ({ url: `https://x.test/api/parcels/lookup?${qs}`, nextUrl: { pathname: '/api/parcels/lookup' }, headers: { get: () => null } } as unknown as NextRequest);
 const call = async (qs = 'parcelId=P-45'): Promise<{ status: number; body: Body }> => {
   const res = await GET(req(qs));
@@ -231,9 +238,14 @@ describe('T8 the gate: product x status (Spec 96 §10 status set; D-4 a)', () =>
 
 describe('T9 the meter (D-2, D-3, D-5, D-6 a)', () => {
   beforeEach(() => { ctx(null); parcelTool('active'); });
+  // task-267 (dated 2026-11-25): the q call finds the lot only (page null, no insert); the INSERT shape and the no-raw-q lock move to the parcelId call the pick opens.
   it('a hit writes one row: parcel_tool / property_view / parcel_ref, keyed on the matched parcels.parcel_id, meta {"extra": false} (MF-47 C-5: the flag is decided at insert) and the transaction clock', async () => {
     vi.mocked(resolveAddress).mockResolvedValue({ match: { parcelId: 'TYPED-ID', matchType: 'exact', address: '5 Elm St' }, candidates: [], truncated: false } as never);
-    const r = await call(`q=${encodeURIComponent(RAW_Q)}`);
+    const q = await call(`q=${encodeURIComponent(RAW_Q)}`);
+    expect(q.status).toBe(200);
+    expect(q.body.data?.page).toBeNull();
+    expect(inserts()).toHaveLength(0);
+    const r = await call('parcelId=P-45');
     expect(r.status).toBe(200);
     const ins = inserts();
     expect(ins).toHaveLength(1);
@@ -242,8 +254,11 @@ describe('T9 the meter (D-2, D-3, D-5, D-6 a)', () => {
     expect(ins[0]![1]).toEqual([UID, 'P-45', NOW]);
     expect(JSON.stringify(txQuery.mock.calls)).not.toContain(RAW_Q);
   });
-  it('the same lot via q and via parcelId counts once (the second open is already_counted, no insert)', async () => {
-    await call(`q=${encodeURIComponent(RAW_Q)}`);
+  it('the same lot via q and via parcelId counts once (the q hit counts nothing; the parcelId open counts; a second open is already_counted, no insert)', async () => {
+    const q = await call(`q=${encodeURIComponent(RAW_Q)}`);
+    expect(q.body.data?.page).toBeNull();
+    expect(inserts()).toHaveLength(0);
+    await call('parcelId=P-45');
     expect(inserts()).toHaveLength(1);
     txQuery.mockClear();
     meter({ used: 1, already: true });
@@ -307,6 +322,10 @@ describe('T9 the meter (D-2, D-3, D-5, D-6 a)', () => {
   });
   it('the log line carries access and meter and never the raw q (Spec 100 §2.8)', async () => {
     await call(`q=${encodeURIComponent(RAW_Q)}`);
+    const qLog = logInfo.mock.calls.find((c) => c[1] === 'consumer parcel lookup');
+    expect(qLog?.[2]).toMatchObject({ access: 'parcel_tool', meter: 'not_produced', outcome: 'hit', page: false });
+    logInfo.mockClear();
+    await call('parcelId=P-45');
     const log = logInfo.mock.calls.find((c) => c[1] === 'consumer parcel lookup');
     expect(log?.[2]).toMatchObject({ access: 'parcel_tool', meter: 'counted', outcome: 'hit' });
     expect(JSON.stringify(logInfo.mock.calls)).not.toContain(RAW_Q);
@@ -367,7 +386,10 @@ describe(`SRCH.METER (task-334, RR-0278 "I should only be charged a report if I 
     expect(meterLog()).toMatchObject({ meter: 'counted', page_source: 'computed' });
   });
   it('a report produced for the found lot counts once: one row keyed on the lot, log meter counted', async () => {
-    const r = await call(`q=${encodeURIComponent(RAW_Q)}`);
+    const q = await call(`q=${encodeURIComponent(RAW_Q)}`);
+    expect([q.status, q.body.data?.page, inserts().length, meterLog().meter]).toEqual([200, null, 0, 'not_produced']);
+    logInfo.mockClear();
+    const r = await call('parcelId=P-45');
     expect(r.status).toBe(200);
     expect(r.body.data?.page).not.toBeNull();
     expect(inserts()).toHaveLength(1);
@@ -465,6 +487,137 @@ describe(`SRCH.METER (task-334, RR-0278 "I should only be charged a report if I 
     expect((await call('parcelId=GONE')).body.data?.parcel).toBeNull();
     expect(vi.mocked(readCustomerPageResponse)).not.toHaveBeenCalled();
     expect(meterCalls()).toBe(0);
+  });
+});
+
+const CHECKED_FIXTURE = (JSON.parse(fs.readFileSync(path.resolve(__dirname, 'fixtures/surfaces/report/loading_checked.mobile.json'), 'utf8')) as { response_fixture: { what_we_checked: unknown } }).response_fixture.what_we_checked;
+
+describe('task-267 LOAD.2 the hand-off: the search finds the lot, the pick computes once (PLAN-267-v2 section 5, G1-G5)', () => {
+  const meterLog = () => (logInfo.mock.calls.find((c) => c[1] === 'consumer parcel lookup')?.[2] ?? {}) as Record<string, unknown>;
+  beforeEach(() => { ctx(null); parcelTool('active'); });
+  it('G1 a q hit never runs the stored read or the compute: page null, meter not_produced, no insert', async () => {
+    const r = await call(`q=${encodeURIComponent(RAW_Q)}`);
+    expect(r.status).toBe(200);
+    expect(r.body.data?.parcel).not.toBeNull();
+    expect(r.body.data?.page).toBeNull();
+    expect(r.body.data?.whatWeChecked).toBeNull();
+    expect(vi.mocked(readCustomerPageResponse)).not.toHaveBeenCalled();
+    expect(vi.mocked(computeCustomerPageResponse)).not.toHaveBeenCalled();
+    expect(inserts()).toHaveLength(0);
+    expect(meterLog()).toMatchObject({ meter: 'not_produced', page_source: 'none', compute_ms: null });
+  });
+  it('G2 compute once per opened lot: q then parcelId with a stored miss computes once and inserts once', async () => {
+    vi.mocked(readCustomerPageResponse).mockResolvedValue(null);
+    vi.mocked(computeCustomerPageResponse).mockResolvedValue(GOLDEN.response_fixture);
+    await call(`q=${encodeURIComponent(RAW_Q)}`);
+    const r = await call('parcelId=P-45');
+    expect(r.body.data?.page).not.toBeNull();
+    expect(vi.mocked(computeCustomerPageResponse)).toHaveBeenCalledTimes(1);
+    expect(inserts()).toHaveLength(1);
+  });
+  it.each<[string, Parameters<typeof meter>[0], number, number]>([
+    ['a new lot is counted once', { used: 0, already: false }, 200, 1],
+    ['an already counted lot counts nothing more', { used: 1, already: true }, 200, 0],
+    ['a new lot at the limit is refused (403) with nothing counted', { used: 3, already: false }, 403, 0],
+    ['a counted lot at the limit is served with nothing counted', { used: 3, already: true }, 200, 0],
+  ])('G3 meter counts unchanged: %s; the q call before it inserts nothing', async (_l, m, status, n) => {
+    meter(m);
+    await call(`q=${encodeURIComponent(RAW_Q)}`);
+    expect(inserts()).toHaveLength(0);
+    const r = await call('parcelId=P-45');
+    expect([r.status, inserts().length]).toEqual([status, n]);
+  });
+  it('G4 683 Danforth: the compute answers null in about 100 ms: 200, page null, meter not_produced (task-317, finding 31)', async () => {
+    vi.mocked(fetchParcelById).mockResolvedValue({ ...ROW, parcel_id: '5361889' });
+    vi.mocked(readCustomerPageResponse).mockResolvedValue(null);
+    vi.mocked(computeCustomerPageResponse).mockResolvedValue(null);
+    const r = await call('parcelId=5361889');
+    expect(r.status).toBe(200);
+    expect(r.body.data?.page).toBeNull();
+    expect(inserts()).toHaveLength(0);
+    expect(meterLog()).toMatchObject({ meter: 'not_produced', page_source: 'none' });
+  });
+  describe('G5 the fast read (fast=1, RR-0497 Q-e A)', () => {
+    it('returns whatWeChecked (the checked view, no href) and runs no compute; it counts nothing (not_produced) and logs fast', async () => {
+      vi.mocked(readCustomerPageResponse).mockResolvedValue(null);
+      vi.mocked(readWhatWeChecked).mockResolvedValue(CHECKED_FIXTURE as never);
+      const r = await call('parcelId=P-45&fast=1');
+      expect(r.status).toBe(200);
+      expect(r.body.data?.page).toBeNull();
+      const w = r.body.data?.whatWeChecked as { href: unknown; paced: unknown; min_ms: unknown; groups: unknown[]; ready: { text: string } } | null;
+      expect(w).not.toBeNull();
+      expect(w!.href).toBeNull();
+      expect(w!.paced).toBe(true);
+      expect(w!.min_ms).toBe(23000);
+      expect(w!.groups).toHaveLength(2);
+      expect(w!.ready.text).toBe('The Building Possibilities Report for 100 Example Ave is ready.');
+      expect(vi.mocked(computeCustomerPageResponse)).not.toHaveBeenCalled();
+      expect(inserts()).toHaveLength(0);
+      expect(meterLog()).toMatchObject({ meter: 'not_produced', fast: true, page: false });
+    });
+    it('a stored page is returned (no checked view) and counted like any page', async () => {
+      vi.mocked(readWhatWeChecked).mockResolvedValue(CHECKED_FIXTURE as never);
+      const r = await call('parcelId=P-45&fast=1');
+      expect(r.body.data?.page).not.toBeNull();
+      expect(r.body.data?.whatWeChecked).toBeNull();
+      expect(inserts()).toHaveLength(1);
+      expect(meterLog()).toMatchObject({ meter: 'counted', page_source: 'stored', fast: true });
+    });
+    it('a held (unsure, unanswered) lot gets no checked view and no page', async () => {
+      vi.mocked(readLotForm).mockResolvedValueOnce({ detected: 'semi_half', basis: 'o4_two_parcel_abut', unsure: true });
+      vi.mocked(readWhatWeChecked).mockResolvedValue(CHECKED_FIXTURE as never);
+      const r = await call('parcelId=P-45&fast=1');
+      expect(r.body.data?.page).toBeNull();
+      expect(r.body.data?.whatWeChecked).toBeNull();
+      expect(vi.mocked(readWhatWeChecked)).not.toHaveBeenCalled();
+      expect(meterCalls()).toBe(0);
+    });
+    it('the fast read then the report read for one lot computes once and inserts once', async () => {
+      vi.mocked(readCustomerPageResponse).mockResolvedValue(null);
+      vi.mocked(computeCustomerPageResponse).mockResolvedValue(GOLDEN.response_fixture);
+      vi.mocked(readWhatWeChecked).mockResolvedValue(CHECKED_FIXTURE as never);
+      await call('parcelId=P-45&fast=1');
+      expect(vi.mocked(computeCustomerPageResponse)).not.toHaveBeenCalled();
+      const r = await call('parcelId=P-45');
+      expect(r.body.data?.page).not.toBeNull();
+      expect(r.body.data?.whatWeChecked).toBeNull();
+      expect(vi.mocked(computeCustomerPageResponse)).toHaveBeenCalledTimes(1);
+      expect(inserts()).toHaveLength(1);
+    });
+    it('the flag is validated: fast with q, fast with semi, fast with no parcel and any value but 1 are 400 with nothing read or counted', async () => {
+      for (const qs of [`q=${encodeURIComponent('5 elm st')}&fast=1`, 'parcelId=P-45&fast=1&semi=answered', 'fast=1', 'parcelId=P-45&fast=yes']) {
+        const r = await call(qs);
+        expect([qs, r.status]).toEqual([qs, 400]);
+      }
+      expect(vi.mocked(fetchParcelById)).not.toHaveBeenCalled();
+      expect(meterCalls()).toBe(0);
+    });
+    it('a thrown checked read gives whatWeChecked null, not a 500, and is logged', async () => {
+      vi.mocked(readCustomerPageResponse).mockResolvedValue(null);
+      vi.mocked(readWhatWeChecked).mockResolvedValue({ groups: 'not a list' } as never);
+      const r = await call('parcelId=P-45&fast=1');
+      expect(r.status).toBe(200);
+      expect(r.body.data?.whatWeChecked).toBeNull();
+      expect(logWarn.mock.calls.some((c) => c[1] === 'fast read: checked view unusable; no lines')).toBe(true);
+    });
+    it('an at-limit stored lot gets the 403 wall from the fast read, with no insert', async () => {
+      meter({ used: 3, already: false });
+      const r = await call('parcelId=P-45&fast=1');
+      expect(r.status).toBe(403);
+      expect(r.body.error?.code).toBe('REPORT_LIMIT_REACHED');
+      expect(inserts()).toHaveLength(0);
+    });
+    it('the fast read uses the detail bucket (parcels-lookup), not the search bucket', async () => {
+      await call('parcelId=P-45&fast=1');
+      expect(vi.mocked(withRateLimit).mock.calls[0]?.[1]).toMatchObject({ key: `parcels-lookup:${UID}` });
+    });
+    it('the boundary parse refuses a stray key inside whatWeChecked (strict) as a 500 with nothing counted', async () => {
+      vi.mocked(readCustomerPageResponse).mockResolvedValue(null);
+      const { ConsumerParcelLookupResponseSchema } = await import('@/app/api/parcels/lookup/types');
+      const base = { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match', map: null, page: null, lotForm: null };
+      expect(ConsumerParcelLookupResponseSchema.safeParse({ ...base, whatWeChecked: { stray: 1 } }).success).toBe(false);
+      expect(ConsumerParcelLookupResponseSchema.safeParse(base).success).toBe(true);
+    });
   });
 });
 

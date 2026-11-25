@@ -23,6 +23,8 @@ export const REPORT_HEX = {
   amberInk: '#9a4a07',
   amberSoft: '#fdf1d8',
   sky: '#efe9df',
+  // task-267 (approved mock MOCK-LOADING-ENDINGS-v3 .tick, RR-0491): the done line tick stroke, the twin of report-ok in mobile/tailwind.config.js
+  ok: '#1a7340',
 } as const;
 
 export const REPORT_PAGE_LAYOUT = {
@@ -37,6 +39,25 @@ export const REPORT_PAGE_LAYOUT = {
   top: 'bg-report-page px-[8px]',
   back: 'min-h-[44px] self-start rounded-[12px] bg-transparent px-[8px] h-auto shadow-none opacity-100 active:bg-report-line',
   backText: 'text-[15px] leading-[20px] font-semibold text-report-ink',
+  // task-267 LOAD.2 + task-317 LOAD.4 (PLAN-267-v2 step 8; approved mock MOCK-LOADING-ENDINGS-v3, RR-0491): the bar with the lot's address, and the loading
+  // screen: the label, the lines (a waiting line: spinner and the muted verb; a done line: the ok mark and the finding), the dates, and the end area
+  // (the ready line and View report; the centred spinner and words, RR-0491's one change; the failure or no-report sentence and its button).
+  bar: 'min-h-[44px] flex-row items-center gap-[8px]',
+  barTitle: 'flex-1 text-[15px] leading-[20px] font-bold text-report-ink',
+  check: 'flex-1 gap-[18px] bg-report-page px-[16px] pb-[24px] pt-[20px]',
+  checkLabel: 'text-[12px] leading-[16px] font-semibold uppercase tracking-[0.06em] text-report-quiet',
+  checkLines: 'gap-[9px]',
+  checkLine: 'flex-row items-start gap-[10px]',
+  checkText: 'flex-1 text-[14px] leading-[20px] font-normal text-report-ink',
+  checkWait: 'flex-1 text-[14px] leading-[20px] font-normal text-report-quiet',
+  checkDates: 'text-[13px] leading-[18px] font-normal text-report-quiet',
+  checkEnd: 'mt-auto gap-[12px] border-t border-report-line pt-[8px]',
+  checkReady: 'text-[16px] leading-[22px] font-semibold text-report-ink',
+  checkEndText: 'text-[16px] leading-[22px] font-semibold text-report-ink',
+  open: 'min-h-[48px] items-center justify-center rounded-[12px] bg-report-amber h-auto shadow-none opacity-100 active:bg-report-amber',
+  openText: 'text-[16px] leading-[24px] font-semibold text-report-ink',
+  checkHold: 'mt-auto flex-row items-center justify-center gap-[12px] pt-[8px]',
+  checkHoldText: 'text-center text-[14px] leading-[20px] font-normal text-report-muted',
   // page top
   title: 'text-[28px] leading-[34px] font-bold tracking-tight text-report-ink',
   address: 'text-[18px] leading-[24px] font-semibold text-report-ink -mt-[16px]',

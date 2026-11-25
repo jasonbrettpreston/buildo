@@ -12,6 +12,12 @@
 // A pending part shows its ruled text in its own slot with REPORT_PENDING appended last (MF-57 D-E). Nothing is skipped silently: an unknown
 // section kind throws, and so does any part of the view that is neither placed nor a declared unshown role (UNSHOWN). FE-05: no numeric literal but
 // 0 and 1, no arithmetic.
+// task-267 LOAD.2 + task-317 LOAD.4 (PLAN-267-v2 step 5; approved mock MOCK-LOADING-ENDINGS-v3, RR-0491; RR-0492, RR-0493, RR-0494): the loading screen.
+// checkedProps draws the What we checked view the server built (whatWeChecked, the fast read) as five screens from existing kinds only: the lines
+// playing (checking), the ready line and View report (ready), the centred spinner and the loading words (holding), the failure sentence and Try again
+// (error), the no-report sentence and Back to search (miss). Every text is a ref: {"derived": "checked.<path>"} into the view the server sent, or an
+// approved content key. A line is a node present or absent by its delay_ms against the elapsed time the host passes in (no maths but the compare).
+// reportScreenState is total over the screen's stable signals and picks one of view, checking, ready, holding, error, miss.
 import { REPORT_HEX as H, REPORT_PAGE_LAYOUT as L, REPORT_PENDING } from '@/constants/reportPage';
 import slice from '@/generated/surfaces/mobile_parcel_detail.json';
 
@@ -28,7 +34,15 @@ export type PanelName = 'size' | 'cost';
 /** Screen-local UI state (Spec 99: ephemeral, never persisted; every visit starts closed). Keyed by option section id. */
 export type ReportUi = { panel: Record<string, PanelName | null>; how: Record<string, boolean> };
 export type LifecycleState = 'loading' | 'miss' | 'error';
-export type Ref = { part: string } | { content: string };
+/** task-267: the server-built What we checked view (core ViewChecked; mobile/src/lib/schemas.ts CheckedViewSchema). */
+export type CheckedLine = { key: string; text: string; verb: string; delay_ms: number; done_ms: number };
+export type CheckedView = {
+  summary: string; groups: { key: string; lines: CheckedLine[] }[]; dates?: { text: string; delay_ms: number }; skip: { text: string; after_ms: number };
+  ready: { text: string; at_ms: number }; open: { text: string }; min_ms: number; paced: boolean; href: string | null;
+};
+/** task-267: what the report screen shows. `view` is the page; the other five are the loading screen and its endings. */
+export type ReportScreen = 'view' | 'checking' | 'ready' | 'holding' | 'error' | 'miss';
+export type Ref = { part: string } | { content: string } | { derived: string }; // task-267: + derived (the checked view and the address the host passes as data.derived)
 export type PropsNode = { component: string; props: Record<string, unknown>; children: (PropsNode | Ref)[] };
 
 export const REPORT_UI_CLOSED: ReportUi = { panel: {}, how: {} };
@@ -370,34 +384,113 @@ export function lifecycleProps(state: LifecycleState): PropsNode {
   return node('View', { key: 'report-lifecycle', testID: `report-${state}`, className: L.lifecycle }, [
     ...(state === 'loading' ? [node('ActivityIndicator', { key: 'spinner', testID: 'report-spinner', size: 'small', color: H.amber })] : []),
     node('Text', { key: 'message', className: L.lifecycleText, accessibilityRole: 'text' }, [{ content: `states.lifecycle.${state}` }]),
-    ...(state === 'error'
-      ? [node('Button', { key: 'retry', testID: 'report-retry', className: L.retry, accessibilityRole: 'button', onPress: { action: 'retry' } }, [
-          node('Text', { key: 'retry-label', className: L.retryText }, [{ content: 'retry.text' }]),
+    ...(state === 'error' ? [retryButton()] : []),
+    // task-317 LOAD.4 (RR-0490 "4 B - no report screen"; the approved mock, screen 5): the no-report state carries Back to search (the `back` action).
+    ...(state === 'miss' ? [backToSearchButton()] : []),
+  ]);
+}
+
+const retryButton = (): PropsNode => node('Button', { key: 'retry', testID: 'report-retry', className: L.retry, accessibilityRole: 'button', onPress: { action: 'retry' } }, [
+  node('Text', { key: 'retry-label', className: L.retryText }, [{ content: 'retry.text' }]),
+]);
+const backToSearchButton = (): PropsNode => node('Button', { key: 'back-to-search', testID: 'report-back-to-search', className: L.retry, accessibilityRole: 'button', onPress: { action: 'back' } }, [
+  node('Text', { key: 'back-to-search-label', className: L.retryText }, [{ content: 'back_to_search.text' }]),
+]);
+
+/**
+ * task-267 LOAD.2 + task-317 LOAD.4: the loading screen over the server's checked view (data.derived.checked). `lineElapsedMs` is the time since the pick
+ * mark (the host passes a number past every delay under Reduce Motion or after Try again: all lines at once). A line shows its verb from delay_ms and its
+ * finding from done_ms; the dates line from its delay_ms. The end area is the screen's: none while checking; the ready line and View report (submit) when
+ * the lines are done and the report is in; the centred spinner and the loading words while the report is still building; the failure sentence and Try again;
+ * the no-report sentence and Back to search. On an ending the host stops the clock, so the lines stay as far as they got (RR-0492 item 2). No Skip (RR-0176).
+ */
+/** The approved mock's done-line tick (MOCK-LOADING-ENDINGS-v3 .tick: path M5 12.5 l4.5 4.5 L19 7.5), drawn with the existing Svg kinds of the REPORT table (no Icon,
+ *  no new component); the stroke is the report-ok green. strokeLinecap is not passed: it is not a declared non-display key (bindings.json). */
+const tick = (): PropsNode => node('Svg', { key: 'tick', viewBox: '0 0 24 24', width: '18', height: '18' }, [
+  node('SvgLine', { key: 'tick-a', x1: '5', y1: '12.5', x2: '9.5', y2: '17', stroke: H.ok, strokeWidth: '2.25' }),
+  node('SvgLine', { key: 'tick-b', x1: '9.5', y1: '17', x2: '19', y2: '7.5', stroke: H.ok, strokeWidth: '2.25' }),
+]);
+
+export function checkedProps(checked: CheckedView, lineElapsedMs: number, screen: Exclude<ReportScreen, 'view'>): PropsNode {
+  const lines: PropsNode[] = [];
+  checked.groups.forEach((g, gi) => g.lines.forEach((l, li) => {
+    if (lineElapsedMs < l.delay_ms) return;
+    const at = `checked.groups.${gi}.lines.${li}`;
+    const done = lineElapsedMs >= l.done_ms;
+    lines.push(node('View', { key: `line-${g.key}-${l.key}`, testID: `report-line-${g.key}-${l.key}`, className: L.checkLine }, done
+      ? [tick(), node('Text', { key: 'text', className: L.checkText }, [{ derived: `${at}.text` }])]
+      : [node('ActivityIndicator', { key: 'wait', size: 'small', color: H.amber }), node('Text', { key: 'text', className: L.checkWait }, [{ derived: `${at}.verb` }])]));
+  }));
+  const dates = checked.dates && lineElapsedMs >= checked.dates.delay_ms ? [node('Text', { key: 'dates', className: L.checkDates }, [{ derived: 'checked.dates.text' }])] : [];
+  const end: PropsNode[] = screen === 'ready'
+    ? [node('View', { key: 'end', testID: 'report-ready', className: L.checkEnd }, [
+        node('Text', { key: 'ready', className: L.checkReady, accessibilityRole: 'text' }, [{ derived: 'checked.ready.text' }]),
+        // submit is the existing optional action (SurfaceRenderer); here it opens the report (View report; RR-0176: no auto-open)
+        node('Button', { key: 'open', testID: 'report-open', className: L.open, accessibilityRole: 'button', onPress: { action: 'submit' } }, [
+          node('Text', { key: 'open-label', className: L.openText }, [{ derived: 'checked.open.text' }]),
+        ]),
+      ])]
+    : screen === 'holding'
+      ? [node('View', { key: 'end', testID: 'report-holding', className: L.checkHold }, [
+          node('ActivityIndicator', { key: 'spinner', testID: 'report-spinner', size: 'small', color: H.amber }),
+          node('Text', { key: 'message', className: L.checkHoldText, accessibilityRole: 'text' }, [{ content: 'states.lifecycle.loading' }]),
         ])]
-      : []),
+      : screen === 'error' || screen === 'miss'
+        ? [node('View', { key: 'end', testID: `report-${screen}`, className: L.checkEnd }, [
+            node('Text', { key: 'message', className: L.checkEndText, accessibilityRole: 'text' }, [{ content: `states.lifecycle.${screen}` }]),
+            screen === 'error' ? retryButton() : backToSearchButton(),
+          ])]
+        : [];
+  return node('View', { key: 'report-checked', testID: `report-checked-${screen}`, className: L.check }, [
+    node('Text', { key: 'label', className: L.checkLabel, role: 'heading' }, [{ content: 'checks.label' }]),
+    node('View', { key: 'lines', className: L.checkLines }, lines),
+    ...dates,
+    ...end,
   ]);
 }
 
 /** MF-48 Stage B (nav-by-route audit #3, review F-11): the screen's one Back control, above the page and every lifecycle state, inside the top safe
  * area. The screen decides where it goes (router.back() with history, else the Lookup route: the MF-53 rule). */
-export function backProps(): PropsNode {
+export function backProps(title = false): PropsNode {
   return node('SafeAreaView', { key: 'report-top', className: L.top, edges: { top: 'additive' } }, [
-    node('Button', { key: 'back', testID: 'report-back', className: L.back, accessibilityRole: 'button', onPress: { action: 'back' } }, [
-      node('Text', { key: 'back-label', className: L.backText }, [{ content: 'back.text' }]),
+    node('View', { key: 'report-bar', className: L.bar }, [
+      node('Button', { key: 'back', testID: 'report-back', className: L.back, accessibilityRole: 'button', onPress: { action: 'back' } }, [
+        node('Text', { key: 'back-label', className: L.backText }, [{ content: 'back.text' }]),
+      ]),
+      // task-267 (PLAN-267-v2 section 3, O6; RR-0486 "it may not be the users lot"): the bar names the lot (data.derived.address, the stored display
+      // address of the answer); with no address there is no title node at all.
+      ...(title ? [node('Text', { key: 'title', testID: 'report-title', className: L.barTitle, numberOfLines: 1, role: 'heading' }, [{ derived: 'address' }])] : []),
     ]),
   ]);
 }
 
 /** The lifecycle content keys the host needs (report-presentation.json states.lifecycle): the screen passes their texts in. */
 export const LIFECYCLE_CONTENT_KEYS = ['states.lifecycle.loading', 'states.lifecycle.miss', 'states.lifecycle.error'];
-/** MF-48 Stage B: the screen's own content keys (mobile_parcel_detail.content.json): Retry and Back. */
-export const SCREEN_CONTENT_KEYS = ['retry.text', 'back.text'];
+/** MF-48 Stage B: the screen's own content keys (mobile_parcel_detail.content.json): Retry and Back. task-267: + Back to search (RR-0490 4 B) and the
+ *  visible label Checks for this lot (RR-0493). */
+export const SCREEN_CONTENT_KEYS = ['retry.text', 'back.text', 'back_to_search.text', 'checks.label'];
 
-/** MF-48 Stage B (D-6; Spec 99 §6.5: loading is a gate state, not data): the lot route's lookup query to the host's input. A served page shows,
- * also from the persisted cache while a refetch fails (offline); a settled lookup with no page (every lot until MB-44, a miss, a dangling id) is
- * the miss text; an error with nothing cached is the error text and Retry; anything else is loading. */
-export function reportScreenState(q: { data: { page?: PageView | null } | undefined; isError: boolean }): { view: PageView | null; lifecycle: LifecycleState } {
-  if (q.data?.page) return { view: q.data.page, lifecycle: 'loading' }; // the host ignores lifecycle when a view is given
-  if (q.data) return { view: null, lifecycle: 'miss' };
-  return { view: null, lifecycle: q.isError ? 'error' : 'loading' };
+/** The screen's stable signals (Spec 99 §6.5: never isFetching). `data` is the report read's answer (the page), `checked` the fast read's view (null: no
+ *  lines), `elapsedMs` the time since the pick mark, `gaveUp` the 60 s give-up, `answeredThisVisit` whether `data` was answered since this visit (or
+ *  this Try again) began, `opened` whether View report was pressed, `linesFull` whether the lines are drawn in full (after Try again). */
+export type ScreenSignals = {
+  data: { page?: PageView | null } | undefined; checked: CheckedView | null; isError: boolean; elapsedMs: number; gaveUp: boolean;
+  answeredThisVisit: boolean; opened: boolean; linesFull: boolean;
+};
+
+/** MF-48 Stage B (D-6; Spec 99 §6.5: loading is a gate state, not data). task-267 LOAD.2 + task-317 LOAD.4 (PLAN-267-v2 step 5; dated 2026-11-25, prior
+ * text: a page, else a settled miss, else error or loading): total over the signals. Only the report read decides an ending, and an ending shows at once:
+ * the give-up or an error (after the ruled retries) is error (RR-0492 item 3, RR-0493); this visit's answer with no page is miss (RR-0494). A page shows at
+ * once with no lines (a cached or stored page, or no checked view), else after the lines are done and View report is pressed (RR-0176): checking while the
+ * lines play, ready when they are done. With no page and no ending: checking while the lines play, then holding. `lifecycle` is the state of the
+ * no-lines screen (lifecycleProps) and of the wall branch. A page that stays in the cache from an earlier visit is a page; a miss from one is not an answer. */
+export function reportScreenState(q: ScreenSignals): { view: PageView | null; lifecycle: LifecycleState; screen: ReportScreen } {
+  const page = q.data?.page ?? null;
+  const linesDone = q.checked === null || q.linesFull || q.elapsedMs >= q.checked.min_ms;
+  if (q.gaveUp) return { view: null, lifecycle: 'error', screen: 'error' };
+  if (page && (q.checked === null || q.opened)) return { view: page, lifecycle: 'loading', screen: 'view' }; // the host ignores lifecycle when a view is given
+  if (page) return { view: null, lifecycle: 'loading', screen: linesDone ? 'ready' : 'checking' };
+  if (q.isError) return { view: null, lifecycle: 'error', screen: 'error' };
+  if (q.data && q.answeredThisVisit) return { view: null, lifecycle: 'miss', screen: 'miss' };
+  return { view: null, lifecycle: 'loading', screen: linesDone ? 'holding' : 'checking' };
 }

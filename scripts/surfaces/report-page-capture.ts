@@ -16,7 +16,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildPage, pageViewOf } from '../../src/lib/surfaces/report/core';
+import { buildPage, buildTree, pageViewOf, viewOf } from '../../src/lib/surfaces/report/core';
 import { reportCtx } from '../../src/lib/surfaces/report/data';
 import { FP_FILES, TARGETS, readJson, sha16, sha16Text } from './report-checks.mjs';
 
@@ -76,6 +76,18 @@ export const MOBILE_PAGE_STATES: Record<string, (r: Json) => Json> = {
   page_all_null: (r) => ({ ...r, values: Object.fromEntries(Object.keys(r.values as Json).map((k) => [k, null])) }),
 };
 export const MOBILE_LIFECYCLE_STATES = ['loading', 'miss', 'error'];
+// task-267 LOAD.2 + task-317 LOAD.4 (PLAN-267-v2 step 11.5; approved mock MOCK-LOADING-ENDINGS-v3, RR-0491): the loading screen states. Each golden carries the
+// checked VIEW the phone is sent (viewOf(buildTree(the synthetic loading response of the MF-62 golden)).checked, through this core, a second source beside
+// buildPage), the elapsed time the lines are drawn at and the screen; its `props` member is the binding's output (checkedProps), asserted equal by
+// mobile/__tests__/reportScreens.golden.test.ts and carried over unchanged here. error_lines and miss_lines are the endings with the lines as far as they got.
+export const CHECKED_RESPONSE_GOLDEN = 'src/tests/fixtures/surfaces/report/loading_checked.mobile.json';
+export const MOBILE_CHECKED_STATES: Record<string, { screen: string; elapsed_ms: number }> = {
+  checking: { screen: 'checking', elapsed_ms: 12000 },
+  ready: { screen: 'ready', elapsed_ms: 23000 },
+  holding: { screen: 'holding', elapsed_ms: 23000 },
+  error_lines: { screen: 'error', elapsed_ms: 8000 },
+  miss_lines: { screen: 'miss', elapsed_ms: 2500 },
+};
 
 export const captureMobileViews = (root: string): Map<string, string> => {
   const base = (readJson(path.join(root, PAGE_GOLDEN_DIR, 'v21.mobile.json')) as Json).response_fixture as Json;
@@ -91,6 +103,12 @@ export const captureMobileViews = (root: string): Map<string, string> => {
   for (const state of MOBILE_LIFECYCLE_STATES) {
     const name = `${state}.mobile.json`;
     out.set(`props/${name}`, `${JSON.stringify({ ...head, state, target: 'mobile', lifecycle: state, props: old(name).props ?? null }, null, 2)}\n`);
+  }
+  const loading = (readJson(path.join(root, CHECKED_RESPONSE_GOLDEN)) as Json).response_fixture as Json;
+  const checked = (viewOf(buildTree(loading, reportCtx), { target: 'mobile' }, reportCtx) as Json).checked as Json;
+  for (const [state, s] of Object.entries(MOBILE_CHECKED_STATES)) {
+    const name = `${state}.mobile.json`;
+    out.set(`props/${name}`, `${JSON.stringify({ ...head, state, target: 'mobile', screen: s.screen, elapsed_ms: s.elapsed_ms, checked, props: old(name).props ?? null }, null, 2)}\n`);
   }
   return out;
 };

@@ -9,9 +9,12 @@
 // role (totality); T2 every pending part carries the pending style last; T3 no literal display text, every ref kind declared, every part ref
 // resolves; T4 the REPORT layout rules (mapping.mobile.REPORT, keyed children, Text size/weight/report colour, exactly min-h-[44px]); T5 the binding
 // throws on an unknown section kind, an unplaced part, an ad section without its ad. Each rule has a planted case.
+// task-267 + task-317 (dated 2026-11-25, PLAN-267-v2 section 5): + the five loading screen goldens (checking, ready, holding, error_lines, miss_lines): T1
+// checkedProps(checked, elapsed_ms, screen) equals the committed props; every derived ref resolves to a text of the server's checked view; the miss state
+// carries Back to search (RR-0490 4 B) and the label Checks for this lot is content (RR-0493).
 import fs from 'node:fs';
 import path from 'node:path';
-import { backProps, lifecycleProps, reportProps, REPORT_UI_CLOSED, UNSHOWN, type LifecycleState, type PageView, type PropsNode, type ReportUi } from '@/components/surfaces/ReportBinding';
+import { backProps, checkedProps, lifecycleProps, reportProps, REPORT_UI_CLOSED, UNSHOWN, type CheckedView, type LifecycleState, type PageView, type PropsNode, type ReportScreen, type ReportUi } from '@/components/surfaces/ReportBinding';
 import { resolveValue, type SurfaceActions } from '@/components/surfaces/SurfaceRenderer';
 import { REPORT_PENDING } from '@/constants/reportPage';
 
@@ -24,6 +27,7 @@ const goldens = Object.fromEntries(fs.readdirSync(DIR).filter((f) => f.endsWith(
 const bindings = rj(path.join(REPO, 'scripts/surfaces/_schema/bindings.json')) as { mapping: { mobile: Record<string, string[]> }; touch_targets: { mobile: Record<string, string[]> }; ref_kinds: string[]; non_display_keys: string[] };
 const PAGE_STATES = ['page_all_null', 'page_no_ad', 'page_not_evaluated', 'page_option_hidden', 'page_v21'];
 const LIFE_STATES = ['error', 'loading', 'miss'];
+const CHECKED_STATES = ['checking', 'error_lines', 'holding', 'miss_lines', 'ready'];
 const viewOf = (n: string): PageView => goldens[n]!.view as PageView;
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
 /** The 35 report-* colour keys (MF-83: 31 re-valued + amber-ink, amber-soft, stage, field) of mobile/tailwind.config.js (membership, not a prefix). */
@@ -99,8 +103,8 @@ const noActions = {} as unknown as SurfaceActions;
 const ctxOf = (v: PageView) => ({ content: {}, data: { contract: {}, derived: {}, page: v }, actions: noActions });
 
 describe('MF-48 mobile REPORT props goldens', () => {
-  it('8 committed goldens: 5 page states and the 3 lifecycle states', () => {
-    expect(Object.keys(goldens)).toEqual([...LIFE_STATES, ...PAGE_STATES].sort());
+  it('13 committed goldens: 5 page states, the 3 lifecycle states and the 5 loading screen states', () => {
+    expect(Object.keys(goldens)).toEqual([...LIFE_STATES, ...PAGE_STATES, ...CHECKED_STATES].sort());
     expect(REPORT_COLOURS).toHaveLength(35);
   });
   it('T1: reportProps(view) and lifecycleProps(state) equal the committed props exactly', () => {
@@ -110,6 +114,32 @@ describe('MF-48 mobile REPORT props goldens', () => {
       expect(reportProps(viewOf(n))).toStrictEqual(g.props);
     }
     for (const n of LIFE_STATES) expect(lifecycleProps(n as LifecycleState)).toStrictEqual(goldens[n]!.props);
+    for (const n of CHECKED_STATES) {
+      const g = goldens[n]!;
+      expect(checkedProps(g.checked as CheckedView, g.elapsed_ms as number, g.screen as Exclude<ReportScreen, 'view'>)).toStrictEqual(g.props);
+    }
+  });
+  it('task-267: every derived ref of a loading screen golden resolves to a text of its checked view; the screens draw their own end area and no Skip', () => {
+    for (const n of CHECKED_STATES) {
+      const g = goldens[n]!;
+      const c = { content: {}, data: { contract: {}, derived: { checked: g.checked }, page: undefined }, actions: noActions };
+      for (const r of refs(g.props, 'derived')) expect([n, r, typeof resolveValue({ derived: r }, c)]).toEqual([n, r, 'string']);
+      const content = refs(g.props, 'content');
+      expect(content[0]).toBe('checks.label');
+      expect(JSON.stringify(g.props)).not.toContain('skip');
+    }
+    expect(refs(goldens.ready!.props, 'derived')).toEqual(expect.arrayContaining(['checked.ready.text', 'checked.open.text']));
+    expect(refs(goldens.holding!.props, 'content')).toEqual(['checks.label', 'states.lifecycle.loading']);
+    expect(refs(goldens.error_lines!.props, 'content')).toEqual(['checks.label', 'states.lifecycle.error', 'retry.text']);
+    expect(refs(goldens.miss_lines!.props, 'content')).toEqual(['checks.label', 'states.lifecycle.miss', 'back_to_search.text']);
+    expect(refs(goldens.checking!.props, 'content')).toEqual(['checks.label']);
+    // the endings keep the lines as far as they got: the golden's lines are exactly those whose delay has come
+    for (const n of CHECKED_STATES) {
+      const g = goldens[n]!;
+      const ck = g.checked as CheckedView;
+      const shown = ck.groups.flatMap((x) => x.lines.filter((l) => l.delay_ms <= (g.elapsed_ms as number)).map((l) => `line-${x.key}-${l.key}`));
+      expect([n, nodes(g.props as unknown as PropsNode).map((x) => String(x.props.key)).filter((k) => k.startsWith('line-'))]).toEqual([n, shown]);
+    }
   });
   it('T1 totality: every part of every view is shown in some UI state (closed, a panel open, How? open) or is a declared unshown role', () => {
     for (const n of PAGE_STATES) {
@@ -183,6 +213,7 @@ describe('MF-48 mobile REPORT props goldens', () => {
     // MF-48 Stage B (dated 2026-11-12): + SafeAreaView, the Back bar's top safe area (the SEARCH and LIST form, edges {top: additive}).
     expect(bindings.mapping.mobile.REPORT).toEqual(['ScrollView', 'View', 'Text', 'Button', 'Input', 'ActivityIndicator', 'SafeAreaView', 'Svg', 'SvgPolygon', 'SvgLine']);
     expect(['back', reportLayoutProblems(backProps()), textProblems(backProps(), 'back')]).toEqual(['back', [], []]);
+    expect(['back+title', reportLayoutProblems(backProps(true)), textProblems(backProps(true), 'back')]).toEqual(['back+title', [], []]); // task-267: the bar names the lot
     for (const n of Object.keys(goldens)) {
       const p = goldens[n]!.props as Json;
       for (const t of 'page' in p ? both(p as { page: PropsNode; sheet: PropsNode | null }) : [p as unknown as PropsNode]) expect([n, reportLayoutProblems(t)]).toEqual([n, []]);
@@ -281,8 +312,9 @@ describe('MF-48 mobile REPORT props goldens', () => {
   it('T9: the lifecycle trees show their approved content key, never a blank or the dash; loading has the spinner', () => {
     for (const n of LIFE_STATES) {
       const t = lifecycleProps(n as LifecycleState);
-      // MF-48 Stage B (B-4 b): the error state also carries Retry, its text the content key retry.text ("Try again").
-      expect(refs(t, 'content')).toEqual([`states.lifecycle.${n}`, ...(n === 'error' ? ['retry.text'] : [])]);
+      // MF-48 Stage B (B-4 b): the error state also carries Retry, its text the content key retry.text ("Try again"). task-317 (RR-0490 4 B): the miss
+      // state carries Back to search, its text the content key back_to_search.text.
+      expect(refs(t, 'content')).toEqual([`states.lifecycle.${n}`, ...(n === 'error' ? ['retry.text'] : []), ...(n === 'miss' ? ['back_to_search.text'] : [])]);
       expect(nodes(t).some((x) => x.component === 'ActivityIndicator')).toBe(n === 'loading');
     }
   });

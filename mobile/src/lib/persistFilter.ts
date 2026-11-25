@@ -25,7 +25,9 @@ export interface QueryShape {
 }
 
 // SRCH.A6 (task-320): ['parcel-entitlement'] is the reports-left count; a count kept from a previous session would be a wrong number, so it is not persisted.
-const NOT_PERSISTED = ['user-profile', 'parcel-entitlement'];
+// task-267 (PLAN-267-v2 step 4; Spec 99 §4 B1 row parcel-checking): ['parcel-checking'] is the fast read of the loading screen; its lines and pace are for
+// this visit only, so it is not persisted (a page it finds is stored under ['parcel-lookup', id], which is).
+const NOT_PERSISTED = ['user-profile', 'parcel-entitlement', 'parcel-checking'];
 
 export const shouldDehydrateQueryFn = (query: QueryShape): boolean =>
   !NOT_PERSISTED.includes(String(query.queryKey[0]));

@@ -27,6 +27,7 @@ import {
   buildAnswerParcelLookupOptions,
   fetchParcelLookup,
   parcelLookupParams,
+  REPORT_GIVE_UP_MS,
   shouldRetryParcelLookup,
   shouldRetryParcelSearch,
   ParcelLookupSchemaError,
@@ -111,6 +112,26 @@ describe('fetchParcelLookup — Zod boundary', () => {
     mockFetch.mockResolvedValue({ data: hitResponse });
     await fetchParcelLookup({ parcelId: 'PIN-777', semi: 'answered' });
     expect(mockFetch).toHaveBeenLastCalledWith('/api/parcels/lookup?parcelId=PIN-777&semi=answered');
+  });
+
+  // task-267 LOAD.2 (PLAN-267-v2 step 4): the fast read is the parcelId form with fast=1; its checked view parses (href null) and an older server's
+  // answer with no whatWeChecked parses to undefined (no lines, never drift).
+  it('task-267: the fast flag is appended to the parcelId form; whatWeChecked parses, null and absent too; a malformed one is drift', async () => {
+    const checked = { summary: 's', groups: [{ key: 'lot', lines: [{ key: 'area', text: 'Lot: 1', verb: 'v', delay_ms: 0, done_ms: 10 }] }], skip: { text: 'Skip', after_ms: 0 }, ready: { text: 'r', at_ms: 20 }, open: { text: 'View report' }, min_ms: 30, paced: true, href: null };
+    mockFetch.mockResolvedValue({ data: { ...hitResponse, page: null, whatWeChecked: checked } });
+    const r = await fetchParcelLookup({ parcelId: 'PIN-777', fast: '1' });
+    expect(mockFetch).toHaveBeenLastCalledWith('/api/parcels/lookup?parcelId=PIN-777&fast=1');
+    expect(r.whatWeChecked).toEqual(checked);
+    mockFetch.mockResolvedValue({ data: { ...hitResponse, whatWeChecked: null } });
+    expect((await fetchParcelLookup({ parcelId: 'PIN-777' })).whatWeChecked).toBeNull();
+    mockFetch.mockResolvedValue({ data: hitResponse });
+    expect((await fetchParcelLookup({ parcelId: 'PIN-777' })).whatWeChecked).toBeUndefined();
+    mockFetch.mockResolvedValue({ data: { ...hitResponse, whatWeChecked: { ...checked, groups: 'x' } } });
+    await expect(fetchParcelLookup({ parcelId: 'PIN-777' })).rejects.toBeInstanceOf(ParcelLookupSchemaError);
+  });
+  it('task-267 O7 (a): the report give-up is the registered 60 000 the semi wait reads (one value, no typed number)', () => {
+    expect(REPORT_GIVE_UP_MS).toBe(SEMI_CONTINUE_WAIT_MS);
+    expect(REPORT_GIVE_UP_MS).toBe(60000);
   });
 
   // SRCH.METER-2 (task-360, RR-0278; SE-1, SE-2): the report screen's own query forwards the route param, so an answered lot refetches WITH the flag (the server

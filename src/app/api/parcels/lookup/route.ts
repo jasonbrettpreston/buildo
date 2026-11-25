@@ -18,6 +18,10 @@
 //   SRCH.METER-2 (task-360, 2026-11-19): that unsure lot's `page` is not sent either (null; neither the stored read nor the compute runs, meter semi_pending) until
 //   the request carries semi=answered, so a page that is sent is a page that is counted. Prior text: the page was sent and only the meter said semi_pending.
 //   A new lot past the allowance → 403 REPORT_LIMIT_REACHED, no payload. Fail closed: a meter error is a 500, never an unmetered payload.
+//   task-267 LOAD.2 (2026-11-25, PLAN-267-v2 step 2; RR-0485 MD:2533): the q form only finds the lot and sends page null (not_produced), so a q hit counts
+//   nothing; the report is produced and counted on the parcelId read the pick opens. The fast read (fast=1, parcelId only, never with semi) sends the stored
+//   page if there is one (counted like any page, through the same code) else the What we checked view (whatWeChecked, page null: not_produced). The meter
+//   code below is unchanged. Prior text: a q hit read the stored page and ran the compute, and was counted when the page was produced.
 // Rate: `parcels-search:${uid}` on the q path and `parcels-lookup:${uid}` on parcelId, a 60 s window; the per-minute counts are the settings
 //   parcel_lookup_search_per_min (default 60) and parcel_lookup_detail_per_min (default 30). task-454 SEARCHFIX.6 (operator, verbatim, 2026-11-20: "yes
 //   follow the rules register them.", MORNING-DECISIONS.md:1494; Spec 128 Rule 3): they, the slow-query mark (parcel_lookup_slow_query_ms) and the
@@ -79,9 +83,10 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
     q: sp.get('q') ?? undefined,
     parcelId: sp.get('parcelId') ?? undefined,
     semi: sp.get('semi') ?? undefined,
+    fast: sp.get('fast') ?? undefined, // task-267: the fast read flag (fast=1), the semi=answered precedent
   });
   if (!parsed.success) return badRequestZod(parsed.error);
-  const { q, parcelId, semi } = parsed.data;
+  const { q, parcelId, semi, fast } = parsed.data;
 
   // 4. The search settings (task-454): one read; the limiter's number comes from it. A bad row throws to the generic 500 (no data, no database text).
   let settings: Awaited<ReturnType<typeof readSearchSettings>>;
@@ -101,7 +106,7 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   const t0 = Date.now();
   try {
     // The flow (resolve, map, lot row, page, response, boundary parse) lives in src/lib/parcels/lookup-flow.ts (Standard 10.3); the meter and the log stay here (RR-0331).
-    const { response, body, parcelRef, pageSource, computeMs } = await runLookupFlow({ q, parcelId, semi, candidateCap: settings.candidate_cap });
+    const { response, body, parcelRef, pageSource, computeMs, checkedProblem } = await runLookupFlow({ q, parcelId, semi, candidateCap: settings.candidate_cap, fast: fast === '1' ? { db: pool } : undefined });
 
     // Meter (MF-45; RR-0278 2026-11-19): only a hit whose report is produced (`page` sent) on the parcel_tool path counts. Candidates, a miss, a
     // map or a dangling id show no report and count nothing; nor does an unsure lot before its semi question (SEMI-B, the app asks it before the
@@ -142,7 +147,11 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
       page: response.page !== null, // MF-48 Stage B: whether a report page was sent (never its content)
       page_source: pageSource, // LOAD.1: stored, computed or none
       compute_ms: computeMs, // LOAD.1: the compute entry's time when it ran (about 0 while the switch is off), null when W served the page
+      fast: fast === '1', // task-267: the fast read (stored page or the checked view, never a compute)
+      checked: response.whatWeChecked !== null, // task-267: whether the checked view was sent (never its content)
     });
+    // task-267: a checked view the fast read could not build is logged here (the flow imports no logger); the lookup still answers, with no lines.
+    if (checkedProblem !== null) logWarn(TAG, 'fast read: checked view unusable; no lines', { parcelId: parcelRef, error: checkedProblem });
     if (duration_ms > settings.slow_query_ms) {
       logWarn(TAG, 'slow_query', { duration_ms, outcome });
     }

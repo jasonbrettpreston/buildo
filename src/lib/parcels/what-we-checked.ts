@@ -25,6 +25,7 @@
 // The GET /api/parcels/lookup wiring and the app render land with MF-48 (X-4 a); `showsWhatWeChecked` holds the re-opened-lot rule for it.
 import universe from '../../../scripts/seeds/bylaw/universe.lock.json';
 import { logError, logWarn } from '@/lib/logger';
+import { areaSqftM2Dot } from '@/lib/parcels/display-rules';
 import { readReportCheckPace, type Queryable, type ReportCheckPace } from './report-check-pace';
 
 export { REPORT_CHECK_BOUNDS, REPORT_CHECK_KEYS, readReportCheckPace } from './report-check-pace';
@@ -52,7 +53,9 @@ export const showsWhatWeChecked = (meter: string): boolean => meter === 'counted
 
 const fmtCount = (n: number): string => n.toLocaleString('en-CA');
 const fmtDate = (d: Date | string): string => new Date(d).toLocaleDateString('en-CA', { timeZone: DATE_ZONE });
-const fmtArea = (sqm: number): string => `${Math.round(sqm).toLocaleString('en-CA')} m²`;
+// task-267 (PLAN-267-v2 section 3, screen 1; operator 2026-11-14, MD:241, default imperial): the lot line uses the report's area rule (area_sqft_m2_dot,
+// sq ft first, then m², the rule of the report's lot.size and the map card). Prior text: `${Math.round(sqm).toLocaleString('en-CA')} m²`.
+const fmtArea = (sqm: number): string => areaSqftM2Dot(sqm) ?? '';
 const positive = (v: unknown): number | null => {
   const n = v === null || v === undefined ? Number.NaN : Number(v);
   return Number.isInteger(n) && n > 0 ? n : null;

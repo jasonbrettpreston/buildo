@@ -429,6 +429,22 @@ export const ParcelLotFormSchema = z.object({
 });
 export type ParcelLotForm = z.infer<typeof ParcelLotFormSchema>;
 
+// task-267 LOAD.2 (PLAN-267-v2 step 3; X-4 a): the fast read's What we checked view, the phone's Zod mirror of src/app/api/parcels/lookup/types.ts
+// CheckedViewSchema (Spec 90 §13). Plain, the MF-53 form above, so a server-added field never raises ParcelLookupSchemaError; href is nullable (always
+// null from this server). An older server that sends no whatWeChecked parses to undefined, and the screen then shows no lines and the spinner.
+export const CheckedViewSchema = z.object({
+  summary: z.string(),
+  groups: z.array(z.object({ key: z.string(), lines: z.array(z.object({ key: z.string(), text: z.string(), verb: z.string(), delay_ms: z.number(), done_ms: z.number() })) })),
+  dates: z.object({ text: z.string(), delay_ms: z.number() }).optional(),
+  skip: z.object({ text: z.string(), after_ms: z.number() }),
+  ready: z.object({ text: z.string(), at_ms: z.number() }),
+  open: z.object({ text: z.string() }),
+  min_ms: z.number(),
+  paced: z.boolean(),
+  href: z.string().nullable(),
+});
+export type CheckedView = z.infer<typeof CheckedViewSchema>;
+
 export const ConsumerParcelLookupResultSchema = z.object({
   match: ParcelMatchSchema.nullable(),
   candidates: z.array(ParcelCandidateSchema),
@@ -438,6 +454,7 @@ export const ConsumerParcelLookupResultSchema = z.object({
   map: ParcelLotMapSchema.nullable().optional(),
   page: ReportPageViewSchema.nullable().optional(),
   lotForm: ParcelLotFormSchema.nullable().optional(),
+  whatWeChecked: CheckedViewSchema.nullable().optional(), // task-267: the fast read's checked view
 });
 export type ConsumerParcelLookupResult = z.infer<typeof ConsumerParcelLookupResultSchema>;
 export type ParcelMatch = z.infer<typeof ParcelMatchSchema>;

@@ -8,11 +8,13 @@
 // the page view itself is built on the server by MF-57's core and sent as `page` (null for every lot until MB-44, so the approved miss text shows).
 // Offline, the persisted query cache (mobile/app/_layout.tsx, 24 h) still serves a fetched page. Back goes back with history, else to the Lookup
 // route (the MF-53 rule, NAV-AUDIT #3). The old hand-built screen, its sponsor slot and its phone formatting are retired (MF-74 Q2 i).
-import React, { useCallback } from 'react';
+// task-267 LOAD.2 + task-317 LOAD.4 (PLAN-267-v2 step 7): the reads and the clock come from useReportScreen (the fast read first, then the report read);
+// the screen is reportScreenState over their stable signals (no isFetching); the wall stays the first branch while no page is shown.
+import React from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { ReportPageHost } from '@/components/surfaces/ReportPageHost';
 import { REPORT_SLICE, reportScreenState } from '@/components/surfaces/ReportBinding';
-import { useParcelLookup } from '@/hooks/useParcelLookup';
+import { useReportScreen } from '@/hooks/useParcelLookup';
 import { useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
 import { useWallState } from '@/hooks/useWallState';
 import { needsSemiQuestion, semiQuestionRoute, SEMI_PARAM } from '@/lib/lotForm';
@@ -20,7 +22,8 @@ import { needsSemiQuestion, semiQuestionRoute, SEMI_PARAM } from '@/lib/lotForm'
 export default function ParcelReportScreen() {
   const { parcelId, [SEMI_PARAM]: semi } = useLocalSearchParams<{ parcelId: string; semi?: string }>();
   const semiParam = typeof semi === 'string' ? semi : undefined;
-  const { data, isError, isFetching, refetch, error } = useParcelLookup(parcelId, semiParam);
+  const r = useReportScreen(parcelId, semiParam);
+  const { data, isFetching, error } = r;
   // task-452 SEARCHFIX.4: a refused lookup (limit, expired) shows the wall once the entitlement read has answered; while it is pending the loading
   // lifecycle shows, never the error one; a shown report is never replaced (the wall is drawn only while view is null).
   const { kind: wallKind, wall } = useWallState(error);
@@ -31,8 +34,16 @@ export default function ParcelReportScreen() {
   useSettledRedirect(ask && parcelId ? semiQuestionRoute(parcelId) : null, isFetching);
   // SRCH.METER-2 (task-360, UX-2c): the server holds an unsure lot's page (null) until the answer, so while the question is owed the screen shows the loading
   // state, never the miss text, on the settled render before the redirect above fires.
-  const { view, lifecycle } = reportScreenState({ data: data && !ask ? { page: data.page ?? null } : undefined, isError });
-  const onRetry = useCallback(() => void refetch(), [refetch]);
+  const { view, lifecycle, screen } = reportScreenState({
+    data: data && !ask ? { page: data.page ?? null } : undefined, checked: ask ? null : r.checked, isError: r.isError, elapsedMs: r.elapsedMs,
+    gaveUp: r.gaveUp, answeredThisVisit: r.answeredThisVisit && !ask, opened: r.opened, linesFull: r.linesFull,
+  });
   const onBack = useGoBack();
-  return <ReportPageHost view={view} lifecycle={view === null && wallKind === 'wait' ? 'loading' : lifecycle} content={REPORT_SLICE.content} onRetry={onRetry} onBack={onBack} wall={view === null ? wall : null} />;
+  const waiting = view === null && wallKind === 'wait';
+  return (
+    <ReportPageHost
+      view={view} lifecycle={waiting ? 'loading' : lifecycle} content={REPORT_SLICE.content} onRetry={r.retry} onBack={onBack} wall={view === null ? wall : null}
+      screen={waiting ? 'holding' : screen} checked={ask ? null : r.checked} lineElapsedMs={r.lineElapsedMs} address={r.address} onOpen={r.open}
+    />
+  );
 }
