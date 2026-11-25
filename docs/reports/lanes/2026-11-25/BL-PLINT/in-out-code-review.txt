@@ -1,0 +1,73 @@
+diff --git a/docs/reports/generated/rule-lists-by-kind.md b/docs/reports/generated/rule-lists-by-kind.md
+index 269f67060930b3cc3156bc433ec67a00cebed433..6762415a84c63c5b2f4323ce9192f6364901c15c 100644
+--- a/docs/reports/generated/rule-lists-by-kind.md
++++ b/docs/reports/generated/rule-lists-by-kind.md
+@@ -39,7 +39,7 @@ Example Files line: `mobile/src/app/`; type build; milestone group [S].
+ | list | document | selection | characters | parts |
+ | --- | --- | --- | ---: | ---: |
+ | mobile-90 | docs/specs/03-mobile/90_mobile_engineering_protocol.md | whole file | 14,097 | 1 |
+-| mobile-98 | docs/specs/03-mobile/98_mobile_testing_protocol.md | whole file | 11,801 | 1 |
++| mobile-98 | docs/specs/03-mobile/98_mobile_testing_protocol.md | whole file | 12,027 | 1 |
+ | mobile-99 | docs/specs/03-mobile/99_mobile_state_architecture.md | whole file | 84,452 | 1 |
+ | surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 | 1 |
+ | eng-front | docs/specs/00_engineering_standards.md | 1. Architecture & UI Standards | 3,214 | 1 |
+@@ -47,7 +47,7 @@ Example Files line: `mobile/src/app/`; type build; milestone group [S].
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 24,787 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 9 lists | | 216,323 | 9 |
++| total | 9 lists | | 216,549 | 9 |
+ 
+ ## storage
+ 
+diff --git a/docs/specs/03-mobile/98_mobile_testing_protocol.md b/docs/specs/03-mobile/98_mobile_testing_protocol.md
+index 2f0488304152a9361ab41470f6eea3b20446fd70..c7761047de80dddb2a74ea7700ca7d79c2eaf5f1 100644
+--- a/docs/specs/03-mobile/98_mobile_testing_protocol.md
++++ b/docs/specs/03-mobile/98_mobile_testing_protocol.md
+@@ -115,7 +115,6 @@ The boundaries below are illustrative examples within those mandates.
+ 
+ **Pull Request Checks:** On every PR targeting `main`, GitHub Actions runs:
+ - `npm run typecheck` (TypeScript compiler)
+-- `npm run lint` (ESLint)
+ - `npm run test` (Jest unit tests)
+ 
+ **Pre-Build Checks:** EAS Build runs the above sequence natively before attempting an iOS/Android build. If tests fail, the build is aborted to save queue time and credits.
+@@ -124,6 +123,8 @@ The boundaries below are illustrative examples within those mandates.
+ 
+ > Dated note 2026-11-24 (task-462, RR-0462, step 4 of the approved quick plan): the phone typecheck and phone tests also run before every push, as steps `mobile-typecheck` and `mobile-tests` of `.husky/pre-push-checks.sh` (before the web suite, no coverage written); Mobile CI still runs after the push.
+ 
++> Dated note 2026-11-24 (task-463, RR-0462, step 5 of the approved quick plan): there is no phone lint step. The phone app has no lint tool installed, so the lint item is removed from this list and the unused `lint` script from `mobile/package.json`.
++
+ ## 6. Historical Context & Past Issues
+ To prevent future developers from falling into the same local development traps, we document the major environment issues that forced the transition to this protocol.
+ 
+diff --git a/mobile/package.json b/mobile/package.json
+index 8f0688cc377116c48d53d575514ba73dabcdaeac..514e8a08e724cc8c12d515d46e99f13d3d5ab258 100644
+--- a/mobile/package.json
++++ b/mobile/package.json
+@@ -10,7 +10,6 @@
+     "test": "jest --watchAll",
+     "test:ci": "jest --coverage --ci",
+     "typecheck": "tsc --noEmit",
+-    "lint": "eslint src app --ext .ts,.tsx",
+     "safe-start": "node scripts/safe-start.mjs"
+   },
+   "dependencies": {
+diff --git a/src/tests/hooks-composition.infra.test.ts b/src/tests/hooks-composition.infra.test.ts
+index b7745bf9314644684c1111fdb5cece4bf5d9fd16..4b8359144288d775636820d0c45ae690706396a1 100644
+--- a/src/tests/hooks-composition.infra.test.ts
++++ b/src/tests/hooks-composition.infra.test.ts
+@@ -609,4 +609,13 @@ describe('task-424 — one list of pre-push checks', () => {
+     };
+     expect(parseForkCapFromHookText(PRE_PUSH_CHECKS)).toEqual(parseForkCapFromHookText(stripComments(PRE_PUSH_CHECKS)));
+   });
++
++  it('task-463 (RR-0462) — no phone lint step: mobile/package.json has no lint script; Spec 98 §5 lists no `npm run lint` and carries the dated note', () => {
++    const scripts = (JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'mobile/package.json'), 'utf8')) as { scripts: Record<string, string> }).scripts;
++    expect(Object.keys(scripts)).not.toContain('lint');
++    expect(Object.keys(scripts)).toEqual(expect.arrayContaining(['typecheck', 'test:ci', 'safe-start']));
++    const s5 = fs.readFileSync(path.join(REPO_ROOT, 'docs/specs/03-mobile/98_mobile_testing_protocol.md'), 'utf8').split('## 5. ')[1]!.split('## 6. ')[0]!;
++    expect(s5).not.toContain('npm run lint');
++    expect(s5.split('> Dated note 2026-11-24 (task-463, RR-0462').length - 1).toBe(1);
++  });
+ });

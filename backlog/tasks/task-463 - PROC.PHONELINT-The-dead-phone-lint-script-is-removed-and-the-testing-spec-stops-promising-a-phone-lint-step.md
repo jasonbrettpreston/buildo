@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-PLINT'
 created_date: '2026-11-24T18:43:00Z'
-updated_date: '2026-11-25T01:47:00Z'
+updated_date: '2026-11-25T02:05:00Z'
 labels:
   - ProcessImprovement
 milestone: m-1
@@ -154,4 +154,8 @@ plan-error-paths#2 MED folded expect.arrayContaini
 2026-11-25 red: the task-463 test is added to the task-424 describe block of src/tests/hooks-composition.infra.test.ts (plan step 1); red is proven by a commit attempt with only the test and task files staged (RR-0225; the plan's 'run only this file' step is done through the pre-commit related run, not a direct runner call).
 
 2026-11-25 build: red.out = refused commit attempt (1 failed | 54 passed; 'expected [...] to not include lint'). Edits: mobile/package.json lint line deleted; Spec 98 section 5 lint bullet deleted and the task-463 dated note added after the task-462 note; rule-lists page regenerated with page --write, page --check current (mobile-98 11,801 -> 12,027; total 216,323 -> 216,549, as the plan derived). Green = this work commit's hook tail. The launch context file docs/reports/reviews/task-463/context-r2.md is committed with the work as the brief says.
+
+2026-11-25 push station PASSED on work commit 74b06e6be (all eight steps rc=0, including mobile-typecheck, mobile-tests and the full web suite); pass file ~/Buildo-scratch/push-station/pass/74b06e6be59e5351d24750d7e2cf72c8b178b7b1.pass; run before the output review by RR-0467 (MORNING-DECISIONS.md:2421-2425).
+
+2026-11-25 output review round 1: one code-review lens (task-460 shape) over a6a3fcb6d..74b06e6be with context-r3.md; out-code-review.txt: 2 MED, 2 LOW DEFER, 2 REJECT, VERDICT PASS; records in docs/reports/lanes/2026-11-25/BL-PLINT/; grounder owed (the lane does not rule its own findings).
 <!-- SECTION:NOTES:END -->
