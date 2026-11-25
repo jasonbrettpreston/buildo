@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-25T17:05:00Z'
-updated_date: '2026-11-25T17:58:00Z'
+updated_date: '2026-11-25T18:00:00Z'
 labels:
   - McFixV2
 milestone: m-1
@@ -280,4 +280,6 @@ Semi page:
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-25: mock APPROVED by the operator (RR-0487, MORNING-DECISIONS.md:2543, verbatim "465 Mock  approved"). Approved mock: ~/Buildo-scratch/lanes-20261125/mcfixv2-465/MOCK-465-approved.html sha256 05b387fa3304 (published https://claude.ai/artifact/NDup2QHQMFKcfLSo9Howk1). Seven states: at rest; typing with suggestions; Enter with more than one match; Enter with no match (No lot found); outside Toronto; Enter with one match (finding the lot); semi question (Is this a semi?). The mock notes that sizes are close, not measured, and that the example street names and districts are illustrations.
+
+2026-11-25: plan PLAN-465-v1 by Cairn-Plan-465 set on the card (planner hand-back saved at ~/Buildo-scratch/lanes-20261125/mcfixv2-465/PLAN.md). Files line owes every OUTSIDE FILES LINE path of the plan section 4; the plan grounder rules that.
 <!-- SECTION:NOTES:END -->

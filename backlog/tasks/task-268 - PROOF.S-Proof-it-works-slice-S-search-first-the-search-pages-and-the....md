@@ -5,7 +5,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-25T17:05:00Z'
+updated_date: '2026-11-25T18:11:00Z'
 due_date: '2026-11-26'
 labels:
   - McFixV2
@@ -67,6 +67,10 @@ who (plan text): fresh lane (no builder context) with the page-proof tool; opera
 - [ ] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
 - [ ] #7 OUTPUT panel record committed with the work — "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116)
 - [ ] #8 McFrontend build only: queue row first — "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72)
+- [ ] #9 Search half 1: the operator's phone walk from the fixed list of addresses and test users is done and his findings are recorded (RR-0489)
+- [ ] #10 Search half 2: one read of the test database after the walk shows what was stored and counted for each lot opened
+- [ ] #11 Search half 3: the passing automatic typed-address and security tests on the current tip are cited
+- [ ] #12 Search half 4: the list of known gaps is put to the operator and each is accepted or not
 <!-- AC:END -->
 
 ## Definition of Done
@@ -101,4 +105,6 @@ Operator 2026-11-20, verbatim: "Task 370 yes . approved" (~/Buildo-scratch/queue
 2026-11-24 (task-453 SEARCHFIX.5 ST5, GROUNDER-SEATS J): the CHK.3 proof row chk3-nothing-new in scripts/analysis/proof-slices.json is now notbuilt, reason "CHK.3 reads the staged diff; --all gives it no input". Commit 4c5bfa249.
 
 McFixV2 addition 2026-11-25 (operator phone walk; rulings RR-0483, RR-0485, RR-0486 in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2523, :2533, :2538). Not yet planned. Tests the operator asked for in the proof (finding 37): one address with two lots where the user must pick one; running out of reports (the at-limit persona); no connection (finding 33, not yet tested on the phone).
+
+Dated note 2026-11-25 (M-246, prior text kept; RR-0489 and RR-0488, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2554 and :2547; operator, verbatim: "Agreed. Cahnge it"). This card is now the SEARCH HALF of the proof and its pass criteria are the four below; they replace criteria (a) to (e) of the description for this card. (1) The operator's phone walk, from a fixed list of addresses and test users. (2) One read of the test database after the walk: what was stored and what was counted for each lot opened (the old criterion (d), storage). (3) A pointer to the passing automatic typed-address and security tests on the current tip (tasks 449 and 456). (4) A short list of known gaps for the operator's yes or no (the old criterion (e), reduced). Moved to the REPORT HALF (the proof of the first increment that prices a lot; no card named yet): (a) the 25 golden lots with screenshots, (b) every element shows a number, (c) every number equals the McProof key. Hooks and the full suite are automatic at every push and are not a separate step. Open, not ruled: old criterion (b) accepts the pending word Not yet evaluated, which conflicts with RR-0485 item 4 (no report without pricing, :2533); to be reworded when the report half gets its card. Also asked for in the walk (finding 37): one address with two lots, running out of reports, no connection; and a small and a large iPhone in the simulator (orchestrator suggestion, not ruled). Still waits on the McFixV2 build cards 465, 267, 317, 343.
 <!-- SECTION:NOTES:END -->
