@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-25T19:40:00Z'
+updated_date: '2026-11-25T19:43:00Z'
 due_date: '2026-11-26'
 labels:
   - 1-2
@@ -90,4 +90,6 @@ who (plan text): lane
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-25 (RR-0497, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2588, operator: 'Saving the lot is the same functionality (Mcapp)'; RR-0498 :2593 'Obviously, users will need to save lots'): saving a lot or report is this card. Open with the operator: whether saved lots can use the existing parcel_user_inputs table (his question, RR-0499 :2598) and whether it builds now or waits for the launch-gate storage.
+
+2026-11-25 (RR-0500, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2603, operator '2. build now'): saving a lot builds now with McApp, not at the launch gate.
 <!-- SECTION:NOTES:END -->
