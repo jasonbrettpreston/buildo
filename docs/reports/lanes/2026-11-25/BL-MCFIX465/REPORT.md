@@ -50,3 +50,8 @@ STATUS: ready for the station run (work commit b3791a88c); output review not sta
 - Round 1 grounder (Cairn-Ground-O465): 22 ids, 16 CONFIRMED (1 MED, 14 LOW, 1 NIT), 6 REJECTED; round-1 GROUNDER.md and TRIAGE.md kept outside the repo (lane scratch og-r1/).
 - Fix: out-code-review-p4#1 MED fixed ab8c2911e (search-web-binding.ui.test.tsx :118, :120): red red2.out (commit attempt, SearchBinding.tsx:427 plant), green green3.out (landed; the first green attempt was refused FAIL:C:no-mf-task until the McFrontend-Task: MF-35 trailer was added). Station PASS on ab8c2911e (covers the merge 2af96802f).
 - Round 2: same material rules on 2fd2f6042..HEAD (41 files, 4 chunks), context-r4.md; every review file re-made under the same names. Counts: CRITICAL 0, HIGH 0, MED 2, LOW 12, NIT 7. Repeats and new ids are listed in FINDINGS.md. Nothing fixed or folded: round-2 grounder owed.
+
+## Round 2 close (2026-11-25)
+- Round-2 grounder Cairn-Ground-O465b: 21 ids, 17 CONFIRMED (11 LOW, 6 NIT), 4 REJECTED; no CRITICAL, HIGH or MED stands; no fix, no third round (RR-0385).
+- Round 2 counts as listed: CRITICAL 0, HIGH 0, MED 2, LOW 12, NIT 7. GROUNDER.md and TRIAGE.md (round 2) are in this folder; round 1 pair kept outside the repo and named in the Final Summary.
+- Status BUILT, not DONE: the operator phone walk of the search box follows the push. The five Acceptance Criteria stay open for that walk.
