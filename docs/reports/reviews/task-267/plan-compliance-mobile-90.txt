@@ -1,0 +1,45 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-25T18:46:15.668Z file_sha256=765dd4914c4c3ffd778508b8711bd6f81ab8873b4d12d2ad7ea28af4ac64ac0a prompt_sha256=5dcd1aa41d80a7a558454a329ef0afcb8bd1eafcdcc3f4fe9237ff598152111a
+🔍 Lens review of docs/reports/reviews/task-267/in-plan-compliance-mobile-90.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 90 §7 "All Zustand stores, MMKV blobs, TanStack Query keys, and cross-layer bridges MUST conform to **Spec 99 ...** Adding a new field, store, or bridge requires either matching an existing pattern in Spec 99 §3-§5 or a Spec 99 amendment." — PLAN-267-v2 §4 step 4 "the fast-read query (key ['parcel-checking', id], under A2)" — a new query key and a new response field `checked` are added and step 12's spec list carries notes for Spec 100 and Spec 126 only, no Spec 99 note — fix: add the Spec 99 §3-§5 pattern match or a dated Spec 99 note in step 12 naming the new key and field.
+
+BUG severity=HIGH — AC #8 "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72) — PLAN-267-v2 §4 step 12 ".cursor/MCFRONTEND-QUEUE.md: one follow-up row to MF-62 for both cards, the next free id at claim" — the queue row is the twelfth step, after eleven steps of server, phone, census, descriptor and fixture work — fix: make the queue row step 0 and commit it before any build step.
+
+DEFER severity=MED — AC #1 "Pre-register the expected moves, committed alone" / "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109) — PLAN-267-v2 §4 heading "one lane; 267 then 317 in the same commits" and §7 "task-267: PLAN-267-v2" — no step pre-registers rules[] and expected moves, the card note is owed after the build, and both cards are committed together so "committed alone" cannot hold — fix: add step 0 that sets rules[] and expected moves and commits alone before the 267/317 batch.
+
+DEFER severity=MED — RR-0485 "5. Always - except for a tracked/stored lot or one that has previously been opened" — PLAN-267-v2 §3 "Tracked lots: tracking is not built. A tracked lot is stored (MD:699), so the stored rule covers it once task-269 and task-265 land. No field now." — the tracked half of the ruled exception is not built and rests on the unverified claim that a tracked lot is served by the stored read (useTrackedLots.ts:52 is a stub) — fix: add a dated note on 267 that the tracked-lot skip is unmet at this head and name the card that carries it.
+
+DEFER severity=MED — RR-0486 "it may not be the users lot they are checking - just a note to clarify" plus the approved mock note "the lot's address in the bar" — PLAN-267-v2 §3 "O6 bar title: the mock draws the lot's address in the bar, taken from the checked view's address ... Settled." — the address exists only under O1-A2, which is still open (§8 "The flag and the response field `checked` ... need his word"), so the ruled title is guaranteed by no decided step — fix: condition O6 on O1-A2, or name the address source under A1.
+
+DEFER severity=MED — Spec 90 §13 "Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema before hitting the UI" and §7 "Zod schemas are shared ... never out of sync" — PLAN-267-v2 §9 "Whether the checked view (viewOf with no href) passes the mobile Zod schema without a core change." — the new field is hand-added to the mobile tree only (§4 step 3 "`checked` nullable and optional") and its parse is left UNVERIFIED, so the boundary is not shown met — fix: add a parse test to G5 and lock the mobile mirror to the contracts.json whitelist added in step 11.2.
+
+DEFER severity=MED — Spec 90 §14 "On cold boot, the app must paint page 1 from cache instantly, then fetch fresh data in the background silently" — PLAN-267-v2 §5 "M2: a cached page opens at once with no lines and no fetch (O5)" — O5 removes the silent background refresh for a cached page and no pasted ruling names that deviation, it is the plan's own undecided recommendation (§8 "O5 ... Rec no refetch") — fix: keep the silent refetch, or record O5 as an operator question with a Spec 90 note.
+
+DEFER severity=LOW — Spec 90 §9 "Touch targets for all interactive elements MUST be a minimum of `44px` by `44px`." — PLAN-267-v2 §4 step 5 "checkedProps renders screens 1-5 from existing kinds only (View, Text, Button, ActivityIndicator)" — the new Back to search action carries no 44px statement — fix: state the touch target for Back to search, or cite the existing Button component's 44px.
+
+MET — RR-0491 "Still building - Loading the report shuld be centered horizontally as opposed to left justified" — PLAN-267-v2 §3 "Screen 3: states.lifecycle.loading, centred (RR-0491's one change)" — the one ruled change is carried and tested by C3.
+
+MET — RR-0490 "3 b - let the animation finish and then say the report failed" — PLAN-267-v2 §5 "an error during the lines, then checking until the end, then error (RR-0490 3 b)" — the failure waits for the lines, tested by C5 "a 500 at 8 s gives the failure only at 23000".
+
+MET — RR-0490 "1 a" and "4 B - no report screen" — PLAN-267-v2 §3 "Screen 4: states.lifecycle.error plus retry.text" and "Screen 5: states.lifecycle.miss plus NEW back_to_search.text" — the kept sentence and the no-report screen are both drawn from existing kinds.
+
+MET — RR-0176 "the animation takes 23 seconds - this goes to completion" — PLAN-267-v2 §5 "C2: page at 5 s, no 'View report' until 23000" — the length is fixed and the button waits for the page.
+
+MET — RR-0278 "I should only be charged a report if I find the address and lot Im looking for and a report is produced" — PLAN-267-v2 §5 "G3 'meter counts unchanged'" — a q hit inserts 0 and every parcelId case keeps its current count.
+
+MET — Spec 90 §3 "This mobile application is a 'Dumb Glass' client." — PLAN-267-v2 §3(d) "one compute behind the lines" — the compute stays on the Next.js route and the app renders the returned tree only.
+
+MET — Spec 90 §5 "NO `useEffect` for Fetching" — PLAN-267-v2 §4 step 4 "the fast-read query (key ['parcel-checking', id], under A2)" — the new read goes through TanStack Query, not an effect.
+
+REJECT — RR-0176 "no 35 s cap" — accused of capping the wait at 60 s — RR-0341 ("approved", names task-267) and RR-0491 rule the 60 s give-up, and the plan records the dated supersession notes in Spec 100 §4, Spec 126 §11a.7 and the card.
+
+REJECT — Spec 126:869 "it doesnt need a title... it should be processing" — accused of drawing the "Checks for this lot" label — Spec 126 is not in the pasted rule list, and the plan leaves it open (O8) with the conflict named.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 8
+Rules met: none
+
+---
+⏱  99599ms (99.6s)
+📊 Tokens — total: 37710, input: 16433, output: 21277, reasoning: 19526

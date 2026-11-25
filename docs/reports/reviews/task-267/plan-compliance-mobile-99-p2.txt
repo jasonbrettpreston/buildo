@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-25T18:46:15.664Z file_sha256=7d96a6dffc904a2a6ed03ab01960d957d86fa4fefc77ee348ca250477d428dce prompt_sha256=e7e85d8576181f3035d65fcb9dd597bba7cbc1649d281eecdac261d908279f92
+🔍 Lens review of docs/reports/reviews/task-267/in-plan-compliance-mobile-99-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC5 "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458) — PLAN-267-v2 §9 "Nothing was run; this was read only." — clause unmet: no grounder re-execution is recorded and six claims stay UNVERIFIED, including whether the no-href checked view passes the mobile Zod schema — run the grounder over the §3 and §4 claims and record the re-executed claims, then clear or date every §9 UNVERIFIED item before plan-lock.
+
+DEFER severity=MED — Spec 99 §9.18 "mmkvPersister is Layer 4a UNENCRYPTED while §2.1 mandates Layer 4b SecureStore for PII" — PLAN-267-v2 step 4 "the fast-read query (key ['parcel-checking', id], under A2)" — the new query carries the checked view (lot address per what-we-checked.ts:45) into the same MMKV persister and no step adds the key to persistFilter.ts — add the parcel-checking key to the persistFilter.ts dehydrate predicate, or state why its payload is not PII.
+
+DEFER severity=MED — AC8 "No McFrontend work starts without its row in" (docs/specs/02-web-admin/126_maxbld_surface_standard.md:72) — PLAN-267-v2 step 12 ".cursor/MCFRONTEND-QUEUE.md: one follow-up row to MF-62 for both cards" is the last step, after steps 1 to 11 — the queue row is sequenced after the build it authorises — move the queue row to step 1 and land it before any code step.
+
+DEFER severity=MED — AC7 "is committed with the work (R-KM)." (.cursor/MCBYLAWS-QUEUE.md:116) — PLAN-267-v2 step 12 lists only "Spec 100 §3.2 note...", "Spec 126 §11a.7 note" and the queue row — no OUTPUT panel record step exists for either card — add the OUTPUT panel record for 267 and 317 to step 12 as a committed artifact.
+
+DEFER severity=MED — Spec 126:869 "it doesnt need a title... it should be processing", relayed on that line as "remove the title 'and any section labels'" — PLAN-267-v2 O8 "Rec visible as drawn, flagged to him with the :869 conflict named" — the plan's default lands a visible section label the quoted clause removes — make the aria-label-only option the default and put "visible as drawn" behind the operator's explicit word.
+
+DEFER severity=MED — task-267 note "317 after 267 stage 2 and LD-1, 2, 3, 5" and the HOLD "build as rows of the page table once the PAGE.TABLE pilot passes" — PLAN-267-v2 "one lane; 267 then 317 in the same commits" — 317 is built in 267's own commits with no line showing LD-1, LD-3 or LD-5 landed, the pilot passed, or a later ruling superseding the order — add a line giving each LD status plus a dated note if RR-0477/RR-0488 supersede the sequencing.
+
+DEFER severity=LOW — Spec 126:869 "it doesnt need a title" — PLAN-267-v2 O6 "the mock draws the lot's address in the bar... Settled." — a title is settled two paragraphs before the same clause is used to leave O8 open, with no reconciling note on O6 — add the same :869 note to O6 (RR-0491 replaces :869 for the bar) or drop the title node.
+
+DEFER severity=LOW — RR-0485 item 5 "Always except for a tracked/stored lot or one that has previously been opened" — PLAN-267-v2 §3(b) "Tracked lots: tracking is not built... No field now." — the ruled tracked-lot exception has no field and no dated note, only a dependency on unlanded task-269 and task-265 — add a dated note in Spec 100 §4 and Spec 126 §11a.7 naming the tracked exception as pending 269/265.
+
+MET — RR-0176 "always runs to completion" with no cap on a still-arriving page — PLAN-267-v2 §5 C2 "page at 5 s, no 'View report' until 23000" — the 23 s run and the button-behind-the-page rule are both asserted.
+MET — RR-0491 "Loading the report shuld be centered horizontally" — PLAN-267-v2 §4.5 "screen 3's spinner and words are centred" with C3 — the one approved change is built.
+MET — RR-0490 3 b "let the animation finish and then say the report failed" — PLAN-267-v2 §3 O4 "A failure or a miss that arrives while the lines play waits until they end", C5 — failure is deferred to the end of the lines.
+MET — RR-0490 4 B "no report screen" — PLAN-267-v2 §3 Screen 5 "states.lifecycle.miss plus NEW back_to_search.text", C6 — the no-report ending exists with its words and the existing back action.
+MET — RR-0485 item 5 "one that has previously been opened" — PLAN-267-v2 §3(b) "(a) the persisted cache holds a page (opened on this phone)" plus M2 — the opened-lot skip is implemented.
+MET — Spec 128 Rule 3 "never a typed number" — PLAN-267-v2 O7 "(a) Read the existing registered 60 000 (maxbld_page_continue_wait_ms, via the semi slice)" — the timeframe stays a registered logic variable.
+MET — Spec 136 fe.31 "existing components" — PLAN-267-v2 step 5 "renders screens 1-5 from existing kinds only (View, Text, Button, ActivityIndicator)" — no new component kind.
+MET — Spec 99 §10 Out-of-Scope "All mobile/src/store/*.ts" — PLAN-267-v2 FILES list — no store file is touched.
+
+REJECT — RR-0278 "I should only be charged a report if I find the address and lot Im looking for and a report is produced" — accused of charging for a report the user never sees at the give-up — charging on production is exactly the rule, and C7 with G3 keep the counted report reachable with no second compute.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 1
+Rules met: none
+
+---
+⏱  104650ms (104.7s)
+📊 Tokens — total: 40404, input: 17781, output: 22623, reasoning: 21161

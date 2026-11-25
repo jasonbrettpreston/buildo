@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-25T18:46:15.666Z file_sha256=9a3f7929841d346099c075df9155e2f1bd51b38c257bd4ba49dc86d05c79e2d6 prompt_sha256=518f3197bd168e7d577baee1d655c383e5bfcb037f9dd8e13a08028b94868c96
+🔍 Lens review of docs/reports/reviews/task-267/in-plan-compliance-mobile-99-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — spec99 §6.5, dated note 2026-11-24 "The page states are derived from stable signals, not from `isFetching` ... No carve-out is added to the enumeration above." — plan §4.5 "reportScreenState (:399-403) becomes total over (data, checked, isFetching, isError, elapsedMs, gaveUp)" — the checking/miss screens are derived from isFetching with no enumerated §6.5 carve-out and no amendment in the same commit, and the same note records that "a paused offline first fetch reports `isFetching` false with no data", so this design shows the false miss and flips the gate on every refetch — derive checking from data absence plus settle as semiQuestion.ts does, or add an enumerated carve-out with its §6.5 amendment in the same commit.
+BUG severity=HIGH — spec99 §4 B1 "Adding a new server query requires a row here" — plan §4.4 "the fast-read query (key ['parcel-checking', id], under A2)" — a new server query key is added and no Spec 99 §4 B1 registry row is named anywhere, step 12 edits Spec 100 and Spec 126 only, and the FILES line omits docs/specs/03-mobile/99_mobile_state_architecture.md — add the ['parcel-checking', id] row, the spec file, and the edit to the files line and the build order.
+BUG severity=HIGH — spec99 §8.3 "MUST have a test asserting that toggling `isFetching` does NOT flip the gate" — plan §5 lists C1-C8 and M1-M3 with no isFetching toggle test, the file appears only in FILES as "mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx" — a file named in FILES with no test written into the plan leaves §8.3 and AC2 "are written INTO the plan and reviewed at PLAN altitude" unmet, and under the isFetching-derived design that test cannot pass — write the toggle test into section 5 and change the gate so it holds.
+BUG severity=HIGH — Spec 126:869 quoted at plan §1 "it doesnt need a title... it should be processing" with the relay "remove the title 'and any section labels'" — plan §3 "The label 'Checks for this lot' is drawn VISIBLE in the mock. It conflicts with Spec 126:869 ('any section labels'). Left open as O8." — the plan would lock a screen that draws a section label a cited spec line removes, leaving the conflict open, and the added address title ("backProps gains the address title") needs the same call — resolve O8 before plan-lock (drop the label, or a Spec 126 dated amendment naming this one label).
+MET — spec99 §2.1 "Layer 3 (Zustand) NEVER mirrors a Layer 1 (server) field unless" — plan §4.7 "pass the fast read, isFetching, error and the cache skip" — the checked view stays in the Layer 2 query, no new store or mirror, so no §3.1 row and no §B5 reset is owed.
+MET — RR-0490 "3 b - let the animation finish and then say the report failed" — plan §5 C5 "a 500 at 8 s gives the failure only at 23000" and "an error during the lines, then checking until the end, then error" — the failure waits for the lines to end.
+MET — RR-0491 "Loading the report shuld be centered horizontally as opposed to left justified" — plan §4.5 "screen 3's spinner and words are centred" and §8 "the centred-hold classes" — the one approved change is carried.
+MET — RR-0485 "5. Always - except for a tracked/stored lot or one that has previously been opened" — plan §3(b) "the persisted cache holds a page (opened on this phone); or the parcelId answer brings a page with no checked view (a stored lot, or already counted)" — the skip set matches the ruling, with tracked covered by MD:699 "Once somebody opens a lot or tracks a lot - we have this lot data saved".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 4
+Rules met: none
+
+---
+⏱  95601ms (95.6s)
+📊 Tokens — total: 50049, input: 30381, output: 19668, reasoning: 18712

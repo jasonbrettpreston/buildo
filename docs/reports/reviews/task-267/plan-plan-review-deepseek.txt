@@ -1,0 +1,63 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-25T18:46:15.683Z file_sha256=9f444fe038dc0cf335293a68fda891a3505e712b49189d35e974ceda25676e52 prompt_sha256=c6e62b055a5571d0f34ed92b89e6a461d3079ffdccfc2cf51e7fc0cd648eedff
+🔍 Lens review of docs/reports/reviews/task-267/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — §9 UNVERIFIED "The platform request timeout." — The 60 s give-up and the "screen 3 from 23 to 60 s" design are load-bearing on the route outliving 60 s; if `/api/parcels/lookup` has a segment `maxDuration`/gateway timeout < 60 s (most functions default 10–30 s), the compute errors first and the app shows screen 4 at ~30 s, not "still building" — the whole timing collapses — Before lock, read the route's `export const maxDuration` / platform config and any middleware timeout; assert it is ≥ 60 s + retry margin, and add a test that pins it.
+
+BUG severity=HIGH — §4.2 vs G3/G5 vs §4.11.2 census note — The fast-read's meter/held semantics are contradictory: "meter code is unchanged" but "the fast read counts only a stored page it serves," and "unless held" leaves the status for an at-limit lot (403 vs 200-null?) undefined — a new-lot fast read may double-count with the compute read, or count zero where the meter expects one, and the client sees one status on the lines query and another on the page query — Pin the fast read to bypass the meter entirely (return before route.ts:114), state its status for held lots (e.g. 200 + `{checked:null, held:true}`), and add a red test that the fast read leaves `usage` at 0 for a new lot.
+
+BUG severity=HIGH — §4.5 + §4.7 + §3(a) — A 403 at-limit now surfaces on the report screen as `isError`→`error` output ("Could not load this report. Try again.") unless a separate `useWallState` wins the race, so a paying user at their cap can see the generic failure sentence instead of the limit wall — Specify how the lookup's 403 (and the fast read's "held") maps to the wall branch, and add a test that an at-limit open shows the wall, never the error screen, under both query orderings.
+
+BUG severity=HIGH — §4.6 "the clock starts at mount" + "give-up timer at 60 s from mount" — If elapsed is a wall-clock delta, backgrounding the app / device sleep for >60 s then returning fires give-up instantly even though the compute finished mid-background; if it is a tick counter, a suspended timer never reaches 60 s — Define the clock against `Date.now()` deltas but reconcile on `AppState` resume (page-in-cache wins over stale gaveUp), and add a test that a resume after 3 min with a cached page shows the view, not screen 4.
+
+BUG severity=MED — §6 "A compute that ends after the give-up is still counted on the server" — The risk is named but the close-app path is unmitigated: user hits give-up at 60 s, closes the app, compute finishes and is counted, report never seen; repeated on slow lots this burns the monthly quota against RR-0278 — Add a "report is still being prepared — we'll show it when you reopen" note on screen 4 and confirm the server-served stored page (no recompute) is reached on reopen via the fast read; test that reopen after a late compute shows view with usage unchanged.
+
+BUG severity=MED — §4.6 "Reduce Motion: all lines at once, one announcement" — Collapsing the lines instantly does not say whether the 23 s gate on the button still holds; a Reduce Motion user with the page already in could see "View report" at 0 s, breaking RR-0176's "always runs to completion" — State that Reduce Motion skips the staggered animation but the button still holds until 23 s (or explicitly get a ruling), and add a C8 assertion for the button time under Reduce Motion.
+
+BUG severity=MED — §4.6 "otherwise it refetches" (Try again) — The unhappy path is unspecified: Try again → new fetch that also hangs/fails → does it re-arm a fresh 60 s clock (unbounded retry loop) or show error at once? C7 only covers the late-page happy path — Specify Try-again re-arms at most one further 60 s window and then stays on screen 4, and add a test for a second consecutive failure.
+
+BUG severity=MED — §4.6 "the clock starts at mount" / §4.6 give-up timer — No protection against a component re-mount (key change, React strict-mode double-mount, parent re-render) resetting the 60 s, which can leave a slow lot permanently "still building" or thrashing give-up→remount→give-up — Store the mount timestamp in a ref keyed to parcelId that survives re-render, and assert a re-render does not reset `elapsedMs`.
+
+BUG severity=MED — O5 + §3(b) skip rule "the persisted cache holds a page (opened on this phone)" — No-refetch means a page cached before the lot's stamp moved is served without any staleness check, which conflicts with storage policy v2 ("a stale record is never served") and A-MF62 ("never an old number") — Either gate the client cache-skip on a stamp/TTL, or confirm the server stored read (lookup-flow.ts:83) already recomputes stale and that the fast read returns the recomputed page, and add a stale-stamp test row.
+
+BUG severity=MED — §4.4 "the fast-read query (key ['parcel-checking', id])" + queryClient.ts:41 / _layout.tsx:490 persisted cache — If the new key is persisted like ['parcel-lookup', id], a bad write ships to every phone and survives app restarts; there is no remote purge and no rollback for a store-released build — Either keep ['parcel-checking', id] out of the persisted set, or add a cache version/purge key so a fix release can drop it, and state the rollback path explicitly.
+
+BUG severity=MED — §4.3 "`checked` nullable and optional" — Forward-compat is assumed but not specified: a new app against an old server sends no `checked`; `reportScreenState` must degrade to today's spinner+"Loading the report…", not fall into `holding` forever or a Zod parse error — Specify checked=undefined → existing lifecycle loading behavior, and add a test that an old-shape response renders the current spinner and never crashes.
+
+BUG severity=MED — §3(a) "a q hit sends page null and logs not_produced" + G1 — This silently changes the q path for every existing caller of `GET /api/parcels/lookup?q=`: admin tool (F-ADMIN-LOOKUP "over the same resolver"), any lead-gen consumer, and any dashboard counting "produced" now gets not_produced/page-null where it used to compute/count — Enumerate all q-path consumers and either confirm none read `page`/metrics or gate the behavior, and add a metric-shift assertion.
+
+BUG severity=MED — O7(a) "Read the existing registered 60 000 (maxbld_page_continue_wait_ms, via the semi slice)" — Coupling the report give-up to the semi page's continue-wait value means a future change to the semi wait silently retunes the report give-up (and vice-versa) — Record the coupling in both specs' dated notes and add a test that pins the report give-up independently of the semi slice name, or isolate the read.
+
+BUG severity=MED — §4.2 "the fast read also skips the lines for an already-counted lot (a usageFor export, one read)" — Adds a new meter-read on every fast read for every opened lot; on a 2-request flow (fast + compute) this doubles entitlement reads and could contend with the compute's own `already_counted` read (entitlements/index.ts:606) — Verify the read is a single indexed lookup, and note the two-reads-per-open cost so 343's meter work accounts for it.
+
+BUG severity=MED — §3 O6/§4.5 "the address is the bar title … with no address there is no title node" + RR-0490 "no-report screen with the address" — For an unknown lot where the checked view is null, the address source (what-we-checked.ts:45) is absent, so screen 5 loses the address the ruling requires — State whether the address on screen 5 comes from the URL parcelId reverse-lookup when checked is null, and add the unknown-lot screen-5 address test.
+
+DEFER severity=LOW — §6 "A failing compute runs up to 4 times, per the ruled retries" — No retry backoff schedule is named; three fast retries inside the 23–60 s window vs a slow platform timeout changes when screen 4 appears — Acceptable to leave to build if the platform-timeout premise is pinned first; note the schedule in the plan.
+
+DEFER severity=LOW — §4.6 "A late page … stays in the cache. Try again shows it at once without a new compute" — Whether an un-aborted request landing at 65 s actually writes the TanStack cache (vs. being aborted at unmount) is not confirmed; C7 asserts the outcome but not the mechanism — Fine to leave; the fast read backstops it by serving the stored page without recompute.
+
+DEFER severity=LOW — G2 "q then parcelId=P-45 … compute called once" — G2/G5 don't exercise the real A2 two-parcelId-request sequence (fast then compute) for the no-double-count claim; G3 only tests q-before — Fold a fast-then-compute case into G2 once fast-read semantics are pinned.
+
+DEFER severity=LOW — §4.11.2 contract `checked` in field whitelist — A strict Zod parser on a downstream consumer (web admin / lead-gen) of `contract_parcels_lookup` would reject the added `checked` field at runtime even though the census whitelist is updated — Check downstream parse strictness; bounded to web-only consumers while MAXBLD_WEB_LIVE is false.
+
+DEFER severity=NIT — §3(d) "11-23 s per compute, and M1 computed the same lot twice (21.7 s plus 21.0 s)" — Duration is a single lot measured twice; no p50/p99, so whether most computes fit inside 60 s is assumed — Note the sample size; a p99 from timing logs would harden the 60 s choice.
+
+REJECT — §3 "no field now" for tracked lots — Treats tracked-lot handling as covered by the stored rule once 269/265 land; not a current failure — Correct: tracking is unbuilt, MD:699 makes a tracked lot stored, and no field exists to read yet; deferring is sound.
+
+REJECT — §6 "no migration and no new seed row (O7 a)" — Concern that a settings change ships — Moot: O7(a) reads an existing value and O7(b) is a separate card, so no DB step here; verified by the plan's own limits.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- The platform request timeout vs the 60 s give-up is unverified and load-bearing (§9); if < 60 s the "still building to 60 s → error" design is fiction and screen 4 fires on the platform's clock.
+- Fast-read metering/held/403 semantics are contradictory (§4.2 vs G3/G5 vs census note) — risk of double-count, wrong error screen, or a 403 that reads as a generic failure.
+- The at-limit 403 → wall vs `error` mapping on the report screen is unspecified (§4.5/§4.7), so a capped paying user can see "Could not load this report. Try again." instead of the limit wall.
+
+Top 3 unverified data premises (regardless of verdict):
+- `maxbld_page_continue_wait_ms` exists and equals 60000 on the environments used — `SELECT value FROM <settings> WHERE key = 'maxbld_page_continue_wait_ms'` (routing through the semi slice §O7(a)).
+- The checked view (`viewOf` with no href) passes the mobile Zod schema with no core change (§9) — run `buildTree({lifecycle:'loading', what_we_checked})` → `viewOf` → `mobileSchemas.parse` in a scratch test before any UI work.
+- The server stored read (lookup-flow.ts:83) returns a fresh page or recomputes on a moved stamp (so O5's cache-skip never serves an old number) — read lookup-flow.ts:79-90 for the stamp compare and query one lot whose `table_version`/`evaluator_version` moved since its stored record.
+
+---
+⏱  103008ms (103.0s)
+📊 Tokens — total: 53571, input: 34499, output: 19072, reasoning: 16264

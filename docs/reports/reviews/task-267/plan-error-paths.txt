@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-25T18:46:15.665Z file_sha256=9f444fe038dc0cf335293a68fda891a3505e712b49189d35e974ceda25676e52 prompt_sha256=38edeed602b3d5785db71fe68e0ba1fd30fda048769b97d8fd0811b5476079e9
+🔍 Lens review of docs/reports/reviews/task-267/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — "Try again shows it at once without a new compute, otherwise it refetches." against "already_counted at :606" — the give-up at 60 s leaves a compute still running on the server; Try again (or a second pick push, since "The pick mark is the report screen's mount, milliseconds after the push") fires a second parcelId call while the first compute's insert has not committed, so already_counted reads 0 twice and the lot is counted twice, a charge against RR-0278; G2 only covers q then parcelId in sequence, never two in flight — key the count on (user, parcel, period) with a unique insert/on-conflict in openReport and add a concurrent parcelId test to G2, plus an in-flight dedupe on the client query key ['parcel-checking', id].
+
+BUG severity=MED — "reportScreenState (:399-403) becomes total over (data, checked, isFetching, isError, elapsedMs, gaveUp)" against "the fast-read query (key ['parcel-checking', id], under A2)" — one isError covers both the page query and the optional fast read, so a lines fetch that 500s mid-animation can drive the "an error during the lines, then checking until the end, then error" row while the report compute is healthy, showing "Could not load this report. Try again." for a decorative failure — pass pageError and checkedError separately; a fast-read error degrades to no lines only, and add that row to report-failure.logic.test.ts.
+
+BUG severity=MED — "(a) Read the existing registered 60 000 (maxbld_page_continue_wait_ms, via the semi slice). No database step" against "the give-up timer at 60 s from mount" — if the slice value is absent or unreadable the comparison runs against undefined/NaN, gaveUp never becomes true, and the screen holds the spinner forever with no failure sentence and no Try again; the empty-config path has no fallback named — define a named fallback interval (Spec 128 Rule 3 form) or treat a missing value as the failure ending, and test it with the value absent.
+
+BUG severity=MED — "readWhatWeChecked (what-we-checked.ts:167), which returns null on any error." against "- no checked view with a miss, then miss at once" — a transient read error is indistinguishable from an unknown lot, so (isError, checked=null) has no row in the claimed-total table and can render "No report for this lot yet." plus Back to search for a failed load, hiding Try again — return a distinct flag from the route for "checked view failed" and add the (error, checked null, no page) row and its test.
+
+BUG severity=MED — "A late page that lands after the give-up stays in the cache. Try again shows it at once without a new compute, otherwise it refetches." — nothing states that Try again resets elapsedMs and gaveUp; left as is, the press re-renders the same failure sentence instantly with no still-building state, no new 60 s bound and no visible response, and a user pressing it repeatedly refetches unbounded — reset the clock and the gaveUp flag on press, show screen 3 until the next bound, and add a C-test for the press with a still-missing page.
+
+DEFER severity=MED — "O5: no refetch on mount when the cache holds a page (one compute per open), versus today's 60 s stale refetch. Rec no refetch." against "a stale record is never served and is recomputed" — a persisted ['parcel-lookup', id] page reopens with no freshness check at all, so a record whose stamp has moved is served indefinitely on that phone; RR-0323 defers the stamp compare, so this is a known gap rather than a new one, but the plan should note the staleness window it creates before O5 is ruled.
+
+DEFER severity=LOW — "its action is the existing `back` (useGoBack)" — two taps on Back to search on the miss screen pop the stack twice and land the user one screen past the search page; useGoBack is not guarded per press, so add a first-press guard or a navigation-focus check and cover it in reportScreen.mount.behaviour.test.tsx.
+
+VERDICT: FAIL on error-path safety
+Paths walked: give-up time-out at 60 s, Try again after give-up, concurrent second compute and double pick push, fast-read error, checked-view error (null on any error), missing 60 s config value, persisted cache reopen, Back to search double tap   Unguarded: 5
+
+---
+⏱  40503ms (40.5s)
+📊 Tokens — total: 40632, input: 33613, output: 7019, reasoning: 6009
