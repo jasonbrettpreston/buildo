@@ -1,10 +1,10 @@
-LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:ffdbea0d47476d39e8b9f3f0bd852658240b6e44a89880d67402cd8f3b2099c7 part 1 of 1 chunk 1 of 4
+LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:9a04bc3bceda0ec534d0e19b655943c9baf3201224dc3cbecb202537c1f56591 part 1 of 1 chunk 1 of 4
 NO RULE LIST: the lens template alone judges the material under review. The material is chunk 1 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/reports/generated/127-surface-registry.md"]
 
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
 diff --git a/docs/reports/generated/127-surface-registry.md b/docs/reports/generated/127-surface-registry.md
-index 6add637a065e2fb8d047e67d1683e9db6201f7a4..25296c23a3582430b6cad269e806e43066891273 100644
+index 6add637a065e2fb8d047e67d1683e9db6201f7a4..4e1291ce57b28b47d3c803e42c93051c51291659 100644
 --- a/docs/reports/generated/127-surface-registry.md
 +++ b/docs/reports/generated/127-surface-registry.md
 @@ -17,7 +17,7 @@ This is the **reviewable projection of the surface census** — the application
@@ -129,7 +129,7 @@ index 6add637a065e2fb8d047e67d1683e9db6201f7a4..25296c23a3582430b6cad269e806e430
 +
 +**Programme.** `S-096` · scope `parcel_product` · feature `F01` · build order 1015 · batch `B2` · review `unreviewed` — The refusal screens of the parcel tool entry flow (objective G.6).
 +
-+**What it is.** The wall a refused lot lookup shows on the phone (task-452 SEARCHFIX.4; RR-0443, RR-0444 2b, RR-0466). At the monthly report limit the person sees one neutral notice: "You’ve used all {limit} reports" as its emphasised first line, "Your count resets on {date}." smaller beneath it, then "Lot reports you’ve opened this month stay available.", "Your Tracked Lots remain." and "Your plan is managed on the web for changes.", and a Go to Tracked Lots button. With an expired subscription the notice is the reactivate sentence and the same plan line, with the same button. No top-up or upgrade control until the buying work (RR-0454 item 3). Drawn in place of the search page, and on the report screen under its Back bar while no report is shown.
++**What it is.** The wall a refused lot lookup shows on the phone (task-452 SEARCHFIX.4; RR-0443, RR-0444 2b, RR-0466). At the monthly report limit the person sees one neutral notice: "You’ve used all {limit} reports" as its emphasised first line, "Your count resets on {date}." smaller beneath it, then "Lot reports you’ve opened this month stay available.", "Your Tracked Lots remain." and "Your plan is managed on the web for changes.", and a Go to Tracked Lots button. With an expired subscription the notice is the reactivate sentence and the same plan line, with the same button. No top-up or upgrade control until the buying work (RR-0454 item 3). Drawn in place of the search page, and on the report screen under its Back bar while no report is shown. Round 2 (dated 2026-11-24; RR-0468, Spec 128 rule 12): when the entitlement read fails after either refusal, the wall shows its error state, one tone-error notice "Something went wrong on our side. Please try again." with Go to Tracked Lots (no count, date or plan line).
 +
 +**What it reads and writes.** It reads one contract, GET /api/parcels/entitlement (contract_parcels_entitlement), through useParcelEntitlement (the query key the search page already reads, so no extra request). The count is reportsLimit and the date is the server label resetsOnDisplay (RR-0310); the 403 body of the lookup carries its own limit and ISO date, kept on ReportLimitError and never drawn. Which wall shows is searchWall (mobile/src/lib/parcelSearchMatch.ts) over the lookup error class and that read. It emits **no analytics event**.
 +
@@ -145,7 +145,7 @@ index 6add637a065e2fb8d047e67d1683e9db6201f7a4..25296c23a3582430b6cad269e806e430
 +
 +**Emits.** —
 +
-+**Render states seen in code.** `rate_limited` · `unauthorized`
++**Render states seen in code.** `rate_limited` · `unauthorized` · `error`
 +
 +**Data lineage.**
 +
@@ -180,7 +180,7 @@ index 6add637a065e2fb8d047e67d1683e9db6201f7a4..25296c23a3582430b6cad269e806e430
 +| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 +| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 +| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
-+| 12 | `errors` | `inline` | The wall is itself the declared failure UI of two refusals: the report limit (rate_limited) and an expired subscription (unauthorized). Every other failure keeps the host’s own notice. — `mobile/src/lib/parcelSearchMatch.ts — searchWall` |
++| 12 | `errors` | `inline` | The wall is itself the declared failure UI of two refusals: the report limit (rate_limited) and an expired subscription (unauthorized); its own failure, a failed entitlement read after either refusal, is its error state (round 2, RR-0468). Every other failure keeps the host’s own notice. — `mobile/src/lib/parcelSearchMatch.ts — searchWall` |
 +| 13 | `emits` | `none` | No client analytics; the wall emits nothing. — `mobile/src/hooks/useWallState.ts` |
 +| 14 | `offers` | `none` | No sponsored placement is rendered. — `mobile/src/components/surfaces/WallBinding.tsx` |
 +| 15 | `metering` | `none` | The wall counts nothing; the lookup route counts a produced report and sends the limit 403 (F02). — `src/app/api/parcels/lookup/route.ts:97-112` |

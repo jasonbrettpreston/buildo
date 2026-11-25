@@ -366,8 +366,8 @@ export function buildSearchSituation(args: {
 }
 
 // ── task-452 SEARCHFIX.4 (RR-0443, RR-0444 2b, RR-0454 item 3, RR-0455): the wall a refused lookup shows ──────────────────────────────────────────
-/** The wall states (S-096 mobile_parcel_wall): the report limit and the reactivate screen. task-357 adds no_plan. */
-export type WallKind = 'limit' | 'reactivate';
+/** The wall states (S-096 mobile_parcel_wall): the report limit, the reactivate screen and (round 2, RR-0468) the error state of a failed read. task-357 adds no_plan. */
+export type WallKind = 'limit' | 'reactivate' | 'error';
 /** What the wall reads from the entitlement read (useParcelEntitlement, the one query key the search page also reads). */
 export type WallRead = {
   data: Pick<ParcelToolEntitlement, 'status' | 'reportsLimit' | 'resetsOnDisplay'> | null | undefined;
@@ -378,13 +378,14 @@ export type WallRead = {
 /**
  * Which wall a lookup error shows. 'wait' while the read is pending (fetching with no data and not failed; a disabled read, no token, is not pending).
  * A ReportLimitError shows 'limit' once the read answered a count and a date (the read's, RR-0310; the 403's own values are never drawn). A
- * SubscriptionRequiredError shows 'reactivate' only for an expired subscription. Anything else, a failed read, or a read without the fields: null
- * (today's notice). Status null (no plan) is null until task-357 adds its no_plan branch.
+ * SubscriptionRequiredError shows 'reactivate' only for an expired subscription. A failed read of either class shows 'error', before any data is looked
+ * at (round 2, dated 2026-11-24; RR-0468, Spec 128 rule 12; prior text: a failed read kept today's notice). Anything else, or a read without the
+ * fields: null (today's notice). Status null (no plan) is null until task-357 adds its no_plan branch.
  */
 export function searchWall(error: unknown, read: WallRead): WallKind | 'wait' | null {
   const limit = error instanceof ReportLimitError;
   if (!limit && !(error instanceof SubscriptionRequiredError)) return null;
-  if (read.isError) return null;
+  if (read.isError) return 'error';
   if (read.data == null) return read.isFetching && read.data === undefined ? 'wait' : null;
   if (limit) return typeof read.data.reportsLimit === 'number' && typeof read.data.resetsOnDisplay === 'string' && read.data.resetsOnDisplay !== '' ? 'limit' : null;
   return read.data.status === 'expired' ? 'reactivate' : null;

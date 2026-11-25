@@ -1,31 +1,35 @@
-◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
-REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-24T21:00:23.943Z file_sha256=746c5bc58626104acc21ac9121a7f674bca9ca18ecc80574e162804b0d09f587 prompt_sha256=69dac590e5d58c0298a337a48d3c6adaf77be659ed0f26cf3c6ea22c027444cd
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-25T00:17:54.668Z file_sha256=904f9146730471196bd5f30dd9cbb797b013b41fb7f9649f7aa93f9bb0c73be5 prompt_sha256=7924df07bbc5117c2989973b413dbaffe810b07715156e597104b42e38487b85
 🔍 Lens review of docs/reports/lanes/2026-11-24/BL-SFX4/in-out-code-review-p3.txt (model: deepseek-reasoner)
 
-[deepseek-review] deepseek-reasoner working… reasoning 12112 chars, answer 0 chars, 15s
-[deepseek-review] deepseek-reasoner working… reasoning 24839 chars, answer 0 chars, 30s
-[deepseek-review] deepseek-reasoner working… reasoning 37143 chars, answer 0 chars, 45s
-[deepseek-review] deepseek-reasoner working… reasoning 49337 chars, answer 0 chars, 60s
-[deepseek-review] deepseek-reasoner working… reasoning 61440 chars, answer 0 chars, 75s
-[deepseek-review] deepseek-reasoner working… reasoning 74850 chars, answer 0 chars, 90s
-[deepseek-review] deepseek-reasoner working… reasoning 86976 chars, answer 0 chars, 105s
-[deepseek-review] deepseek-reasoner working… reasoning 99487 chars, answer 0 chars, 120s
-[deepseek-review] deepseek-reasoner working… reasoning 112354 chars, answer 0 chars, 135s
-[deepseek-review] deepseek-reasoner working… reasoning 124699 chars, answer 0 chars, 150s
-DEFER severity=MED — mobile/src/lib/parcelSearchMatch.ts:391 "return read.data.status === 'expired' ? 'reactivate' : null;" — the reactivate branch fires only on the exact string 'expired', but the census guard this same change adds (scripts/surfaces/_schema/census/mobile-product.json) lists "statuses": ["trial","active","past_due","admin_managed"] with no 'expired', and ParcelToolEntitlementSchema is not in this chunk, so if the API never serves 'expired' this branch is unreachable and a SUBSCRIPTION_REQUIRED 403 always falls through to today's notice — confirm the schema/served status can be 'expired' (or match the real lapsed status) before relying on AC3.
+[deepseek-review] deepseek-reasoner working… reasoning 12168 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23399 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 34624 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 46082 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 57108 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 68314 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 79553 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 90107 chars, answer 0 chars, 120s
+[deepseek-review] deepseek-reasoner working… reasoning 101344 chars, answer 0 chars, 135s
+[deepseek-review] deepseek-reasoner working… reasoning 112266 chars, answer 0 chars, 150s
+[deepseek-review] deepseek-reasoner working… reasoning 123101 chars, answer 0 chars, 165s
+[deepseek-review] deepseek-reasoner working… reasoning 134653 chars, answer 0 chars, 180s
+DEFER severity=LOW — mobile/__tests__/reportScreen.mount.behaviour.test.tsx:26 "useRouter: () => ({ replace: mockReplace, back: mockBack, push: jest.fn(), canGoBack: () => mockCanGoBack })," — the route now builds the wall's only action as router.navigate(route) inside useWallState, but this mock has no navigate, so pressing parcel-wall-tracked here would throw TypeError instead of asserting the route — add navigate: jest.fn() to the mock so the wall action is exercised, not latent.
 
-DEFER severity=LOW — mobile/src/lib/apiClient.ts:68 "if (e instanceof AccountDeletedError || e instanceof ApiError) throw e;" — every other throw inside the 403 body parsing (e.g. a JSON SyntaxError from res.json() or a mistyped body) is still swallowed silently into the generic ApiError(403) with no log, so a malformed 403 body is invisible in Sentry — capture/log the swallowed error (or preserve it as cause) instead of discarding it.
+DEFER severity=LOW — scripts/surfaces/_schema/bindings.json:22 "{ "path": "mobile/src/components/surfaces/WallBinding.tsx", "platform": "mobile", "archetypes": ["LIST"], "owner": "binding_mobile_list", "exports": ["WALL_SLICE", "WALL_FLAG_NAMES", "wallProps", "wallData"] }," — WallBinding.tsx also exports WALL_VALUE_NAMES, WALL_VAR_PATHS and WALL_CHOICES, which have no consumer in this chunk and are not in the declared exports list — cannot see scripts/surfaces/surface-validate.mjs; if its S-page arm does not import them they are dead exports, and the semi sibling declares both of its name lists here.
 
-DEFER severity=NIT — mobile/src/components/surfaces/WallBinding.tsx:29 "export const WALL_CHOICES: Record<string, readonly string[]> = {};" — WALL_CHOICES, WALL_VALUE_NAMES and WALL_VAR_PATHS are new exports but the bindings.json entry for this file lists only ["WALL_SLICE","WALL_FLAG_NAMES","wallProps","wallData"], and no reader is in this chunk; if scripts/surfaces/surface-validate.mjs (cannot see it) does not import them they are dead code — drop them or add them to the exports manifest with a real reader.
+DEFER severity=NIT — mobile/src/lib/parcelSearchMatch.ts:388 "if (read.data == null) return read.isFetching && read.data === undefined ? 'wait' : null;" — inside a nullish guard the extra === undefined test splits null from undefined, so a null data with isFetching true silently returns null (today's notice, no loading) instead of waiting — no producer in this chunk yields null data, so either return 'wait' for any nullish data while fetching or pin the null case in the test.
 
-REJECT — mobile/src/hooks/useWallState.ts:23 "const { data, isFetching, isError } = useParcelEntitlement();" — looks like this issues a second entitlement request alongside the search page's own entitlement read — correct, both resolve the same query key so TanStack Query dedupes to one fetch, as the file header states.
+DEFER severity=NIT — mobile/__tests__/reportPage.behaviour.test.tsx:221 "jest.spyOn(console, 'error').mockImplementation(() => undefined);" — the spy is never restored, so any later test in this file runs with console.error silenced unless jest restoreMocks is configured — call mockRestore (or restore in afterEach) so React warnings and act() errors are not hidden.
 
-REJECT — mobile/src/components/surfaces/PageTableBinding.tsx:104 "return node('AlertDescription', { key: n === 0 ? `${s.id}-text` : `${s.id}-text-${n}`, className }, [child]);" — the `texts++` counter looks like an off-by-one that could shift keys — correct, n===0 keeps the pre-existing `${s.id}-text` key (semi goldens unchanged) and later text parts get distinct `-text-1`, `-text-2` suffixes, while button parts never increment the counter.
+DEFER severity=NIT — mobile/__tests__/wallScreens.golden.test.ts:43 "const allowed = bindings.mapping.mobile.LIST!;" — the non-null assertion turns a missing mapping.mobile.LIST into a TypeError inside wallProblems instead of a named assertion failure — assert the key exists first or type it as string[] | undefined and fail with a message.
+
+REJECT — mobile/src/lib/parcelSearchMatch.ts:387 "if (read.isError) return 'error';" — a failed background refetch with a usable count and date in hand is discarded in favour of the error notice — ruled and pinned: RR-0468 and the test "a failed read gives the error state for both classes, before any data is looked at".
+
+REJECT — mobile/src/lib/apiClient.ts "if (e instanceof AccountDeletedError || e instanceof ApiError) throw e;" — widening the catch looks like it changes every 403's error type — correct: ReportLimitError and SubscriptionRequiredError are ApiErrors thrown inside the try and would otherwise be swallowed into the generic ApiError(403, 'Forbidden'), AccountDeletedError is not an ApiError so it stays, and a JSON.parse SyntaxError still falls through to the generic 403.
 
 VERDICT: PASS on code correctness
-Top 3 defects (if FAIL):
-- none
 
 ---
-⏱  161390ms (161.4s)
-📊 Tokens — total: 67142, input: 31991, output: 35151, reasoning: 34510
+⏱  183021ms (183.0s)
+📊 Tokens — total: 69921, input: 32655, output: 37266, reasoning: 36501

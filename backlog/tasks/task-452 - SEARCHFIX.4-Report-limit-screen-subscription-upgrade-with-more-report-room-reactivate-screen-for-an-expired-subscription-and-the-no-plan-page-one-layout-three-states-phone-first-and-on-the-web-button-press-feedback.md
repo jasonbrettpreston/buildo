@@ -3,11 +3,11 @@ id: TASK-452
 title: >-
   SEARCHFIX.4 Report-limit screen (subscription upgrade with more report room)
   and reactivate screen for an expired subscription, phone first
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-SFX4'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-24T23:52:00Z'
+updated_date: '2026-11-25T00:27:00Z'
 labels:
   - SEARCHFIX-PRIORITY
 milestone: m-1
@@ -59,8 +59,8 @@ Files: src/tests/surfaces/page-arm.logic.test.ts, mobile/src/components/surfaces
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 A limit-reached or subscription-required 403 keeps its code, as two error classes (the limit one also keeps its limit and reset date); every other 403 stays today's ApiError, and ACCOUNT_DELETED still gives AccountDeletedError
-- [ ] #2 At the limit, once the entitlement read has answered, the search page and the report screen show the wall with the count, the reset date and the plan line (no top-up or upgrade control until the buying work, RR-0454 item 3); never the reactivate copy; a failed read shows the limit screen's error notice, "Something went wrong on our side. Please try again." (RR-0468); the count and date are the read's, not the 403's
-- [ ] #3 An expired subscription shows the reactivate state (the reactivate sentence, the plan line and Go to Tracked Lots); a subscription-required 403 with no plan or an active status keeps today's notice (the no-plan page is task-357, RR-0455 item 2); the same 403 with a failed read shows the limit screen's error notice (RR-0468)
+- [x] #2 At the limit, once the entitlement read has answered, the search page and the report screen show the wall with the count, the reset date and the plan line (no top-up or upgrade control until the buying work, RR-0454 item 3); never the reactivate copy; a failed read shows the limit screen's error notice, "Something went wrong on our side. Please try again." (RR-0468); the count and date are the read's, not the 403's
+- [x] #3 An expired subscription shows the reactivate state (the reactivate sentence, the plan line and Go to Tracked Lots); a subscription-required 403 with no plan or an active status keeps today's notice (the no-plan page is task-357, RR-0455 item 2); the same 403 with a failed read shows the limit screen's error notice (RR-0468)
 - [x] #4 The web is unchanged by this card: it keeps its one not-entitled notice and gets the limit and reactivate screens with the web switch-on (MB-44, task-123, MAXBLD_WEB_LIVE pinned false; RR-0455 item 1)
 <!-- AC:END -->
 
@@ -418,6 +418,12 @@ Output review round 1 (task-460 shape): one code-review lens over 4 chunks (out-
 Dated note 2026-11-24 (round 1 close, grounder Cairn-Ground-O452): 15 findings, 2 CONFIRMED (LOW, piled), 13 REJECTED; no fix round. Piled: out-code-review-p1#4 (the C-069 sharing why names the search page only; wording waits for the next edit of that row); out-code-review-p4#1 (wall-golden-capture --write leaves a stray golden, as the semi capture does; none exists). The grounder found the three HIGH registry comments are a generator display defect and a stale generated column list that predate this card. The web test files in the grounder's point C are unverified until the push-station run on the folded tip. Nothing is pushed before the operator answers the two open items: the wording of line three (wall.limit.opened) and WallBinding.tsx under the MD:1476 delegation (MORNING-DECISIONS.md:2416-2419).
 
 2026-11-24: reopened for round 2 (RR-0385 item 3: last round). The push station on the folded tip 09c7ac9d7 failed 10 web tests in 6 files (~/Buildo-scratch/push-station/fail/09c7ac9d780784ca72406edee78522aa7c675981.fail); the validating grounder ruled all six real; the fixes are plan section 14. Operator: RR-0467 (line three is wording A; the station runs on the fix commit before the review), RR-0468 (the failed-read notice reads: Something went wrong on our side. Please try again.), RR-0469 (WallBinding.tsx confirmed). Acceptance lines 2 and 3 are unticked until re-proven. Nothing is pushed.
+
+Round 2 (lane BL-SFX4, plan sha256:7c9748df170f, section 14): the six station failures at 09c7ac9d7 fixed. (1) surface-goldens.ts and the two admin-media lists gain mobile_parcel_wall. (2) auth-class-parity-exceptions.json gains the wall's P-1 row, owner MF-77 (in memory: the wall's only R-18 line, now listed). (3) The error state (RR-0468, Spec 128 rule 12): searchWall gives error on a failed read for both classes; flag error; tone-error notice wall.error; census state error and errors class; third golden. (4) canary b: no own fix. (5) PageTableBinding keys without arithmetic (no-maths probe: texts++ before, [] after); semi capture ok (8) and wall goldens' props byte-identical. (6) search-reports-left reads the hook line. Red: the 6 station tests, plus phone r2-red.out 4 failed / 139 passed. Measured: S-screen 18 surfaces 103 goldens, S-sbind 444 strings, S-page 2 of 2. Phone full local run 59 suites 908/908; mobile tsc clean.
+
+Dated note 2026-11-24: the push station PASSED on the round-2 fix commit 7d4410db0 (typecheck, mobile-typecheck, mobile-tests, full web suite; pass file ~/Buildo-scratch/push-station/pass/7d4410db0cb931e9918306acc73718c4940ef444.pass), run before the output review by RR-0467 (MORNING-DECISIONS.md:2421-2425). No code or test changes after it.
+
+Output review round 2 (task-460 shape): one code-review lens over the whole task range 1ce2f774c..7d4410db0, 4 chunks re-made under the round-1 names (out-code-review-p1..p4.txt), 16 findings (HIGH 3, MED 2, LOW 8, NIT 3), FINDINGS.md. Grounder owed; the task stays RUNNING.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
@@ -426,4 +432,6 @@ Dated note 2026-11-24 (round 1 close, grounder Cairn-Ground-O452): 15 findings, 
 SEARCHFIX.4 built on the phone: work commit 4cf68ec45 (hooks: related run Test Files 4 passed, Tests 147 passed; GATE OK; POLICY CHECKS OK), D15 cite e4a9eea86, dated notes 1ce7b88ae, review records aa6de17b3. AC1 errors.ts/apiClient.ts classes (apiClient.test.ts); AC2 limit wall on search and report (parcelSearchScreen.behaviour, reportPage.behaviour, reportScreen.mount, wallScreens.golden); AC3 reactivate only for expired, status null keeps the notice (parcelSearchMatch.test.ts searchWall); AC4 no web file in the diff. Phone: full local run 59 suites 905/905. Web files outside the related run unverified until the push station.
 
 Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 2 pile; grounder docs/reports/lanes/2026-11-24/BL-SFX4/GROUNDER.md; triage docs/reports/lanes/2026-11-24/BL-SFX4/TRIAGE.md
+
+Review round 2: 0 fixed, 0 task, 0 ruling, 0 wontfix, 4 pile; grounder docs/reports/lanes/2026-11-24/BL-SFX4/GROUNDER.md; triage docs/reports/lanes/2026-11-24/BL-SFX4/TRIAGE.md
 <!-- SECTION:FINAL_SUMMARY:END -->

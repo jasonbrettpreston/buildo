@@ -44,6 +44,8 @@ export const MOBILE_GOLDEN_TESTS: Record<string, string> = {
   mobile_parcel_disambiguation_map: 'mobile/__tests__/lotMapScreens.golden.test.ts',
   // SEMI-B (dated 2026-11-13): the one-question page before the report; its goldens are written by scripts/surfaces/semi-question-golden-capture.ts.
   mobile_parcel_semi_question: 'mobile/__tests__/semiQuestionScreens.golden.test.ts',
+  // task-452 SEARCHFIX.4 (dated 2026-11-24): the report-limit and reactivate wall; its goldens are written by scripts/surfaces/wall-golden-capture.ts.
+  mobile_parcel_wall: 'mobile/__tests__/wallScreens.golden.test.ts',
 };
 
 /** A non-web target: the declared mobile golden test of `id`, else a throw (fail closed; never a silent skip). */

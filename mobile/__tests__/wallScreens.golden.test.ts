@@ -11,6 +11,7 @@ import path from 'node:path';
 import { WALL_SLICE, wallData, wallProps, type WallSituation } from '@/components/surfaces/WallBinding';
 import type { PropsNode } from '@/components/surfaces/SearchBinding';
 import searchSlice from '@/generated/surfaces/mobile_parcel_search.json';
+import { LOT_MAP_LAYOUT } from '@/constants/lotMap';
 
 type Json = Record<string, unknown>;
 const MOBILE = path.resolve(__dirname, '..');
@@ -112,6 +113,17 @@ describe('the wall rules (named cases)', () => {
     expect(nodes(t).some((n) => n.props.testID === 'parcel-wall-reactivate')).toBe(false);
     expect(nodes(t).find((n) => n.props.testID === 'parcel-wall-tracked')!.props.onPress).toEqual({ action: 'push', route: '/(app)/parcel-tool/tracked' });
     expect(wallData(situation('limit'))).toEqual({ contract: { contract_parcels_entitlement: { reportsLimit: 10, resetsOnDisplay: '9 Dec 2026' } }, derived: {} });
+  });
+  it('round 2 (RR-0468, Spec 128 rule 12): the error state is one tone-error notice with the one sentence and Go to Tracked Lots; no plan line, no retry, no limit or reactivate copy', () => {
+    const t = wallProps(situation('error'));
+    const notice = nodes(t).find((n) => n.props.testID === 'parcel-wall-error')!;
+    expect(refs(notice, 'content')).toEqual(['wall.error']);
+    expect([notice.props.icon, notice.props.className]).toEqual(['AlertTriangle', LOT_MAP_LAYOUT.noticeError]); // tone error
+    expect(refs(t, 'content')).not.toContain('wall.plan');
+    expect(nodes(t).some((n) => n.props.testID === 'parcel-wall-limit' || n.props.testID === 'parcel-wall-reactivate')).toBe(false);
+    expect(nodes(t).filter((n) => n.component === 'Button').map((n) => n.props.testID)).toEqual(['parcel-wall-tracked']);
+    expect(WALL_SLICE.content['wall.error']).toBe('Something went wrong on our side. Please try again.');
+    expect(wallData(situation('error'))).toEqual({ contract: { contract_parcels_entitlement: { reportsLimit: null, resetsOnDisplay: null } }, derived: {} });
   });
   it('the reactivate state: the reactivate sentence and the plan line in one notice, and Go to Tracked Lots; no limit copy; no button but Go to Tracked Lots (RR-0454 item 3)', () => {
     const t = wallProps(situation('reactivate'));

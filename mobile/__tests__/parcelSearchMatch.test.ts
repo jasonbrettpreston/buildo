@@ -537,20 +537,25 @@ describe('searchWall', () => {
     expect(searchWall(limitErr(), read(active))).toBe('limit');
     expect(searchWall(limitErr(), read(active, { isFetching: true }))).toBe('limit');
   });
-  it('limit: a failed read, a disabled read (no token: not fetching, no data) or an incomplete read keeps the notice (null)', () => {
-    expect(searchWall(limitErr(), read(undefined, { isError: true }))).toBeNull();
-    expect(searchWall(limitErr(), read(active, { isError: true }))).toBeNull();
+  // Round 2 (dated 2026-11-24; RR-0468, Spec 128 rule 12; prior: a failed read gave null, today's notice): a failed read of either class is the wall's error state.
+  it('a failed read gives the error state for both classes, before any data is looked at (RR-0468)', () => {
+    expect(searchWall(limitErr(), read(undefined, { isError: true }))).toBe('error');
+    expect(searchWall(limitErr(), read(active, { isError: true }))).toBe('error');
+    expect(searchWall(subErr(), read(undefined, { isError: true }))).toBe('error');
+    expect(searchWall(subErr(), read({ status: 'expired', reportsLimit: null, resetsOnDisplay: null }, { isError: true }))).toBe('error');
+    expect(searchWall(new ApiError(403, 'Forbidden'), read(undefined, { isError: true }))).toBeNull();
+  });
+  it('limit: a disabled read (no token: not fetching, no data) or an incomplete read keeps the notice (null)', () => {
     expect(searchWall(limitErr(), read(undefined))).toBeNull();
     expect(searchWall(limitErr(), read({ ...active, reportsLimit: null }))).toBeNull();
     expect(searchWall(limitErr(), read({ ...active, resetsOnDisplay: null }))).toBeNull();
   });
-  it('subscription required: wait while pending; reactivate only for expired; null, active and a failed read keep the notice', () => {
+  it('subscription required: wait while pending; reactivate only for expired; null and active keep the notice', () => {
     expect(searchWall(subErr(), read(undefined, { isFetching: true }))).toBe('wait');
     expect(searchWall(subErr(), read({ status: 'expired', reportsLimit: null, resetsOnDisplay: null }))).toBe('reactivate');
     // A lock until task-357 (no-plan page, RR-0455 item 2): its card says to flip this line to 'no_plan'.
     expect(searchWall(subErr(), read({ status: null, reportsLimit: null, resetsOnDisplay: null }))).toBeNull();
     expect(searchWall(subErr(), read(active))).toBeNull();
-    expect(searchWall(subErr(), read(undefined, { isError: true }))).toBeNull();
   });
   it('anything else is no wall: a plain 403, a 500, a 429 and no error', () => {
     for (const e of [new ApiError(403, 'Forbidden'), new ApiError(500, 'boom'), new RateLimitError(30), null, undefined]) {

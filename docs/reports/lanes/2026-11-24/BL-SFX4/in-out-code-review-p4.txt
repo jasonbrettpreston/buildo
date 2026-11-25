@@ -1,19 +1,514 @@
-LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:a5cd3f65c5dc3387bdf83de6accf6d5dbd173dc0f64dcb939bfe15f6888cce09 part 1 of 1 chunk 4 of 4
-NO RULE LIST: the lens template alone judges the material under review. The material is chunk 4 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_wall.descriptor.json","scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json","scripts/surfaces/platform_shared/F14/surfaces/binding_mobile_list.descriptor.json","scripts/surfaces/wall-golden-capture.ts","src/tests/surfaces/page-arm.logic.test.ts","src/tests/surfaces/static-page.logic.test.ts","src/tests/surfaces/surface-conformance.logic.test.ts","src/tests/surfaces/surface-validate.logic.test.ts"]
+LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:bb91f7de32e0fa2c29168e2c9bda9c3e9d3a46bb37f8fe01607c0a85b32bfd55 part 1 of 1 chunk 4 of 4
+NO RULE LIST: the lens template alone judges the material under review. The material is chunk 4 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/surfaces/_schema/census/mobile-product.json","scripts/surfaces/_schema/converted-surfaces.json","scripts/surfaces/_schema/static-page.json","scripts/surfaces/_schema/static-page.schema.json","scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_wall.content.json","scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_wall.descriptor.json","scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json","scripts/surfaces/platform_shared/F14/surfaces/binding_mobile_list.descriptor.json","scripts/surfaces/wall-golden-capture.ts","src/tests/surfaces/admin-media.golden.test.ts","src/tests/surfaces/page-arm.logic.test.ts","src/tests/surfaces/search-reports-left.logic.test.ts","src/tests/surfaces/static-page.logic.test.ts","src/tests/surfaces/surface-conformance.logic.test.ts","src/tests/surfaces/surface-goldens.ts","src/tests/surfaces/surface-validate.logic.test.ts"]
 
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/surfaces/_schema/census/mobile-product.json b/scripts/surfaces/_schema/census/mobile-product.json
+index d260577d2762ea79fb3a508c6f6619327bb6c902..5126a5c35757466f7859511fff546be475fab117 100644
+--- a/scripts/surfaces/_schema/census/mobile-product.json
++++ b/scripts/surfaces/_schema/census/mobile-product.json
+@@ -14920,7 +14920,8 @@
+         "components": [
+           "mobile/src/components/surfaces/LotMapBinding.tsx",
+           "mobile/src/components/surfaces/SemiQuestionBinding.tsx",
+-          "mobile/src/components/surfaces/PageTableBinding.tsx"
++          "mobile/src/components/surfaces/PageTableBinding.tsx",
++          "mobile/src/components/surfaces/WallBinding.tsx"
+         ]
+       },
+       "owner": "Admin domain (Spec 126 §14 Target Files) — the conversion programme owns the row; no individual owner is named by Specs 126/127/128.",
+@@ -15342,5 +15343,335 @@
+         "status": "unreviewed"
+       }
+     }
++  },
++  {
++    "kind": "SURFACE",
++    "status": "generated",
++    "docs": {
++      "purpose": "The wall a refused lot lookup shows on the phone (task-452 SEARCHFIX.4; RR-0443, RR-0444 2b, RR-0466). At the monthly report limit the person sees one neutral notice: \"You’ve used all {limit} reports\" as its emphasised first line, \"Your count resets on {date}.\" smaller beneath it, then \"Lot reports you’ve opened this month stay available.\", \"Your Tracked Lots remain.\" and \"Your plan is managed on the web for changes.\", and a Go to Tracked Lots button. With an expired subscription the notice is the reactivate sentence and the same plan line, with the same button. No top-up or upgrade control until the buying work (RR-0454 item 3). Drawn in place of the search page, and on the report screen under its Back bar while no report is shown. Round 2 (dated 2026-11-24; RR-0468, Spec 128 rule 12): when the entitlement read fails after either refusal, the wall shows its error state, one tone-error notice \"Something went wrong on our side. Please try again.\" with Go to Tracked Lots (no count, date or plan line).",
++      "data_story": "It reads one contract, GET /api/parcels/entitlement (contract_parcels_entitlement), through useParcelEntitlement (the query key the search page already reads, so no extra request). The count is reportsLimit and the date is the server label resetsOnDisplay (RR-0310); the 403 body of the lookup carries its own limit and ISO date, kept on ReportLimitError and never drawn. Which wall shows is searchWall (mobile/src/lib/parcelSearchMatch.ts) over the lookup error class and that read. It emits **no analytics event**.",
++      "under_126": "**CONVERTED (SEARCHFIX.4)** — LIST, drawn from the rows of screens.mobile_parcel_wall in scripts/surfaces/_schema/static-page.json by pageProps (PageTableBinding.tsx) through WallBinding.tsx and the shared SurfaceRenderer.tsx, the second screens row after the semi page (task-357 ruling, MD:1476). It owns no component and has no route of its own: two mounts (the search page and the report route) draw it through useWallState.ts."
++    },
++    "evidence": {
++      "files": [
++        "mobile/src/hooks/useWallState.ts",
++        "mobile/src/components/surfaces/WallBinding.tsx",
++        "mobile/src/lib/parcelSearchMatch.ts",
++        "mobile/src/lib/errors.ts",
++        "mobile/app/(app)/parcel-tool/index.tsx",
++        "mobile/app/(app)/parcel-tool/[parcelId].tsx",
++        "mobile/src/components/surfaces/ReportPageHost.tsx"
++      ],
++      "contracts": [
++        "mobile/src/hooks/useWallState.ts — useParcelEntitlement() (GET /api/parcels/entitlement)"
++      ],
++      "tables": [
++        "src/lib/entitlements/index.ts — readParcelToolUsage (the entitlements row of product parcel_tool)"
++      ],
++      "gate": [
++        "src/app/api/parcels/lookup/route.ts:112 — reportLimitReached",
++        "src/features/leads/api/error-mapping.ts:29 — SUBSCRIPTION_REQUIRED",
++        "src/features/leads/api/error-mapping.ts:38 — REPORT_LIMIT_REACHED"
++      ],
++      "states": [
++        "mobile/src/lib/parcelSearchMatch.ts — searchWall",
++        "mobile/__tests__/fixtures/wall.situations.json — goldens"
++      ],
++      "emits": [
++        "mobile/src/hooks/useWallState.ts — no track() call"
++      ]
++    },
++    "identity": {
++      "id": "mobile_parcel_wall",
++      "route": "mobile/app/(app)/parcel-tool/index.tsx",
++      "archetype": "LIST",
++      "platforms": [
++        "mobile"
++      ],
++      "owns": {
++        "components": []
++      },
++      "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-16)",
++      "spec": "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md",
++      "spec_refs": [
++        "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4",
++        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §3.1",
++        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7"
++      ],
++      "spec_version": "0-draft",
++      "versioning": {
++        "answer": "none",
++        "why": "It reads the entitlement read as parsed by ParcelToolEntitlementSchema (a plain object, additive_only); a field it needs that is null draws no wall (today’s notice stays).",
++        "evidence": [
++          "mobile/src/lib/schemas.ts — ParcelToolEntitlementSchema"
++        ]
++      },
++      "ref": "S-096"
++    },
++    "inputs": {
++      "answer": "contract",
++      "why": "One GET /api/parcels/entitlement through useParcelEntitlement, the same TanStack entry the search page reads; plus the lookup error class its host passes in (ReportLimitError or SubscriptionRequiredError from mobile/src/lib/apiClient.ts).",
++      "evidence": [
++        "mobile/src/hooks/useWallState.ts — useParcelEntitlement()",
++        "mobile/src/hooks/useParcelLookup.ts — export function useParcelEntitlement"
++      ],
++      "contract_ref": [
++        "/api/parcels/entitlement"
++      ],
++      "query_key": [
++        "parcel-entitlement"
++      ],
++      "field_whitelist": [
++        "status",
++        "reportsLimit",
++        "resetsOnDisplay"
++      ],
++      "tables": [
++        {
++          "table": "entitlements",
++          "columns": [
++            "user_id",
++            "product",
++            "status",
++            "plan_key",
++            "current_period_end"
++          ],
++          "producing_steps": "none",
++          "chain_position": "n/a",
++          "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
++          "evidence": [
++            "src/lib/entitlements/index.ts — readParcelToolUsage"
++          ]
++        }
++      ]
++    },
++    "outputs": {
++      "answer": "none",
++      "why": "It writes nothing. The only action is Go to Tracked Lots, a tab switch (router.navigate to PARCEL_TAB_ROUTE.tracked); it records no recent search.",
++      "evidence": [
++        "mobile/src/hooks/useWallState.ts — push: router.navigate"
++      ],
++      "contract_ref": [],
++      "tables": []
++    },
++    "state": {
++      "answer": "none",
++      "why": "No store and no field of its own: it reads the existing entitlement query and the lookup error its host already holds.",
++      "evidence": [
++        "mobile/src/hooks/useWallState.ts"
++      ],
++      "fields": []
++    },
++    "staleness": {
++      "answer": "query_cache",
++      "why": "useParcelEntitlement declares staleTime ENTITLEMENT_STALE_MS (the search slice config entitlement_stale_ms, 0) and is re-read on focus of the search page.",
++      "evidence": [
++        "mobile/src/hooks/useParcelLookup.ts — staleTime: ENTITLEMENT_STALE_MS"
++      ],
++      "offline": "blocked",
++      "stale_time_ms": 0,
++      "gc_time_ms": 86400000
++    },
++    "guards": {
++      "session": {
++        "answer": "entitled",
++        "why": "It shows only after the lookup route refused: the 403 is the gate (a display, never a gate on the phone); the tab gate and the parcel-tool Stack are inherited.",
++        "evidence": [
++          "src/app/api/parcels/lookup/route.ts:112",
++          "mobile/app/(app)/_layout.tsx:236-265"
++        ]
++      },
++      "rls_class": {
++        "answer": "B",
++        "why": "entitlements is read as the table owner through the entitlement route; no client read.",
++        "evidence": [
++          "src/lib/entitlements/index.ts — readParcelToolUsage"
++        ]
++      },
++      "disclosure": "none",
++      "entitlement": {
++        "product": "parcel_tool",
++        "statuses": [
++          "trial",
++          "active",
++          "past_due",
++          "admin_managed"
++        ],
++        "on_missing": "403"
++      },
++      "flag": "none",
++      "permission": "none",
++      "rate_bucket": "none — the wall makes no request of its own; the entitlement read is the search page’s"
++    },
++    "render": {
++      "targets": [
++        "screen"
++      ],
++      "projection": "none",
++      "breakpoints": "mobile_first",
++      "export": "none",
++      "list": {
++        "item_archetype": "one notice and one button",
++        "pagination": "none",
++        "recycling": "none — one notice"
++      }
++    },
++    "checks": [
++      {
++        "id": "parcelwall_read_not_403",
++        "kind": "empty_state",
++        "severity": "FAIL",
++        "blocking": true,
++        "when": "pre",
++        "why": "RR-0310: the count and the date are the entitlement read’s served values; the 403’s own values are never drawn. Round 2 (dated 2026-11-24; RR-0468; prior text: a failed read keeps today’s notice): a failed read shows the wall’s error state. Locked by mobile/__tests__/parcelSearchMatch.test.ts (searchWall) and parcelSearchScreen.behaviour.test.tsx."
++      },
++      {
++        "id": "parcelwall_reactivate_only_expired",
++        "kind": "empty_state",
++        "severity": "FAIL",
++        "blocking": true,
++        "when": "pre",
++        "why": "RR-0444 2b: the reactivate state shows only for an expired subscription; no plan (task-357) and an active status keep today’s notice; a failed read shows the error state (round 2, RR-0468). Locked by mobile/__tests__/parcelSearchMatch.test.ts."
++      }
++    ],
++    "invariants": "none",
++    "plausibility": "none",
++    "states": [
++      {
++        "name": "rate_limited",
++        "golden": "rate_limited"
++      },
++      {
++        "name": "unauthorized",
++        "golden": "unauthorized"
++      },
++      {
++        "name": "error",
++        "golden": "error"
++      }
++    ],
++    "errors": {
++      "answer": "inline",
++      "why": "The wall is itself the declared failure UI of two refusals: the report limit (rate_limited) and an expired subscription (unauthorized); its own failure, a failed entitlement read after either refusal, is its error state (round 2, RR-0468). Every other failure keeps the host’s own notice.",
++      "evidence": [
++        "mobile/src/lib/parcelSearchMatch.ts — searchWall"
++      ],
++      "classes": [
++        {
++          "class": "403",
++          "ui": "REPORT_LIMIT_REACHED: the limit notice with the read’s count and date, the two lead lines, the plan line and Go to Tracked Lots. SUBSCRIPTION_REQUIRED with status expired: the reactivate sentence, the plan line and Go to Tracked Lots."
++        },
++        {
++          "class": "500",
++          "ui": "The entitlement read failed after a REPORT_LIMIT_REACHED or SUBSCRIPTION_REQUIRED 403: one tone-error notice \"Something went wrong on our side. Please try again.\" and Go to Tracked Lots (RR-0468). A plain 403 with a failed read keeps the search notice."
++        }
++      ]
++    },
++    "emits": {
++      "answer": "none",
++      "why": "No client analytics; the wall emits nothing.",
++      "evidence": [
++        "mobile/src/hooks/useWallState.ts"
++      ],
++      "analytics": [],
++      "ledger_events": [],
++      "breadcrumbs": []
++    },
++    "offers": {
++      "answer": "none",
++      "why": "No sponsored placement is rendered.",
++      "evidence": [
++        "mobile/src/components/surfaces/WallBinding.tsx"
++      ]
++    },
++    "metering": {
++      "answer": "none",
++      "why": "The wall counts nothing; the lookup route counts a produced report and sends the limit 403 (F02).",
++      "evidence": [
++        "src/app/api/parcels/lookup/route.ts:97-112"
++      ]
++    },
++    "config": {
++      "answer": "none",
++      "why": "No tunable: the wall reads no setting of its own.",
++      "evidence": [
++        "mobile/src/components/surfaces/WallBinding.tsx"
++      ]
++    },
++    "sharing": {
++      "answer": "shared",
++      "why": "It shares contract_parcels_entitlement and its query with the search page (S-002).",
++      "evidence": [
++        "mobile/src/hooks/useParcelLookup.ts — useParcelEntitlement"
++      ],
++      "surfaces": [
++        "mobile_parcel_search"
++      ]
++    },
++    "a11y": {
++      "touch_target_min_px": 44,
++      "labels": "complete",
++      "dark_mode": "hardcoded",
++      "reduced_motion": "none",
++      "i18n": "none",
++      "safe_area": [
++        "top"
++      ]
++    },
++    "deviations": [
++      {
++        "from": "Spec 126 §11a.1 closed binding set: a client derivation picks the state",
++        "why": "searchWall (mobile/src/lib/parcelSearchMatch.ts) maps the lookup error class and the entitlement read to the flags limit, reactivate and error (round 2, RR-0468) (the closed list WALL_FLAG_NAMES); task-357 extends this row by a dated note with no_plan.",
++        "adjudicated_by": "task-452 plan grounder (v1 mobile-99-p1#5 CONFIRMED; RR-0444 2b, RR-0455, RR-0466)",
++        "date": "2026-11-24"
++      }
++    ],
++    "limitations": [
++      {
++        "what": "A failed entitlement read shows the error state, not the limit: the count and date are drawn only from the read (round 2, RR-0468; prior text: a failed read keeps today’s notice).",
++        "measured": "mobile/src/lib/parcelSearchMatch.ts searchWall returns error on isError.",
++        "check_id": "parcelwall_read_not_403"
++      },
++      {
++        "what": "No top-up or upgrade control and no way to sign up: both wait for the buying work (RR-0454 items 3 and 4); the no-plan page is task-357.",
++        "measured": "mobile/src/components/surfaces/WallBinding.tsx WALL_FLAG_NAMES holds limit and reactivate only.",
++        "check_id": "parcelwall_reactivate_only_expired"
++      }
++    ],
++    "interpretation": "none",
++    "notes": "SEARCHFIX.4 (task-452). One layout, two states, phone first; the web keeps its one not-entitled notice until its switch-on (RR-0455 item 1).",
++    "x-draft": {
++      "shard": "mobile-product",
++      "files": [
++        "mobile/src/hooks/useWallState.ts",
++        "mobile/src/components/surfaces/WallBinding.tsx"
++      ],
++      "loc": 0,
++      "call_idiom": "hook",
++      "stores": [],
++      "measured_states": [
++        "rate_limited",
++        "unauthorized",
++        "error"
++      ],
++      "measured_gate": {
++        "session": "required",
++        "entitlement": "parcel_tool",
++        "flag": "none",
++        "permission": "none"
++      }
++    },
++    "programme": {
++      "scope": "parcel_product",
++      "phase": "B2",
++      "why": "The refusal screens of the parcel tool entry flow (objective G.6).",
++      "feature": "F01",
++      "build_order": 1015,
++      "leakage": "none",
++      "product_questions": "none",
++      "review": {
++        "status": "unreviewed"
++      }
++    }
+   }
+ ]
+diff --git a/scripts/surfaces/_schema/converted-surfaces.json b/scripts/surfaces/_schema/converted-surfaces.json
+index 2fe1b3e0d244eb1108b0dcf211ef2e2338504a37..96912436e006681134e1428b9c3ebb58f34ff466 100644
+--- a/scripts/surfaces/_schema/converted-surfaces.json
++++ b/scripts/surfaces/_schema/converted-surfaces.json
+@@ -2,9 +2,9 @@
+   "$comment": "MF-42 (FE-31, P42-D5 a, P42-D8): the converted manifest. Every in-scope SURFACE descriptor (kind SURFACE, programme.scope in scope.programme_scopes) is in exactly one list; REPORT archetypes only in report. converted lists surfaces rendered from descriptors (status generated); pending_conversion names the queue row that converts each; parked and report are declared, not derived. waits is required while converted is empty and names the open row that converts the first surface; the lock (surface-conformance.logic.test.ts C-1) checks each named row is an open queue heading. Shape: screen-data.schema.json#/definitions/manifest. Read by scripts/surfaces/screen-checks.mjs (SV-DESC). overlay_sponsor_slot (Spec 126 11b.3: through MF-20) is listed under parked, not pending: MF-20 is DONE (MF-20@7b152d7e1) and rendered the ad slots through the REPORT path, while this SLOT descriptor stays status exists; a pending entry naming a DONE row is the stale state the C-1 queue check refuses (measured at build, ffb6b0610). Parked until a row converts it; operator confirmation owed (MF-42 hand-back). Dated note 2026-11-09 (prior text kept; operator, verbatim: \"yes\"; record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, \"Operator answers 2026-11-09 (push 14/15 items)\"): confirmed: the sponsor slot and the report ad slot are one slot. overlay_sponsor_slot stays parked. mobile/src/components/parcel/SponsorSlot.tsx (rendered at mobile/app/(app)/parcel-tool/[parcelId].tsx:227) is retired when the mobile parcel report screen converts to the report renderer, and the MF-20 ad slot replaces it there. No new row, no code. Dated note 2026-11-09 (MF-37; prior text kept): the first three converted surfaces are admin_media, admin_media_upload and admin_media_delete; waits is removed now that converted is not empty, and expected_count moves 20 -> 23 (the three new parcel_admin SURFACE rows). Dated note 2026-11-10 (MF-35; prior text kept): mobile_parcel_search is converted (the MaxBLD search page and its inline address list); mobile_parcel_disambiguation_map stays pending and its row moves MF-35 -> MF-53 (the map page row; queue notes on MF-35 and MF-53 of this date), so the C-1 queue check names an open row when MF-35 flips DONE. expected_count is unchanged: the promoted binding entry shared_mobile_surface_binding is platform_shared, outside the programme scopes. Dated note 2026-11-10 (MF-40; operator, verbatim: \"y recommendation: C, with the four trims. approved\"; plan delta 1 section 5): admin_placements (the offer FORM), admin_offers (LIST) and admin_advertiser_entry (FORM) are converted; admin_placements leaves pending_conversion, and expected_count moves 23 -> 25 (the two new parcel_admin SURFACE rows). Dated note 2026-11-11 (MF-19; operator D-1..D-8 \"all as recommmended\"): admin_lot_size_revert (FORM, the audited admin revert, D-4) and report_lot_size_entry (FORM, the user lot-size entry, declared and goldened; its mount in the report sheet waits for the entry switch flip, D-6) are converted; expected_count moves 25 -> 27 (one parcel_admin and one parcel_product SURFACE row). Dated note 2026-11-11 (MF-46 stage C; operator D-2 (a) and round 2026-11-11 \"1 y 2 y 3 ? 4y 5 y 6 y 7 y ... 8. y\"; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 12 folds 13, 16, 22): the MaxBLD plain pages web_help, web_terms and web_privacy and their error and not-found page web_maxbld_error are converted (the first web STATIC surfaces, through binding_web_static); expected_count moves 25 -> 29 (the four new parcel_product SURFACE rows). web_landing stays pending: the v9 landing is its own row (MF-76, D-1 (a)); its row field still names MF-46 until the queue owner moves it. Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a), D-2 (a), D-3 (a) \"3 y\" and the all-scenarios ruling; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 12 folds 14 and 15): web_landing is converted (the MaxBLD landing on maxbld.ca, through binding_web_static with the landing kinds) and leaves pending_conversion (its row field named MF-46; the landing is MF-76). expected_count is unchanged by MF-76 (31 after the restack onto 34520a43b, which brought MF-19 and MF-53): the former web_landing knowledge (src/app/page.tsx, the Buildo lead-gen page) moved to its own scope-D descriptor web_buildo_landing (estate_other), outside the programme scopes.",
+   "scope": {
+     "programme_scopes": ["parcel_product", "parcel_admin"],
+-    "expected_count": 33
++    "expected_count": 34
+   },
+-  "converted": ["admin_media", "admin_media_upload", "admin_media_delete", "mobile_parcel_search", "admin_placements", "admin_offers", "admin_advertiser_entry", "mobile_parcel_disambiguation_map", "mobile_parcel_semi_question", "admin_lot_size_revert", "report_lot_size_entry", "report_lot_size_entry_area", "web_help", "web_terms", "web_privacy", "web_maxbld_error", "web_landing"],
++  "converted": ["admin_media", "admin_media_upload", "admin_media_delete", "mobile_parcel_search", "admin_placements", "admin_offers", "admin_advertiser_entry", "mobile_parcel_disambiguation_map", "mobile_parcel_semi_question", "admin_lot_size_revert", "report_lot_size_entry", "report_lot_size_entry_area", "web_help", "web_terms", "web_privacy", "web_maxbld_error", "web_landing", "mobile_parcel_wall"],
+   "pending_conversion": [
+     { "id": "admin_surface_registry", "row": "MF-30" },
+     { "id": "admin_drift_status", "row": "MF-30" },
+diff --git a/scripts/surfaces/_schema/static-page.json b/scripts/surfaces/_schema/static-page.json
+index b41d5f385c080205671096d2d3c45f9e1188a9bd..7ae2b910d190a792ded24381702dae563608f368 100644
+--- a/scripts/surfaces/_schema/static-page.json
++++ b/scripts/surfaces/_schema/static-page.json
+@@ -1402,6 +1402,90 @@
+      "busy": "busy"
+     }
+    ]
++  },
++  "mobile_parcel_wall": {
++   "prefix": "parcel-wall",
++   "contract": "contract_parcels_entitlement",
++   "binding": "mobile/src/components/surfaces/WallBinding.tsx",
++   "platforms": [
++    "mobile"
++   ],
++   "sections": [
++    {
++     "kind": "notice",
++     "id": "limit",
++     "when": "limit",
++     "tone": "neutral",
++     "icon": "Info",
++     "parts": [
++      {
++       "role": "title",
++       "content": "wall.limit.title",
++       "vars": {
++        "limit": "reportsLimit"
++       }
++      },
++      {
++       "role": "small",
++       "content": "wall.limit.reset",
++       "vars": {
++        "date": "resetsOnDisplay"
++       }
++      },
++      {
++       "role": "text",
++       "content": "wall.limit.opened"
++      },
++      {
++       "role": "text",
++       "content": "wall.limit.stay"
++      },
++      {
++       "role": "text",
++       "content": "wall.plan"
++      }
++     ]
++    },
++    {
++     "kind": "notice",
++     "id": "reactivate",
++     "when": "reactivate",
++     "tone": "neutral",
++     "icon": "Info",
++     "parts": [
++      {
++       "role": "text",
++       "content": "wall.reactivate"
++      },
++      {
++       "role": "text",
++       "content": "wall.plan"
++      }
++     ]
++    },
++    {
++     "kind": "notice",
++     "id": "error",
++     "when": "error",
++     "tone": "error",
++     "icon": "AlertTriangle",
++     "parts": [
++      {
++       "role": "text",
++       "content": "wall.error"
++      }
++     ]
++    },
++    {
++     "kind": "button",
++     "id": "tracked",
++     "variant": "default",
++     "label": "wall.tracked",
++     "content": "wall.tracked",
++     "action": "push",
++     "target": "route"
++    }
++   ]
+   }
+  }
+ }
+diff --git a/scripts/surfaces/_schema/static-page.schema.json b/scripts/surfaces/_schema/static-page.schema.json
+index bd000c95b216c2063483c1bb3bcb2fef2f2aeb03..66f2dac82d1dfbe649668580aa4e2b2ddcb13b9b 100644
+--- a/scripts/surfaces/_schema/static-page.schema.json
++++ b/scripts/surfaces/_schema/static-page.schema.json
+@@ -782,7 +782,12 @@
+                 ],
+                 "properties": {
+                   "role": {
+-                    "const": "text"
++                    "$comment": "task-452 (dated 2026-11-24; operator RR-0466, MORNING-DECISIONS.md:2410-2413; prior text kept: const text): a notice text part is text, title (the emphasised first line) or small (the smaller line beneath it); PageTableBinding.tsx picks the class by role; no new kind.",
++                    "enum": [
++                      "text",
++                      "title",
++                      "small"
++                    ]
+                   },
+                   "content": {
+                     "$ref": "#/$defs/contentKey"
+diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_wall.content.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_wall.content.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..7c9f9224906685cb4bf4eaf8758912e5b4c5db62
+--- /dev/null
++++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_wall.content.json
+@@ -0,0 +1,10 @@
++{
++  "wall.limit.title": "You’ve used all {limit} reports",
++  "wall.limit.reset": "Your count resets on {date}.",
++  "wall.limit.opened": "Lot reports you’ve opened this month stay available.",
++  "wall.limit.stay": "Your Tracked Lots remain.",
++  "wall.plan": "Your plan is managed on the web for changes.",
++  "wall.tracked": "Go to Tracked Lots",
++  "wall.reactivate": "Your subscription doesn't include the parcel tool right now. This isn't a missing address — reactivate to search lots again.",
++  "wall.error": "Something went wrong on our side. Please try again."
++}
 diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_wall.descriptor.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_wall.descriptor.json
 new file mode 100644
-index 0000000000000000000000000000000000000000..fb325d30d77093e0e005e776d100ae6fdd708f91
+index 0000000000000000000000000000000000000000..045ccdd1bda3d3d78c145c44ff85b75605a4cf60
 --- /dev/null
 +++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_wall.descriptor.json
-@@ -0,0 +1,321 @@
+@@ -0,0 +1,330 @@
 +{
 +  "kind": "SURFACE",
 +  "status": "generated",
 +  "docs": {
-+    "purpose": "The wall a refused lot lookup shows on the phone (task-452 SEARCHFIX.4; RR-0443, RR-0444 2b, RR-0466). At the monthly report limit the person sees one neutral notice: \"You’ve used all {limit} reports\" as its emphasised first line, \"Your count resets on {date}.\" smaller beneath it, then \"Lot reports you’ve opened this month stay available.\", \"Your Tracked Lots remain.\" and \"Your plan is managed on the web for changes.\", and a Go to Tracked Lots button. With an expired subscription the notice is the reactivate sentence and the same plan line, with the same button. No top-up or upgrade control until the buying work (RR-0454 item 3). Drawn in place of the search page, and on the report screen under its Back bar while no report is shown.",
++    "purpose": "The wall a refused lot lookup shows on the phone (task-452 SEARCHFIX.4; RR-0443, RR-0444 2b, RR-0466). At the monthly report limit the person sees one neutral notice: \"You’ve used all {limit} reports\" as its emphasised first line, \"Your count resets on {date}.\" smaller beneath it, then \"Lot reports you’ve opened this month stay available.\", \"Your Tracked Lots remain.\" and \"Your plan is managed on the web for changes.\", and a Go to Tracked Lots button. With an expired subscription the notice is the reactivate sentence and the same plan line, with the same button. No top-up or upgrade control until the buying work (RR-0454 item 3). Drawn in place of the search page, and on the report screen under its Back bar while no report is shown. Round 2 (dated 2026-11-24; RR-0468, Spec 128 rule 12): when the entitlement read fails after either refusal, the wall shows its error state, one tone-error notice \"Something went wrong on our side. Please try again.\" with Go to Tracked Lots (no count, date or plan line).",
 +    "data_story": "It reads one contract, GET /api/parcels/entitlement (contract_parcels_entitlement), through useParcelEntitlement (the query key the search page already reads, so no extra request). The count is reportsLimit and the date is the server label resetsOnDisplay (RR-0310); the 403 body of the lookup carries its own limit and ISO date, kept on ReportLimitError and never drawn. Which wall shows is searchWall (mobile/src/lib/parcelSearchMatch.ts) over the lookup error class and that read. It emits **no analytics event**.",
 +    "under_126": "**CONVERTED (SEARCHFIX.4)** — LIST, drawn from the rows of screens.mobile_parcel_wall in scripts/surfaces/_schema/static-page.json by pageProps (PageTableBinding.tsx) through WallBinding.tsx and the shared SurfaceRenderer.tsx, the second screens row after the semi page (task-357 ruling, MD:1476). It owns no component and has no route of its own: two mounts (the search page and the report route) draw it through useWallState.ts."
 +  },
@@ -188,7 +683,7 @@ index 0000000000000000000000000000000000000000..fb325d30d77093e0e005e776d100ae6f
 +      "severity": "FAIL",
 +      "blocking": true,
 +      "when": "pre",
-+      "why": "RR-0310: the count and the date are the entitlement read’s served values; the 403’s own values are never drawn and a failed read keeps today’s notice. Locked by mobile/__tests__/parcelSearchMatch.test.ts (searchWall) and parcelSearchScreen.behaviour.test.tsx."
++      "why": "RR-0310: the count and the date are the entitlement read’s served values; the 403’s own values are never drawn. Round 2 (dated 2026-11-24; RR-0468; prior text: a failed read keeps today’s notice): a failed read shows the wall’s error state. Locked by mobile/__tests__/parcelSearchMatch.test.ts (searchWall) and parcelSearchScreen.behaviour.test.tsx."
 +    },
 +    {
 +      "id": "parcelwall_reactivate_only_expired",
@@ -196,7 +691,7 @@ index 0000000000000000000000000000000000000000..fb325d30d77093e0e005e776d100ae6f
 +      "severity": "FAIL",
 +      "blocking": true,
 +      "when": "pre",
-+      "why": "RR-0444 2b: the reactivate state shows only for an expired subscription; no plan (task-357), an active status and a failed read keep today’s notice. Locked by mobile/__tests__/parcelSearchMatch.test.ts."
++      "why": "RR-0444 2b: the reactivate state shows only for an expired subscription; no plan (task-357) and an active status keep today’s notice; a failed read shows the error state (round 2, RR-0468). Locked by mobile/__tests__/parcelSearchMatch.test.ts."
 +    }
 +  ],
 +  "invariants": "none",
@@ -209,11 +704,15 @@ index 0000000000000000000000000000000000000000..fb325d30d77093e0e005e776d100ae6f
 +    {
 +      "name": "unauthorized",
 +      "golden": "unauthorized"
++    },
++    {
++      "name": "error",
++      "golden": "error"
 +    }
 +  ],
 +  "errors": {
 +    "answer": "inline",
-+    "why": "The wall is itself the declared failure UI of two refusals: the report limit (rate_limited) and an expired subscription (unauthorized). Every other failure keeps the host’s own notice.",
++    "why": "The wall is itself the declared failure UI of two refusals: the report limit (rate_limited) and an expired subscription (unauthorized); its own failure, a failed entitlement read after either refusal, is its error state (round 2, RR-0468). Every other failure keeps the host’s own notice.",
 +    "evidence": [
 +      "mobile/src/lib/parcelSearchMatch.ts — searchWall"
 +    ],
@@ -221,6 +720,10 @@ index 0000000000000000000000000000000000000000..fb325d30d77093e0e005e776d100ae6f
 +      {
 +        "class": "403",
 +        "ui": "REPORT_LIMIT_REACHED: the limit notice with the read’s count and date, the two lead lines, the plan line and Go to Tracked Lots. SUBSCRIPTION_REQUIRED with status expired: the reactivate sentence, the plan line and Go to Tracked Lots."
++      },
++      {
++        "class": "500",
++        "ui": "The entitlement read failed after a REPORT_LIMIT_REACHED or SUBSCRIPTION_REQUIRED 403: one tone-error notice \"Something went wrong on our side. Please try again.\" and Go to Tracked Lots (RR-0468). A plain 403 with a failed read keeps the search notice."
 +      }
 +    ]
 +  },
@@ -278,15 +781,15 @@ index 0000000000000000000000000000000000000000..fb325d30d77093e0e005e776d100ae6f
 +  "deviations": [
 +    {
 +      "from": "Spec 126 §11a.1 closed binding set: a client derivation picks the state",
-+      "why": "searchWall (mobile/src/lib/parcelSearchMatch.ts) maps the lookup error class and the entitlement read to the flags limit and reactivate (the closed list WALL_FLAG_NAMES); task-357 extends this row by a dated note with no_plan.",
++      "why": "searchWall (mobile/src/lib/parcelSearchMatch.ts) maps the lookup error class and the entitlement read to the flags limit, reactivate and error (round 2, RR-0468) (the closed list WALL_FLAG_NAMES); task-357 extends this row by a dated note with no_plan.",
 +      "adjudicated_by": "task-452 plan grounder (v1 mobile-99-p1#5 CONFIRMED; RR-0444 2b, RR-0455, RR-0466)",
 +      "date": "2026-11-24"
 +    }
 +  ],
 +  "limitations": [
 +    {
-+      "what": "A failed entitlement read keeps today’s notice even at the limit: the count and date are drawn only from the read.",
-+      "measured": "mobile/src/lib/parcelSearchMatch.ts searchWall returns null on isError.",
++      "what": "A failed entitlement read shows the error state, not the limit: the count and date are drawn only from the read (round 2, RR-0468; prior text: a failed read keeps today’s notice).",
++      "measured": "mobile/src/lib/parcelSearchMatch.ts searchWall returns error on isError.",
 +      "check_id": "parcelwall_read_not_403"
 +    },
 +    {
@@ -308,7 +811,8 @@ index 0000000000000000000000000000000000000000..fb325d30d77093e0e005e776d100ae6f
 +    "stores": [],
 +    "measured_states": [
 +      "rate_limited",
-+      "unauthorized"
++      "unauthorized",
++      "error"
 +    ],
 +    "measured_gate": {
 +      "session": "required",
@@ -439,6 +943,29 @@ index 0000000000000000000000000000000000000000..62a36d5920f328f15e99c9ab74506ed2
 +}
 +
 +main(process.argv.slice(2));
+diff --git a/src/tests/surfaces/admin-media.golden.test.ts b/src/tests/surfaces/admin-media.golden.test.ts
+index c6c8f215abafa513201523731b70805c4ddf448c..68a8937fd38cbe94264d8758ccc8ed2d084c3b14 100644
+--- a/src/tests/surfaces/admin-media.golden.test.ts
++++ b/src/tests/surfaces/admin-media.golden.test.ts
+@@ -67,7 +67,8 @@ describe('T7 (b) coverage', () => {
+     expect(convertedIds(ROOT)).toEqual(['admin_media', 'admin_media_upload', 'admin_media_delete', 'mobile_parcel_search', 'admin_placements', 'admin_offers', 'admin_advertiser_entry', 'mobile_parcel_disambiguation_map', 'mobile_parcel_semi_question', 'admin_lot_size_revert', 'report_lot_size_entry', 'report_lot_size_entry_area',
+       // MF-46 stage C (dated 2026-11-11): the MaxBLD plain pages and their error page, the first web STATIC surfaces.
+       // MF-76 (dated 2026-11-11): the MaxBLD landing.
+-      'web_help', 'web_terms', 'web_privacy', 'web_maxbld_error', 'web_landing']); // MF-53: + the map page (mobile only); MF-19: +2 FORM surfaces
++      // task-452 SEARCHFIX.4 (dated 2026-11-24): + the wall (mobile only).
++      'web_help', 'web_terms', 'web_privacy', 'web_maxbld_error', 'web_landing', 'mobile_parcel_wall']); // MF-53: + the map page (mobile only); MF-19: +2 FORM surfaces
+     for (const id of convertedIds(ROOT).filter((x) => JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, x)), 'utf8')).identity.platforms.includes('web'))) {
+       const d: Json = JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, id)), 'utf8'));
+       for (const s of d.states) {
+@@ -95,7 +96,7 @@ describe('T7 (c) the page passes plain data only', () => {
+ describe('T7 (d) non-web targets fail closed', () => {
+   it('every converted surface with a mobile target names its mobile golden test, and that file exists', () => {
+     const mobile = convertedIds(ROOT).filter((id) => JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, id)), 'utf8')).identity.platforms.includes('mobile'));
+-    expect(mobile).toEqual(['mobile_parcel_search', 'mobile_parcel_disambiguation_map', 'mobile_parcel_semi_question']); // MF-53: + the map page; SEMI-B: + the one-question page
++    expect(mobile).toEqual(['mobile_parcel_search', 'mobile_parcel_disambiguation_map', 'mobile_parcel_semi_question', 'mobile_parcel_wall']); // MF-53: + the map page; SEMI-B: + the one-question page; task-452 (dated 2026-11-24): + the wall
+     for (const id of mobile) expect([id, fs.existsSync(path.join(ROOT, MOBILE_GOLDEN_TESTS[id] ?? 'none'))]).toEqual([id, true]);
+   });
+   it('RED: a mobile target with no declared test, and a pdf target, throw', () => {
 diff --git a/src/tests/surfaces/page-arm.logic.test.ts b/src/tests/surfaces/page-arm.logic.test.ts
 index beb92bb6917935e07d7bd95bcf6cfdb19f17f51a..18d932408762f060af03dfceb78919664ceccc8e 100644
 --- a/src/tests/surfaces/page-arm.logic.test.ts
@@ -488,6 +1015,22 @@ index beb92bb6917935e07d7bd95bcf6cfdb19f17f51a..18d932408762f060af03dfceb7891966
 +    expect(pageArm(c).findings).toEqual([`SV-PAGE ${TABLE_PATH}: 2 screen(s) read, 3 expected (the binding modules that call the page builder)`]);
    });
  });
+diff --git a/src/tests/surfaces/search-reports-left.logic.test.ts b/src/tests/surfaces/search-reports-left.logic.test.ts
+index 59254058764555d798db8621448a7ed9eeb64cbf..2824294681f3c168032a5041a416a84481369112 100644
+--- a/src/tests/surfaces/search-reports-left.logic.test.ts
++++ b/src/tests/surfaces/search-reports-left.logic.test.ts
+@@ -130,7 +130,10 @@ describe('A.6 (e): the declarations agree and nothing is computed', () => {
+     expect(s.inputs.contract_ref).toEqual(['/api/parcels/lookup', '/api/parcels/entitlement']);
+     const c = rj(CONTRACT_DESCRIPTOR);
+     expect(c.inputs.field_whitelist).toEqual(expect.arrayContaining(['reportsLeft', 'reportsLimit', 'resetsOn', 'resetsOnDisplay']));
+-    expect(c.sharing.surfaces).toEqual(['mobile/src/hooks/useParcelLookup.ts:162']);
++    // task-452 round 2 (dated 2026-11-24; prior text kept: a typed :162): the call site is read from the hook, as fix-tune.logic.test.ts D15 does, so a moved hook shows here at once.
++    const hookLine = rt('mobile/src/hooks/useParcelLookup.ts').split('\n').findIndex((l) => l.startsWith('export function useParcelEntitlement(')) + 1;
++    expect(hookLine).toBeGreaterThan(0);
++    expect(c.sharing.surfaces).toEqual([`mobile/src/hooks/useParcelLookup.ts:${hookLine}`]);
+     expect(c['x-draft'].consumers).toEqual(['mobile/src/hooks/useParcelLookup.ts']);
+     expect(JSON.stringify(s.deviations)).not.toContain('reset_date');
+   });
 diff --git a/src/tests/surfaces/static-page.logic.test.ts b/src/tests/surfaces/static-page.logic.test.ts
 index fafda8ba54c1da9f720a0b17c4a8cefdbffdd37e..db15ffc7733be785aa8729edd2fe2ad3f3ec626d 100644
 --- a/src/tests/surfaces/static-page.logic.test.ts
@@ -554,7 +1097,7 @@ index fafda8ba54c1da9f720a0b17c4a8cefdbffdd37e..db15ffc7733be785aa8729edd2fe2ad3
  });
  
 diff --git a/src/tests/surfaces/surface-conformance.logic.test.ts b/src/tests/surfaces/surface-conformance.logic.test.ts
-index 6e662a6a9783746e2c52fa202b1217560ba4b424..f438c2148cada0e80fcce1ee13e37c142adf640d 100644
+index 6e662a6a9783746e2c52fa202b1217560ba4b424..b7eec7450f013beed406bc7b76749f717c5a53a9 100644
 --- a/src/tests/surfaces/surface-conformance.logic.test.ts
 +++ b/src/tests/surfaces/surface-conformance.logic.test.ts
 @@ -242,7 +242,8 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
@@ -567,17 +1110,18 @@ index 6e662a6a9783746e2c52fa202b1217560ba4b424..f438c2148cada0e80fcce1ee13e37c14
      // MF-37 (dated 2026-11-09): converted was empty with waits MF-37 until this commit; the counts move with the three admin media surfaces.
      // MF-58 (dated 2026-11-10; ruling 2026-11-10 items 16 and 5): the search page legal line joins as one content key (154 -> 155 strings);
      // red evidence docs/reports/red-evidence/MF-58/legal-line-red.txt.
-@@ -260,7 +261,8 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
+@@ -260,7 +261,9 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
      // SRCH.LOTMAP-2 (task-362; dated 2026-11-19; design small-pages-v8 choose-lot.html:278 "Pick a lot on the map or in the list."): 425 -> 426 strings: +1 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (select.hint); goldens unchanged (100); measured with surface-validate --check before (425) and after (426).
      // SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings: +1 in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json (help.mailto.wrong_lot); goldens unchanged (100); measured with surface-validate --check before (426) and after (427).
      // SEARCHFIX.3 (task-451; dated 2026-11-24; H Q2/H Q4 GROUNDER-QUESTIONS.md:75, :77; doc-2 B.6 (doc-2:48); plan rulings 8.1 b and 8.3): 427 -> 436 strings: +8 nav strings (nav.home "MaxBLD" and nav.sign_in "Log in" in web_help, web_terms, web_privacy and web_maxbld_error .content.json, the plain-page header links) and +1 net in mobile_parcel_disambiguation_map.content.json (unlinked.report and unlinked.stop added, select.label retired); goldens unchanged (100); measured with surface-validate --check before (427) and after (436).
 -    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (17 surfaces, 100 goldens)' }, { findings: [], note: 'S-sbind ok (17 surfaces, 436 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
 +    // SEARCHFIX.4 (task-452; dated 2026-11-24; RR-0444 MD:2290, RR-0455 MD:2357-2358): + the wall S-096 mobile_parcel_wall (converted 17 -> 18, in scope 33 -> 34; 2 mobile goldens rate_limited and unauthorized, 100 -> 102; +7 strings in mobile_parcel_wall.content.json, 436 -> 443; the second screens row, S-page 1 -> 2 of 2); measured with surface-validate --check before and after.
-+    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (18 surfaces, 102 goldens)' }, { findings: [], note: 'S-sbind ok (18 surfaces, 443 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
++    // SEARCHFIX.4 round 2 (task-452; dated 2026-11-24; RR-0468 MD:2426-2430, Spec 128 rule 12): + the wall's error state (1 mobile golden, 102 -> 103; +1 string wall.error, 443 -> 444); measured with surface-validate --check before and after.
++    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (18 surfaces, 103 goldens)' }, { findings: [], note: 'S-sbind ok (18 surfaces, 444 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
    });
    it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
      const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
-@@ -391,7 +393,8 @@ describe('C-3 bindings.json integrity', () => {
+@@ -391,7 +394,8 @@ describe('C-3 bindings.json integrity', () => {
      // MF-48 (dated 2026-11-11; D-2 a): + ReportBinding.tsx and ReportPageHost.tsx and their promoted entry binding_mobile_report; no mount (Stage A).
      // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join.
      // MF-76 (dated 2026-11-11; plan v3 §12 fold 13): + the landing mount (19 -> 20 mounts).
@@ -587,7 +1131,7 @@ index 6e662a6a9783746e2c52fa202b1217560ba4b424..f438c2148cada0e80fcce1ee13e37c14
    });
    it('RED (in memory): a glob as a path, a .ts module, a module under src/lib, an owner that does not own it, a promoted entry outside platform_shared', () => {
      const owner = { identity: { owns: { components: [] } }, programme: { scope: 'parcel_admin' } };
-@@ -500,7 +503,8 @@ describe('C-7 schema closedness and the cutover (the closed render vocabulary gr
+@@ -500,7 +504,8 @@ describe('C-7 schema closedness and the cutover (the closed render vocabulary gr
      // MF-48 (dated 2026-11-11; D-2 a): +1 promoted binding entry (binding_mobile_report).
      // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join.
      // MF-76 (dated 2026-11-11; plan v3 §12 fold 15): +1 SURFACE (web_buildo_landing, scope D: the old src/app/page.tsx knowledge; web_landing is repointed).
@@ -597,7 +1141,7 @@ index 6e662a6a9783746e2c52fa202b1217560ba4b424..f438c2148cada0e80fcce1ee13e37c14
      expect(all.filter((f) => v(rj(f)).length > 0)).toEqual([]);
      // MF-40 converted admin_placements; the non-generated FORM control is now binding_web_form (status new, no render.form).
      // Regression guardian LOW-1 (MF-40 OUTPUT panel): binding_web_form is a platform_shared promoted binding entry, not a pending user-facing surface;
-@@ -807,7 +811,7 @@ describe('C-8m the mobile closed table (MF-35; every element of a mobile binding
+@@ -807,7 +812,7 @@ describe('C-8m the mobile closed table (MF-35; every element of a mobile binding
    it('the real tree: the mobile modules render only through a COMPONENTS table equal to mapping.mobile for their archetypes (SEARCH; the renderer SEARCH and LIST); no FlashList', () => {
      console.log(`C-8m: ${mods.length} mobile modules`);
      // MF-48 (dated 2026-11-11): + ReportBinding.tsx (no JSX) and the host ReportPageHost.tsx (its own table, mapping.mobile.REPORT_HOST, host list). MF-53: + LotMapBinding.tsx (no JSX).
@@ -606,17 +1150,31 @@ index 6e662a6a9783746e2c52fa202b1217560ba4b424..f438c2148cada0e80fcce1ee13e37c14
      for (const m of mods) {
        const host = MOBILE_HOSTS[m.path];
        const allowed = [...new Set<string>(m.archetypes.flatMap((a: string) => B.mapping.mobile[host ? `${a}_HOST` : a] ?? []))];
+diff --git a/src/tests/surfaces/surface-goldens.ts b/src/tests/surfaces/surface-goldens.ts
+index 98eab87e77b13084f030c20195671e06274a5f61..76924934787f365d7bd3354aa0d6ebb92acd512d 100644
+--- a/src/tests/surfaces/surface-goldens.ts
++++ b/src/tests/surfaces/surface-goldens.ts
+@@ -44,6 +44,8 @@ export const MOBILE_GOLDEN_TESTS: Record<string, string> = {
+   mobile_parcel_disambiguation_map: 'mobile/__tests__/lotMapScreens.golden.test.ts',
+   // SEMI-B (dated 2026-11-13): the one-question page before the report; its goldens are written by scripts/surfaces/semi-question-golden-capture.ts.
+   mobile_parcel_semi_question: 'mobile/__tests__/semiQuestionScreens.golden.test.ts',
++  // task-452 SEARCHFIX.4 (dated 2026-11-24): the report-limit and reactivate wall; its goldens are written by scripts/surfaces/wall-golden-capture.ts.
++  mobile_parcel_wall: 'mobile/__tests__/wallScreens.golden.test.ts',
+ };
+ 
+ /** A non-web target: the declared mobile golden test of `id`, else a throw (fail closed; never a silent skip). */
 diff --git a/src/tests/surfaces/surface-validate.logic.test.ts b/src/tests/surfaces/surface-validate.logic.test.ts
-index 16f1b2fcdbe830393f7490a274cd70d4a079765e..f33d1eb44b91fbb985b9ce3a560140116ede84c0 100644
+index 16f1b2fcdbe830393f7490a274cd70d4a079765e..f1106a3cbbb4d14b30c5ec8fb1d2a2b4dbf8991a 100644
 --- a/src/tests/surfaces/surface-validate.logic.test.ts
 +++ b/src/tests/surfaces/surface-validate.logic.test.ts
-@@ -90,9 +90,10 @@ describe('FE-13 surface-validate gate: real tree', () => {
+@@ -90,9 +90,11 @@ describe('FE-13 surface-validate gate: real tree', () => {
      // SRCH.LOTMAP-2 (task-362; dated 2026-11-19; design small-pages-v8 choose-lot.html:278 "Pick a lot on the map or in the list."): 425 -> 426 strings: +1 in scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json (select.hint); goldens unchanged (100); measured with surface-validate --check before (425) and after (426).
      // SEARCHFIX.2 (task-450; dated 2026-11-24; RR-0444 MD:2290, B.7 doc-2:49): 426 -> 427 strings: +1 in scripts/surfaces/parcel_product/F06/surfaces/web_help.content.json (help.mailto.wrong_lot, the topic "Wrong address or lot"); goldens unchanged (100); measured with surface-validate --check before (426) and after (427).
      // SEARCHFIX.3 (task-451; dated 2026-11-24; H Q2/H Q4 GROUNDER-QUESTIONS.md:75, :77; doc-2 B.6 (doc-2:48); plan rulings 8.1 b and 8.3): 427 -> 436 strings: +8 nav strings (nav.home "MaxBLD" and nav.sign_in "Log in" in web_help, web_terms, web_privacy and web_maxbld_error .content.json, the plain-page header links) and +1 net in mobile_parcel_disambiguation_map.content.json (unlinked.report and unlinked.stop added, select.label retired); goldens unchanged (100); measured with surface-validate --check before (427) and after (436).
 -    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 436 strings) · S-page ok (1 of 1 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
 +    // SEARCHFIX.4 (task-452; dated 2026-11-24; RR-0444 MD:2290, RR-0455 MD:2357-2358): + the wall S-096 mobile_parcel_wall (converted 17 -> 18, in scope 33 -> 34; 2 mobile goldens rate_limited and unauthorized, 100 -> 102; +7 strings in mobile_parcel_wall.content.json, 436 -> 443; the second screens row, S-page 1 -> 2 of 2); measured with surface-validate --check before and after.
-+    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 34 in scope: converted 18, pending 3, parked 9, report 4) · S-screen ok (18 surfaces, 102 goldens) · S-sbind ok (18 surfaces, 443 strings) · S-page ok (2 of 2 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
++    // SEARCHFIX.4 round 2 (task-452; dated 2026-11-24; RR-0468 MD:2426-2430, Spec 128 rule 12): + the wall's error state (1 mobile golden, 102 -> 103; +1 string wall.error, 443 -> 444); measured with surface-validate --check before and after.
++    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 34 in scope: converted 18, pending 3, parked 9, report 4) · S-screen ok (18 surfaces, 103 goldens) · S-sbind ok (18 surfaces, 444 strings) · S-page ok (2 of 2 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
      expect(r.stdout.startsWith('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · ')).toBe(true);
 -    expect(r.stdout).toContain('S-desc ok (examined 33 in scope:');
 +    expect(r.stdout).toContain('S-desc ok (examined 34 in scope:');
