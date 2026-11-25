@@ -130,7 +130,10 @@ describe('A.6 (e): the declarations agree and nothing is computed', () => {
     expect(s.inputs.contract_ref).toEqual(['/api/parcels/lookup', '/api/parcels/entitlement']);
     const c = rj(CONTRACT_DESCRIPTOR);
     expect(c.inputs.field_whitelist).toEqual(expect.arrayContaining(['reportsLeft', 'reportsLimit', 'resetsOn', 'resetsOnDisplay']));
-    expect(c.sharing.surfaces).toEqual(['mobile/src/hooks/useParcelLookup.ts:162']);
+    // task-452 round 2 (dated 2026-11-24; prior text kept: a typed :162): the call site is read from the hook, as fix-tune.logic.test.ts D15 does, so a moved hook shows here at once.
+    const hookLine = rt('mobile/src/hooks/useParcelLookup.ts').split('\n').findIndex((l) => l.startsWith('export function useParcelEntitlement(')) + 1;
+    expect(hookLine).toBeGreaterThan(0);
+    expect(c.sharing.surfaces).toEqual([`mobile/src/hooks/useParcelLookup.ts:${hookLine}`]);
     expect(c['x-draft'].consumers).toEqual(['mobile/src/hooks/useParcelLookup.ts']);
     expect(JSON.stringify(s.deviations)).not.toContain('reset_date');
   });

@@ -95,16 +95,17 @@ export function pageProps(screen: PageScreen, flags: Readonly<Record<string, boo
         return [node('Text', { key: s.id, testID: testID(s.id), className: styles.heading, role: s.role }, [content(s.content)])];
       case 'notice': {
         const t = styles.notice[s.tone];
-        // task-452 (risk 5, RR-0466): React keys are unique among siblings. The first shown text part keeps today's key exactly (every semi golden is
-        // byte-identical); each later text part of the same notice gets a counter (`<id>-text-1`, `<id>-text-2`, ...).
-        let texts = 0;
-        return [node('Alert', { key: s.id, testID: testID(s.id), icon: s.icon, iconClassName: t.icon, className: t.box }, s.parts.filter((p) => on(p.when)).map((p): PageNode => {
+        // task-452 (risk 5, RR-0466; round 2: no arithmetic, the binding modules are scanned for maths by report-no-maths FE-05): React keys are unique
+        // among siblings. The first shown text part keeps today's key exactly (every semi golden is byte-identical); every later text part is keyed by its
+        // index among the shown parts (`<id>-text-<index>`).
+        const shown = s.parts.filter((p) => on(p.when));
+        const firstText = shown.findIndex((p) => p.role !== 'button');
+        return [node('Alert', { key: s.id, testID: testID(s.id), icon: s.icon, iconClassName: t.icon, className: t.box }, shown.map((p, index): PageNode => {
           if (p.role === 'button') return button(p.id, p);
           const child: PageChild = p.vars === undefined ? content(p.content)
             : { text: content(p.content), vars: Object.fromEntries(Object.entries(p.vars).map(([k, path]) => [k, { contract: `${screen.contract}.${path}` }])) };
-          const n = texts++;
           const className = p.role === 'title' ? (t.title ?? t.text) : p.role === 'small' ? (t.small ?? t.text) : t.text;
-          return node('AlertDescription', { key: n === 0 ? `${s.id}-text` : `${s.id}-text-${n}`, className }, [child]);
+          return node('AlertDescription', { key: index === firstText ? `${s.id}-text` : `${s.id}-text-${index}`, className }, [child]);
         }))];
       }
       case 'choices': {

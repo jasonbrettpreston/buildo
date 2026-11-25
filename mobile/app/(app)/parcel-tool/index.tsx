@@ -61,7 +61,8 @@ export default function ParcelSearchScreen() {
   // The Toronto-only rule (operator ruling 2026-09-16 (b)): an out-of-Toronto address is refused visibly and never sent ('' disables the hook).
   const { data, isFetching, error, refetch } = useParcelSearch(searchQueryArg(debounced));
   // task-452 SEARCHFIX.4: a refused lookup (limit, expired) shows the wall in place of the page once the entitlement read has answered; while the read is
-  // pending ('wait') the page shows its loading state (neither the notice nor the miss copy). A plain 403, a failed read or no plan keep today's notice.
+  // pending ('wait') the page shows its loading state (neither the notice nor the miss copy). A failed read shows the wall's error state (round 2,
+  // RR-0468); a plain 403 or no plan keep today's notice.
   const { kind: wallKind, wall } = useWallState(error);
   const waiting = wallKind === 'wait';
 

@@ -1,0 +1,113 @@
+{
+  "surface": "mobile_parcel_wall",
+  "state": "error",
+  "target": "mobile",
+  "covers": [
+    "error"
+  ],
+  "situation": "error",
+  "props": {
+    "component": "SafeAreaView",
+    "props": {
+      "className": "flex-1 bg-report-page",
+      "edges": {
+        "top": "additive"
+      },
+      "testID": "parcel-wall-screen"
+    },
+    "children": [
+      {
+        "component": "ScrollView",
+        "props": {
+          "key": "scroll",
+          "className": "flex-1",
+          "contentContainerStyle": {
+            "paddingBottom": 106,
+            "alignItems": "center"
+          },
+          "keyboardShouldPersistTaps": "handled"
+        },
+        "children": [
+          {
+            "component": "View",
+            "props": {
+              "key": "column",
+              "testID": "parcel-wall-column",
+              "className": "w-full px-4",
+              "style": {
+                "maxWidth": 448
+              }
+            },
+            "children": [
+              {
+                "component": "Alert",
+                "props": {
+                  "key": "error",
+                  "testID": "parcel-wall-error",
+                  "icon": "AlertTriangle",
+                  "iconClassName": "text-report-no",
+                  "className": "mt-3 rounded-xl bg-report-no-fill border-report-no-ring"
+                },
+                "children": [
+                  {
+                    "component": "AlertDescription",
+                    "props": {
+                      "key": "error-text",
+                      "className": "text-sm font-normal text-report-no"
+                    },
+                    "children": [
+                      {
+                        "content": "wall.error"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "tracked",
+                  "testID": "parcel-wall-tracked",
+                  "variant": "default",
+                  "className": "mt-6 min-h-[48px] w-full rounded-xl",
+                  "disabled": false,
+                  "accessibilityRole": "button",
+                  "accessibilityState": {
+                    "disabled": false
+                  },
+                  "accessibilityLabel": {
+                    "content": "wall.tracked"
+                  },
+                  "onPress": {
+                    "action": "push",
+                    "route": "/(app)/parcel-tool/tracked"
+                  }
+                },
+                "children": [
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "tracked-text",
+                      "className": "text-base font-bold text-report-ink"
+                    },
+                    "children": [
+                      {
+                        "content": "wall.tracked"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_wall.content.json": "10ba391b9f8fee6a",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_wall.descriptor.json": "efa4f68fd7496198"
+    }
+  }
+}

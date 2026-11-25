@@ -31,7 +31,7 @@ export function useWallState(error: unknown): WallState {
   const reportsLimit = data?.reportsLimit ?? null;
   const resetsOnDisplay = data?.resetsOnDisplay ?? null;
   const wall = useMemo<WallView | null>(() => {
-    if (kind !== 'limit' && kind !== 'reactivate') return null;
+    if (kind !== 'limit' && kind !== 'reactivate' && kind !== 'error') return null;
     const s = { kind, reportsLimit, resetsOnDisplay };
     return { tree: wallProps(s) as SurfaceTree, content: WALL_SLICE.content, data: wallData(s), actions };
   }, [kind, reportsLimit, resetsOnDisplay, actions]);

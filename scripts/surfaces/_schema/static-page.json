@@ -1464,6 +1464,19 @@
      ]
     },
     {
+     "kind": "notice",
+     "id": "error",
+     "when": "error",
+     "tone": "error",
+     "icon": "AlertTriangle",
+     "parts": [
+      {
+       "role": "text",
+       "content": "wall.error"
+      }
+     ]
+    },
+    {
      "kind": "button",
      "id": "tracked",
      "variant": "default",

@@ -181,4 +181,12 @@ describe('task-452 the report route draws the wall', () => {
     expect(screen.queryByTestId('report-error')).toBeNull();
     expect(screen.queryByTestId('parcel-wall-screen')).toBeNull();
   });
+  it('round 2 (RR-0468): the same refusal with a failed read shows the wall error notice under Back, not the lifecycle error text', () => {
+    refused();
+    mockEntitlement = { data: undefined, isFetching: false, isError: true };
+    render(<Screen />);
+    expect(within(screen.getByTestId('parcel-wall-error')).getByText('Something went wrong on our side. Please try again.')).toBeTruthy();
+    expect(screen.getByTestId('report-back')).toBeTruthy();
+    expect(screen.queryByText(LIFE.error as string)).toBeNull();
+  });
 });

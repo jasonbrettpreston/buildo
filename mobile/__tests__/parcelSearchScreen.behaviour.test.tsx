@@ -235,9 +235,30 @@ describe('the report-limit and reactivate wall (task-452)', () => {
     expect(screen.queryByTestId('parcel-wall-screen')).toBeNull();
     noSearchCopy();
   });
-  it('a failed read keeps today\'s notice (the 403 values are never drawn)', () => {
+  // Round 2 (dated 2026-11-24; RR-0468, Spec 128 rule 12; prior title "a failed read keeps today's notice"): a failed read of either refusal class shows the
+  // wall's error notice (the one sentence, Go to Tracked Lots; no count, date or plan line); a plain 403 with a failed read keeps today's notice.
+  it('a failed read shows the wall error notice for both classes (the 403 values are never drawn); a plain 403 with a failed read keeps the notice', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { ApiError } = require('@/lib/errors') as typeof import('@/lib/errors');
+    const clean = (): void => {
+      mockHook = { data: undefined, isFetching: false, error: null, refetch: jest.fn() };
+      mockEntitlement = { data: undefined, isFetching: false, isError: false, refetch: jest.fn() };
+    };
+    for (const error of [new ReportLimitError(10, '2026-12-09T05:00:00.000Z'), new SubscriptionRequiredError()]) {
+      clean();
+      const r = render(<Screen />);
+      refused(error, undefined, { isError: true });
+      type('26 Hurlingham Cres');
+      expect(within(screen.getByTestId('parcel-wall-error')).getByText('Something went wrong on our side. Please try again.')).toBeTruthy();
+      expect(screen.getByTestId('parcel-wall-tracked')).toBeTruthy();
+      expect(screen.queryByText('Your plan is managed on the web for changes.')).toBeNull();
+      expect(screen.queryByText('You’ve used all 10 reports')).toBeNull();
+      noSearchCopy();
+      r.unmount();
+    }
+    clean();
     render(<Screen />);
-    refused(new ReportLimitError(10, '2026-12-09T05:00:00.000Z'), undefined, { isError: true });
+    refused(new ApiError(403, 'Forbidden'), undefined, { isError: true });
     type('26 Hurlingham Cres');
     expect(screen.getByTestId('parcel-search-entitlement')).toBeTruthy();
     expect(screen.queryByTestId('parcel-wall-screen')).toBeNull();

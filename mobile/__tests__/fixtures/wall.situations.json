@@ -1,12 +1,35 @@
 {
   "$comment": "task-452 SEARCHFIX.4: the situations of S-096 mobile_parcel_wall (the report-limit and reactivate wall). Each committed golden names its state and its situation; scripts/surfaces/wall-golden-capture.ts writes src/tests/fixtures/surfaces/mobile_parcel_wall/<golden>.mobile.json from them and mobile/__tests__/wallScreens.golden.test.ts asserts the same equality. The count and the date are the entitlement read's (RR-0310), never the 403's.",
   "goldens": {
-    "rate_limited": { "state": "rate_limited", "situation": "limit" },
-    "unauthorized": { "state": "unauthorized", "situation": "reactivate" }
+    "rate_limited": {
+      "state": "rate_limited",
+      "situation": "limit"
+    },
+    "unauthorized": {
+      "state": "unauthorized",
+      "situation": "reactivate"
+    },
+    "error": {
+      "state": "error",
+      "situation": "error"
+    }
   },
   "inputs": {
-    "limit": { "kind": "limit", "reportsLimit": 10, "resetsOnDisplay": "9 Dec 2026" },
-    "reactivate": { "kind": "reactivate", "reportsLimit": null, "resetsOnDisplay": null }
+    "limit": {
+      "kind": "limit",
+      "reportsLimit": 10,
+      "resetsOnDisplay": "9 Dec 2026"
+    },
+    "reactivate": {
+      "kind": "reactivate",
+      "reportsLimit": null,
+      "resetsOnDisplay": null
+    },
+    "error": {
+      "kind": "error",
+      "reportsLimit": null,
+      "resetsOnDisplay": null
+    }
   },
   "named": []
 }

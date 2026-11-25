@@ -997,7 +997,7 @@ ICONS. The shelf was specified with @expo/vector-icons Ionicons (compass / bookm
 
 **Programme.** `S-096` · scope `parcel_product` · feature `F01` · build order 1015 · batch `B2` · review `unreviewed` — The refusal screens of the parcel tool entry flow (objective G.6).
 
-**What it is.** The wall a refused lot lookup shows on the phone (task-452 SEARCHFIX.4; RR-0443, RR-0444 2b, RR-0466). At the monthly report limit the person sees one neutral notice: "You’ve used all {limit} reports" as its emphasised first line, "Your count resets on {date}." smaller beneath it, then "Lot reports you’ve opened this month stay available.", "Your Tracked Lots remain." and "Your plan is managed on the web for changes.", and a Go to Tracked Lots button. With an expired subscription the notice is the reactivate sentence and the same plan line, with the same button. No top-up or upgrade control until the buying work (RR-0454 item 3). Drawn in place of the search page, and on the report screen under its Back bar while no report is shown.
+**What it is.** The wall a refused lot lookup shows on the phone (task-452 SEARCHFIX.4; RR-0443, RR-0444 2b, RR-0466). At the monthly report limit the person sees one neutral notice: "You’ve used all {limit} reports" as its emphasised first line, "Your count resets on {date}." smaller beneath it, then "Lot reports you’ve opened this month stay available.", "Your Tracked Lots remain." and "Your plan is managed on the web for changes.", and a Go to Tracked Lots button. With an expired subscription the notice is the reactivate sentence and the same plan line, with the same button. No top-up or upgrade control until the buying work (RR-0454 item 3). Drawn in place of the search page, and on the report screen under its Back bar while no report is shown. Round 2 (dated 2026-11-24; RR-0468, Spec 128 rule 12): when the entitlement read fails after either refusal, the wall shows its error state, one tone-error notice "Something went wrong on our side. Please try again." with Go to Tracked Lots (no count, date or plan line).
 
 **What it reads and writes.** It reads one contract, GET /api/parcels/entitlement (contract_parcels_entitlement), through useParcelEntitlement (the query key the search page already reads, so no extra request). The count is reportsLimit and the date is the server label resetsOnDisplay (RR-0310); the 403 body of the lookup carries its own limit and ISO date, kept on ReportLimitError and never drawn. Which wall shows is searchWall (mobile/src/lib/parcelSearchMatch.ts) over the lookup error class and that read. It emits **no analytics event**.
 
@@ -1013,7 +1013,7 @@ ICONS. The shelf was specified with @expo/vector-icons Ionicons (compass / bookm
 
 **Emits.** —
 
-**Render states seen in code.** `rate_limited` · `unauthorized`
+**Render states seen in code.** `rate_limited` · `unauthorized` · `error`
 
 **Data lineage.**
 
@@ -1048,7 +1048,7 @@ ICONS. The shelf was specified with @expo/vector-icons Ionicons (compass / bookm
 | 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 | 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 | 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
-| 12 | `errors` | `inline` | The wall is itself the declared failure UI of two refusals: the report limit (rate_limited) and an expired subscription (unauthorized). Every other failure keeps the host’s own notice. — `mobile/src/lib/parcelSearchMatch.ts — searchWall` |
+| 12 | `errors` | `inline` | The wall is itself the declared failure UI of two refusals: the report limit (rate_limited) and an expired subscription (unauthorized); its own failure, a failed entitlement read after either refusal, is its error state (round 2, RR-0468). Every other failure keeps the host’s own notice. — `mobile/src/lib/parcelSearchMatch.ts — searchWall` |
 | 13 | `emits` | `none` | No client analytics; the wall emits nothing. — `mobile/src/hooks/useWallState.ts` |
 | 14 | `offers` | `none` | No sponsored placement is rendered. — `mobile/src/components/surfaces/WallBinding.tsx` |
 | 15 | `metering` | `none` | The wall counts nothing; the lookup route counts a produced report and sends the limit 403 (F02). — `src/app/api/parcels/lookup/route.ts:97-112` |

@@ -2,7 +2,7 @@
   "kind": "SURFACE",
   "status": "generated",
   "docs": {
-    "purpose": "The wall a refused lot lookup shows on the phone (task-452 SEARCHFIX.4; RR-0443, RR-0444 2b, RR-0466). At the monthly report limit the person sees one neutral notice: \"You’ve used all {limit} reports\" as its emphasised first line, \"Your count resets on {date}.\" smaller beneath it, then \"Lot reports you’ve opened this month stay available.\", \"Your Tracked Lots remain.\" and \"Your plan is managed on the web for changes.\", and a Go to Tracked Lots button. With an expired subscription the notice is the reactivate sentence and the same plan line, with the same button. No top-up or upgrade control until the buying work (RR-0454 item 3). Drawn in place of the search page, and on the report screen under its Back bar while no report is shown.",
+    "purpose": "The wall a refused lot lookup shows on the phone (task-452 SEARCHFIX.4; RR-0443, RR-0444 2b, RR-0466). At the monthly report limit the person sees one neutral notice: \"You’ve used all {limit} reports\" as its emphasised first line, \"Your count resets on {date}.\" smaller beneath it, then \"Lot reports you’ve opened this month stay available.\", \"Your Tracked Lots remain.\" and \"Your plan is managed on the web for changes.\", and a Go to Tracked Lots button. With an expired subscription the notice is the reactivate sentence and the same plan line, with the same button. No top-up or upgrade control until the buying work (RR-0454 item 3). Drawn in place of the search page, and on the report screen under its Back bar while no report is shown. Round 2 (dated 2026-11-24; RR-0468, Spec 128 rule 12): when the entitlement read fails after either refusal, the wall shows its error state, one tone-error notice \"Something went wrong on our side. Please try again.\" with Go to Tracked Lots (no count, date or plan line).",
     "data_story": "It reads one contract, GET /api/parcels/entitlement (contract_parcels_entitlement), through useParcelEntitlement (the query key the search page already reads, so no extra request). The count is reportsLimit and the date is the server label resetsOnDisplay (RR-0310); the 403 body of the lookup carries its own limit and ISO date, kept on ReportLimitError and never drawn. Which wall shows is searchWall (mobile/src/lib/parcelSearchMatch.ts) over the lookup error class and that read. It emits **no analytics event**.",
     "under_126": "**CONVERTED (SEARCHFIX.4)** — LIST, drawn from the rows of screens.mobile_parcel_wall in scripts/surfaces/_schema/static-page.json by pageProps (PageTableBinding.tsx) through WallBinding.tsx and the shared SurfaceRenderer.tsx, the second screens row after the semi page (task-357 ruling, MD:1476). It owns no component and has no route of its own: two mounts (the search page and the report route) draw it through useWallState.ts."
   },
@@ -177,7 +177,7 @@
       "severity": "FAIL",
       "blocking": true,
       "when": "pre",
-      "why": "RR-0310: the count and the date are the entitlement read’s served values; the 403’s own values are never drawn and a failed read keeps today’s notice. Locked by mobile/__tests__/parcelSearchMatch.test.ts (searchWall) and parcelSearchScreen.behaviour.test.tsx."
+      "why": "RR-0310: the count and the date are the entitlement read’s served values; the 403’s own values are never drawn. Round 2 (dated 2026-11-24; RR-0468; prior text: a failed read keeps today’s notice): a failed read shows the wall’s error state. Locked by mobile/__tests__/parcelSearchMatch.test.ts (searchWall) and parcelSearchScreen.behaviour.test.tsx."
     },
     {
       "id": "parcelwall_reactivate_only_expired",
@@ -185,7 +185,7 @@
       "severity": "FAIL",
       "blocking": true,
       "when": "pre",
-      "why": "RR-0444 2b: the reactivate state shows only for an expired subscription; no plan (task-357), an active status and a failed read keep today’s notice. Locked by mobile/__tests__/parcelSearchMatch.test.ts."
+      "why": "RR-0444 2b: the reactivate state shows only for an expired subscription; no plan (task-357) and an active status keep today’s notice; a failed read shows the error state (round 2, RR-0468). Locked by mobile/__tests__/parcelSearchMatch.test.ts."
     }
   ],
   "invariants": "none",
@@ -198,11 +198,15 @@
     {
       "name": "unauthorized",
       "golden": "unauthorized"
+    },
+    {
+      "name": "error",
+      "golden": "error"
     }
   ],
   "errors": {
     "answer": "inline",
-    "why": "The wall is itself the declared failure UI of two refusals: the report limit (rate_limited) and an expired subscription (unauthorized). Every other failure keeps the host’s own notice.",
+    "why": "The wall is itself the declared failure UI of two refusals: the report limit (rate_limited) and an expired subscription (unauthorized); its own failure, a failed entitlement read after either refusal, is its error state (round 2, RR-0468). Every other failure keeps the host’s own notice.",
     "evidence": [
       "mobile/src/lib/parcelSearchMatch.ts — searchWall"
     ],
@@ -210,6 +214,10 @@
       {
         "class": "403",
         "ui": "REPORT_LIMIT_REACHED: the limit notice with the read’s count and date, the two lead lines, the plan line and Go to Tracked Lots. SUBSCRIPTION_REQUIRED with status expired: the reactivate sentence, the plan line and Go to Tracked Lots."
+      },
+      {
+        "class": "500",
+        "ui": "The entitlement read failed after a REPORT_LIMIT_REACHED or SUBSCRIPTION_REQUIRED 403: one tone-error notice \"Something went wrong on our side. Please try again.\" and Go to Tracked Lots (RR-0468). A plain 403 with a failed read keeps the search notice."
       }
     ]
   },
@@ -267,15 +275,15 @@
   "deviations": [
     {
       "from": "Spec 126 §11a.1 closed binding set: a client derivation picks the state",
-      "why": "searchWall (mobile/src/lib/parcelSearchMatch.ts) maps the lookup error class and the entitlement read to the flags limit and reactivate (the closed list WALL_FLAG_NAMES); task-357 extends this row by a dated note with no_plan.",
+      "why": "searchWall (mobile/src/lib/parcelSearchMatch.ts) maps the lookup error class and the entitlement read to the flags limit, reactivate and error (round 2, RR-0468) (the closed list WALL_FLAG_NAMES); task-357 extends this row by a dated note with no_plan.",
       "adjudicated_by": "task-452 plan grounder (v1 mobile-99-p1#5 CONFIRMED; RR-0444 2b, RR-0455, RR-0466)",
       "date": "2026-11-24"
     }
   ],
   "limitations": [
     {
-      "what": "A failed entitlement read keeps today’s notice even at the limit: the count and date are drawn only from the read.",
-      "measured": "mobile/src/lib/parcelSearchMatch.ts searchWall returns null on isError.",
+      "what": "A failed entitlement read shows the error state, not the limit: the count and date are drawn only from the read (round 2, RR-0468; prior text: a failed read keeps today’s notice).",
+      "measured": "mobile/src/lib/parcelSearchMatch.ts searchWall returns error on isError.",
       "check_id": "parcelwall_read_not_403"
     },
     {
@@ -297,7 +305,8 @@
     "stores": [],
     "measured_states": [
       "rate_limited",
-      "unauthorized"
+      "unauthorized",
+      "error"
     ],
     "measured_gate": {
       "session": "required",

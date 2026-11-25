@@ -20,8 +20,8 @@ export const WALL_SLICE: { surface: string; config: Record<string, number>; cont
   surface: string; config: Record<string, number>; content: Record<string, string>; page: PageScreen;
 };
 
-/** The closed list of flag names a `when` of the rows may name (task-357 appends no_plan, checking and none). */
-export const WALL_FLAG_NAMES = ['limit', 'reactivate'] as const;
+/** The closed list of flag names a `when` of the rows may name (round 2, RR-0468: + error; task-357 appends no_plan, checking and none). */
+export const WALL_FLAG_NAMES = ['limit', 'reactivate', 'error'] as const;
 /** The closed lists of the other names the rows may use (read by the S-page arm of scripts/surfaces/surface-validate.mjs; data, not logic). */
 export const WALL_VALUE_NAMES = ['route'] as const;
 export const WALL_VAR_PATHS = ['reportsLimit', 'resetsOnDisplay'] as const;
@@ -50,7 +50,7 @@ const STYLES: PageStyles = {
 
 /** The props tree of one render. Go to Tracked Lots targets the Tracked tab route (the mount switches tab with router.navigate). */
 export function wallProps(s: WallSituation): PropsNode {
-  return pageProps(WALL_SLICE.page, { limit: s.kind === 'limit', reactivate: s.kind === 'reactivate' }, { route: PARCEL_TAB_ROUTE.tracked }, STYLES);
+  return pageProps(WALL_SLICE.page, { limit: s.kind === 'limit', reactivate: s.kind === 'reactivate', error: s.kind === 'error' }, { route: PARCEL_TAB_ROUTE.tracked }, STYLES);
 }
 
 export type WallBindingData = { contract: Record<string, unknown>; derived: Record<string, unknown> };

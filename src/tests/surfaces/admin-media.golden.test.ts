@@ -67,7 +67,8 @@ describe('T7 (b) coverage', () => {
     expect(convertedIds(ROOT)).toEqual(['admin_media', 'admin_media_upload', 'admin_media_delete', 'mobile_parcel_search', 'admin_placements', 'admin_offers', 'admin_advertiser_entry', 'mobile_parcel_disambiguation_map', 'mobile_parcel_semi_question', 'admin_lot_size_revert', 'report_lot_size_entry', 'report_lot_size_entry_area',
       // MF-46 stage C (dated 2026-11-11): the MaxBLD plain pages and their error page, the first web STATIC surfaces.
       // MF-76 (dated 2026-11-11): the MaxBLD landing.
-      'web_help', 'web_terms', 'web_privacy', 'web_maxbld_error', 'web_landing']); // MF-53: + the map page (mobile only); MF-19: +2 FORM surfaces
+      // task-452 SEARCHFIX.4 (dated 2026-11-24): + the wall (mobile only).
+      'web_help', 'web_terms', 'web_privacy', 'web_maxbld_error', 'web_landing', 'mobile_parcel_wall']); // MF-53: + the map page (mobile only); MF-19: +2 FORM surfaces
     for (const id of convertedIds(ROOT).filter((x) => JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, x)), 'utf8')).identity.platforms.includes('web'))) {
       const d: Json = JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, id)), 'utf8'));
       for (const s of d.states) {
@@ -95,7 +96,7 @@ describe('T7 (c) the page passes plain data only', () => {
 describe('T7 (d) non-web targets fail closed', () => {
   it('every converted surface with a mobile target names its mobile golden test, and that file exists', () => {
     const mobile = convertedIds(ROOT).filter((id) => JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, id)), 'utf8')).identity.platforms.includes('mobile'));
-    expect(mobile).toEqual(['mobile_parcel_search', 'mobile_parcel_disambiguation_map', 'mobile_parcel_semi_question']); // MF-53: + the map page; SEMI-B: + the one-question page
+    expect(mobile).toEqual(['mobile_parcel_search', 'mobile_parcel_disambiguation_map', 'mobile_parcel_semi_question', 'mobile_parcel_wall']); // MF-53: + the map page; SEMI-B: + the one-question page; task-452 (dated 2026-11-24): + the wall
     for (const id of mobile) expect([id, fs.existsSync(path.join(ROOT, MOBILE_GOLDEN_TESTS[id] ?? 'none'))]).toEqual([id, true]);
   });
   it('RED: a mobile target with no declared test, and a pdf target, throw', () => {
