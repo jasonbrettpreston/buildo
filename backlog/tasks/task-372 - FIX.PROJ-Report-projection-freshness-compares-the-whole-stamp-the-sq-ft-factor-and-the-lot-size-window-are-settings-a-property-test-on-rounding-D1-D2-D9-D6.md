@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXPROJ'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-24T18:41:00Z'
+updated_date: '2026-11-25T13:57:00Z'
 labels:
   - dead
 milestone: m-1
@@ -65,4 +65,6 @@ Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMA
 Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder's recommendation of 2026-11-20: no DB mirror migration is owed for maxbld_report_lot_size_implausible_min_sqm and _max_sqm: the seed loader inserts them at the next npm run migrate. The two seed descriptions that say a migration is owed are corrected under task-367's fix round or task-343.
 
 Retro review by a separate grounder 2026-11-20 (task-405; file ~/Buildo-scratch/lanes-20261119/inc1b/retro/BL-FIXPROJ/RETRO-372-373.md), code as on the board: DEFECTS before a push: (1) D1 is NOT fixed: src/lib/report-projection/project.ts:185-187 compares table_version, catalogue_sha, switchboard_sha only; a record with an older settings or evaluator stamp reads current (owner: task-380 FIX.FRESH). (2) scripts/seeds/logic_variables.json:8197 and :8207 still say a migration is owed (none is: resolution on task-367); the same text in the generated registry doc and src/tests/control-panel.logic.test.ts:268. (3) the same seed lines and src/tests/report-projection-settings.logic.test.ts:3 cite MORNING-DECISIONS.md:738 for the 50 / 5,000 words; that line holds only 'ONE-13 a': cite backlog/decisions decision-37 (RR-0167). (4) twelve changed paths are outside the Files line. (5) src/components/admin/lead-inspector/CoaClassificationPanel.tsx:280 still types 10.764 (not listed anywhere). No lens output of this lane carries a REVIEW header: the whole lens set is owed through the review tool. D2, D9 hold; no golden moved.
+
+Dated note 2026-11-25 (task-454 SEARCHFIX.6, work commit 42b4b7932; findings G2 D3 and K3, docs/reports/reviews/mcfixreborn-g2/GROUNDER-B.md D3 and GROUNDER-A.md K3; prior text kept): the two seed rows maxbld_report_lot_size_implausible_min_sqm and _max_sqm no longer say a DB mirror migration is owed (now: 'No DB mirror row is owed: the seed loader inserts the key at the next npm run migrate (task-372, MD:1476)'), and their cite reads 'ONE-13 a (MORNING-DECISIONS.md:738); the 50 and 5,000 words: backlog/decisions/decision-37 (RR-0167)'; the same cite fix is in src/tests/report-projection-settings.logic.test.ts and the 'owed' text is gone from src/tests/control-panel.logic.test.ts. The correction this card's notes said task-367 or task-343 would make is done here.
 <!-- SECTION:NOTES:END -->
