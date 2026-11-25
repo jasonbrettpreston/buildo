@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MCFIX465'
 created_date: '2026-11-25T17:05:00Z'
-updated_date: '2026-11-25T21:36:00Z'
+updated_date: '2026-11-25T21:45:00Z'
 labels:
   - McFixV2
 milestone: m-1
@@ -358,4 +358,6 @@ Files line (2026-11-25, station FAIL on b3791a88c; plan third addendum, NAV-6 op
 Merge of wf2/board (2026-11-25, 7be07be67, task-469 folded): the card conflicted on two hunks; the board side was taken (task-469 plan section 3) and this lane re-added its 10 Files-line paths and its notes above through the CLI. The merge commit was made with git -c core.quotepath=false commit, as scripts/board/board-commit.zsh:13 does: check-partial-staging.sh:23-30 lists staged paths quoted, so the task-343 card (a non-ASCII middle dot in its name, 32,726 bytes) read as size unreadable (orchestrator go; the defect goes to the loose-ends card).
 
 Output review round 1 (2026-11-25, lane BL-MCFIX465): code-review lens over 2fd2f6042..HEAD in 4 chunks (context-r3.md), outputs in docs/reports/lanes/2026-11-25/BL-MCFIX465/ (out-code-review-p1..p4.txt, FINDINGS.md): CRITICAL 0, HIGH 0, MED 6, LOW 15, NIT 1. Grounder owed: nothing is fixed or folded before it rules (RR-0359).
+
+Round 1 fix (2026-11-25, lane BL-MCFIX465; output grounder Cairn-Ground-O465 CONFIRMED out-code-review-p4#1 MED, LANE-STEPS PART A): search-web-binding.ui.test.tsx :118 and :120: the no-dead-control case renders the static page (its recent chips are the buttons) and pins at least three buttons before the disabled loop. Red: commit attempt with SearchBinding.tsx:427 '|| click === undefined' removed in the tree (red2.out); green: the landed commit with it restored byte-identical (green3.out).
 <!-- SECTION:NOTES:END -->

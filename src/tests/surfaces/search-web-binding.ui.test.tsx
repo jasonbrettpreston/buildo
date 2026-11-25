@@ -115,9 +115,9 @@ describe('(b) the live switch off: every control disabled', () => {
     for (const b of buttons) expect((b as HTMLButtonElement).disabled).toBe(true);
   });
   it('a button whose action has no callback is disabled (no dead control)', () => {
-    render(provided(bind(SITUATIONS.ambiguous as WebSituation)));
+    render(provided(bind(SITUATIONS.static as WebSituation))); // task-465: no callbacks given; the static page recent chips are the buttons (the ambiguous page has only link rows)
     expect(screen.queryByTestId('parcel-search-account')).toBeNull();
-    for (const b of screen.queryAllByRole('button')) expect((b as HTMLButtonElement).disabled).toBe(true); // task-465: the rows are links, so there may be none
+    const btns = screen.queryAllByRole('button'); expect(btns.length).toBeGreaterThanOrEqual(3); for (const b of btns) expect((b as HTMLButtonElement).disabled).toBe(true);
   });
 });
 
