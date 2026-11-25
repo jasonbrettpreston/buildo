@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-GENROW'
 created_date: '2026-11-25T12:31:00Z'
-updated_date: '2026-11-25T13:34:00Z'
+updated_date: '2026-11-25T14:31:00Z'
 labels:
   - ProcessImprovement
 milestone: m-1
@@ -206,6 +206,8 @@ rg#1 MED folded The three by-law gen
 2026-11-25 output review round 1: code-review lens on the whole diff 68f1718da..4b47e5119 with context-r3.md; out-code-review.txt findings:2 (1 LOW, 1 NIT); FINDINGS.md in docs/reports/lanes/2026-11-25/BL-GENROW/. Grounder owed (a separate grounder rules every finding; the lane does not).
 
 2026-11-25 (orchestrator): folded to the board at aca7d541d. On the folded tip in the gate worktree: full phone run and STATION PASS (see ~/Buildo-scratch/lanes-20261125/gate-phone-aca7d541d.out and station-aca7d541d.out). Owed: the push (the operator's y) and the Mobile CI run after it.
+
+2026-11-25 (orchestrator): pushed by the operator (push.log 2026-11-25T14:26:13Z, aca7d541d -> wf1/mb-rulings rc=0; origin confirmed at aca7d541d). Mobile CI run 45634768039 concluded success on aca7d541d (gh run view).
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
