@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-25T01:45:43.685Z file_sha256=f66197b229f3b16329d228a08d9e68e26a04530e376cb46475a8b076272182e3 prompt_sha256=a8f6ee604339c0fef76e31570d3b6498d2b8566b10cc7ccd9be02f091ed6efbc
+🔍 Lens review of docs/reports/reviews/task-456/context-r1.md (model: deepseek-reasoner)
+
+DEFER severity=MED — plan step 1 "`'reports_left: the line renders "6 of 10 reports left until 9 Dec 2026"'`" vs design "RR-0311 A.6 zero reports left still shows the line (task-352 question 1)" — the only person state the new case draws is 6 of 10, so a person at zero reports left can lose the A.6 line with no test failing — the X2 ruling names one getByText ("add 'reports_left' to line 35, and add one getByText") and this card adds nothing beyond its rulings (RR-0392), so it is in-bounds here; record the zero state for the next card that names it.
+
+DEFER severity=LOW — plan step 1 "`it asserts that getByTestId('parcel-search-reports-left') contains that text`" vs design (silent) "RR-0182 Increment 1·B builds A.6 (reports-left line, app search page)" — the test certifies the exact customer wording "reports left until" that no pasted design text gives, so a person could be shown copy the operator never approved and the suite would call it right — design silent on A.6 wording; a copy ruling would settle the string before this test freezes it.
+
+DEFER severity=LOW — plan step 1 "`'reports_left: the line renders "6 of 10 reports left until 9 Dec 2026"'`" vs design "RR-0310 A.6 reset date served as a Toronto-time label (task-320)" — the fixture pins one date, so the person who opens on or after the reset date sees a line whose date has moved and no test draws that state — bounded to one line, and the date is data-driven, so it is safe to defer to a card that names the reset-day state.
+
+REJECT — plan step 8 "`write no recorded statements in <dir> to stderr and return 1`" — the empty-folder exit code looks like a person-facing failure — it is a developer tool message; the customer never sees it, so it does not bear on the person's experience.
+
+REJECT — plan step 10 "`Refused, each with SQLSTATE 23514 and err.constraint equal to the name`" — a database refusing a row sounds like someone being blocked — no person reaches migration 309's CHECKs directly; the refusal protects the report numbers the person already sees, so it matches the design.
+
+REJECT — plan step 3 "`Add dated notes (prior text kept) at :2-3, :6 and :48-50`" — stale "reserved" headers look like misleading copy — they are test-file headers, invisible to the person; harmless to the experience.
+
+VERDICT: PASS on the person's experience
+States checked: search page first view with reports left (drawn), reports left at zero / post reset date (not drawn), held unsure semi lot gate (drawn, hidden as designed), error state (existing smoke), loading and repeat visit (no change), developer tool and database states (not person-facing)   Dead ends found: 0
+
+---
+⏱  47959ms (48.0s)
+📊 Tokens — total: 28253, input: 20081, output: 8172, reasoning: 7491

@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-25T01:45:43.684Z file_sha256=f66197b229f3b16329d228a08d9e68e26a04530e376cb46475a8b076272182e3 prompt_sha256=f68df02eb4f702c7dfba9e4c16e72f053479767cb821f9caa5f8a165c4fb7381
+🔍 Lens review of docs/reports/reviews/task-456/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — Step 8 (src-sql-ledger.mjs:810) — Making `--confirm` exit 1 on an empty/missing folder can refuse any hook or script that legitimately invokes the ledger on a folder that is empty for a given commit (e.g. a filtered subset or a fresh worktree); the plan audits no callers — add `grep -rn "src-sql-ledger" .husky package.json scripts` and confirm no caller passes an empty-but-valid folder, or scope the exit-1 to an explicit `--require-statements` flag.
+BUG severity=HIGH — Step 10 (migration-309-...db.test.ts) — `DROP CONSTRAINT <name>` … `ROLLBACK` has no try/finally; an assertion failure between DROP and ROLLBACK leaves the constraint dropped and an ACCESS EXCLUSIVE lock open, and with `--no-file-parallelism` a leaked transaction can contaminate the *next* `.db.test.ts` file — wrap in `try { ... } finally { await client.query('ROLLBACK') }` and delete the seeded row in the same finally.
+BUG severity=MED — (B) "Phone tests" red proof — phone red edits (steps 1–2 to `SearchBinding.tsx` / `[parcelId].tsx`) sit "outside the related run," so a forgotten restore is only caught at pre-push; add `git diff --exit-code mobile/...` to the per-red checklist exactly as the web red does, so a leaked edit is caught at restore time not at push.
+BUG severity=MED — Step 10 / Section E — If `test:db -- <path>` ORs with the `.db.test.ts` glob, the orchestrator's "run the new file" run actually executes every db test on a disk the plan itself says was at 0 GB (MD:2453); verify `jq '.scripts["test:db"]' package.json` and use `--testPathPattern` (or drop the glob) instead of relying on OR semantics.
+BUG severity=MED — Step 10 seed — The parcel seed copied from `enrich-parcels-scenarios.db.test.ts:30-32` may not satisfy columns/CHECKs added by migrations since that test was written; run the seed insert against a fresh container before trusting the "accepts/refuses" rows, or every "accepts" case becomes a stale-seed red herring.
+BUG severity=MED — Step 8 (`readRecordedStatements`, :308) — "missing folder exits 1 and names it" assumes the reader on a missing dir returns `[]` so `length === 0` runs and `no recorded statements in <dir>` prints; if it throws ENOENT instead the tool exits non-zero via an uncaught throw that may not "name it" in the asserted form — read `readRecordedStatements`'s missing-dir branch before writing the assertion.
+BUG severity=MED — Step 7 — The 401 / uid-ignored assertions depend on route order (session → rate-limit → pool); if the rate-limit key is derived from a source other than `ctx.uid`, `JSON.stringify(poolQuery.mock.calls)` can lack OTHER even when the route forwarded OTHER — verify the argument flow in `entitlement/route.ts:29-39` and also assert `readParcelToolUsage.mock.calls[0][1] === UID`.
+BUG severity=MED — Step 7 (N3) — Sibling routes: grep `src/app/api/parcels/**` for `searchParams.get('uid')`; if any route beyond the three tested trusts a caller-supplied uid, the security gap is broader than the test file covers (potential auth bypass, HIGH if found).
+BUG severity=MED — Step 10 (D5) — Sibling migrations: `grep -rn "_iff_\|CHECK.*iff" migrations/ | cut -d: -f1 | sort -u` and cross-check `ls src/tests/db/`; any other migration carrying the same iff-constraint class with no `*.db.test.ts` is the identical untested-constraint bug this card fixes.
+BUG severity=MED — Step 1 (X2) — Sibling states: diff the keys of `mobile/__tests__/fixtures/parcelSearch.situations.json` against `GOLDEN_SITUATIONS` at smoke :35 — `reports_left` may not be the only fixture state the smoke test never renders.
+BUG severity=MED — Step 2 (X5) — Sibling screens: `grep -rn "data && !" mobile/app mobile/src` for other gate conditions sharing the `data && !ask` shape (missing loading/error state opens or closes the wrong screen); size the class before declaring one row sufficient.
+BUG severity=MED — Step 3 (X6) — Sibling operators: the walker climbs only `&&`/`||`, but `a ?? b` (nullish) and a nested ternary returning JSX are the same root cause (a discriminant hidden behind an operator the lock does not traverse) — add one planted case each for `??` and a nested ternary.
+DEFER severity=MED — Step 5 — `within 0.05 of m × 3.28084` is magnitude-dependent (the 3.2808-vs-3.28084 gap alone exceeds 0.05 near m≈150); bound the generated `m` to the real massing range and/or use `toBeCloseTo` with relative tolerance, else the test is either too tight at scale or too loose at 0.
+DEFER severity=MED — Step 6 — Generator must enforce `min ≤ max` and needs explicit boundary cases (`v === min`, `v === max`, `v === 0`, `min === max`); the plan says "for any min ≤ max" but names no boundary assertions, so the clamp at the endpoints is untested.
+DEFER severity=MED — Section D1 — The throwaway-container recommendation has no precondition fallback: if disk is still 0 GB the image cannot pull; add "clear lane folders per RR-0416 first" as an explicit precondition rather than a parenthetical.
+DEFER severity=MED — Step 9 (D4) — "same case count passes before and after (39)" proves nothing about behaviour; capture the pre-refactor name→pass map (`--reporter=json`) and diff it after, so a silently-mutated builder field is caught.
+DEFER severity=LOW — Step 8 — Sibling scripts: `grep -rn "rows.length > 0 ? 1 : 0" scripts/analysis/` — other analysis tools with the same "empty input exits 0" bug are the same class, cheap to widen now or note as a follow-up card.
+DEFER severity=LOW — Step 10 — afterAll deletes the seeded parcel by captured id; if the insert throws before the id is assigned, afterAll runs with `undefined` — guard the delete with `if (id) await ...` to keep cleanup idempotent.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers:
+- Ledger callers not audited: the D2 exit-1 can block every commit if any hook/script runs the ledger on a folder that is empty for that commit (Step 8).
+- Unprotected DROP CONSTRAINT transaction in the DB test: a mid-test throw leaks the dropped constraint + ACCESS EXCLUSIVE lock and can contaminate the next `.db.test.ts` file (Step 10).
+- Security-test sibling not swept: `?uid=`-trusting routes outside the three tested ones would leave a real auth gap the card claims to close (Step 7 / N3).
+
+Top 3 unverified data premises (with verification):
+- Seed satisfies the *current* schema: run the copied insert against a fresh container — `npm run test:db -- src/tests/db/migration-309-parcel-maxbld-scenarios.db.test.ts` on a clean container; a stale seed surfaces as a spurious "accepts" failure.
+- `readRecordedStatements` behavior on a missing dir returns `[]` (not a throw): `sed -n '290,330p' scripts/analysis/src-sql-ledger.mjs` and trace the missing-dir branch before asserting "exits 1 and names it".
+- Coverage column permits exactly 100 and the cap is intended: `grep -n -i "coverage" migrations/*.sql` for the numeric precision (e.g. `numeric(4,2)` max 99.99 would reject 100) plus confirm the bylaw cap is genuinely 100, else the property test codifies a masking clamp.
+
+---
+⏱  92911ms (92.9s)
+📊 Tokens — total: 37912, input: 20968, output: 16944, reasoning: 15063

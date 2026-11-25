@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-25T01:45:43.684Z file_sha256=f66197b229f3b16329d228a08d9e68e26a04530e376cb46475a8b076272182e3 prompt_sha256=b16b7c4187c88cb0b30b832a8d7c1561039e31ab9f3b6e8a6d579f6ddc17f673
+🔍 Lens review of docs/reports/reviews/task-456/context-r1.md (model: deepseek-reasoner)
+
+DEFER severity=MED — scripts/analysis/src-sql-ledger.mjs:810, :816 "return r.rows.length > 0 ? 1 : 0;" — the plan guards only "after :810" while the same `rows.length > 0 ? 1 : 0` sits at :816, so a `--confirm` call routed through :816 still exits 0 on an empty folder — put the zero-length guard before both return sites and assert each mode separately.
+
+DEFER severity=MED — plan step 8 "after :810, if `readRecordedStatements(dir).length === 0`, write `no recorded statements in <dir>` to stderr and return 1" — a missing folder and an empty folder collapse into one message, so a mistyped path reads as a legitimately empty ledger — probe the folder first and emit "folder not found: <dir>" on ENOENT, "no recorded statements in <dir>" only when it exists and is empty.
+
+DEFER severity=MED — plan step (B) "stage the test file, leave the edited source file unstaged, and try to commit. The pre-commit related run reads the working tree" — any unrelated hook refusal (lint, lock, partial-staging) produces the same non-zero exit and is saved as `red-<id>.out`, so the artifact does not prove the named test failed — require the saved output to name the new test file and its failing assertion before accepting the red.
+
+DEFER severity=MED — plan step 6 "'for any min ≤ max and finite v: the result is in [min,max] (and v itself when in range), or it throws only under fail'" — NaN, undefined and infinite v are precluded by the generator, so a clamp like `Math.max(b.min, v)` that returns NaN for bad input passes the property — add one case with a non-finite v and assert the defined fallback or throw.
+
+DEFER severity=MED — plan step 1 asserts `getByTestId('parcel-search-reports-left')` on the fixture `"entitlement":{"reportsLeft":6,"reportsLimit":10,…}` only — the zero case is never rendered, so a falsy guard that hides the line at 0 passes, contrary to A.6 (RR-0311, zero reports left still shows the line) — add a second situation with reportsLeft 0 and assert the line still renders.
+
+DEFER severity=LOW — plan step 7 "the lot-size insert gets UID" — POST lot-size is a write and only a single submit is exercised, no key or dedup is named, cannot see whether two submits insert twice — send the same POST twice and assert one row, or state the unique key that makes the repeat a no-op.
+
+DEFER severity=LOW — plan step 10 "Seed one parcel the way enrich-parcels-scenarios.db.test.ts:30-32 does, and delete it in afterAll." — cleanup runs only if the suite reaches afterAll, so a crash against the external test stack (BUILDO_TEST_DB_EXTERNAL=1) leaves the seed and a re-run meets the same row — delete any prior row for that id before the insert so a repeat run is a no-op.
+
+REJECT — plan step 10 "Wrapped in `describe.skipIf(!dbAvailable())`." — a skipped test reports green and looks like a fail-open for acceptance #4 — the plan already holds acceptance #4 open until the operator run passes (D1), so a skip cannot close it.
+
+```
+VERDICT: PASS on error-path safety
+Paths walked: missing folder, empty folder, red-proof refusal, invalid input (NaN/undefined), zero-count render, repeat POST write, re-run of the db seed, missing DB skip   Unguarded: 6
+```
+
+---
+⏱  44626ms (44.6s)
+📊 Tokens — total: 27928, input: 20082, output: 7846, reasoning: 7034
