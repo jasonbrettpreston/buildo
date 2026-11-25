@@ -5,12 +5,10 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-24T16:12:00Z'
+updated_date: '2026-11-25T17:03:00Z'
 due_date: '2026-11-26'
 labels:
-  - S
-  - plan:PROOF.S
-  - unverified
+  - McFixV2
 milestone: m-1
 dependencies:
   - TASK-12

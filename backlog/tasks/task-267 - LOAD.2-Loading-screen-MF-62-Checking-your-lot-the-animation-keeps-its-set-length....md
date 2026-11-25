@@ -7,15 +7,10 @@ status: WAITS
 assignee:
   - '@lane-BL-LOAD2'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-21T00:25:00Z'
+updated_date: '2026-11-25T17:03:00Z'
 due_date: '2026-11-26'
 labels:
-  - S
-  - plan:LOAD.2
-  - unverified
-  - dep-dropped
-  - McFix F
-  - McFix
+  - McFixV2
 milestone: m-1
 dependencies:
   - TASK-266

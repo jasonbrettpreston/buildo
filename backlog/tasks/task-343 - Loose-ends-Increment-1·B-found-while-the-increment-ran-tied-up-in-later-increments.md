@@ -7,10 +7,9 @@ status: WAITS
 assignee:
   - '@lane-BL-LOOSE'
 created_date: '2026-11-19T20:30:00Z'
-updated_date: '2026-11-24T14:47:00Z'
+updated_date: '2026-11-25T17:03:00Z'
 labels:
-  - S
-  - loose-ends
+  - McFixV2
 milestone: m-1
 dependencies:
   - TASK-268

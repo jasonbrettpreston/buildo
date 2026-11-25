@@ -7,12 +7,9 @@ status: WAITS
 assignee:
   - '@lane-BL-LOAD4'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-20T17:36:00Z'
+updated_date: '2026-11-25T17:03:00Z'
 labels:
-  - S
-  - plan:LOAD.4
-  - McFix F
-  - McFix
+  - McFixV2
 milestone: m-1
 dependencies:
   - TASK-267
