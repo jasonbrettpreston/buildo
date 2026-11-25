@@ -9,6 +9,9 @@
 // declared closed list; and the layout rules hold on every tree: Text carries size, weight and colour; Button and Input carry min-h-[44px] and no
 // other min-h-; each dark: token of a vendored variant in use has a twin with the same chain (P35-D2 a); a checked card has border-primary twins;
 // SELECT is disabled with nothing checked; every component is in mapping.mobile.SEARCH; every child node carries a key (RG-15).
+// Dated 2026-11-25 (task-465 McFixV2.1; RR-0483, RR-0487, RR-0495; prior text kept): the radio cards and SELECT are gone, so their two rules
+// (a checked card's border twins, SELECT disabled with nothing checked) and their planted proofs go with them; a new rule refuses any radio role,
+// the Select testID and an Alert around the outside-Toronto line. 12 goldens (the typing state `partial`, golden `suggest`).
 import fs from 'node:fs';
 import path from 'node:path';
 import { DERIVED_NAMES, SEARCH_CANDIDATE_LIMIT, SEARCH_DEBOUNCE_MS, SEARCH_MIN_QUERY_LEN, SEARCH_SLICE, searchProps, type PropsNode } from '@/components/surfaces/SearchBinding';
@@ -23,8 +26,9 @@ const goldens = (rj(path.join(__dirname, 'fixtures/surfaces/mobile_parcel_search
 const bindings = rj(path.join(REPO, 'scripts/surfaces/_schema/bindings.json')) as { mapping: { mobile: { SEARCH: string[] } }; touch_targets: { mobile: Record<string, string[]> } };
 
 /** The named cases (plan v3 §7): situations that are not committed goldens but are asserted below. */
+// Dated 2026-11-25 (task-465; prior list kept as text: none_checked and prompt_type_more): typing_unique, deleting and short_query_enter.
 export const NAMED_CASES = [
-  'rate_limited_zero', 'fetching_with_candidates', 'none_checked', 'prompt_type_more', 'blank_idle', 'outside_toronto', 'typing_ahead',
+  'rate_limited_zero', 'fetching_with_candidates', 'typing_unique', 'deleting', 'short_query_enter', 'blank_idle', 'outside_toronto', 'typing_ahead',
   'navigating_intersection', 'navigating_multi_parcel', 'navigating_unlinked',
 ];
 
@@ -62,13 +66,12 @@ export function layoutProblems(t: PropsNode, darkChains: { outline: string[]; in
     }
     const chains = n.component === 'Input' ? darkChains.input : n.component === 'Button' && n.props.variant === 'outline' ? darkChains.outline : [];
     for (const c of chains) if (!tk.some((x) => x.startsWith(c))) out.push(`${at}: no ${c} twin`);
-    if (n.props.role === 'radio' && (n.props.accessibilityState as Json | undefined)?.checked === true && !(tk.includes('border-report-ink') && tk.includes('dark:border-report-ink'))) out.push(`${at}: a checked card without border-report-ink dark:border-report-ink`);
+    if (n.props.role === 'radio') out.push(`${at}: a radio card (task-465: rows are taps, RR-0487)`);
+    if (n.props.testID === 'parcel-search-select') out.push(`${at}: a Select button (task-465: RR-0487)`);
+    if (n.component === 'Alert' && n.props.testID === 'parcel-search-outside-toronto') out.push(`${at}: the outside-Toronto line is an Alert (task-465: a drop-down line)`);
     for (const c of n.children) if (isNode(c)) walk(c, n);
   };
   walk(t, null);
-  const cards = nodes(t).filter((n) => n.props.role === 'radio');
-  const select = byTestID(t, 'parcel-search-select');
-  if (select && !cards.some((c) => (c.props.accessibilityState as Json).checked === true) && (select.props.disabled !== true || select.props.onPress !== null)) out.push('SELECT is enabled with nothing checked');
   for (const name of refs(t, 'derived')) if (!DERIVED_NAMES.some((re) => re.test(name))) out.push(`derived name ${name} is not declared`);
   return out;
 }
@@ -88,8 +91,9 @@ describe('mobile_parcel_search goldens (FE-31; plan v3 §7)', () => {
   const names = Object.keys(goldens);
   // Dated 2026-11-20 (task-354, MOBILE.CI-1; Mobile CI run 44741125636): the committed set is 11 since ace05ccee (2026-11-19, SRCH.A6, the reports_left
   // golden of the reports-left line); the pin said 10 and was never run. The check is unchanged: the exact set of names, then each golden equals searchProps.
-  it('11 committed goldens, one per declared state, each naming a situation; searchProps(situation) equals the golden props exactly', () => {
-    expect(names.sort()).toEqual(['ambiguous', 'empty', 'error', 'loading', 'miss', 'rate_limited', 'redirect', 'reports_left', 'schema_drift', 'static', 'unauthorized']);
+  // Dated 2026-11-25 (task-465; prior title kept: "11 committed goldens, ..."): 12, the typing state's golden suggest added.
+  it('12 committed goldens, one per declared state, each naming a situation; searchProps(situation) equals the golden props exactly', () => {
+    expect(names.sort()).toEqual(['ambiguous', 'empty', 'error', 'loading', 'miss', 'rate_limited', 'redirect', 'reports_left', 'schema_drift', 'static', 'suggest', 'unauthorized']);
     for (const n of names) {
       const g = goldens[n] as { situation: string; props: PropsNode; target: string; surface: string };
       expect([n, g.surface, g.target, g.situation in situations]).toEqual([n, 'mobile_parcel_search', 'mobile', true]);
@@ -127,29 +131,33 @@ describe('mobile_parcel_search goldens (FE-31; plan v3 §7)', () => {
     expect(chains).toEqual({ outline: ['dark:bg-', 'dark:border-', 'dark:active:bg-'], input: ['dark:bg-'] });
     for (const k of [...names.map((n) => goldens[n]!.situation as string), ...NAMED_CASES]) expect([k, layoutProblems(searchProps(situations[k] as SearchSituation), chains)]).toEqual([k, []]);
   });
-  it('RED (planted): a missing dark twin, a sub-44 chip, a checked card without border-primary, SELECT enabled with nothing checked, an undeclared derived name, a Card, a keyless child', () => {
+  // Dated 2026-11-25 (task-465; prior title kept: "RED (planted): a missing dark twin, a sub-44 chip, a checked card without border-primary, SELECT enabled
+  // with nothing checked, an undeclared derived name, a Card, a keyless child"): the card and SELECT proofs go with their blocks; three new ones come in.
+  it('RED (planted): a missing dark twin, a sub-44 row, an undeclared derived name, a Card, a keyless child, a radio row, a Select button, an Alert outside line', () => {
     const chains = vendorDarkChains();
-    const t = searchProps(situations.ambiguous as SearchSituation);
+    const t = searchProps(situations.suggest as SearchSituation);
     const col = (t.children[0] as PropsNode).children[0] as PropsNode;
-    const card = col.children.find((c) => isNode(c) && c.props.role === 'radio' && (c.props.accessibilityState as Json).checked) as PropsNode;
-    card.props.className = String(card.props.className).replace('dark:border-report-ink', '').replace('dark:active:bg-report-sky', '');
-    const other = col.children.find((c) => isNode(c) && c.props.role === 'radio' && !(c.props.accessibilityState as Json).checked) as PropsNode;
-    other.props.className = String(other.props.className).replace('min-h-[44px]', 'min-h-[44px] sm:min-h-8');
+    const input = byTestID(t, 'parcel-search-input') as PropsNode;
+    input.props.className = String(input.props.className).replace('dark:bg-transparent', '');
+    const row = byTestID(t, 'parcel-candidate-100102') as PropsNode;
+    row.props.className = String(row.props.className).replace('min-h-[48px]', 'min-h-[48px] sm:min-h-8');
+    const other = byTestID(t, 'parcel-candidate-100104') as PropsNode;
+    other.props.role = 'radio';
     col.children.push({ component: 'Card', props: {}, children: [{ derived: 'other' }] });
+    col.children.push({ component: 'Button', props: { key: 'select', testID: 'parcel-search-select', className: 'min-h-[44px]' }, children: [] });
+    col.children.push({ component: 'Alert', props: { key: 'outside', testID: 'parcel-search-outside-toronto' }, children: [] });
     const p = layoutProblems(t, chains);
     expect(p).toEqual(expect.arrayContaining([
-      '100102: no dark:active:bg- twin',
-      '100102: a checked card without border-report-ink dark:border-report-ink',
+      'input: no dark:bg- twin',
       // Dated 2026-11-20 (task-354): the message names the whole list since 8a5387194 (2026-11-19, SUITE.FIX-2: touch_targets.mobile.Button lists 44 and 48 px).
-      '100100: Button min-h tokens ["min-h-[44px]","sm:min-h-8"] (need exactly one of min-h-[44px]|min-h-[48px])',
+      '100102: Button min-h tokens ["min-h-[48px]","sm:min-h-8"] (need exactly one of min-h-[44px]|min-h-[48px])',
+      '100104: a radio card (task-465: rows are taps, RR-0487)',
+      'select: a Select button (task-465: RR-0487)',
+      'outside: the outside-Toronto line is an Alert (task-465: a drop-down line)',
       'Card: Card is not in mapping.mobile.SEARCH',
       'Card: a child node without a key',
       'derived name other is not declared',
     ]));
-    const none = searchProps(situations.none_checked as SearchSituation);
-    const sel = byTestID(none, 'parcel-search-select') as PropsNode;
-    sel.props.disabled = false;
-    expect(layoutProblems(none, chains)).toEqual(['SELECT is enabled with nothing checked']);
   });
 });
 
@@ -165,39 +173,52 @@ describe('named cases (plan v3 §7; must-survive rows 7-17)', () => {
     expect(ids(t)).not.toEqual(expect.arrayContaining(['parcel-search-retry']));
     expect(refs(t, 'contract')).toContain('contract_parcels_lookup.errors.429.retryAfterSeconds');
   });
-  it('the spinner shows over still-listed candidates; the block order is notices, list, refine, miss, prompt', () => {
+  // Dated 2026-11-25 (task-465; prior title kept: "the spinner shows over still-listed candidates; the block order is notices, list, refine, miss, prompt"):
+  // the lines sit in the drop-down under the box: the miss and the outside line, then the rows, the one hint line, the help link; the notices follow the box.
+  it('the spinner shows over still-listed rows; the drop-down order is the lines, the rows, the hint or refine line, the help link', () => {
     const t = at('fetching_with_candidates');
     expect(ids(t)).toEqual(expect.arrayContaining(['parcel-search-spinner', 'parcel-candidate-100100']));
-    const order = ids(at('rate_limited_zero')).filter((x) => /ratelimit|error|retry|candidate|refine|empty|prompt/.test(x));
+    expect(ids(t).filter((x) => /drop|candidate|refine|hint|empty|report/.test(x))).toEqual(['parcel-search-drop', 'parcel-candidate-100100', 'parcel-candidate-100102', 'parcel-candidate-100104', 'parcel-search-refine', 'parcel-search-report']);
+    expect(ids(at('ambiguous')).filter((x) => /drop|candidate|refine|hint|empty|report/.test(x))).toEqual(['parcel-search-drop', 'parcel-candidate-100181', 'parcel-candidate-100182', 'parcel-candidate-100183', 'parcel-search-hint', 'parcel-search-report']);
+    const order = ids(at('rate_limited_zero')).filter((x) => /ratelimit|error|retry|candidate|refine|empty/.test(x));
     expect(order).toEqual(['parcel-search-ratelimit']); // task-450 L3: one message for a retry-after of 0
   });
-  it('the prompt shows for a short query and not for an idle 3+ query; outside Toronto shows no spinner and no prompt', () => {
-    expect(ids(at('prompt_type_more'))).toContain('parcel-search-prompt');
-    expect(ids(at('blank_idle')).filter((x) => /prompt|empty|refine|error|ratelimit|entitlement|outside|candidate/.test(x))).toEqual([]);
+  // Dated 2026-11-25 (task-465, RR-0495; prior title kept: "the prompt shows for a short query and not for an idle 3+ query; outside Toronto shows no spinner and no prompt").
+  it('a short Enter shows the miss line; an idle typed query shows no line; outside Toronto after Enter shows its drop-down line and no spinner', () => {
+    expect(ids(at('short_query_enter'))).toContain('parcel-search-empty');
+    expect(ids(at('blank_idle')).filter((x) => /prompt|empty|refine|error|ratelimit|entitlement|outside|candidate|drop/.test(x))).toEqual([]);
     expect(ids(at('outside_toronto')).filter((x) => /prompt|spinner/.test(x))).toEqual([]);
-    expect(ids(at('outside_toronto'))).toContain('parcel-search-outside-toronto');
+    expect(ids(at('outside_toronto'))).toEqual(expect.arrayContaining(['parcel-search-drop', 'parcel-search-outside-toronto']));
+    expect(nodes(at('outside_toronto')).some((n) => n.component === 'Alert')).toBe(false);
   });
-  it('no recent searches: no chip row; three: three chips with the legacy testIDs and labels', () => {
+  it('no recent searches: no chip row; three: three chips with the legacy testIDs and labels; the chips hide once anything is typed (task-465 O7)', () => {
     expect(nodes(at('blank_idle')).some((n) => n.props.key === 'chips')).toBe(false);
     expect(ids(at('static')).filter((x) => x.startsWith('parcel-search-suggestion-'))).toEqual(['parcel-search-suggestion-Queen & Spadina', 'parcel-search-suggestion-26 Hurlingham Cres', 'parcel-search-suggestion-Bathurst St']);
+    expect(nodes(at('empty')).some((n) => n.props.key === 'chips')).toBe(false);
   });
-  it('the field shows the raw input at once while everything else reads the debounced query (row 22)', () => {
+  it('the field shows the raw input at once while everything else reads the debounced query (row 22); Enter fires submit (task-465)', () => {
     const input = byTestID(at('typing_ahead'), 'parcel-search-input') as PropsNode;
     expect(input.props.value).toEqual({ derived: 'input' });
+    expect(input.props.onSubmitEditing).toEqual({ action: 'submit' });
   });
-  it('the map kinds and unique carry their route as navigate and render no address list (row 28)', () => {
+  it('the map kinds and unique carry their route as navigate and render no radio card (row 28)', () => {
     for (const k of ['navigating_intersection', 'navigating_multi_parcel', 'navigating_unlinked', 'redirect']) {
       const t = at(k);
       expect([k, t.props.navigate]).toEqual([k, (situations[k] as SearchSituation).route]);
       expect(nodes(t).some((n) => n.props.role === 'radio')).toBe(false);
     }
+    expect(at('typing_unique').props.navigate).toBeUndefined();
+    expect(ids(at('typing_unique'))).toContain('parcel-candidate-100026');
   });
-  it('a candidate tap selects (no route); SELECT pushes the selected lot by the legacy route string', () => {
+  // Dated 2026-11-25 (task-465; prior title kept: "a candidate tap selects (no route); SELECT pushes the selected lot by the legacy route string").
+  it('a row tap pushes its lot by the legacy route string; no Select; the typing list keeps the cap and the refine line; the first delete draws no rows', () => {
     const t = at('ambiguous');
-    expect((byTestID(t, 'parcel-candidate-100100') as PropsNode).props.onPress).toEqual({ action: 'select', parcelId: { contract: 'contract_parcels_lookup.candidates.0.parcelId' } });
-    expect((byTestID(t, 'parcel-search-select') as PropsNode).props.onPress).toEqual({ action: 'push', route: '/(app)/parcel-tool/100102' });
-    expect(nodes(t).filter((n) => n.props.role === 'radio')).toHaveLength(SEARCH_CANDIDATE_LIMIT);
-    expect(ids(t)).toContain('parcel-search-refine');
+    expect((byTestID(t, 'parcel-candidate-100181') as PropsNode).props.onPress).toEqual({ action: 'push', route: '/(app)/parcel-tool/100181' });
+    expect(byTestID(t, 'parcel-search-select')).toBeUndefined();
+    const s = at('suggest');
+    expect(ids(s).filter((x) => x.startsWith('parcel-candidate-'))).toHaveLength(SEARCH_CANDIDATE_LIMIT);
+    expect(ids(s)).toContain('parcel-search-refine');
+    expect(ids(at('deleting')).filter((x) => /candidate|drop/.test(x))).toEqual([]);
   });
 });
 
@@ -211,7 +232,8 @@ describe('one home for the config values (row 24, RG-14)', () => {
     expect(SEARCH_SLICE.config).toEqual({ debounce_ms: SEARCH_DEBOUNCE_MS, min_query_len: SEARCH_MIN_QUERY_LEN, entitlement_stale_ms: 0, lookup_retry_max: 3, lookup_stale_ms: 60000, candidate_cap: 10, recent_max: 3 }); // FIX.TUNE (task-378): the phone tunables are declared beside them; task-454: the cap and the recent count
     // Dated 2026-11-24 (task-450 L5 and Q8.2; prior text kept: the strings held "at least ${SEARCH_MIN_QUERY_LEN} characters" and "More than
     // ${SEARCH_CANDIDATE_LIMIT} lots"): the minimum length is a {min} template filled from the setting, and the refine line names no count.
-    expect(SEARCH_SLICE.content['search.prompt']).toContain('at least {min} characters');
+    // Dated 2026-11-25 (task-465, RR-0495; prior line kept as text: search.prompt held "at least {min} characters"): the prompt key is dropped.
+    expect(SEARCH_SLICE.content).not.toHaveProperty('search.prompt');
     expect(SEARCH_SLICE.content['search.input.hint']).toContain('at least {min} characters');
     expect(SEARCH_SLICE.content['list.refine']).toBe('Add a house number to narrow it down.');
   });
@@ -254,7 +276,7 @@ describe('MF-58 the legal line on the search page (ruling 2026-11-10 items 16 an
       expect([k, ks.filter((x) => x === 'legal').length]).toEqual([k, 1]);
       expect([k, ks[ks.length - 1]]).toEqual([k, 'legal']);
       expect([k, ks.includes('reports-left')]).toEqual([k, k === 'reports_left']); // only the reports_left situation carries an entitlement
-      if (ks.includes('reports-left')) expect([k, ks[ks.indexOf('pill') + 1]]).toEqual([k, 'reports-left']);
+      if (ks.includes('reports-left')) expect([k, ks[ks.indexOf('box') + 1]]).toEqual([k, 'reports-left']); // task-465: the pill is now the box
       const legal = column(t).children.find((c) => isNode(c) && c.props.key === 'legal') as PropsNode;
       expect([k, legal.component, legal.props.testID, legal.children]).toEqual([k, 'Text', 'parcel-search-legal', [{ content: 'search.legal' }]]);
     }

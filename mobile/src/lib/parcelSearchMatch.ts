@@ -302,6 +302,9 @@ export function classifyParcelSearchError(error: unknown, schemaDrift: boolean):
   return { rateLimited: retryAfterSeconds != null, retryAfterSeconds, entitlement, unexpected, schemaDrift: unexpected && schemaDrift };
 }
 
+/** task-465 (McFixV2.1; RR-0483, RR-0487): one row of the drop-down under the box: the address, and the page a tap on it opens. */
+export type SearchRow = { parcelId: string; address: string; route: string };
+
 export type SearchSituation = {
   /** The raw field text (shown at once); everything else reads the debounced query. */
   input: string;
@@ -314,52 +317,100 @@ export type SearchSituation = {
   /** Show the refine line: the list hit the cap, or (task-450, ruled B) a candidate list for a query with no house number; the list stays. */
   overCap: boolean;
   showMiss: boolean;
-  showPrompt: boolean;
   /** On-device recent searches, newest first (P35-D16 a). */
   recent: string[];
-  /** The checked address card, or null (P35-D17 a: nothing pre-checked). */
-  selectedParcelId: string | null;
-  /** Where the outcome navigates (unique, map kinds), else null: the screen's effect pushes it. */
+  /** task-465 (RR-0483): the text the user ran with Enter (or a chip tap), else null. Prior field (kept as text): selectedParcelId, the checked
+   *  address card of P35-D17 a; the radio cards and SELECT are gone on the phone (RR-0487), so the field left the situation. */
+  submitted: string | null;
+  /** task-465: the drop-down rows (text_candidates capped; unique gives its match; multi_parcel its first address with the map route). */
+  rows: SearchRow[];
+  /** task-465: the one line under the rows: 'several' (more than one match, after Enter), 'refine' (the cap, or a street with no number), or none. */
+  hint: 'several' | 'refine' | null;
+  /** task-465: the outside-Toronto line in the drop-down, after Enter only (RR-0483; finding 32). Prior field (kept as text): showPrompt, the
+   *  "Type at least N characters" line, dropped by RR-0495: a too-short Enter shows the miss line instead. */
+  showOutside: boolean;
+  /** task-465: the recent-search chips show at rest only (an empty box; mock state 1). */
+  showChips: boolean;
+  /** task-465 O7: the reports-left line hides while the drop-down is open (mock states 2 to 5). */
+  showCount: boolean;
+  /** Where the outcome navigates (unique, map kinds), else null: the screen's effect pushes it. task-465: only for a submitted query whose fetch has settled. */
   route: string | null;
   /** SRCH.A6 (task-320): the served count fields the reports-left line binds; absent or null (loading, read failed, no plan) draws no line. */
   entitlement?: EntitlementLine | null;
 };
 
-/** The situation of one render, from the hook's values (rows 14, 16; the truth table in parcelSearchMatch.test.ts). */
+/**
+ * The situation of one render, from the hook's values (rows 14, 16; the truth table in parcelSearchMatch.test.ts).
+ *
+ * Dated 2026-11-25 (task-465 McFixV2.1; RR-0483 MORNING-DECISIONS.md:2523 "your typed search does not execute until you press enter or select an
+ * address. And if you press enter with an incomplete address - you get the error"; RR-0485 :2533 "they need to press enter"; RR-0487 :2543 "465 Mock
+ * approved"; prior text kept): the match-type ruling of 2026-09-16 above ("unique -> navigate straight to the lot") is replaced in part. Nothing opens
+ * while typing: unique and the map kinds (multi_parcel, unlinked, intersection) open only on Enter (`submitted`) or a tap on a row. While typing the
+ * rows drop under the box; the miss, the prompt and the outside-Toronto line show only after Enter. The rows hide as soon as the box no longer starts
+ * with the text they were found for (the first delete clears the list).
+ */
 export function buildSearchSituation(args: {
   input: string;
   debounced: string;
+  /** task-465: the text run with Enter or a chip tap, else null; it wins over the debounced text. */
+  submitted: string | null;
   data: ConsumerParcelLookupResult | undefined;
   error: unknown;
   isFetching: boolean;
   schemaDrift: boolean;
   recent: readonly string[];
-  selectedParcelId: string | null;
   cap: number;
   minQueryLen: number;
   /** SRCH.A6: the entitlement read's data, undefined while loading or after a failed read. */
   entitlement?: EntitlementLine | null;
 }): SearchSituation {
-  const { debounced, data, error, isFetching } = args;
-  const outcome = deriveMatchType(debounced, error ? undefined : data);
+  const { data, error, isFetching, submitted } = args;
+  const query = submitted ?? args.debounced;
+  const outcome = deriveMatchType(query, error ? undefined : data);
   const candidates = outcome === 'text_candidates' && data ? data.candidates.slice(0, args.cap) : [];
   // task-450 (2a, RR-0443 c; QUESTIONS-RULED.md Q8.1 B): a candidate list for a query with no house number also asks for one; the rows are kept.
-  const noNumber = outcome === 'text_candidates' && !hasHouseNumber(debounced);
-  const selected = candidates.some((c) => c.parcelId === args.selectedParcelId) ? args.selectedParcelId : null;
+  const noNumber = outcome === 'text_candidates' && !hasHouseNumber(query);
+  const overCap = noNumber || isOverCandidateCap(candidates, args.cap);
+  const ran = submitted !== null;
+  // task-465 (mock "The list clears on the first delete"): the rows belong to `query`; once the box no longer starts with it they hide.
+  const current = args.input.trim().toLowerCase().startsWith(query.trim().toLowerCase());
+  const lot = (parcelId: string): string => parcelSearchRoute('unique', { parcelId, query }) ?? '';
+  const first = data?.candidates[0];
+  const rows: SearchRow[] = !current
+    ? []
+    : outcome === 'text_candidates'
+      ? candidates.map((c) => ({ parcelId: c.parcelId, address: c.address, route: lot(c.parcelId) }))
+      : outcome === 'unique' && data?.match
+        ? [{ parcelId: data.match.parcelId, address: data.match.address, route: lot(data.match.parcelId) }]
+        : outcome === 'multi_parcel' && first
+          ? [{ parcelId: first.parcelId, address: first.address, route: parcelSearchRoute('multi_parcel', { query }) ?? '' }]
+          : [];
+  // O4 (QUESTIONS-RULED.md; RR-0483 "you get the error", RR-0443 c "select from the available addresses that are close"): one close row after Enter
+  // shows the miss line above it. RR-0495 (O14, second addendum): a non-blank Enter shorter than min_query_len shows the miss line too (nothing is sent).
+  const short = query.trim().length < args.minQueryLen && outcome !== 'outside_toronto';
+  const showMiss = ran && error == null && (short || outcome === 'no_match' || (outcome === 'text_candidates' && rows.length === 1));
+  const showOutside = ran && outcome === 'outside_toronto';
+  // The refine line keeps its task-450 timing (ruled B, kept: it shows with the rows while typing too); the several-matches line shows after Enter only.
+  const hint = outcome !== 'text_candidates' || rows.length === 0 ? null : overCap ? 'refine' : ran && rows.length > 1 ? 'several' : null;
+  const dropOpen = rows.length > 0 || showMiss || showOutside || hint !== null;
   return {
     input: args.input,
-    query: debounced,
+    query,
     outcome,
     isFetching,
     errors: classifyParcelSearchError(error, args.schemaDrift),
     candidates,
-    overCap: noNumber || isOverCandidateCap(candidates, args.cap),
+    overCap,
     // task-450 V4 (Spec 99 §6.5 :527-530): a settled miss keeps its line on a re-fetch; isFetching is not a render gate here.
-    showMiss: outcome === 'no_match' && error == null,
-    showPrompt: outcome !== 'outside_toronto' && debounced.trim().length < args.minQueryLen && error == null,
+    showMiss,
     recent: [...args.recent],
-    selectedParcelId: selected,
-    route: parcelSearchRoute(outcome, { parcelId: data?.match?.parcelId ?? null, query: debounced }),
+    submitted,
+    rows,
+    hint,
+    showOutside,
+    showChips: args.input.trim() === '',
+    showCount: !dropOpen,
+    route: ran && !isFetching ? parcelSearchRoute(outcome, { parcelId: data?.match?.parcelId ?? null, query }) : null,
     // Only when a read answered: the key is left off otherwise so every other situation is unchanged.
     ...(args.entitlement ? { entitlement: { reportsLeft: args.entitlement.reportsLeft, reportsLimit: args.entitlement.reportsLimit, resetsOnDisplay: args.entitlement.resetsOnDisplay } } : {}),
   };

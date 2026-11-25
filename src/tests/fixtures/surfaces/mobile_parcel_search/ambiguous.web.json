@@ -69,1125 +69,392 @@
             ]
           },
           {
-            "component": "Group",
+            "component": "Stack",
             "props": {
-              "key": "pill",
-              "className": "flex-nowrap items-center gap-1 rounded-full border border-zinc-800 bg-zinc-900 py-1 pl-4 pr-1"
+              "key": "box",
+              "testID": "parcel-search-box",
+              "className": "w-full gap-0 overflow-hidden rounded-[26px] border border-zinc-800 bg-zinc-900"
             },
             "children": [
               {
-                "component": "TextInput",
+                "component": "Group",
                 "props": {
-                  "key": "input",
-                  "testID": "parcel-search-input",
-                  "className": "flex-1 ph-no-capture",
-                  "size": "lg",
-                  "variant": "unstyled",
-                  "value": {
-                    "derived": "input"
-                  },
-                  "onChange": {
-                    "action": "change_input"
-                  },
-                  "placeholder": {
-                    "content": "search.input.placeholder"
-                  },
-                  "ariaLabel": {
-                    "content": "search.input.label"
-                  },
-                  "ariaDescription": {
-                    "text": {
-                      "content": "search.input.hint"
-                    },
-                    "vars": {
-                      "min": {
-                        "derived": "min_query_len"
-                      }
-                    }
-                  },
-                  "autoComplete": "off"
-                },
-                "children": []
-              }
-            ]
-          },
-          {
-            "component": "Group",
-            "props": {
-              "key": "chips",
-              "className": "mt-3 gap-2"
-            },
-            "children": [
-              {
-                "component": "Button",
-                "props": {
-                  "key": "chip-Queen & Spadina",
-                  "testID": "parcel-search-suggestion-Queen & Spadina",
-                  "size": "lg",
-                  "variant": "outline",
-                  "color": "gray",
-                  "className": "rounded-full font-mono text-xs font-normal",
-                  "ariaLabel": {
-                    "text": {
-                      "content": "search.chip.label"
-                    },
-                    "vars": {
-                      "query": {
-                        "derived": "recent.0"
-                      }
-                    }
-                  },
-                  "onClick": {
-                    "action": "set_input",
-                    "value": {
-                      "derived": "recent.0"
-                    }
-                  }
+                  "key": "bar",
+                  "className": "flex-nowrap items-center gap-2 py-1 pl-4 pr-1"
                 },
                 "children": [
                   {
-                    "derived": "recent.0"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "component": "Group",
-            "props": {
-              "key": "list-header",
-              "testID": "parcel-search-list-header",
-              "className": "mt-4 items-center justify-between"
-            },
-            "children": [
-              {
-                "component": "Text",
-                "props": {
-                  "key": "rail",
-                  "className": "font-mono text-[11px] font-normal uppercase tracking-widest text-zinc-400"
-                },
-                "children": [
-                  {
-                    "content": "list.rail"
+                    "component": "TextInput",
+                    "props": {
+                      "key": "input",
+                      "testID": "parcel-search-input",
+                      "className": "flex-1 ph-no-capture",
+                      "size": "lg",
+                      "variant": "unstyled",
+                      "value": {
+                        "derived": "input"
+                      },
+                      "onChange": {
+                        "action": "change_input"
+                      },
+                      "onSubmit": {
+                        "action": "submit"
+                      },
+                      "placeholder": {
+                        "content": "search.input.placeholder"
+                      },
+                      "ariaLabel": {
+                        "content": "search.input.label"
+                      },
+                      "ariaDescription": {
+                        "text": {
+                          "content": "search.input.hint"
+                        },
+                        "vars": {
+                          "min": {
+                            "derived": "min_query_len"
+                          }
+                        }
+                      },
+                      "autoComplete": "off"
+                    },
+                    "children": []
                   }
                 ]
               },
               {
-                "component": "Text",
+                "component": "Stack",
                 "props": {
-                  "key": "badge",
-                  "className": "font-mono text-[11px] font-normal uppercase tracking-widest text-amber-500"
+                  "key": "drop",
+                  "testID": "parcel-search-drop",
+                  "className": "w-full gap-0 border-t border-zinc-800"
                 },
                 "children": [
                   {
-                    "text": {
-                      "content": "list.badge"
-                    },
-                    "vars": {
-                      "count": {
-                        "derived": "candidate_count"
-                      }
-                    }
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "component": "Button",
-            "props": {
-              "key": "100100",
-              "testID": "parcel-candidate-100100",
-              "size": "lg",
-              "variant": "outline",
-              "color": "gray",
-              "className": "mt-2 h-auto w-full justify-start rounded-xl border-zinc-800 bg-zinc-900 px-3 py-3",
-              "role": "radio",
-              "checked": false,
-              "ariaLabel": {
-                "derived": "label.0"
-              },
-              "onClick": {
-                "action": "select",
-                "parcelId": {
-                  "contract": "contract_parcels_lookup.candidates.0.parcelId"
-                }
-              }
-            },
-            "children": [
-              {
-                "component": "Text",
-                "props": {
-                  "key": "card-text",
-                  "component": "span",
-                  "className": "text-base font-normal text-zinc-100"
-                },
-                "children": [
-                  {
-                    "component": "Text",
+                    "component": "Button",
                     "props": {
-                      "key": "100100-0",
-                      "component": "span",
-                      "className": "text-base font-semibold text-amber-500"
+                      "key": "100181",
+                      "testID": "parcel-candidate-100181",
+                      "size": "lg",
+                      "variant": "subtle",
+                      "color": "gray",
+                      "className": "h-auto w-full justify-start rounded-none border-t border-zinc-800 px-4 py-2",
+                      "ariaLabel": {
+                        "derived": "label.0"
+                      },
+                      "href": "/parcel-tool/100181",
+                      "onClick": {
+                        "action": "push",
+                        "route": "/parcel-tool/100181"
+                      }
                     },
                     "children": [
                       {
-                        "derived": "segments.0.0.text"
+                        "component": "Text",
+                        "props": {
+                          "key": "row-text",
+                          "component": "span",
+                          "className": "text-[15px] font-medium text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100181-0",
+                              "component": "span",
+                              "className": "text-[15px] font-bold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.0.0.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100181-1",
+                              "component": "span",
+                              "className": "text-[15px] font-bold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.0.1.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100181-2",
+                              "component": "span",
+                              "className": "text-[15px] font-bold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.0.2.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100181-3",
+                              "component": "span",
+                              "className": "text-[15px] font-bold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.0.3.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100181-4",
+                              "component": "span",
+                              "className": "text-[15px] font-medium text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.0.4.text"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "100182",
+                      "testID": "parcel-candidate-100182",
+                      "size": "lg",
+                      "variant": "subtle",
+                      "color": "gray",
+                      "className": "h-auto w-full justify-start rounded-none border-t border-zinc-800 px-4 py-2",
+                      "ariaLabel": {
+                        "derived": "label.1"
+                      },
+                      "href": "/parcel-tool/100182",
+                      "onClick": {
+                        "action": "push",
+                        "route": "/parcel-tool/100182"
+                      }
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "row-text",
+                          "component": "span",
+                          "className": "text-[15px] font-medium text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100182-0",
+                              "component": "span",
+                              "className": "text-[15px] font-bold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.1.0.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100182-1",
+                              "component": "span",
+                              "className": "text-[15px] font-bold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.1.1.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100182-2",
+                              "component": "span",
+                              "className": "text-[15px] font-bold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.1.2.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100182-3",
+                              "component": "span",
+                              "className": "text-[15px] font-bold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.1.3.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100182-4",
+                              "component": "span",
+                              "className": "text-[15px] font-medium text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.1.4.text"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "component": "Button",
+                    "props": {
+                      "key": "100183",
+                      "testID": "parcel-candidate-100183",
+                      "size": "lg",
+                      "variant": "subtle",
+                      "color": "gray",
+                      "className": "h-auto w-full justify-start rounded-none border-t border-zinc-800 px-4 py-2",
+                      "ariaLabel": {
+                        "derived": "label.2"
+                      },
+                      "href": "/parcel-tool/100183",
+                      "onClick": {
+                        "action": "push",
+                        "route": "/parcel-tool/100183"
+                      }
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "row-text",
+                          "component": "span",
+                          "className": "text-[15px] font-medium text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100183-0",
+                              "component": "span",
+                              "className": "text-[15px] font-bold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.2.0.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100183-1",
+                              "component": "span",
+                              "className": "text-[15px] font-bold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.2.1.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100183-2",
+                              "component": "span",
+                              "className": "text-[15px] font-bold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.2.2.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100183-3",
+                              "component": "span",
+                              "className": "text-[15px] font-bold text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.2.3.text"
+                              }
+                            ]
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "100183-4",
+                              "component": "span",
+                              "className": "text-[15px] font-medium text-zinc-100"
+                            },
+                            "children": [
+                              {
+                                "derived": "segments.2.4.text"
+                              }
+                            ]
+                          }
+                        ]
                       }
                     ]
                   },
                   {
                     "component": "Text",
                     "props": {
-                      "key": "100100-1",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
+                      "key": "hint",
+                      "testID": "parcel-search-hint",
+                      "className": "border-t border-zinc-800 px-4 pt-2 pb-2 text-[12px] font-normal text-zinc-400"
                     },
                     "children": [
                       {
-                        "derived": "segments.0.1.text"
+                        "content": "list.hint"
                       }
                     ]
                   },
                   {
-                    "component": "Text",
+                    "component": "Button",
                     "props": {
-                      "key": "100100-2",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.0.2.text"
+                      "key": "report",
+                      "testID": "parcel-search-report",
+                      "size": "lg",
+                      "variant": "subtle",
+                      "color": "gray",
+                      "className": "mt-2 self-center rounded-xl text-xs font-normal text-zinc-400 underline",
+                      "onClick": {
+                        "action": "open_help",
+                        "topic": "wrong-lot",
+                        "q": {
+                          "derived": "input"
+                        }
                       }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100100-3",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
                     },
                     "children": [
                       {
-                        "derived": "segments.0.3.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100100-4",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.0.4.text"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "component": "Button",
-            "props": {
-              "key": "100102",
-              "testID": "parcel-candidate-100102",
-              "size": "lg",
-              "variant": "outline",
-              "color": "gray",
-              "className": "mt-2 h-auto w-full justify-start rounded-xl border-amber-500 bg-zinc-900 px-3 py-3",
-              "role": "radio",
-              "checked": true,
-              "ariaLabel": {
-                "derived": "label.1"
-              },
-              "onClick": {
-                "action": "select",
-                "parcelId": {
-                  "contract": "contract_parcels_lookup.candidates.1.parcelId"
-                }
-              }
-            },
-            "children": [
-              {
-                "component": "Text",
-                "props": {
-                  "key": "card-text",
-                  "component": "span",
-                  "className": "text-base font-normal text-zinc-100"
-                },
-                "children": [
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100102-0",
-                      "component": "span",
-                      "className": "text-base font-semibold text-amber-500"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.1.0.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100102-1",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.1.1.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100102-2",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.1.2.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100102-3",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.1.3.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100102-4",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.1.4.text"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "component": "Button",
-            "props": {
-              "key": "100104",
-              "testID": "parcel-candidate-100104",
-              "size": "lg",
-              "variant": "outline",
-              "color": "gray",
-              "className": "mt-2 h-auto w-full justify-start rounded-xl border-zinc-800 bg-zinc-900 px-3 py-3",
-              "role": "radio",
-              "checked": false,
-              "ariaLabel": {
-                "derived": "label.2"
-              },
-              "onClick": {
-                "action": "select",
-                "parcelId": {
-                  "contract": "contract_parcels_lookup.candidates.2.parcelId"
-                }
-              }
-            },
-            "children": [
-              {
-                "component": "Text",
-                "props": {
-                  "key": "card-text",
-                  "component": "span",
-                  "className": "text-base font-normal text-zinc-100"
-                },
-                "children": [
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100104-0",
-                      "component": "span",
-                      "className": "text-base font-semibold text-amber-500"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.2.0.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100104-1",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.2.1.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100104-2",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.2.2.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100104-3",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.2.3.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100104-4",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.2.4.text"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "component": "Button",
-            "props": {
-              "key": "100001",
-              "testID": "parcel-candidate-100001",
-              "size": "lg",
-              "variant": "outline",
-              "color": "gray",
-              "className": "mt-2 h-auto w-full justify-start rounded-xl border-zinc-800 bg-zinc-900 px-3 py-3",
-              "role": "radio",
-              "checked": false,
-              "ariaLabel": {
-                "derived": "label.3"
-              },
-              "onClick": {
-                "action": "select",
-                "parcelId": {
-                  "contract": "contract_parcels_lookup.candidates.3.parcelId"
-                }
-              }
-            },
-            "children": [
-              {
-                "component": "Text",
-                "props": {
-                  "key": "card-text",
-                  "component": "span",
-                  "className": "text-base font-normal text-zinc-100"
-                },
-                "children": [
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100001-0",
-                      "component": "span",
-                      "className": "text-base font-semibold text-amber-500"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.3.0.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100001-1",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.3.1.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100001-2",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.3.2.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100001-3",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.3.3.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100001-4",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.3.4.text"
+                        "content": "list.report"
                       }
                     ]
                   }
                 ]
-              }
-            ]
-          },
-          {
-            "component": "Button",
-            "props": {
-              "key": "100010",
-              "testID": "parcel-candidate-100010",
-              "size": "lg",
-              "variant": "outline",
-              "color": "gray",
-              "className": "mt-2 h-auto w-full justify-start rounded-xl border-zinc-800 bg-zinc-900 px-3 py-3",
-              "role": "radio",
-              "checked": false,
-              "ariaLabel": {
-                "derived": "label.4"
-              },
-              "onClick": {
-                "action": "select",
-                "parcelId": {
-                  "contract": "contract_parcels_lookup.candidates.4.parcelId"
-                }
-              }
-            },
-            "children": [
-              {
-                "component": "Text",
-                "props": {
-                  "key": "card-text",
-                  "component": "span",
-                  "className": "text-base font-normal text-zinc-100"
-                },
-                "children": [
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100010-0",
-                      "component": "span",
-                      "className": "text-base font-semibold text-amber-500"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.4.0.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100010-1",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.4.1.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100010-2",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.4.2.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100010-3",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.4.3.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100010-4",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.4.4.text"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "component": "Button",
-            "props": {
-              "key": "100106",
-              "testID": "parcel-candidate-100106",
-              "size": "lg",
-              "variant": "outline",
-              "color": "gray",
-              "className": "mt-2 h-auto w-full justify-start rounded-xl border-zinc-800 bg-zinc-900 px-3 py-3",
-              "role": "radio",
-              "checked": false,
-              "ariaLabel": {
-                "derived": "label.5"
-              },
-              "onClick": {
-                "action": "select",
-                "parcelId": {
-                  "contract": "contract_parcels_lookup.candidates.5.parcelId"
-                }
-              }
-            },
-            "children": [
-              {
-                "component": "Text",
-                "props": {
-                  "key": "card-text",
-                  "component": "span",
-                  "className": "text-base font-normal text-zinc-100"
-                },
-                "children": [
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100106-0",
-                      "component": "span",
-                      "className": "text-base font-semibold text-amber-500"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.5.0.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100106-1",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.5.1.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100106-2",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.5.2.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100106-3",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.5.3.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100106-4",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.5.4.text"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "component": "Button",
-            "props": {
-              "key": "100108",
-              "testID": "parcel-candidate-100108",
-              "size": "lg",
-              "variant": "outline",
-              "color": "gray",
-              "className": "mt-2 h-auto w-full justify-start rounded-xl border-zinc-800 bg-zinc-900 px-3 py-3",
-              "role": "radio",
-              "checked": false,
-              "ariaLabel": {
-                "derived": "label.6"
-              },
-              "onClick": {
-                "action": "select",
-                "parcelId": {
-                  "contract": "contract_parcels_lookup.candidates.6.parcelId"
-                }
-              }
-            },
-            "children": [
-              {
-                "component": "Text",
-                "props": {
-                  "key": "card-text",
-                  "component": "span",
-                  "className": "text-base font-normal text-zinc-100"
-                },
-                "children": [
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100108-0",
-                      "component": "span",
-                      "className": "text-base font-semibold text-amber-500"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.6.0.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100108-1",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.6.1.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100108-2",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.6.2.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100108-3",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.6.3.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100108-4",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.6.4.text"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "component": "Button",
-            "props": {
-              "key": "100110",
-              "testID": "parcel-candidate-100110",
-              "size": "lg",
-              "variant": "outline",
-              "color": "gray",
-              "className": "mt-2 h-auto w-full justify-start rounded-xl border-zinc-800 bg-zinc-900 px-3 py-3",
-              "role": "radio",
-              "checked": false,
-              "ariaLabel": {
-                "derived": "label.7"
-              },
-              "onClick": {
-                "action": "select",
-                "parcelId": {
-                  "contract": "contract_parcels_lookup.candidates.7.parcelId"
-                }
-              }
-            },
-            "children": [
-              {
-                "component": "Text",
-                "props": {
-                  "key": "card-text",
-                  "component": "span",
-                  "className": "text-base font-normal text-zinc-100"
-                },
-                "children": [
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100110-0",
-                      "component": "span",
-                      "className": "text-base font-semibold text-amber-500"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.7.0.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100110-1",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.7.1.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100110-2",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.7.2.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100110-3",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.7.3.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100110-4",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.7.4.text"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "component": "Button",
-            "props": {
-              "key": "100112",
-              "testID": "parcel-candidate-100112",
-              "size": "lg",
-              "variant": "outline",
-              "color": "gray",
-              "className": "mt-2 h-auto w-full justify-start rounded-xl border-zinc-800 bg-zinc-900 px-3 py-3",
-              "role": "radio",
-              "checked": false,
-              "ariaLabel": {
-                "derived": "label.8"
-              },
-              "onClick": {
-                "action": "select",
-                "parcelId": {
-                  "contract": "contract_parcels_lookup.candidates.8.parcelId"
-                }
-              }
-            },
-            "children": [
-              {
-                "component": "Text",
-                "props": {
-                  "key": "card-text",
-                  "component": "span",
-                  "className": "text-base font-normal text-zinc-100"
-                },
-                "children": [
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100112-0",
-                      "component": "span",
-                      "className": "text-base font-semibold text-amber-500"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.8.0.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100112-1",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.8.1.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100112-2",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.8.2.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100112-3",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.8.3.text"
-                      }
-                    ]
-                  },
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100112-4",
-                      "component": "span",
-                      "className": "text-base font-normal text-zinc-100"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.8.4.text"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "component": "Button",
-            "props": {
-              "key": "100114",
-              "testID": "parcel-candidate-100114",
-              "size": "lg",
-              "variant": "outline",
-              "color": "gray",
-              "className": "mt-2 h-auto w-full justify-start rounded-xl border-zinc-800 bg-zinc-900 px-3 py-3",
-              "role": "radio",
-              "checked": false,
-              "ariaLabel": {
-                "derived": "label.9"
-              },
-              "onClick": {
-                "action": "select",
-                "parcelId": {
-                  "contract": "contract_parcels_lookup.candidates.9.parcelId"
-                }
-              }
-            },
-            "children": [
-              {
-                "component": "Text",
-                "props": {
-                  "key": "card-text",
-                  "component": "span",
-                  "className": "text-base font-normal text-zinc-100"
-                },
-                "children": [
-                  {
-                    "component": "Text",
-                    "props": {
-                      "key": "100114-0",
-                      "component": "span",
-                      "className": "text-base font-semibold text-amber-500"
-                    },
-                    "children": [
-                      {
-                        "derived": "segments.9.0.text"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "component": "Button",
-            "props": {
-              "key": "select",
-              "testID": "parcel-search-select",
-              "size": "lg",
-              "variant": "filled",
-              "color": "yellow",
-              "className": "mt-4 w-full rounded-xl uppercase tracking-widest",
-              "disabled": false,
-              "ariaLabel": {
-                "content": "list.select.label"
-              },
-              "onClick": {
-                "action": "push",
-                "route": "/parcel-tool/100102"
-              }
-            },
-            "children": [
-              {
-                "content": "list.select"
-              }
-            ]
-          },
-          {
-            "component": "Button",
-            "props": {
-              "key": "report",
-              "testID": "parcel-search-report",
-              "size": "lg",
-              "variant": "subtle",
-              "color": "gray",
-              "className": "mt-2 self-center rounded-xl text-xs font-normal text-zinc-400 underline",
-              "onClick": {
-                "action": "open_help",
-                "topic": "wrong-lot",
-                "q": {
-                  "derived": "input"
-                }
-              }
-            },
-            "children": [
-              {
-                "content": "list.report"
-              }
-            ]
-          },
-          {
-            "component": "Text",
-            "props": {
-              "key": "refine",
-              "testID": "parcel-search-refine",
-              "className": "mt-3 text-center text-xs font-normal text-zinc-400"
-            },
-            "children": [
-              {
-                "content": "list.refine"
               }
             ]
           }
@@ -1294,8 +561,8 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "33c06b5ae3b585b0"
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "3893aa2731eac197",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "4071cba8122fcf0c"
     }
   }
 }

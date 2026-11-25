@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-25T22:02:18.037Z file_sha256=1f9fb2bafae264206408819e66f760d903a26448d81237aa32e84adb8e0dd5b4 prompt_sha256=edbc48d15eba56265da5806cda2a4802b2104a2bb2b945aba6c84349e0f921e6
+🔍 Lens review of docs/reports/lanes/2026-11-25/BL-MCFIX465/in-out-code-review-p2.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11338 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23028 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 35537 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 47581 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 58861 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 70775 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 82201 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 93524 chars, answer 0 chars, 120s
+[deepseek-review] deepseek-reasoner working… reasoning 104821 chars, answer 0 chars, 135s
+[deepseek-review] deepseek-reasoner working… reasoning 116764 chars, answer 0 chars, 150s
+[deepseek-review] deepseek-reasoner working… reasoning 128572 chars, answer 0 chars, 165s
+[deepseek-review] deepseek-reasoner working… reasoning 139854 chars, answer 0 chars, 180s
+[deepseek-review] deepseek-reasoner working… reasoning 150955 chars, answer 0 chars, 195s
+[deepseek-review] deepseek-reasoner working… reasoning 162249 chars, answer 0 chars, 210s
+[deepseek-review] deepseek-reasoner working… reasoning 173497 chars, answer 0 chars, 225s
+[deepseek-review] deepseek-reasoner working… reasoning 184733 chars, answer 0 chars, 240s
+DEFER severity=LOW — mobile/src/lib/parcelSearchMatch.ts "const lot = (parcelId: string): string => parcelSearchRoute('unique', { parcelId, query }) ?? '';" — a null route is coerced to '' so the row stays pressable and its push carries an empty path instead of the row being omitted or disabled, — keep `route: string | null` on SearchRow and drop or disable the row when it is null.
+
+DEFER severity=LOW — mobile/src/lib/parcelSearchMatch.ts "const short = query.trim().length < args.minQueryLen && outcome !== 'outside_toronto';" — `short` gates only showMiss, so rows and route are still built for a too-short submitted text, and if the hook ever answers it the drop shows "No lot found for 26" above tappable rows and Enter navigates, — apply the min-length condition to the rows and the route as well.
+
+DEFER severity=LOW — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "expect(mockHook.refetch).not.toHaveBeenCalled();" — refetch is only what the Retry button calls, so this does not prove the "nothing fetched" claim in the T17 title, assert on mockCalls (as the other tests do) instead.
+
+DEFER severity=NIT — mobile/src/components/surfaces/SurfaceRenderer.tsx "return () => act.submit?.();" — an absent submit action is silently ignored, no throw and no log, unlike open_help whose comment says a tree naming it throws via the `in` guard, so a host that renders the field without wiring submit draws a dead Enter key, — run submit through the same guard as open_help.
+
+DEFER severity=NIT — mobile/src/components/surfaces/SearchBinding.tsx "const H = { primary: R.amber, onPrimary: R.ink, check: R.ink, textMuted: R.muted, placeholder: R.muted } as const;" — `check` lost its only reader when the checked-card icon and the Select icon were deleted from the address list, so it is now dead in this file, — remove the `check` entry (and check whether PARCEL_SEARCH_ICON.button and .miss still have a consumer).
+
+DEFER severity=NIT — mobile/src/constants/parcelSearch.ts "pill: 'flex-row items-center gap-1 rounded-full border border-report-field bg-report-card py-1 pl-4 pr-1'," — with pill(), addressList() and tail() removed, nothing in SearchBinding.tsx reads pill, card, cardChecked, cardRow, cardText, select, selectText, refine, miss, missText or prompt any more, cannot see another consumer (the web binding was not in this chunk), — delete them or record the remaining consumer.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none (PASS)
+
+---
+⏱  253041ms (253.0s)
+📊 Tokens — total: 82167, input: 30414, output: 51753, reasoning: 51124

@@ -35,7 +35,8 @@ describe('T7 (a) the committed goldens equal a fresh build', () => {
     const fresh = buildGoldens(ROOT);
     // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join. 56 -> 61 goldens.
     // MF-76 (dated 2026-11-11; plan v3 §12 fold 14): the landing's 2 web goldens (static, degraded) join (49 -> 51).
-    expect(fresh.size).toBe(70); // SRCH.A6 (task-320; dated 2026-11-19): 69 -> 70, the search state hit (golden reports_left) web golden; MF-19 plan v3 (2026-11-15): + the area form's 6 web goldens (63 -> 69); MF-76: + the landing's 2 web goldens
+    // Dated 2026-11-25 (task-465 McFixV2.1; prior pin 70): + the search typing state partial (golden suggest) web golden: 70 -> 71.
+    expect(fresh.size).toBe(71); // SRCH.A6 (task-320; dated 2026-11-19): 69 -> 70, the search state hit (golden reports_left) web golden; MF-19 plan v3 (2026-11-15): + the area form's 6 web goldens (63 -> 69); MF-76: + the landing's 2 web goldens
     for (const [p, text] of fresh) expect([p, fs.readFileSync(path.join(ROOT, p), 'utf8') === text]).toEqual([p, true]);
   });
   it('RED: a hand edit of one golden differs from the fresh build', () => {

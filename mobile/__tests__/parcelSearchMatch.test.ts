@@ -382,8 +382,10 @@ describe('MF-35 situation helpers', () => {
   const { ApiError, RateLimitError } = require('@/lib/errors') as typeof import('@/lib/errors');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const S = require('./fixtures/parcelSearch.situations.json') as Record<string, unknown>;
-  const base = { input: '', debounced: '', data: undefined, error: null as unknown, isFetching: false, schemaDrift: false, recent: [] as string[], selectedParcelId: null, cap: 10, minQueryLen: 3 };
-  const cands = (S.ambiguous as { candidates: { parcelId: string; address: string }[] }).candidates;
+  // Dated 2026-11-25 (task-465; prior base kept as text: selectedParcelId null, no submitted): the builder takes `submitted`, the text run with Enter.
+  const base = { input: '', debounced: '', submitted: null as string | null, data: undefined, error: null as unknown, isFetching: false, schemaDrift: false, recent: [] as string[], cap: 10, minQueryLen: 3 };
+  const cands = (S.suggest as { candidates: { parcelId: string; address: string }[] }).candidates;
+  const ran = (q: string) => ({ input: q, debounced: q, submitted: q });
   // Dated 2026-11-24 (task-450 SEARCHFIX.2, Q19): the payloads carry the server's `resolution`, as the server always sends it (a payload without it reads as no_match).
   const lookup = (candidates: { parcelId: string; address: string }[], match: unknown = null) =>
     ({ match, candidates, warnings: [], parcel: null, resolution: match ? 'unique' : candidates.length > 0 ? 'text_candidates' : 'no_match' }) as never;
@@ -400,30 +402,89 @@ describe('MF-35 situation helpers', () => {
     expect(M.classifyParcelSearchError(new Error('drift'), true)).toMatchObject({ unexpected: true, schemaDrift: true });
     expect(M.classifyParcelSearchError(null, false)).toEqual({ rateLimited: false, retryAfterSeconds: null, entitlement: false, unexpected: false, schemaDrift: false });
   });
-  it('rebuilds the named situations from hook values: static, ambiguous, empty, rate_limited_zero, miss, redirect', () => {
+  // Dated 2026-11-25 (task-465; prior title kept: "rebuilds the named situations from hook values: static, ambiguous, empty, rate_limited_zero, miss,
+  // redirect"): the same six plus suggest, typing_unique, deleting and short_query_enter, each from the hook values and `submitted`.
+  it('rebuilds the named situations from hook values (static, ambiguous, suggest, empty, rate_limited_zero, miss, redirect, typing_unique, deleting, short_query_enter)', () => {
     const recent = ['Queen & Spadina', '26 Hurlingham Cres', 'Bathurst St'];
+    const preston = (S.ambiguous as { candidates: { parcelId: string; address: string }[] }).candidates;
+    const H = '26 Hurlingham Cres';
+    const unique = lookup([], { parcelId: '100026', matchType: 'exact', address: H });
     expect(M.buildSearchSituation({ ...base, recent })).toEqual(S.static);
-    expect(M.buildSearchSituation({ ...base, input: 'Bathurst St', debounced: 'Bathurst St', data: lookup([...cands, { parcelId: '100116', address: '116 Bathurst St' }, { parcelId: '100118', address: '118 Bathurst St' }]), selectedParcelId: '100102', recent: ['Queen & Spadina'] })).toEqual(S.ambiguous);
-    expect(M.buildSearchSituation({ ...base, input: '100 City Centre Dr, Mississauga', debounced: '100 City Centre Dr, Mississauga', recent })).toEqual(S.empty);
-    expect(M.buildSearchSituation({ ...base, input: '26 Hurlingham Cres', debounced: '26 Hurlingham Cres', error: new RateLimitError(0) })).toEqual(S.rate_limited_zero);
-    expect(M.buildSearchSituation({ ...base, input: 'zzzz qqqq', debounced: 'zzzz qqqq', data: lookup([]) })).toEqual(S.miss);
-    expect(M.buildSearchSituation({ ...base, input: '26 Hurlingham Cres', debounced: '26 Hurlingham Cres', data: lookup([], { parcelId: '100026', matchType: 'exact' }), recent: ['Bathurst St'] })).toEqual(S.redirect);
+    expect(M.buildSearchSituation({ ...base, ...ran('18 Preston'), data: lookup(preston), recent: ['Queen & Spadina'] })).toEqual(S.ambiguous);
+    expect(M.buildSearchSituation({ ...base, input: 'Bathurst St', debounced: 'Bathurst St', data: lookup(cands) })).toEqual(S.suggest);
+    expect(M.buildSearchSituation({ ...base, ...ran('100 City Centre Dr, Mississauga'), recent })).toEqual(S.empty);
+    expect(M.buildSearchSituation({ ...base, ...ran(H), error: new RateLimitError(0) })).toEqual(S.rate_limited_zero);
+    expect(M.buildSearchSituation({ ...base, ...ran('zzzz qqqq'), data: lookup([]) })).toEqual(S.miss);
+    expect(M.buildSearchSituation({ ...base, ...ran(H), data: unique, recent: ['Bathurst St'] })).toEqual(S.redirect);
+    expect(M.buildSearchSituation({ ...base, input: H, debounced: H, data: unique })).toEqual(S.typing_unique);
+    expect(M.buildSearchSituation({ ...base, input: '18 Presto', debounced: '18 Preston', data: lookup(preston) })).toEqual(S.deleting);
+    expect(M.buildSearchSituation({ ...base, ...ran('26') })).toEqual(S.short_query_enter);
   });
+  // Dated 2026-11-25 (task-465; prior title kept: "truth table: error + data lists no candidates; the cap after the slice with the refine line at >= the
+  // cap; a settled miss keeps its line on a re-fetch (task-450 V4) and needs no error"; its selectedParcelId line is gone with the field).
   it('truth table: error + data lists no candidates; the cap after the slice with the refine line at >= the cap; a settled miss keeps its line on a re-fetch (task-450 V4) and needs no error', () => {
     const many = lookup(cands.slice(0, 9));
-    expect(M.buildSearchSituation({ ...base, debounced: 'Bathurst St', data: many, error: new Error('x') }).candidates).toEqual([]);
-    expect(M.buildSearchSituation({ ...base, debounced: '100 Bathurst St', data: many }).overCap).toBe(false);
-    expect(M.buildSearchSituation({ ...base, debounced: 'Bathurst St', data: lookup(cands) }).overCap).toBe(true);
-    expect(M.buildSearchSituation({ ...base, debounced: 'zzzz qqqq', data: lookup([]), isFetching: true }).showMiss).toBe(true);
-    expect(M.buildSearchSituation({ ...base, debounced: 'zzzz qqqq', data: lookup([]), error: new Error('x') }).showMiss).toBe(false);
-    expect(M.buildSearchSituation({ ...base, debounced: '26', error: new Error('x') }).showPrompt).toBe(false);
-    expect(M.buildSearchSituation({ ...base, debounced: 'Bathurst St', data: lookup(cands), selectedParcelId: 'gone' }).selectedParcelId).toBeNull();
+    expect(M.buildSearchSituation({ ...base, ...ran('Bathurst St'), data: many, error: new Error('x') }).candidates).toEqual([]);
+    expect(M.buildSearchSituation({ ...base, ...ran('100 Bathurst St'), data: many }).overCap).toBe(false);
+    expect(M.buildSearchSituation({ ...base, ...ran('Bathurst St'), data: lookup(cands) }).overCap).toBe(true);
+    expect(M.buildSearchSituation({ ...base, ...ran('zzzz qqqq'), data: lookup([]), isFetching: true }).showMiss).toBe(true);
+    expect(M.buildSearchSituation({ ...base, ...ran('zzzz qqqq'), data: lookup([]), error: new Error('x') }).showMiss).toBe(false);
+    expect(M.buildSearchSituation({ ...base, ...ran('26'), error: new Error('x') }).showMiss).toBe(false);
+    expect(M.buildSearchSituation({ ...base, ...ran('Bathurst St'), data: lookup(cands) })).not.toHaveProperty('selectedParcelId');
+    expect(M.buildSearchSituation({ ...base, ...ran('Bathurst St'), data: lookup(cands) })).not.toHaveProperty('showPrompt');
   });
   it('task-450 AC2 (V4): a settled miss fetched again keeps the no-match line (no flicker)', () => {
-    const settled = M.buildSearchSituation({ ...base, input: 'zzzz qqqq', debounced: 'zzzz qqqq', data: lookup([]), isFetching: false });
-    const refetching = M.buildSearchSituation({ ...base, input: 'zzzz qqqq', debounced: 'zzzz qqqq', data: lookup([]), isFetching: true });
+    const settled = M.buildSearchSituation({ ...base, ...ran('zzzz qqqq'), data: lookup([]), isFetching: false });
+    const refetching = M.buildSearchSituation({ ...base, ...ran('zzzz qqqq'), data: lookup([]), isFetching: true });
     expect(settled.showMiss).toBe(true);
     expect(refetching.showMiss).toBe(true);
+  });
+  it('task-465: a route only for a submitted query whose fetch has settled; a unique gives one row; a typed unique opens nothing', () => {
+    const unique = lookup([], { parcelId: '100026', matchType: 'exact', address: '26 Hurlingham Cres' });
+    const typed = M.buildSearchSituation({ ...base, input: '26 Hurlingham Cres', debounced: '26 Hurlingham Cres', data: unique });
+    expect(typed.route).toBeNull();
+    expect(typed.rows).toEqual([{ parcelId: '100026', address: '26 Hurlingham Cres', route: '/(app)/parcel-tool/100026' }]);
+    expect(M.buildSearchSituation({ ...base, ...ran('26 Hurlingham Cres'), data: unique, isFetching: true }).route).toBeNull();
+    expect(M.buildSearchSituation({ ...base, ...ran('26 Hurlingham Cres'), data: unique }).route).toBe('/(app)/parcel-tool/100026');
+    const map = M.buildSearchSituation({ ...base, ...ran('78 Robert St'), data: withResolution('multi_parcel', { candidates: [{ parcelId: 'A', address: '78 Robert St' }, { parcelId: 'B', address: '78 Robert St' }] }) });
+    expect(map.rows).toEqual([{ parcelId: 'A', address: '78 Robert St', route: '/(app)/parcel-tool/disambiguate?q=78%20Robert%20St&kind=multi_parcel' }]);
+    expect(map.route).toBe('/(app)/parcel-tool/disambiguate?q=78%20Robert%20St&kind=multi_parcel');
+    expect(M.buildSearchSituation({ ...base, input: 'King and Bay', debounced: 'King and Bay', data: withResolution('no_match') }).rows).toEqual([]);
+  });
+  it('task-465: the deletion rule: rows hide once the box no longer starts with the text they were found for (case-folded); typing forward keeps them', () => {
+    const at = (input: string) => M.buildSearchSituation({ ...base, input, debounced: '383 El', data: lookup([{ parcelId: 'P1', address: '383 Elm Ave' }, { parcelId: 'P2', address: '383 Elmwood Ave' }]) });
+    expect(at('383 El').rows).toHaveLength(2);
+    expect(at('383 ELM').rows).toHaveLength(2);
+    expect(at('383 E').rows).toEqual([]);
+    expect(at('').rows).toEqual([]);
+  });
+  it('task-465: the miss, the short Enter and the outside line show only after Enter; a blank submit is never made (the screen ignores it)', () => {
+    const miss = lookup([]);
+    expect(M.buildSearchSituation({ ...base, input: 'zzzz qqqq', debounced: 'zzzz qqqq', data: miss }).showMiss).toBe(false);
+    expect(M.buildSearchSituation({ ...base, ...ran('zzzz qqqq'), data: miss }).showMiss).toBe(true);
+    expect(M.buildSearchSituation({ ...base, input: '26', debounced: '26' }).showMiss).toBe(false);
+    expect(M.buildSearchSituation({ ...base, ...ran('26') }).showMiss).toBe(true);
+    const out = '123 Main St, Mississauga';
+    expect(M.buildSearchSituation({ ...base, input: out, debounced: out }).showOutside).toBe(false);
+    expect(M.buildSearchSituation({ ...base, ...ran(out) }).showOutside).toBe(true);
+    expect(M.buildSearchSituation({ ...base, ...ran(out) }).showMiss).toBe(false);
+    expect(M.buildSearchSituation({ ...base, input: '', debounced: '' })).toEqual(M.buildSearchSituation({ ...base }));
+  });
+  it('task-465: the hint kinds: several after Enter on 2+ numbered rows; refine at the cap or with no number (typing too); one row after Enter is the miss line plus the row (O4)', () => {
+    const two = lookup([{ parcelId: 'P1', address: '383 Elm Ave' }, { parcelId: 'P2', address: '383 Elmwood Ave' }]);
+    expect(M.buildSearchSituation({ ...base, input: '383 El', debounced: '383 El', data: two }).hint).toBeNull();
+    expect(M.buildSearchSituation({ ...base, ...ran('383 El'), data: two }).hint).toBe('several');
+    expect(M.buildSearchSituation({ ...base, input: 'Bathurst St', debounced: 'Bathurst St', data: lookup(cands) }).hint).toBe('refine');
+    expect(M.buildSearchSituation({ ...base, ...ran('Bathurst St'), data: lookup(cands) }).hint).toBe('refine');
+    const one = M.buildSearchSituation({ ...base, ...ran('41 derwyn'), data: lookup([{ parcelId: '5293897', address: '41 Derwyn Rd' }]) });
+    expect([one.hint, one.showMiss, one.rows.length]).toEqual([null, true, 1]);
+  });
+  it('task-465 O7: the chips show at rest only and the count line hides while the drop-down is open', () => {
+    expect(M.buildSearchSituation({ ...base }).showChips).toBe(true);
+    expect(M.buildSearchSituation({ ...base, input: '4', debounced: '' }).showChips).toBe(false);
+    expect(M.buildSearchSituation({ ...base }).showCount).toBe(true);
+    expect(M.buildSearchSituation({ ...base, ...ran('zzzz qqqq'), data: lookup([]) }).showCount).toBe(false);
+    expect(M.buildSearchSituation({ ...base, ...ran('26 Hurlingham Cres'), isFetching: true }).showCount).toBe(true);
   });
 });
 
@@ -433,7 +494,7 @@ describe('MF-35 situation helpers', () => {
 describe('a street with no house number', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const M = require('@/lib/parcelSearchMatch') as typeof import('@/lib/parcelSearchMatch');
-  const base = { data: undefined, error: null as unknown, isFetching: false, schemaDrift: false, recent: [] as string[], selectedParcelId: null, cap: 10, minQueryLen: 3 };
+  const base = { data: undefined, error: null as unknown, isFetching: false, schemaDrift: false, recent: [] as string[], submitted: null, cap: 10, minQueryLen: 3 }; // task-465: submitted, no selectedParcelId
   const rows = (...r: [string, string][]) => r.map(([parcelId, address]) => ({ parcelId, address }));
   const tc = (cands: { parcelId: string; address: string }[]) => withResolution('text_candidates', { candidates: cands });
   const at = (q: string, data: ConsumerParcelLookupResult | undefined) => M.buildSearchSituation({ ...base, input: q, debounced: q, data });
@@ -471,12 +532,15 @@ describe('a street with no house number', () => {
     const inter = at('King and Bay', withResolution('no_match'));
     expect(inter.outcome).toBe('intersection');
     expect(inter.overCap).toBe(false);
-    const miss = at('zzzz qqqq', withResolution('no_match'));
+    // Dated 2026-11-25 (task-465; prior line kept as text: the typed miss showed its line): the miss line shows after Enter only.
+    const miss = M.buildSearchSituation({ ...base, input: 'zzzz qqqq', debounced: 'zzzz qqqq', submitted: 'zzzz qqqq', data: withResolution('no_match') });
     expect(miss.showMiss).toBe(true);
     expect(miss.overCap).toBe(false);
     expect(at('123 Main St, Mississauga', undefined).outcome).toBe('outside_toronto');
+    // Dated 2026-11-25 (task-465, RR-0495; prior lines kept as text: a short query showed the prompt): the prompt is dropped; a short query typed
+    // without Enter shows nothing and no refine line.
     const short = at('12', undefined);
-    expect(short.showPrompt).toBe(true);
+    expect(short.showMiss).toBe(false);
     expect(short.overCap).toBe(false);
   });
 

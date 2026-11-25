@@ -1,0 +1,1045 @@
+LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:06386cbb87ab1fda46bc54d18308c2fa684d4d95e44a83bb877802dbe97b3d07 part 1 of 1 chunk 1 of 4
+NO RULE LIST: the lens template alone judges the material under review. The material is chunk 1 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/reports/generated/127-surface-registry.md","docs/reports/generated/127-surface-review-queue.md","docs/reports/generated/rule-lists-by-kind.md","docs/specs/00-architecture/117_maxbld_brand.md","docs/specs/02-web-admin/126_maxbld_surface_standard.md","docs/specs/03-mobile/100_mobile_parcel_cost_tool.md","docs/specs/03-mobile/99_mobile_state_architecture.md","mobile/__tests__/fixtures/parcelSearch.situations.json","mobile/__tests__/parcelScreens.golden.test.ts","mobile/__tests__/parcelSearchMatch.test.ts"]
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/reports/generated/127-surface-registry.md b/docs/reports/generated/127-surface-registry.md
+index d79bd1a46e50819812b6af34c081fbf37fa67ff4..9ed22b37da38dc2d097643daa108511df3fc8ef5 100644
+--- a/docs/reports/generated/127-surface-registry.md
++++ b/docs/reports/generated/127-surface-registry.md
+@@ -759,7 +759,7 @@ _No table is reached by this entry — every value it shows arrives through a co
+ 
+ **❓ Product question(s) (2).** MaxBLD runs on the lead-gen entitlement. `guards.entitlement.product` is `lead_gen` because `chk_entitlements_product` (migration 228) admits only `lead_gen` and `flight_center` — so a user pays for lead generation and is thereby granted the parcel tool. Under OD5, does MaxBLD get its own `parcel_tool` entitlement product, and when? Dated 2026-11-24 (task-450 SEARCHFIX.2, R2): closed by MF-45 D-4 (a). · The open SEARCH question — "open the matching lot directly rather than a candidate list" — is RULED and implemented, but two of its five branches are unreachable. Does the API change that makes multi_parcel and unlinked expressible get scheduled now, or does the map surface wait? Dated 2026-11-24 (task-450 SEARCHFIX.2, R2): closed by MF-53 (the server names the outcome in `resolution`). — see §2.9.
+ 
+-**What it is.** A search box where someone types a Toronto street address and gets back the lot. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. Lots are only available in Toronto: an address in another municipality is refused on the spot, before any request is sent, and told so plainly. What happens after that is decided by the MATCH TYPE, never by how many rows came back: one lot opens straight away; several text matches show a short list with the differing part of each address highlighted, and past ten it asks for a house number instead; an address linked to several lots, an address with no lot, and an intersection all hand off to the map surface. Being rate-limited, being out of subscription, and finding nothing are three different things on screen, and it says which one happened. Dated 2026-11-24 (task-450 SEARCHFIX.2, RR-0443 c, QUESTIONS-RULED.md Q8.1 B and Q8.2; prior text kept): "past ten it asks for a house number instead" no longer says what the page does: the list stays, and the line "Add a house number to narrow it down." shows below it at the cap and for a street typed with no house number.
++**What it is.** A search box where someone types a Toronto street address and gets back the lot. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. Lots are only available in Toronto: an address in another municipality is refused on the spot, before any request is sent, and told so plainly. What happens after that is decided by the MATCH TYPE, never by how many rows came back: one lot opens straight away; several text matches show a short list with the differing part of each address highlighted, and past ten it asks for a house number instead; an address linked to several lots, an address with no lot, and an intersection all hand off to the map surface. Being rate-limited, being out of subscription, and finding nothing are three different things on screen, and it says which one happened. Dated 2026-11-24 (task-450 SEARCHFIX.2, RR-0443 c, QUESTIONS-RULED.md Q8.1 B and Q8.2; prior text kept): "past ten it asks for a house number instead" no longer says what the page does: the list stays, and the line "Add a house number to narrow it down." shows below it at the cap and for a street typed with no house number. Dated 2026-11-25 (task-465 McFixV2.1; RR-0483 MORNING-DECISIONS.md:2523, RR-0485 :2533, RR-0487 :2543; prior text kept): nothing opens while typing any more. While typing, the matching addresses drop under the box as rows; a tap on a row opens that lot (or the map page). Enter runs the typed search: one lot opens; several matches keep the rows with the line "More than one address matches. Tap the one you mean."; nothing found shows "No lot found for <address>" under the box; an address outside Toronto shows "Outside Toronto" under the box, not a red banner. There is no Select button and no list title. The list clears on the first delete, and the box is empty when the user comes back from a page it opened. The typing state is declared as `partial` with the golden `suggest` (the state names are a closed list; plan grounder round 1 addendum, O8).
+ 
+ **What it reads and writes.** It reads nothing from the database directly. Every value arrives through one contract: `/api/parcels/lookup`. Behind that contract, the data comes from `address_points`, `parcel_address_points` and `parcels` — the lot corpus — plus `entitlements` for the access check. It holds no client store at all: the query text and its debounce live in component state, and the Toronto-only rule is computed from the typed address. It emits **no analytics event**, so nothing it does is currently countable. Dated 2026-11-24 (task-450 SEARCHFIX.2, R2; prior text kept): "It holds no client store at all" is no longer true: the recent searches are kept on the phone in the Layer 4a store mobile/src/store/recentSearchesStore.ts (MF-35, P35-D16 a).
+ 
+@@ -775,7 +775,7 @@ _No table is reached by this entry — every value it shows arrives through a co
+ 
+ **Emits.** —
+ 
+-**Render states seen in code.** `prompt_type_more` · `fetching` · `outside_toronto` · `rate_limited` · `entitlement_refused` · `unexpected_error` · `schema_drift` · `candidates` · `empty_no_match` · `navigating_unique` · `navigating_map`
++**Render states seen in code.** `short_query_enter` · `fetching` · `outside_toronto` · `rate_limited` · `entitlement_refused` · `unexpected_error` · `schema_drift` · `candidates` · `empty_no_match` · `navigating_unique` · `navigating_map`
+ 
+ **Data lineage.**
+ 
+@@ -812,7 +812,7 @@ _No table is reached by this entry — every value it shows arrives through a co
+ | 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+ | 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+ | 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+-| 12 | `errors` | `inline` | Every failure class has its OWN rendered line, and none of them borrows the miss copy. The 403 entitlement refusal is no longer presented as "No parcel found for that address." — presenting a subscription refusal as a data miss was this surface’s own recorded limitation, and it is closed. The Toronto-only refusal is likewise its own state and is decided before the network. NOTE: the Toronto-only refusal is NOT in `errors.classes[]` — that vocabulary is closed to HTTP-ish classes (400/401/403/429/500/404/schema_drift/offline) and this refusal never reaches the network. Nor does the closed `states[]` vocabulary have a value for it. It is carried by the blocking `parcelsearch_toronto_only` check and its testID instead. Both gaps are reported to the operator rather than papered over with an invented enum value. — `mobile/src/lib/parcelSearchMatch.ts:298 — classifyParcelSearchError, the four error classifications (task-450 R2: re-pointed from mobile/app/(app)/parcel-tool/index.tsx:127-134)`, `mobile/src/components/surfaces/SearchBinding.tsx:128 — testID parcel-search-outside-toronto (task-450 R2: prior cite index.tsx:201)`, `mobile/src/components/surfaces/SearchBinding.tsx:131 — testID parcel-search-ratelimit (task-450 R2: prior cite index.tsx:214)`, `mobile/src/components/surfaces/SearchBinding.tsx:135 — testID parcel-search-entitlement (task-450 R2: prior cite index.tsx:222)`, `mobile/src/components/surfaces/SearchBinding.tsx:138 — testID parcel-search-error (task-450 R2: prior cite index.tsx:234)` |
++| 12 | `errors` | `inline` | Every failure class has its OWN rendered line, and none of them borrows the miss copy. The 403 entitlement refusal is no longer presented as "No parcel found for that address." — presenting a subscription refusal as a data miss was this surface’s own recorded limitation, and it is closed. The Toronto-only refusal is likewise its own state and is decided before the network. NOTE: the Toronto-only refusal is NOT in `errors.classes[]` — that vocabulary is closed to HTTP-ish classes (400/401/403/429/500/404/schema_drift/offline) and this refusal never reaches the network. Nor does the closed `states[]` vocabulary have a value for it. It is carried by the blocking `parcelsearch_toronto_only` check and its testID instead. Both gaps are reported to the operator rather than papered over with an invented enum value. — `mobile/src/lib/parcelSearchMatch.ts:298 — classifyParcelSearchError, the four error classifications (task-450 R2: re-pointed from mobile/app/(app)/parcel-tool/index.tsx:127-134)`, `mobile/src/components/surfaces/SearchBinding.tsx:198 — testID parcel-search-outside-toronto, a drop-down line since task-465 (prior cite :128) (task-450 R2: prior cite index.tsx:201)`, `mobile/src/components/surfaces/SearchBinding.tsx:144 — testID parcel-search-ratelimit (task-465: prior cite :131) (task-450 R2: prior cite index.tsx:214)`, `mobile/src/components/surfaces/SearchBinding.tsx:148 — testID parcel-search-entitlement (task-465: prior cite :135) (task-450 R2: prior cite index.tsx:222)`, `mobile/src/components/surfaces/SearchBinding.tsx:151 — testID parcel-search-error (task-465: prior cite :138) (task-450 R2: prior cite index.tsx:234)` |
+ | 13 | `emits` | `none` | The screen emits no PostHog event; the only record of a search is the server-side logInfo line, which deliberately omits the query text. — `mobile/app/(app)/parcel-tool/index.tsx:1-128 (task-450 R2: the whole file; prior cite :1-115)`, `src/app/api/parcels/lookup/route.ts:113-119` |
+ | 14 | `offers` | `none` | No sponsored placement is rendered: the only slot component in the Expo tree is SponsorSlot, and it returns null unless EXPO_PUBLIC_PARCEL_SPONSORS=1. [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator "Ball y" B-6: SponsorSlot.tsx is deleted with the old lot screen; no slot component remains in the Expo tree, and the report's ads are the v21 page ad sections (MF-20)] — `mobile/src/components/parcel/SponsorSlot.tsx:16-20 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator "Ball y" B-6: SponsorSlot.tsx is deleted with the old lot screen; no slot component remains in the Expo tree, and the report's ads are the v21 page ad sections (MF-20)]` |
+ | 15 | `metering` | `none` | Nothing here is counted. The Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the parcel product has no quota, credit or view counter of its own — no metering column, no ledger row, no consumption event. Measured 2026-09-16. Dated 2026-11-24 (task-450 SEARCHFIX.2, R2; prior text kept): the page counts nothing; the lookup it calls counts a produced report (F02). — `src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-16)`, `src/app/api/parcels/lookup/route.ts:113-119 — the only record of a lookup is a log line; it increments nothing` |
+@@ -923,7 +923,7 @@ ICONS. The shelf was specified with @expo/vector-icons Ionicons (compass / bookm
+ 
+ **Programme.** `S-093` · scope `parcel_product` · feature `F01` · build order 1014 · batch `B2` · review `unreviewed` — The question before the report for a lot the detector cannot place: one question on the entry flow of the parcel tool.
+ 
+-**What it is.** The one-question page before the report (SEMI-B; operator "semi ask a", 2026-11-13). When the detector is unsure whether a lot is half of a semi (the doubt band of Spec 78 O-4: a footprint over 3 parcels, or a weak or small shared boundary), the app asks one question before the report shows: "Is this house one half of a semi-detached pair?" with three answers: "Yes, it's one half of a semi" (semi view, renovations only), "No, it's detached" (the full report), "Not sure" (the semi view, with "This isn't a semi" still offered in the report). Clear semis and clear detached lots never see this page. Nothing is selected when the page opens; Continue is disabled until an answer is chosen.
++**What it is.** The one-question page before the report (SEMI-B; operator "semi ask a", 2026-11-13). When the detector is unsure whether a lot is half of a semi (the doubt band of Spec 78 O-4: a footprint over 3 parcels, or a weak or small shared boundary), the app asks one question before the report shows: "Is this house one half of a semi-detached pair?" with three answers: "Yes, it's one half of a semi" (semi view, renovations only), "No, it's detached" (the full report), "Not sure" (the semi view, with "This isn't a semi" still offered in the report). Clear semis and clear detached lots never see this page. Nothing is selected when the page opens; Continue is disabled until an answer is chosen. Dated 2026-11-25 (task-465 McFixV2.1; RR-0485 MORNING-DECISIONS.md:2533 "1 inside", RR-0487 :2543; prior text kept): the question reads "Is this a semi?" and the answers read Yes, No and Not sure (the approved mock, state 7); the question is the largest text on the page and the answers are smaller and lighter.
+ 
+ **What it reads and writes.** It reads one contract, GET /api/parcels/lookup?parcelId= (C-001), through the same query the report reads (['parcel-lookup', parcelId]), so it makes no extra request. The server names the lot's form from the view parcel_lot_form (migration 320): lotForm.detected, lotForm.basis and lotForm.unsure; the page asks only when unsure is true. The answer is the owner's input lot_form_user_override (Spec 78): yes writes semi_half, no writes detached, not sure writes nothing. It is carried to the report as a route param and applied there through the shared pure function lotFormEffective (O-12: the pipeline never reads it; there is no server store). It emits **no analytics event**.
+ 
+diff --git a/docs/reports/generated/127-surface-review-queue.md b/docs/reports/generated/127-surface-review-queue.md
+index 017fb4d1c99b6a521590d0005ed365e66588ab11..0ac8e3aa34935827bda38b38308983954674868f 100644
+--- a/docs/reports/generated/127-surface-review-queue.md
++++ b/docs/reports/generated/127-surface-review-queue.md
+@@ -250,7 +250,7 @@ Registry detail: [`S-002`](../../../docs/reports/generated/127-surface-registry.
+ 
+ **1. What does it do, and for whom?**
+ 
+-A search box where someone types a Toronto street address and gets back the lot. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. Lots are only available in Toronto: an address in another municipality is refused on the spot, before any request is sent, and told so plainly. What happens after that is decided by the MATCH TYPE, never by how many rows came back: one lot opens straight away; several text matches show a short list with the differing part of each address highlighted, and past ten it asks for a house number instead; an address linked to several lots, an address with no lot, and an intersection all hand off to the map surface. Being rate-limited, being out of subscription, and finding nothing are three different things on screen, and it says which one happened. Dated 2026-11-24 (task-450 SEARCHFIX.2, RR-0443 c, QUESTIONS-RULED.md Q8.1 B and Q8.2; prior text kept): "past ten it asks for a house number instead" no longer says what the page does: the list stays, and the line "Add a house number to narrow it down." shows below it at the cap and for a street typed with no house number.
++A search box where someone types a Toronto street address and gets back the lot. Typing pauses briefly before searching so exploratory typing does not hammer the server, and at least three characters are required. Lots are only available in Toronto: an address in another municipality is refused on the spot, before any request is sent, and told so plainly. What happens after that is decided by the MATCH TYPE, never by how many rows came back: one lot opens straight away; several text matches show a short list with the differing part of each address highlighted, and past ten it asks for a house number instead; an address linked to several lots, an address with no lot, and an intersection all hand off to the map surface. Being rate-limited, being out of subscription, and finding nothing are three different things on screen, and it says which one happened. Dated 2026-11-24 (task-450 SEARCHFIX.2, RR-0443 c, QUESTIONS-RULED.md Q8.1 B and Q8.2; prior text kept): "past ten it asks for a house number instead" no longer says what the page does: the list stays, and the line "Add a house number to narrow it down." shows below it at the cap and for a street typed with no house number. Dated 2026-11-25 (task-465 McFixV2.1; RR-0483 MORNING-DECISIONS.md:2523, RR-0485 :2533, RR-0487 :2543; prior text kept): nothing opens while typing any more. While typing, the matching addresses drop under the box as rows; a tap on a row opens that lot (or the map page). Enter runs the typed search: one lot opens; several matches keep the rows with the line "More than one address matches. Tap the one you mean."; nothing found shows "No lot found for <address>" under the box; an address outside Toronto shows "Outside Toronto" under the box, not a red banner. There is no Select button and no list title. The list clears on the first delete, and the box is empty when the user comes back from a page it opened. The typing state is declared as `partial` with the golden `suggest` (the state names are a closed list; plan grounder round 1 addendum, O8).
+ 
+ **2. Which tables and columns, produced by which step?**
+ 
+@@ -349,7 +349,7 @@ Registry detail: [`S-093`](../../../docs/reports/generated/127-surface-registry.
+ 
+ **1. What does it do, and for whom?**
+ 
+-The one-question page before the report (SEMI-B; operator "semi ask a", 2026-11-13). When the detector is unsure whether a lot is half of a semi (the doubt band of Spec 78 O-4: a footprint over 3 parcels, or a weak or small shared boundary), the app asks one question before the report shows: "Is this house one half of a semi-detached pair?" with three answers: "Yes, it's one half of a semi" (semi view, renovations only), "No, it's detached" (the full report), "Not sure" (the semi view, with "This isn't a semi" still offered in the report). Clear semis and clear detached lots never see this page. Nothing is selected when the page opens; Continue is disabled until an answer is chosen.
++The one-question page before the report (SEMI-B; operator "semi ask a", 2026-11-13). When the detector is unsure whether a lot is half of a semi (the doubt band of Spec 78 O-4: a footprint over 3 parcels, or a weak or small shared boundary), the app asks one question before the report shows: "Is this house one half of a semi-detached pair?" with three answers: "Yes, it's one half of a semi" (semi view, renovations only), "No, it's detached" (the full report), "Not sure" (the semi view, with "This isn't a semi" still offered in the report). Clear semis and clear detached lots never see this page. Nothing is selected when the page opens; Continue is disabled until an answer is chosen. Dated 2026-11-25 (task-465 McFixV2.1; RR-0485 MORNING-DECISIONS.md:2533 "1 inside", RR-0487 :2543; prior text kept): the question reads "Is this a semi?" and the answers read Yes, No and Not sure (the approved mock, state 7); the question is the largest text on the page and the answers are smaller and lighter.
+ 
+ **2. Which tables and columns, produced by which step?**
+ 
+diff --git a/docs/reports/generated/rule-lists-by-kind.md b/docs/reports/generated/rule-lists-by-kind.md
+index ae8cc7de4879f8d69d3188e438b7647ef0b2bc56..eba0d61227a7febe864312f08dfa893d56ced872 100644
+--- a/docs/reports/generated/rule-lists-by-kind.md
++++ b/docs/reports/generated/rule-lists-by-kind.md
+@@ -40,14 +40,14 @@ Example Files line: `mobile/src/app/`; type build; milestone group [S].
+ | --- | --- | --- | ---: | ---: |
+ | mobile-90 | docs/specs/03-mobile/90_mobile_engineering_protocol.md | whole file | 14,097 | 1 |
+ | mobile-98 | docs/specs/03-mobile/98_mobile_testing_protocol.md | whole file | 12,027 | 1 |
+-| mobile-99 | docs/specs/03-mobile/99_mobile_state_architecture.md | whole file | 84,550 | 1 |
++| mobile-99 | docs/specs/03-mobile/99_mobile_state_architecture.md | whole file | 85,828 | 2 |
+ | surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 29,166 | 1 |
+ | eng-front | docs/specs/00_engineering_standards.md | 1. Architecture & UI Standards | 3,214 | 1 |
+ | eng-shared | docs/specs/00_engineering_standards.md | 2. Error Handling & Stability; 4. Security & API Contracts; 5. Testing Standards; 6. Centralized Logging; 7. Dual Code Path Safety; 8. Next.js & TypeScript Constraints; 10. Frontend/Backend Boundary; 11. Plan Compliance Checklist; 12. Frontend Foundation Tooling; 13. Observability Standards; 14. The Prevention Loop | 37,472 | 1 |
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 24,787 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 9 lists | | 216,647 | 9 |
++| total | 9 lists | | 217,925 | 10 |
+ 
+ ## storage
+ 
+diff --git a/docs/specs/00-architecture/117_maxbld_brand.md b/docs/specs/00-architecture/117_maxbld_brand.md
+index 3ca7b696394237de17141825202d2cefb24e3a2b..e0884a12dcf36614a071ce0a019e4669e7d261b0 100644
+--- a/docs/specs/00-architecture/117_maxbld_brand.md
++++ b/docs/specs/00-architecture/117_maxbld_brand.md
+@@ -251,6 +251,8 @@ Resolving §4.2's option (a) *load the fonts* vs (b) *adopt system-font formally
+ 
+ > Dated note 2026-11-10 (M-246, prior text kept; MF-35 OUTPUT panel fold, APPROVE WITH FOLDS, `~/Buildo-scratch/mcfrontend/MF-35/panel-out/output-panel.md`; operator, verbatim: "MF-35 a"; pre-approved D-27, `~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md`): correction to the note above: the search page's class strings are the full literals of `PARCEL_SEARCH_LAYOUT` in `mobile/src/constants/parcelSearch.ts` (the layout table, MF-35), not the class strings of `PARCEL_SEARCH_TOKENS`, which stays as it was. The S-002 hex values are unchanged. The chip label size `text-xs` predates MF-35 (the table above says `text-[11px]`); MF-35 kept the legacy chip size, and the tagline follows the `text-[11px]` above.
+ 
++> Dated note 2026-11-25 (M-246, prior text kept; McFixV2.1 · task-465; operator, verbatim: "your typed search does not execute until you press enter or select an address. And if you press enter with an incomplete address - you get the error" (RR-0483, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2523`); "1 inside" and "6. Open that lot - they need to press enter - after filling out the address in the search box." (RR-0485, `:2533`); "465 Mock  approved" (RR-0487, `:2543`; the mock `~/Buildo-scratch/lanes-20261125/mcfixv2-465/MOCK-465-approved.html`, sha256 05b387fa3304, "replaces the approved search page design where the two differ", `:2544`); "correct" (RR-0495, `:2579`, dropping the type-more line)): for S-002 the 2026-11-10 note above is replaced where the approved mock differs: the pill search bar becomes the box (white, a 26 px radius, the field-edge border), and its answers hang from it under a thin grey line (`report-line`): 48 px rows with a pin icon and the address (the typed part bold, the rest medium, both ink; no amber differing part, no radio cards, no SELECT), and 15/20 answer lines with a 13/18 second line in `report-soft`. The typed text is 16 px and centred in the box; the spinner sits in a 44 px slot at the right edge. Everything else is quiet: the reports-left line 12/16 and the legal line 11/15, both `report-soft` (the mock's #8a8172 is under WCAG AA on the page colour; `report-soft` #655f55 is 5.61:1), and the recent searches as 13 px plain pills (32 px look) inside a 44 px touch target. No new colour token. Classes: `PARCEL_SEARCH_LAYOUT` in `mobile/src/constants/parcelSearch.ts`. The semi question page (S-093) uses its own heading and answer keys (`semiQuestionHeading` 26/32 bold, `semiAnswerText` 15/20 in `report-muted`, cards at 48 px) in `mobile/src/constants/lotMap.ts`; the report-limit wall keeps the older semi keys.
++
+ ### 6.2 Surface application — S-004 `shell_parcel_tool_stack` (the product shelf)
+ 
+ Registry entry: [`S-004`](../../reports/generated/127-surface-registry.md#s-004); archetype **SHELL**. Implementation: `mobile/app/(app)/parcel-tool/_layout.tsx`, with the shelf itself at `mobile/src/components/parcel/ParcelShelf.tsx` (declared in the surface's `owns.components`). Tokens in `PARCEL_SHELF_HEX`.
+diff --git a/docs/specs/02-web-admin/126_maxbld_surface_standard.md b/docs/specs/02-web-admin/126_maxbld_surface_standard.md
+index d0ed3bc4ef62acd816108b11f347cfc2033d11e7..b4138846c516c1c077566062455fc618a945a582 100644
+--- a/docs/specs/02-web-admin/126_maxbld_surface_standard.md
++++ b/docs/specs/02-web-admin/126_maxbld_surface_standard.md
+@@ -996,6 +996,8 @@ A converted-surfaces manifest has two-direction totality against the MaxBLD-scop
+ 
+ > Dated note 2026-11-20 (M-246, prior text kept; RULES.ACC · task-387 · C4, as verified in docs/reports/lanes/2026-11-20/BL-VERIFYC/VERIFY.md section C4 (task-377); operator, verbatim, 2026-11-11: "Let's make those changes . 1-12 yes" (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1016), to the consolidated B list whose item B10 reads "Help, Terms and Privacy open in an in-app browser sheet with Done" (~/Buildo-scratch/mcfrontend/small-pages-v8/DECISIONS.md:82); that "1-12 yes" covers B10 is the record of that list in open-questions.md, which is the orchestrator's summary of it, and is not a separate ruling): the sentence of the 2026-11-12 MF-46 follow-up note above, item (4), that the app leaves for `MAXBLD_HELP_URL` through `Linking.openURL`, describes the code of 2026-11-12 and does not record an operator choice of that opener. The built app opens Help in the in-app browser sheet (`mobile/src/lib/maxbldHelp.ts:24`, `openBrowserAsync`). Residuals, not ruled: an Android Custom Tab has no Done button; a failed open is only logged (`maxbldHelp.ts:26-28`) and shows the person nothing. Not checked: whether the operator saw the sheet frames before "1-12 yes" (VERIFY.md C4.5).
+ 
++> Dated note 2026-11-25 (M-246, prior text kept; McFixV2.1 · task-465 · MF-35 and its web twin MF-44; operator, verbatim: "your typed search does not execute until you press enter or select an address. And if you press enter with an incomplete address - you get the error" (RR-0483, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2523`); "1 inside" and "6. Open that lot - they need to press enter - after filling out the address in the search box." (RR-0485, `:2533`); "465 Mock  approved" (RR-0487, `:2543`; the mock `~/Buildo-scratch/lanes-20261125/mcfixv2-465/MOCK-465-approved.html`, sha256 05b387fa3304, "replaces the approved search page design where the two differ", `:2544`); "correct" (RR-0495, `:2579`, dropping the type-more line)): (1) **the submit action.** The shared mobile renderer (`SurfaceRenderer.tsx`) gains the optional action `submit` (no argument), carried by the prop `onSubmitEditing` (the search field's Enter key); like `open_help` (the 2026-11-12 note above) a host that renders no search field need not pass it, and a tree naming it there throws. The web SEARCH binding fires the same action from the field's Enter key (the tree prop `onSubmit`). `bindings.json` `non_display_keys` gains `onSubmitEditing` (action data, never display text); the web prop `onSubmit` is not listed, because SV-SBIND does not judge its object value. No component kind, binding module or mapping entry is added. (2) **the web mirror (FE-07).** `mobile_parcel_search` keeps one declaration for both targets: the web tree mirrors the phone's box and drop-down block for block (the lines after Enter, the rows, the one hint line, the help link), and the parity lock holds 12 states, the typing state `partial` with the golden `suggest`. The address list's `select` action, the content keys `list.rail`, `list.badge`, `list.select`, `list.select.label` and `search.prompt`, and the derived name `candidate_count` leave the page.
++
+ ### 11b.4 The libraries
+ 
+ Operator, verbatim: "D-0-D-4 approved D-3 we should used our existing components and approach as detailed in the mobile build specs" (record "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9").
+diff --git a/docs/specs/03-mobile/100_mobile_parcel_cost_tool.md b/docs/specs/03-mobile/100_mobile_parcel_cost_tool.md
+index f10e258c346e2854545f078bbcbe5658aea5b2bc..a0921d4c0135137276ca14017e7837a369eb06ab 100644
+--- a/docs/specs/03-mobile/100_mobile_parcel_cost_tool.md
++++ b/docs/specs/03-mobile/100_mobile_parcel_cost_tool.md
+@@ -156,6 +156,8 @@ Everything else in `parcels` — zoning internals, bylaw fields, heritage/ravine
+ 
+ > Dated note 2026-11-19 (RR-0313, prior text kept; MF-35 follow-up · lane BL-BOX, task-356 SRCH.A6; operator, verbatim: "c. can't we put in the search box. Enter a Toronto address" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1216, decision-98), and on the outside-Toronto notice, "yes." (:1223, RR-0314, decision-99)): the search placeholder `search.input.placeholder` now reads "Enter a Toronto address", replacing "Enter lot address" (note above, kept). Content only: one value in `scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json`, read by the app and the web (FE-07); the generated slice and the goldens regenerated by their scripts. The notice `search.outside_toronto` ("Lots are only available in Toronto.") still shows for an address outside Toronto and the reports-left slot is unchanged. Departs from small-pages-v8 (`search.html:265`, `:278`, `:318` draw "Enter lot address"): the 2026-11-19 words are newer; the scratch mock still owes the same change (loose end, task-343).
+ 
++> Dated note 2026-11-25 (M-246, prior text kept; McFixV2.1 · task-465 · MF-35; operator, verbatim: "your typed search does not execute until you press enter or select an address. And if you press enter with an incomplete address - you get the error" (RR-0483, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2523`); "1 inside" and "6. Open that lot - they need to press enter - after filling out the address in the search box." (RR-0485, `:2533`); "465 Mock  approved" (RR-0487, `:2543`; the mock `~/Buildo-scratch/lanes-20261125/mcfixv2-465/MOCK-465-approved.html`, sha256 05b387fa3304, "replaces the approved search page design where the two differ", `:2544`); "correct" (RR-0495, `:2579`, dropping the type-more line)): **the search box the Google way.** (a) Nothing opens while typing: `unique` and the map kinds (`multi_parcel`, `unlinked`, `intersection`) open only on Enter (the field's `onSubmitEditing`, the renderer action `submit`) or a tap on a drop-down row; this replaces in part the 2026-09-16 match-type rule "unique -> navigate straight to the lot" (`mobile/src/lib/parcelSearchMatch.ts`, dated note above `buildSearchSituation`). A submitted text is queried at once (no debounce wait); a chip tap runs its saved address the same way. (b) The address list as radio cards with an amber SELECT (the 2026-11-10 note above, D17 a) is replaced on both targets: while typing the matching addresses drop under the box as rows (address only, the typed part bold), each a tap that opens its page; no title, no count badge, no Select. (c) RR-0442 (the 2026-11-24 note above) is kept and narrowed: an exact match opens on Enter or a tap. After Enter: several matches keep the rows with "More than one address matches. Tap the one you mean."; nothing found, a too-short entry and a one-row partial address show "No lot found for <the typed text>" with "Check the house number and street name." (RR-0443 c is kept: the close row stays under the line); an address outside Toronto shows "Outside Toronto" with "Lots are only available in Toronto." in the drop-down, not a red banner. A no-comma outside address still reaches the server and reads No lot found (the stated limitation, unchanged). The refine line ("Add a house number to narrow it down.", task-450 Q8.1 B) keeps its timing and shows with the rows while typing too. The prompt line "Type at least {min} characters to search." is dropped (RR-0495); {min} still fills the field's accessibility hint. (d) "We dont need a clear search" (task-330) is kept: no clear (x); the rows clear on the first delete, and the box is empty when the page regains focus after it opened a page. (e) The legal line (RR-0320, task-389) keeps its words and its place at the bottom; it, the reports-left line and the recent-search chips are smaller and quieter, and the chips show at rest only, the count line only while the drop-down is closed. (f) The semi question page reads "Is this a semi?" with the answers Yes, No and Not sure (the 2026-11-13 note above quotes the prior question; the full-width heading of the semi mock approval and Continue at 48 px, RR-0321, are kept); the question is 26/32 bold and the answers 15/20. (h) No area line under the rows (P35-D15 b, kept): the mock's districts are examples, not read from the address data. The typing state is declared as `partial` with the golden `suggest`. Not changed: the server, the meter, the compute (tasks 267, 343). Locks: `mobile/__tests__/parcelSearchScreen.behaviour.test.tsx` (T1-T17), `mobile/__tests__/parcelSearchMatch.test.ts`, `mobile/__tests__/parcelScreens.golden.test.ts`, and the web parity lock search-parity.golden.test.ts and the semi design test semi-question-design.logic.test.ts (both under the web test folder).
++
+ ## 5. Subscription-check exception (documented)
+ 
+ Consumer/mobile routes historically enforce subscription state at the **client** (the `AppLayout` gate, Spec 96 §10). This route additionally enforces it **server-side** because the response is the proprietary cost model — a value payload we will not serve to a lapsed or deleted account even if a stale client bypasses the UI gate. The gate reads the already-fetched `ctx.subscription_status`; the allowed set mirrors `AppLayout` app-content access (`trial | active | past_due | admin_managed`). The mobile `AppLayout` subscription gate remains the UX enforcement; the two are defense-in-depth, not redundancy. Parcel lookups do **not** touch the permit-shaped trial counter — a future `parcel_view_events` counter is a separate migration if ever wanted.
+diff --git a/docs/specs/03-mobile/99_mobile_state_architecture.md b/docs/specs/03-mobile/99_mobile_state_architecture.md
+index b0227fa062f1fc3d44d0cc0b41551f79018db735..9437a941bc652248b93d8a7fdd8c588b46254046 100644
+--- a/docs/specs/03-mobile/99_mobile_state_architecture.md
++++ b/docs/specs/03-mobile/99_mobile_state_architecture.md
+@@ -174,6 +174,8 @@ These stores survive app close and are reset on sign-out via §B5. Spec 77 §3.2
+ | `seenMap` (`Record<permitId, ISO8601>`) | `flightBoardSeenStore` (Zustand + persist→MMKV `flight-board-last-seen` blob) | `markSeen(permitId, updatedAt)` from `[flight-job].tsx` on detail-open | `flight-board.tsx` `renderItem` to compute `hasUpdate = updated_at !== seenMap[permitId]` per Spec 77 §3.2 | Layer 4a (MMKV plaintext — non-PII; just permit IDs + ISO timestamps) | Required (§B5) — `clearLocalSessionState` calls `useFlightBoardSeenStore.getState().reset()` |
+ | `recent` (`string[]`, newest first, at most `SEARCH_RECENT_MAX` = 3) | `recentSearchesStore` (Zustand + persist→MMKV `parcel-recent-searches` blob) | `add(query)` from `parcel-tool/index.tsx`, only when a search opens a page (the lot report, SELECT on the address list, the map page) | `parcel-tool/index.tsx` recent-search chips | Layer 4a (MMKV plaintext — a searched street address; not in the Layer 4b list above) | Required (§B5) — `clearLocalSessionState` calls `useRecentSearchesStore.getState().reset()` |
+ 
++> Dated note 2026-11-25 (M-246, prior text kept; McFixV2.1 · task-465; operator, verbatim: "your typed search does not execute until you press enter or select an address. And if you press enter with an incomplete address - you get the error" (RR-0483, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2523`); "1 inside" and "6. Open that lot - they need to press enter - after filling out the address in the search box." (RR-0485, `:2533`); "465 Mock  approved" (RR-0487, `:2543`; the mock `~/Buildo-scratch/lanes-20261125/mcfixv2-465/MOCK-465-approved.html`, sha256 05b387fa3304, "replaces the approved search page design where the two differ", `:2544`); "correct" (RR-0495, `:2579`, dropping the type-more line)): the `add(query)` triggers are now a tap on a drop-down row or Enter (on a lot, or on a map kind), not SELECT on the address list (the radio cards and SELECT are gone); a chip tap runs its saved address as Enter does. The recorded text is the submitted text when there is one (an Enter before the debounce), else the debounced query. The screen also holds `submitted` (component state, Layer 1): the text run with Enter, cleared by the next keystroke; after the screen opened a page, its next focus empties the box and `submitted` (a tab switch does not).
++
+ > Dated note 2026-11-10 (M-246, prior text kept; MF-35 · McFrontend queue · lane MF-35 build; operator, verbatim: "D15 b, D16 a, D17 a D18 a, D-2 a , D-9 a, D-1 a"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-10: MF-35 v3 and MF-51 decisions"; plan `~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md`): the `recentSearchesStore` row above is added by MF-35 (P35-D16 a: the MaxBLD search page's recent searches on the phone, max 3, newest first, duplicates ignoring case removed, saved only when a search opens a page, cleared at sign-out). A searched street address is none of the Layer 4b items (tokens, keys, payment credentials, government IDs, photo content; :97), so Layer 4a applies. `storeReset.coverage.test.ts` finds the new store with no count change (its guard is `>= 6`).
+ 
+ > Dated note 2026-11-25 (task-454): SEARCH_RECENT_MAX is now the setting maxbld_page_recent_max.
+diff --git a/mobile/__tests__/fixtures/parcelSearch.situations.json b/mobile/__tests__/fixtures/parcelSearch.situations.json
+index f56f95ac35bdf8a05134bb95538c46e2b84f4a06..b2b4316c9e562c1286553975a9a3b1971173d29a 100644
+--- a/mobile/__tests__/fixtures/parcelSearch.situations.json
++++ b/mobile/__tests__/fixtures/parcelSearch.situations.json
+@@ -1,5 +1,5 @@
+ {
+-  "$comment": "MF-35 (plan v3 §2.1, §7): the named render situations of the parcel search page, the input of searchProps (SearchBinding.tsx). A committed golden names one of these by `situation`; the others are the named test cases of parcelScreens.golden.test.ts. Each value has the shape of SearchSituation (mobile/src/lib/parcelSearchMatch.ts); parcelSearchMatch.test.ts rebuilds several of them with buildSearchSituation from the hook values, so a situation here cannot drift from the helper. Parcel ids are synthetic.",
++  "$comment": "MF-35 (plan v3 §2.1, §7): the named render situations of the parcel search page, the input of searchProps (SearchBinding.tsx). A committed golden names one of these by `situation`; the others are the named test cases of parcelScreens.golden.test.ts. Each value has the shape of SearchSituation (mobile/src/lib/parcelSearchMatch.ts); parcelSearchMatch.test.ts rebuilds several of them with buildSearchSituation from the hook values, so a situation here cannot drift from the helper. Parcel ids are synthetic. Dated 2026-11-25 (task-465 McFixV2.1; prior shape kept as text: each situation carried selectedParcelId and showPrompt, both removed, RR-0487 and RR-0495): each situation carries submitted (the text run with Enter or a chip tap), rows, hint, showOutside, showChips and showCount; suggest is the typing state (rows under the box, nothing opens); typing_unique (was none_checked) types an exact address without Enter; deleting is the first delete; short_query_enter (was prompt_type_more) is Enter on a 2-character query, the miss line (RR-0495).",
+   "static": {
+     "input": "",
+     "query": "",
+@@ -15,13 +15,17 @@
+     "candidates": [],
+     "overCap": false,
+     "showMiss": false,
+-    "showPrompt": true,
+     "recent": [
+       "Queen & Spadina",
+       "26 Hurlingham Cres",
+       "Bathurst St"
+     ],
+-    "selectedParcelId": null,
++    "submitted": null,
++    "rows": [],
++    "hint": null,
++    "showOutside": false,
++    "showChips": true,
++    "showCount": true,
+     "route": null
+   },
+   "loading": {
+@@ -39,9 +43,13 @@
+     "candidates": [],
+     "overCap": false,
+     "showMiss": false,
+-    "showPrompt": false,
+     "recent": [],
+-    "selectedParcelId": null,
++    "submitted": "26 Hurlingham Cres",
++    "rows": [],
++    "hint": null,
++    "showOutside": false,
++    "showChips": false,
++    "showCount": true,
+     "route": null
+   },
+   "redirect": {
+@@ -59,14 +67,79 @@
+     "candidates": [],
+     "overCap": false,
+     "showMiss": false,
+-    "showPrompt": false,
+     "recent": [
+       "Bathurst St"
+     ],
+-    "selectedParcelId": null,
++    "submitted": "26 Hurlingham Cres",
++    "rows": [
++      {
++        "parcelId": "100026",
++        "address": "26 Hurlingham Cres",
++        "route": "/(app)/parcel-tool/100026"
++      }
++    ],
++    "hint": null,
++    "showOutside": false,
++    "showChips": false,
++    "showCount": false,
+     "route": "/(app)/parcel-tool/100026"
+   },
+   "ambiguous": {
++    "input": "18 Preston",
++    "query": "18 Preston",
++    "outcome": "text_candidates",
++    "isFetching": false,
++    "errors": {
++      "rateLimited": false,
++      "retryAfterSeconds": null,
++      "entitlement": false,
++      "unexpected": false,
++      "schemaDrift": false
++    },
++    "candidates": [
++      {
++        "parcelId": "100181",
++        "address": "18 Preston Pl"
++      },
++      {
++        "parcelId": "100182",
++        "address": "18 Preston St"
++      },
++      {
++        "parcelId": "100183",
++        "address": "18 Preston Rd"
++      }
++    ],
++    "overCap": false,
++    "showMiss": false,
++    "recent": [
++      "Queen & Spadina"
++    ],
++    "submitted": "18 Preston",
++    "rows": [
++      {
++        "parcelId": "100181",
++        "address": "18 Preston Pl",
++        "route": "/(app)/parcel-tool/100181"
++      },
++      {
++        "parcelId": "100182",
++        "address": "18 Preston St",
++        "route": "/(app)/parcel-tool/100182"
++      },
++      {
++        "parcelId": "100183",
++        "address": "18 Preston Rd",
++        "route": "/(app)/parcel-tool/100183"
++      }
++    ],
++    "hint": "several",
++    "showOutside": false,
++    "showChips": false,
++    "showCount": false,
++    "route": null
++  },
++  "suggest": {
+     "input": "Bathurst St",
+     "query": "Bathurst St",
+     "outcome": "text_candidates",
+@@ -122,11 +195,64 @@
+     ],
+     "overCap": true,
+     "showMiss": false,
+-    "showPrompt": false,
+-    "recent": [
+-      "Queen & Spadina"
++    "recent": [],
++    "submitted": null,
++    "rows": [
++      {
++        "parcelId": "100100",
++        "address": "100 Bathurst St",
++        "route": "/(app)/parcel-tool/100100"
++      },
++      {
++        "parcelId": "100102",
++        "address": "102 Bathurst St",
++        "route": "/(app)/parcel-tool/100102"
++      },
++      {
++        "parcelId": "100104",
++        "address": "104 Bathurst St",
++        "route": "/(app)/parcel-tool/100104"
++      },
++      {
++        "parcelId": "100001",
++        "address": "1 Bathurst St",
++        "route": "/(app)/parcel-tool/100001"
++      },
++      {
++        "parcelId": "100010",
++        "address": "10 Bathurst St",
++        "route": "/(app)/parcel-tool/100010"
++      },
++      {
++        "parcelId": "100106",
++        "address": "106 Bathurst St",
++        "route": "/(app)/parcel-tool/100106"
++      },
++      {
++        "parcelId": "100108",
++        "address": "108 Bathurst St",
++        "route": "/(app)/parcel-tool/100108"
++      },
++      {
++        "parcelId": "100110",
++        "address": "110 Bathurst St",
++        "route": "/(app)/parcel-tool/100110"
++      },
++      {
++        "parcelId": "100112",
++        "address": "112 Bathurst St",
++        "route": "/(app)/parcel-tool/100112"
++      },
++      {
++        "parcelId": "100114",
++        "address": "",
++        "route": "/(app)/parcel-tool/100114"
++      }
+     ],
+-    "selectedParcelId": "100102",
++    "hint": "refine",
++    "showOutside": false,
++    "showChips": false,
++    "showCount": false,
+     "route": null
+   },
+   "miss": {
+@@ -144,9 +270,13 @@
+     "candidates": [],
+     "overCap": false,
+     "showMiss": true,
+-    "showPrompt": false,
+     "recent": [],
+-    "selectedParcelId": null,
++    "submitted": "zzzz qqqq",
++    "rows": [],
++    "hint": null,
++    "showOutside": false,
++    "showChips": false,
++    "showCount": false,
+     "route": null
+   },
+   "empty": {
+@@ -164,13 +294,17 @@
+     "candidates": [],
+     "overCap": false,
+     "showMiss": false,
+-    "showPrompt": false,
+     "recent": [
+       "Queen & Spadina",
+       "26 Hurlingham Cres",
+       "Bathurst St"
+     ],
+-    "selectedParcelId": null,
++    "submitted": "100 City Centre Dr, Mississauga",
++    "rows": [],
++    "hint": null,
++    "showOutside": true,
++    "showChips": false,
++    "showCount": false,
+     "route": null
+   },
+   "schema_drift": {
+@@ -188,9 +322,13 @@
+     "candidates": [],
+     "overCap": false,
+     "showMiss": false,
+-    "showPrompt": false,
+     "recent": [],
+-    "selectedParcelId": null,
++    "submitted": "26 Hurlingham Cres",
++    "rows": [],
++    "hint": null,
++    "showOutside": false,
++    "showChips": false,
++    "showCount": true,
+     "route": null
+   },
+   "rate_limited": {
+@@ -208,9 +346,13 @@
+     "candidates": [],
+     "overCap": false,
+     "showMiss": false,
+-    "showPrompt": false,
+     "recent": [],
+-    "selectedParcelId": null,
++    "submitted": "26 Hurlingham Cres",
++    "rows": [],
++    "hint": null,
++    "showOutside": false,
++    "showChips": false,
++    "showCount": true,
+     "route": null
+   },
+   "unauthorized": {
+@@ -228,9 +370,13 @@
+     "candidates": [],
+     "overCap": false,
+     "showMiss": false,
+-    "showPrompt": false,
+     "recent": [],
+-    "selectedParcelId": null,
++    "submitted": "26 Hurlingham Cres",
++    "rows": [],
++    "hint": null,
++    "showOutside": false,
++    "showChips": false,
++    "showCount": true,
+     "route": null
+   },
+   "error": {
+@@ -248,9 +394,13 @@
+     "candidates": [],
+     "overCap": false,
+     "showMiss": false,
+-    "showPrompt": false,
+     "recent": [],
+-    "selectedParcelId": null,
++    "submitted": "26 Hurlingham Cres",
++    "rows": [],
++    "hint": null,
++    "showOutside": false,
++    "showChips": false,
++    "showCount": true,
+     "route": null
+   },
+   "rate_limited_zero": {
+@@ -268,9 +418,13 @@
+     "candidates": [],
+     "overCap": false,
+     "showMiss": false,
+-    "showPrompt": false,
+     "recent": [],
+-    "selectedParcelId": null,
++    "submitted": "26 Hurlingham Cres",
++    "rows": [],
++    "hint": null,
++    "showOutside": false,
++    "showChips": false,
++    "showCount": true,
+     "route": null
+   },
+   "fetching_with_candidates": {
+@@ -299,16 +453,66 @@
+         "address": "104 Bathurst St"
+       }
+     ],
++    "overCap": true,
++    "showMiss": false,
++    "recent": [],
++    "submitted": null,
++    "rows": [
++      {
++        "parcelId": "100100",
++        "address": "100 Bathurst St",
++        "route": "/(app)/parcel-tool/100100"
++      },
++      {
++        "parcelId": "100102",
++        "address": "102 Bathurst St",
++        "route": "/(app)/parcel-tool/100102"
++      },
++      {
++        "parcelId": "100104",
++        "address": "104 Bathurst St",
++        "route": "/(app)/parcel-tool/100104"
++      }
++    ],
++    "hint": "refine",
++    "showOutside": false,
++    "showChips": false,
++    "showCount": false,
++    "route": null
++  },
++  "typing_unique": {
++    "input": "26 Hurlingham Cres",
++    "query": "26 Hurlingham Cres",
++    "outcome": "unique",
++    "isFetching": false,
++    "errors": {
++      "rateLimited": false,
++      "retryAfterSeconds": null,
++      "entitlement": false,
++      "unexpected": false,
++      "schemaDrift": false
++    },
++    "candidates": [],
+     "overCap": false,
+     "showMiss": false,
+-    "showPrompt": false,
+     "recent": [],
+-    "selectedParcelId": null,
++    "submitted": null,
++    "rows": [
++      {
++        "parcelId": "100026",
++        "address": "26 Hurlingham Cres",
++        "route": "/(app)/parcel-tool/100026"
++      }
++    ],
++    "hint": null,
++    "showOutside": false,
++    "showChips": false,
++    "showCount": false,
+     "route": null
+   },
+-  "none_checked": {
+-    "input": "Bathurst St",
+-    "query": "Bathurst St",
++  "deleting": {
++    "input": "18 Presto",
++    "query": "18 Preston",
+     "outcome": "text_candidates",
+     "isFetching": false,
+     "errors": {
+@@ -320,26 +524,30 @@
+     },
+     "candidates": [
+       {
+-        "parcelId": "100100",
+-        "address": "100 Bathurst St"
++        "parcelId": "100181",
++        "address": "18 Preston Pl"
+       },
+       {
+-        "parcelId": "100102",
+-        "address": "102 Bathurst St"
++        "parcelId": "100182",
++        "address": "18 Preston St"
+       },
+       {
+-        "parcelId": "100104",
+-        "address": "104 Bathurst St"
++        "parcelId": "100183",
++        "address": "18 Preston Rd"
+       }
+     ],
+     "overCap": false,
+     "showMiss": false,
+-    "showPrompt": false,
+     "recent": [],
+-    "selectedParcelId": null,
++    "submitted": null,
++    "rows": [],
++    "hint": null,
++    "showOutside": false,
++    "showChips": false,
++    "showCount": true,
+     "route": null
+   },
+-  "prompt_type_more": {
++  "short_query_enter": {
+     "input": "26",
+     "query": "26",
+     "outcome": "idle",
+@@ -353,10 +561,14 @@
+     },
+     "candidates": [],
+     "overCap": false,
+-    "showMiss": false,
+-    "showPrompt": true,
++    "showMiss": true,
+     "recent": [],
+-    "selectedParcelId": null,
++    "submitted": "26",
++    "rows": [],
++    "hint": null,
++    "showOutside": false,
++    "showChips": false,
++    "showCount": false,
+     "route": null
+   },
+   "blank_idle": {
+@@ -374,9 +586,13 @@
+     "candidates": [],
+     "overCap": false,
+     "showMiss": false,
+-    "showPrompt": false,
+     "recent": [],
+-    "selectedParcelId": null,
++    "submitted": null,
++    "rows": [],
++    "hint": null,
++    "showOutside": false,
++    "showChips": false,
++    "showCount": true,
+     "route": null
+   },
+   "outside_toronto": {
+@@ -394,9 +610,13 @@
+     "candidates": [],
+     "overCap": false,
+     "showMiss": false,
+-    "showPrompt": false,
+     "recent": [],
+-    "selectedParcelId": null,
++    "submitted": "100 City Centre Dr, Mississauga",
++    "rows": [],
++    "hint": null,
++    "showOutside": true,
++    "showChips": false,
++    "showCount": false,
+     "route": null
+   },
+   "typing_ahead": {
+@@ -414,9 +634,13 @@
+     "candidates": [],
+     "overCap": false,
+     "showMiss": false,
+-    "showPrompt": false,
+     "recent": [],
+-    "selectedParcelId": null,
++    "submitted": null,
++    "rows": [],
++    "hint": null,
++    "showOutside": false,
++    "showChips": false,
++    "showCount": true,
+     "route": null
+   },
+   "navigating_intersection": {
+@@ -434,9 +658,13 @@
+     "candidates": [],
+     "overCap": false,
+     "showMiss": false,
+-    "showPrompt": false,
+     "recent": [],
+-    "selectedParcelId": null,
++    "submitted": "Queen & Spadina",
++    "rows": [],
++    "hint": null,
++    "showOutside": false,
++    "showChips": false,
++    "showCount": true,
+     "route": "/(app)/parcel-tool/disambiguate?q=Queen%20%26%20Spadina&kind=intersection"
+   },
+   "navigating_multi_parcel": {
+@@ -454,9 +682,19 @@
+     "candidates": [],
+     "overCap": false,
+     "showMiss": false,
+-    "showPrompt": false,
+     "recent": [],
+-    "selectedParcelId": null,
++    "submitted": "26 Hurlingham Cres",
++    "rows": [
++      {
++        "parcelId": "100026",
++        "address": "26 Hurlingham Cres",
++        "route": "/(app)/parcel-tool/disambiguate?q=26%20Hurlingham%20Cres&kind=multi_parcel"
++      }
++    ],
++    "hint": null,
++    "showOutside": false,
++    "showChips": false,
++    "showCount": false,
+     "route": "/(app)/parcel-tool/disambiguate?q=26%20Hurlingham%20Cres&kind=multi_parcel"
+   },
+   "navigating_unlinked": {
+@@ -474,9 +712,13 @@
+     "candidates": [],
+     "overCap": false,
+     "showMiss": false,
+-    "showPrompt": false,
+     "recent": [],
+-    "selectedParcelId": null,
++    "submitted": "26 Hurlingham Cres",
++    "rows": [],
++    "hint": null,
++    "showOutside": false,
++    "showChips": false,
++    "showCount": true,
+     "route": "/(app)/parcel-tool/disambiguate?q=26%20Hurlingham%20Cres&kind=unlinked"
+   },
+   "reports_left": {
+@@ -494,13 +736,17 @@
+     "candidates": [],
+     "overCap": false,
+     "showMiss": false,
+-    "showPrompt": true,
+     "recent": [
+       "Queen & Spadina",
+       "26 Hurlingham Cres",
+       "Bathurst St"
+     ],
+-    "selectedParcelId": null,
++    "submitted": null,
++    "rows": [],
++    "hint": null,
++    "showOutside": false,
++    "showChips": true,
++    "showCount": true,
+     "route": null,
+     "entitlement": {
+       "reportsLeft": 6,
+diff --git a/mobile/__tests__/parcelScreens.golden.test.ts b/mobile/__tests__/parcelScreens.golden.test.ts
+index c32be82c74da12b61660717d51658c17b5493880..efa7099a868a446c697195179ddeff115626ffa7 100644
+--- a/mobile/__tests__/parcelScreens.golden.test.ts
++++ b/mobile/__tests__/parcelScreens.golden.test.ts
+@@ -9,6 +9,9 @@
+ // declared closed list; and the layout rules hold on every tree: Text carries size, weight and colour; Button and Input carry min-h-[44px] and no
+ // other min-h-; each dark: token of a vendored variant in use has a twin with the same chain (P35-D2 a); a checked card has border-primary twins;
+ // SELECT is disabled with nothing checked; every component is in mapping.mobile.SEARCH; every child node carries a key (RG-15).
++// Dated 2026-11-25 (task-465 McFixV2.1; RR-0483, RR-0487, RR-0495; prior text kept): the radio cards and SELECT are gone, so their two rules
++// (a checked card's border twins, SELECT disabled with nothing checked) and their planted proofs go with them; a new rule refuses any radio role,
++// the Select testID and an Alert around the outside-Toronto line. 12 goldens (the typing state `partial`, golden `suggest`).
+ import fs from 'node:fs';
+ import path from 'node:path';
+ import { DERIVED_NAMES, SEARCH_CANDIDATE_LIMIT, SEARCH_DEBOUNCE_MS, SEARCH_MIN_QUERY_LEN, SEARCH_SLICE, searchProps, type PropsNode } from '@/components/surfaces/SearchBinding';
+@@ -23,8 +26,9 @@ const goldens = (rj(path.join(__dirname, 'fixtures/surfaces/mobile_parcel_search
+ const bindings = rj(path.join(REPO, 'scripts/surfaces/_schema/bindings.json')) as { mapping: { mobile: { SEARCH: string[] } }; touch_targets: { mobile: Record<string, string[]> } };
+ 
+ /** The named cases (plan v3 §7): situations that are not committed goldens but are asserted below. */
++// Dated 2026-11-25 (task-465; prior list kept as text: none_checked and prompt_type_more): typing_unique, deleting and short_query_enter.
+ export const NAMED_CASES = [
+-  'rate_limited_zero', 'fetching_with_candidates', 'none_checked', 'prompt_type_more', 'blank_idle', 'outside_toronto', 'typing_ahead',
++  'rate_limited_zero', 'fetching_with_candidates', 'typing_unique', 'deleting', 'short_query_enter', 'blank_idle', 'outside_toronto', 'typing_ahead',
+   'navigating_intersection', 'navigating_multi_parcel', 'navigating_unlinked',
+ ];
+ 
+@@ -62,13 +66,12 @@ export function layoutProblems(t: PropsNode, darkChains: { outline: string[]; in
+     }
+     const chains = n.component === 'Input' ? darkChains.input : n.component === 'Button' && n.props.variant === 'outline' ? darkChains.outline : [];
+     for (const c of chains) if (!tk.some((x) => x.startsWith(c))) out.push(`${at}: no ${c} twin`);
+-    if (n.props.role === 'radio' && (n.props.accessibilityState as Json | undefined)?.checked === true && !(tk.includes('border-report-ink') && tk.includes('dark:border-report-ink'))) out.push(`${at}: a checked card without border-report-ink dark:border-report-ink`);
++    if (n.props.role === 'radio') out.push(`${at}: a radio card (task-465: rows are taps, RR-0487)`);
++    if (n.props.testID === 'parcel-search-select') out.push(`${at}: a Select button (task-465: RR-0487)`);
++    if (n.component === 'Alert' && n.props.testID === 'parcel-search-outside-toronto') out.push(`${at}: the outside-Toronto line is an Alert (task-465: a drop-down line)`);
+     for (const c of n.children) if (isNode(c)) walk(c, n);
+   };
+   walk(t, null);
+-  const cards = nodes(t).filter((n) => n.props.role === 'radio');
+-  const select = byTestID(t, 'parcel-search-select');
+-  if (select && !cards.some((c) => (c.props.accessibilityState as Json).checked === true) && (select.props.disabled !== true || select.props.onPress !== null)) out.push('SELECT is enabled with nothing checked');
+   for (const name of refs(t, 'derived')) if (!DERIVED_NAMES.some((re) => re.test(name))) out.push(`derived name ${name} is not declared`);
+   return out;
+ }
+@@ -88,8 +91,9 @@ describe('mobile_parcel_search goldens (FE-31; plan v3 §7)', () => {
+   const names = Object.keys(goldens);
+   // Dated 2026-11-20 (task-354, MOBILE.CI-1; Mobile CI run 44741125636): the committed set is 11 since ace05ccee (2026-11-19, SRCH.A6, the reports_left
+   // golden of the reports-left line); the pin said 10 and was never run. The check is unchanged: the exact set of names, then each golden equals searchProps.
+-  it('11 committed goldens, one per declared state, each naming a situation; searchProps(situation) equals the golden props exactly', () => {
+-    expect(names.sort()).toEqual(['ambiguous', 'empty', 'error', 'loading', 'miss', 'rate_limited', 'redirect', 'reports_left', 'schema_drift', 'static', 'unauthorized']);
++  // Dated 2026-11-25 (task-465; prior title kept: "11 committed goldens, ..."): 12, the typing state's golden suggest added.
++  it('12 committed goldens, one per declared state, each naming a situation; searchProps(situation) equals the golden props exactly', () => {
++    expect(names.sort()).toEqual(['ambiguous', 'empty', 'error', 'loading', 'miss', 'rate_limited', 'redirect', 'reports_left', 'schema_drift', 'static', 'suggest', 'unauthorized']);
+     for (const n of names) {
+       const g = goldens[n] as { situation: string; props: PropsNode; target: string; surface: string };
+       expect([n, g.surface, g.target, g.situation in situations]).toEqual([n, 'mobile_parcel_search', 'mobile', true]);
+@@ -127,29 +131,33 @@ describe('mobile_parcel_search goldens (FE-31; plan v3 §7)', () => {
+     expect(chains).toEqual({ outline: ['dark:bg-', 'dark:border-', 'dark:active:bg-'], input: ['dark:bg-'] });
+     for (const k of [...names.map((n) => goldens[n]!.situation as string), ...NAMED_CASES]) expect([k, layoutProblems(searchProps(situations[k] as SearchSituation), chains)]).toEqual([k, []]);
+   });
+-  it('RED (planted): a missing dark twin, a sub-44 chip, a checked card without border-primary, SELECT enabled with nothing checked, an undeclared derived name, a Card, a keyless child', () => {
++  // Dated 2026-11-25 (task-465; prior title kept: "RED (planted): a missing dark twin, a sub-44 chip, a checked card without border-primary, SELECT enabled
++  // with nothing checked, an undeclared derived name, a Card, a keyless child"): the card and SELECT proofs go with their blocks; three new ones come in.
++  it('RED (planted): a missing dark twin, a sub-44 row, an undeclared derived name, a Card, a keyless child, a radio row, a Select button, an Alert outside line', () => {
+     const chains = vendorDarkChains();
+-    const t = searchProps(situations.ambiguous as SearchSituation);
++    const t = searchProps(situations.suggest as SearchSituation);
+     const col = (t.children[0] as PropsNode).children[0] as PropsNode;
+-    const card = col.children.find((c) => isNode(c) && c.props.role === 'radio' && (c.props.accessibilityState as Json).checked) as PropsNode;
+-    card.props.className = String(card.props.className).replace('dark:border-report-ink', '').replace('dark:active:bg-report-sky', '');
+-    const other = col.children.find((c) => isNode(c) && c.props.role === 'radio' && !(c.props.accessibilityState as Json).checked) as PropsNode;
+-    other.props.className = String(other.props.className).replace('min-h-[44px]', 'min-h-[44px] sm:min-h-8');
++    const input = byTestID(t, 'parcel-search-input') as PropsNode;
++    input.props.className = String(input.props.className).replace('dark:bg-transparent', '');
++    const row = byTestID(t, 'parcel-candidate-100102') as PropsNode;
++    row.props.className = String(row.props.className).replace('min-h-[48px]', 'min-h-[48px] sm:min-h-8');
++    const other = byTestID(t, 'parcel-candidate-100104') as PropsNode;
++    other.props.role = 'radio';
+     col.children.push({ component: 'Card', props: {}, children: [{ derived: 'other' }] });
++    col.children.push({ component: 'Button', props: { key: 'select', testID: 'parcel-search-select', className: 'min-h-[44px]' }, children: [] });
++    col.children.push({ component: 'Alert', props: { key: 'outside', testID: 'parcel-search-outside-toronto' }, children: [] });
+     const p = layoutProblems(t, chains);
+     expect(p).toEqual(expect.arrayContaining([
+-      '100102: no dark:active:bg- twin',
+-      '100102: a checked card without border-report-ink dark:border-report-ink',
++      'input: no dark:bg- twin',
+       // Dated 2026-11-20 (task-354): the message names the whole list since 8a5387194 (2026-11-19, SUITE.FIX-2: touch_targets.mobile.Button lists 44 and 48 px).
+-      '100100: Button min-h tokens ["min-h-[44px]","sm:min-h-8"] (need exactly one of min-h-[44px]|min-h-[48px])',
++      '100102: Button min-h tokens ["min-h-[48px]","sm:min-h-8"] (need exactly one of min-h-[44px]|min-h-[48px])',
++      '100104: a radio card (task-465: rows are taps, RR-0487)',
++      'select: a Select button (task-465: RR-0487)',
++      'outside: the outside-Toronto line is an Alert (task-465: a drop-down line)',
+       'Card: Card is not in mapping.mobile.SEARCH',
+       'Card: a child node without a key',
+       'derived name other is not declared',
+     ]));
+-    const none = searchProps(situations.none_checked as SearchSituation);
+-    const sel = byTestID(none, 'parcel-search-select') as PropsNode;
+-    sel.props.disabled = false;
+-    expect(layoutProblems(none, chains)).toEqual(['SELECT is enabled with nothing checked']);
+   });
+ });
+ 
+@@ -165,39 +173,52 @@ describe('named cases (plan v3 §7; must-survive rows 7-17)', () => {
+     expect(ids(t)).not.toEqual(expect.arrayContaining(['parcel-search-retry']));
+     expect(refs(t, 'contract')).toContain('contract_parcels_lookup.errors.429.retryAfterSeconds');
+   });
+-  it('the spinner shows over still-listed candidates; the block order is notices, list, refine, miss, prompt', () => {
++  // Dated 2026-11-25 (task-465; prior title kept: "the spinner shows over still-listed candidates; the block order is notices, list, refine, miss, prompt"):
++  // the lines sit in the drop-down under the box: the miss and the outside line, then the rows, the one hint line, the help link; the notices follow the box.
++  it('the spinner shows over still-listed rows; the drop-down order is the lines, the rows, the hint or refine line, the help link', () => {
+     const t = at('fetching_with_candidates');
+     expect(ids(t)).toEqual(expect.arrayContaining(['parcel-search-spinner', 'parcel-candidate-100100']));
+-    const order = ids(at('rate_limited_zero')).filter((x) => /ratelimit|error|retry|candidate|refine|empty|prompt/.test(x));
++    expect(ids(t).filter((x) => /drop|candidate|refine|hint|empty|report/.test(x))).toEqual(['parcel-search-drop', 'parcel-candidate-100100', 'parcel-candidate-100102', 'parcel-candidate-100104', 'parcel-search-refine', 'parcel-search-report']);
++    expect(ids(at('ambiguous')).filter((x) => /drop|candidate|refine|hint|empty|report/.test(x))).toEqual(['parcel-search-drop', 'parcel-candidate-100181', 'parcel-candidate-100182', 'parcel-candidate-100183', 'parcel-search-hint', 'parcel-search-report']);
++    const order = ids(at('rate_limited_zero')).filter((x) => /ratelimit|error|retry|candidate|refine|empty/.test(x));
+     expect(order).toEqual(['parcel-search-ratelimit']); // task-450 L3: one message for a retry-after of 0
+   });
+-  it('the prompt shows for a short query and not for an idle 3+ query; outside Toronto shows no spinner and no prompt', () => {
+-    expect(ids(at('prompt_type_more'))).toContain('parcel-search-prompt');
+-    expect(ids(at('blank_idle')).filter((x) => /prompt|empty|refine|error|ratelimit|entitlement|outside|candidate/.test(x))).toEqual([]);
++  // Dated 2026-11-25 (task-465, RR-0495; prior title kept: "the prompt shows for a short query and not for an idle 3+ query; outside Toronto shows no spinner and no prompt").
++  it('a short Enter shows the miss line; an idle typed query shows no line; outside Toronto after Enter shows its drop-down line and no spinner', () => {
++    expect(ids(at('short_query_enter'))).toContain('parcel-search-empty');
++    expect(ids(at('blank_idle')).filter((x) => /prompt|empty|refine|error|ratelimit|entitlement|outside|candidate|drop/.test(x))).toEqual([]);
+     expect(ids(at('outside_toronto')).filter((x) => /prompt|spinner/.test(x))).toEqual([]);
+-    expect(ids(at('outside_toronto'))).toContain('parcel-search-outside-toronto');
++    expect(ids(at('outside_toronto'))).toEqual(expect.arrayContaining(['parcel-search-drop', 'parcel-search-outside-toronto']));
++    expect(nodes(at('outside_toronto')).some((n) => n.component === 'Alert')).toBe(false);
+   });
+-  it('no recent searches: no chip row; three: three chips with the legacy testIDs and labels', () => {
++  it('no recent searches: no chip row; three: three chips with the legacy testIDs and labels; the chips hide once anything is typed (task-465 O7)', () => {
+     expect(nodes(at('blank_idle')).some((n) => n.props.key === 'chips')).toBe(false);
+     expect(ids(at('static')).filter((x) => x.startsWith('parcel-search-suggestion-'))).toEqual(['parcel-search-suggestion-Queen & Spadina', 'parcel-search-suggestion-26 Hurlingham Cres', 'parcel-search-suggestion-Bathurst St']);
++    expect(nodes(at('empty')).some((n) => n.props.key === 'chips')).toBe(false);
+   });
+-  it('the field shows the raw input at once while everything else reads the debounced query (row 22)', () => {
++  it('the field shows the raw input at once while everything else reads the debounced query (row 22); Enter fires submit (task-465)', () => {
+     const input = byTestID(at('typing_ahead'), 'parcel-search-input') as PropsNode;
+     expect(input.props.value).toEqual({ derived: 'input' });
++    expect(input.props.onSubmitEditing).toEqual({ action: 'submit' });
+   });
+-  it('the map kinds and unique carry their route as navigate and render no address list (row 28)', () => {
++  it('the map kinds and unique carry their route as navigate and render no radio card (row 28)', () => {
+     for (const k of ['navigating_intersection', 'navigating_multi_parcel', 'navigating_unlinked', 'redirect']) {
+       const t = at(k);
+       expect([k, t.props.navigate]).toEqual([k, (situations[k] as SearchSituation).route]);
+       expect(nodes(t).some((n) => n.props.role === 'radio')).toBe(false);
+     }
++    expect(at('typing_unique').props.navigate).toBeUndefined();
++    expect(ids(at('typing_unique'))).toContain('parcel-candidate-100026');
+   });
+-  it('a candidate tap selects (no route); SELECT pushes the selected lot by the legacy route string', () => {
++  // Dated 2026-11-25 (task-465; prior title kept: "a candidate tap selects (no route); SELECT pushes the selected lot by the legacy route string").
++  it('a row tap pushes its lot by the legacy route string; no Select; the typing list keeps the cap and the refine line; the first delete draws no rows', () => {
+     const t = at('ambiguous');
+-    expect((byTestID(t, 'parcel-candidate-100100') as PropsNode).props.onPress).toEqual({ action: 'select', parcelId: { contract: 'contract_parcels_lookup.candidates.0.parcelId' } });
+-    expect((byTestID(t, 'parcel-search-select') as PropsNode).props.onPress).toEqual({ action: 'push', route: '/(app)/parcel-tool/100102' });
+-    expect(nodes(t).filter((n) => n.props.role === 'radio')).toHaveLength(SEARCH_CANDIDATE_LIMIT);
+-    expect(ids(t)).toContain('parcel-search-refine');
++    expect((byTestID(t, 'parcel-candidate-100181') as PropsNode).props.onPress).toEqual({ action: 'push', route: '/(app)/parcel-tool/100181' });
++    expect(byTestID(t, 'parcel-search-select')).toBeUndefined();
++    const s = at('suggest');
++    expect(ids(s).filter((x) => x.startsWith('parcel-candidate-'))).toHaveLength(SEARCH_CANDIDATE_LIMIT);
++    expect(ids(s)).toContain('parcel-search-refine');
++    expect(ids(at('deleting')).filter((x) => /candidate|drop/.test(x))).toEqual([]);
+   });
+ });
+ 
+@@ -211,7 +232,8 @@ describe('one home for the config values (row 24, RG-14)', () => {
+     expect(SEARCH_SLICE.config).toEqual({ debounce_ms: SEARCH_DEBOUNCE_MS, min_query_len: SEARCH_MIN_QUERY_LEN, entitlement_stale_ms: 0, lookup_retry_max: 3, lookup_stale_ms: 60000, candidate_cap: 10, recent_max: 3 }); // FIX.TUNE (task-378): the phone tunables are declared beside them; task-454: the cap and the recent count
+     // Dated 2026-11-24 (task-450 L5 and Q8.2; prior text kept: the strings held "at least ${SEARCH_MIN_QUERY_LEN} characters" and "More than
+     // ${SEARCH_CANDIDATE_LIMIT} lots"): the minimum length is a {min} template filled from the setting, and the refine line names no count.
+-    expect(SEARCH_SLICE.content['search.prompt']).toContain('at least {min} characters');
++    // Dated 2026-11-25 (task-465, RR-0495; prior line kept as text: search.prompt held "at least {min} characters"): the prompt key is dropped.
++    expect(SEARCH_SLICE.content).not.toHaveProperty('search.prompt');
+     expect(SEARCH_SLICE.content['search.input.hint']).toContain('at least {min} characters');
+     expect(SEARCH_SLICE.content['list.refine']).toBe('Add a house number to narrow it down.');
+   });
+@@ -254,7 +276,7 @@ describe('MF-58 the legal line on the search page (ruling 2026-11-10 items 16 an
+       expect([k, ks.filter((x) => x === 'legal').length]).toEqual([k, 1]);
+       expect([k, ks[ks.length - 1]]).toEqual([k, 'legal']);
+       expect([k, ks.includes('reports-left')]).toEqual([k, k === 'reports_left']); // only the reports_left situation carries an entitlement
+-      if (ks.includes('reports-left')) expect([k, ks[ks.indexOf('pill') + 1]]).toEqual([k, 'reports-left']);
++      if (ks.includes('reports-left')) expect([k, ks[ks.indexOf('box') + 1]]).toEqual([k, 'reports-left']); // task-465: the pill is now the box
+       const legal = column(t).children.find((c) => isNode(c) && c.props.key === 'legal') as PropsNode;
+       expect([k, legal.component, legal.props.testID, legal.children]).toEqual([k, 'Text', 'parcel-search-legal', [{ content: 'search.legal' }]]);
+     }
+diff --git a/mobile/__tests__/parcelSearchMatch.test.ts b/mobile/__tests__/parcelSearchMatch.test.ts
+index 08e9307b5303efb9260d57d289d024b7ef55995c..86ca102013a7ca806f7fbb9d83ddc0fd6d701be7 100644
+--- a/mobile/__tests__/parcelSearchMatch.test.ts
++++ b/mobile/__tests__/parcelSearchMatch.test.ts
+@@ -382,8 +382,10 @@ describe('MF-35 situation helpers', () => {
+   const { ApiError, RateLimitError } = require('@/lib/errors') as typeof import('@/lib/errors');
+   // eslint-disable-next-line @typescript-eslint/no-require-imports
+   const S = require('./fixtures/parcelSearch.situations.json') as Record<string, unknown>;
+-  const base = { input: '', debounced: '', data: undefined, error: null as unknown, isFetching: false, schemaDrift: false, recent: [] as string[], selectedParcelId: null, cap: 10, minQueryLen: 3 };
+-  const cands = (S.ambiguous as { candidates: { parcelId: string; address: string }[] }).candidates;
++  // Dated 2026-11-25 (task-465; prior base kept as text: selectedParcelId null, no submitted): the builder takes `submitted`, the text run with Enter.
++  const base = { input: '', debounced: '', submitted: null as string | null, data: undefined, error: null as unknown, isFetching: false, schemaDrift: false, recent: [] as string[], cap: 10, minQueryLen: 3 };
++  const cands = (S.suggest as { candidates: { parcelId: string; address: string }[] }).candidates;
++  const ran = (q: string) => ({ input: q, debounced: q, submitted: q });
+   // Dated 2026-11-24 (task-450 SEARCHFIX.2, Q19): the payloads carry the server's `resolution`, as the server always sends it (a payload without it reads as no_match).
+   const lookup = (candidates: { parcelId: string; address: string }[], match: unknown = null) =>
+     ({ match, candidates, warnings: [], parcel: null, resolution: match ? 'unique' : candidates.length > 0 ? 'text_candidates' : 'no_match' }) as never;
+@@ -400,31 +402,90 @@ describe('MF-35 situation helpers', () => {
+     expect(M.classifyParcelSearchError(new Error('drift'), true)).toMatchObject({ unexpected: true, schemaDrift: true });
+     expect(M.classifyParcelSearchError(null, false)).toEqual({ rateLimited: false, retryAfterSeconds: null, entitlement: false, unexpected: false, schemaDrift: false });
+   });
+-  it('rebuilds the named situations from hook values: static, ambiguous, empty, rate_limited_zero, miss, redirect', () => {
++  // Dated 2026-11-25 (task-465; prior title kept: "rebuilds the named situations from hook values: static, ambiguous, empty, rate_limited_zero, miss,
++  // redirect"): the same six plus suggest, typing_unique, deleting and short_query_enter, each from the hook values and `submitted`.
++  it('rebuilds the named situations from hook values (static, ambiguous, suggest, empty, rate_limited_zero, miss, redirect, typing_unique, deleting, short_query_enter)', () => {
+     const recent = ['Queen & Spadina', '26 Hurlingham Cres', 'Bathurst St'];
++    const preston = (S.ambiguous as { candidates: { parcelId: string; address: string }[] }).candidates;
++    const H = '26 Hurlingham Cres';
++    const unique = lookup([], { parcelId: '100026', matchType: 'exact', address: H });
+     expect(M.buildSearchSituation({ ...base, recent })).toEqual(S.static);
+-    expect(M.buildSearchSituation({ ...base, input: 'Bathurst St', debounced: 'Bathurst St', data: lookup([...cands, { parcelId: '100116', address: '116 Bathurst St' }, { parcelId: '100118', address: '118 Bathurst St' }]), selectedParcelId: '100102', recent: ['Queen & Spadina'] })).toEqual(S.ambiguous);
+-    expect(M.buildSearchSituation({ ...base, input: '100 City Centre Dr, Mississauga', debounced: '100 City Centre Dr, Mississauga', recent })).toEqual(S.empty);
+-    expect(M.buildSearchSituation({ ...base, input: '26 Hurlingham Cres', debounced: '26 Hurlingham Cres', error: new RateLimitError(0) })).toEqual(S.rate_limited_zero);
+-    expect(M.buildSearchSituation({ ...base, input: 'zzzz qqqq', debounced: 'zzzz qqqq', data: lookup([]) })).toEqual(S.miss);
+-    expect(M.buildSearchSituation({ ...base, input: '26 Hurlingham Cres', debounced: '26 Hurlingham Cres', data: lookup([], { parcelId: '100026', matchType: 'exact' }), recent: ['Bathurst St'] })).toEqual(S.redirect);
+-  });
++    expect(M.buildSearchSituation({ ...base, ...ran('18 Preston'), data: lookup(preston), recent: ['Queen & Spadina'] })).toEqual(S.ambiguous);
++    expect(M.buildSearchSituation({ ...base, input: 'Bathurst St', debounced: 'Bathurst St', data: lookup(cands) })).toEqual(S.suggest);
++    expect(M.buildSearchSituation({ ...base, ...ran('100 City Centre Dr, Mississauga'), recent })).toEqual(S.empty);
++    expect(M.buildSearchSituation({ ...base, ...ran(H), error: new RateLimitError(0) })).toEqual(S.rate_limited_zero);
++    expect(M.buildSearchSituation({ ...base, ...ran('zzzz qqqq'), data: lookup([]) })).toEqual(S.miss);
++    expect(M.buildSearchSituation({ ...base, ...ran(H), data: unique, recent: ['Bathurst St'] })).toEqual(S.redirect);
++    expect(M.buildSearchSituation({ ...base, input: H, debounced: H, data: unique })).toEqual(S.typing_unique);
++    expect(M.buildSearchSituation({ ...base, input: '18 Presto', debounced: '18 Preston', data: lookup(preston) })).toEqual(S.deleting);
++    expect(M.buildSearchSituation({ ...base, ...ran('26') })).toEqual(S.short_query_enter);
++  });
++  // Dated 2026-11-25 (task-465; prior title kept: "truth table: error + data lists no candidates; the cap after the slice with the refine line at >= the
++  // cap; a settled miss keeps its line on a re-fetch (task-450 V4) and needs no error"; its selectedParcelId line is gone with the field).
+   it('truth table: error + data lists no candidates; the cap after the slice with the refine line at >= the cap; a settled miss keeps its line on a re-fetch (task-450 V4) and needs no error', () => {
+     const many = lookup(cands.slice(0, 9));
+-    expect(M.buildSearchSituation({ ...base, debounced: 'Bathurst St', data: many, error: new Error('x') }).candidates).toEqual([]);
+-    expect(M.buildSearchSituation({ ...base, debounced: '100 Bathurst St', data: many }).overCap).toBe(false);
+-    expect(M.buildSearchSituation({ ...base, debounced: 'Bathurst St', data: lookup(cands) }).overCap).toBe(true);
+-    expect(M.buildSearchSituation({ ...base, debounced: 'zzzz qqqq', data: lookup([]), isFetching: true }).showMiss).toBe(true);
+-    expect(M.buildSearchSituation({ ...base, debounced: 'zzzz qqqq', data: lookup([]), error: new Error('x') }).showMiss).toBe(false);
+-    expect(M.buildSearchSituation({ ...base, debounced: '26', error: new Error('x') }).showPrompt).toBe(false);
+-    expect(M.buildSearchSituation({ ...base, debounced: 'Bathurst St', data: lookup(cands), selectedParcelId: 'gone' }).selectedParcelId).toBeNull();
++    expect(M.buildSearchSituation({ ...base, ...ran('Bathurst St'), data: many, error: new Error('x') }).candidates).toEqual([]);
++    expect(M.buildSearchSituation({ ...base, ...ran('100 Bathurst St'), data: many }).overCap).toBe(false);
++    expect(M.buildSearchSituation({ ...base, ...ran('Bathurst St'), data: lookup(cands) }).overCap).toBe(true);
++    expect(M.buildSearchSituation({ ...base, ...ran('zzzz qqqq'), data: lookup([]), isFetching: true }).showMiss).toBe(true);
++    expect(M.buildSearchSituation({ ...base, ...ran('zzzz qqqq'), data: lookup([]), error: new Error('x') }).showMiss).toBe(false);
++    expect(M.buildSearchSituation({ ...base, ...ran('26'), error: new Error('x') }).showMiss).toBe(false);
++    expect(M.buildSearchSituation({ ...base, ...ran('Bathurst St'), data: lookup(cands) })).not.toHaveProperty('selectedParcelId');
++    expect(M.buildSearchSituation({ ...base, ...ran('Bathurst St'), data: lookup(cands) })).not.toHaveProperty('showPrompt');
+   });
+   it('task-450 AC2 (V4): a settled miss fetched again keeps the no-match line (no flicker)', () => {
+-    const settled = M.buildSearchSituation({ ...base, input: 'zzzz qqqq', debounced: 'zzzz qqqq', data: lookup([]), isFetching: false });
+-    const refetching = M.buildSearchSituation({ ...base, input: 'zzzz qqqq', debounced: 'zzzz qqqq', data: lookup([]), isFetching: true });
++    const settled = M.buildSearchSituation({ ...base, ...ran('zzzz qqqq'), data: lookup([]), isFetching: false });
++    const refetching = M.buildSearchSituation({ ...base, ...ran('zzzz qqqq'), data: lookup([]), isFetching: true });
+     expect(settled.showMiss).toBe(true);
+     expect(refetching.showMiss).toBe(true);
+   });
++  it('task-465: a route only for a submitted query whose fetch has settled; a unique gives one row; a typed unique opens nothing', () => {
++    const unique = lookup([], { parcelId: '100026', matchType: 'exact', address: '26 Hurlingham Cres' });
++    const typed = M.buildSearchSituation({ ...base, input: '26 Hurlingham Cres', debounced: '26 Hurlingham Cres', data: unique });
++    expect(typed.route).toBeNull();
++    expect(typed.rows).toEqual([{ parcelId: '100026', address: '26 Hurlingham Cres', route: '/(app)/parcel-tool/100026' }]);
++    expect(M.buildSearchSituation({ ...base, ...ran('26 Hurlingham Cres'), data: unique, isFetching: true }).route).toBeNull();
++    expect(M.buildSearchSituation({ ...base, ...ran('26 Hurlingham Cres'), data: unique }).route).toBe('/(app)/parcel-tool/100026');
++    const map = M.buildSearchSituation({ ...base, ...ran('78 Robert St'), data: withResolution('multi_parcel', { candidates: [{ parcelId: 'A', address: '78 Robert St' }, { parcelId: 'B', address: '78 Robert St' }] }) });
++    expect(map.rows).toEqual([{ parcelId: 'A', address: '78 Robert St', route: '/(app)/parcel-tool/disambiguate?q=78%20Robert%20St&kind=multi_parcel' }]);
++    expect(map.route).toBe('/(app)/parcel-tool/disambiguate?q=78%20Robert%20St&kind=multi_parcel');
++    expect(M.buildSearchSituation({ ...base, input: 'King and Bay', debounced: 'King and Bay', data: withResolution('no_match') }).rows).toEqual([]);
++  });
++  it('task-465: the deletion rule: rows hide once the box no longer starts with the text they were found for (case-folded); typing forward keeps them', () => {
++    const at = (input: string) => M.buildSearchSituation({ ...base, input, debounced: '383 El', data: lookup([{ parcelId: 'P1', address: '383 Elm Ave' }, { parcelId: 'P2', address: '383 Elmwood Ave' }]) });
++    expect(at('383 El').rows).toHaveLength(2);
++    expect(at('383 ELM').rows).toHaveLength(2);
++    expect(at('383 E').rows).toEqual([]);
++    expect(at('').rows).toEqual([]);
++  });
++  it('task-465: the miss, the short Enter and the outside line show only after Enter; a blank submit is never made (the screen ignores it)', () => {
++    const miss = lookup([]);
++    expect(M.buildSearchSituation({ ...base, input: 'zzzz qqqq', debounced: 'zzzz qqqq', data: miss }).showMiss).toBe(false);
++    expect(M.buildSearchSituation({ ...base, ...ran('zzzz qqqq'), data: miss }).showMiss).toBe(true);
++    expect(M.buildSearchSituation({ ...base, input: '26', debounced: '26' }).showMiss).toBe(false);
++    expect(M.buildSearchSituation({ ...base, ...ran('26') }).showMiss).toBe(true);
++    const out = '123 Main St, Mississauga';
++    expect(M.buildSearchSituation({ ...base, input: out, debounced: out }).showOutside).toBe(false);
++    expect(M.buildSearchSituation({ ...base, ...ran(out) }).showOutside).toBe(true);
++    expect(M.buildSearchSituation({ ...base, ...ran(out) }).showMiss).toBe(false);
++    expect(M.buildSearchSituation({ ...base, input: '', debounced: '' })).toEqual(M.buildSearchSituation({ ...base }));
++  });
++  it('task-465: the hint kinds: several after Enter on 2+ numbered rows; refine at the cap or with no number (typing too); one row after Enter is the miss line plus the row (O4)', () => {
++    const two = lookup([{ parcelId: 'P1', address: '383 Elm Ave' }, { parcelId: 'P2', address: '383 Elmwood Ave' }]);
++    expect(M.buildSearchSituation({ ...base, input: '383 El', debounced: '383 El', data: two }).hint).toBeNull();
++    expect(M.buildSearchSituation({ ...base, ...ran('383 El'), data: two }).hint).toBe('several');
++    expect(M.buildSearchSituation({ ...base, input: 'Bathurst St', debounced: 'Bathurst St', data: lookup(cands) }).hint).toBe('refine');
++    expect(M.buildSearchSituation({ ...base, ...ran('Bathurst St'), data: lookup(cands) }).hint).toBe('refine');
++    const one = M.buildSearchSituation({ ...base, ...ran('41 derwyn'), data: lookup([{ parcelId: '5293897', address: '41 Derwyn Rd' }]) });
++    expect([one.hint, one.showMiss, one.rows.length]).toEqual([null, true, 1]);
++  });
++  it('task-465 O7: the chips show at rest only and the count line hides while the drop-down is open', () => {
++    expect(M.buildSearchSituation({ ...base }).showChips).toBe(true);
++    expect(M.buildSearchSituation({ ...base, input: '4', debounced: '' }).showChips).toBe(false);
++    expect(M.buildSearchSituation({ ...base }).showCount).toBe(true);
++    expect(M.buildSearchSituation({ ...base, ...ran('zzzz qqqq'), data: lookup([]) }).showCount).toBe(false);
++    expect(M.buildSearchSituation({ ...base, ...ran('26 Hurlingham Cres'), isFetching: true }).showCount).toBe(true);
++  });
+ });
+ 
+ // ── task-450 SEARCHFIX.2 AC1 (fold section 2 line 42, finding 2a phone side; RR-0443 c MD:2284; ruled B, QUESTIONS-RULED.md Q8.1) ─────────────────────
+@@ -433,7 +494,7 @@ describe('MF-35 situation helpers', () => {
+ describe('a street with no house number', () => {
+   // eslint-disable-next-line @typescript-eslint/no-require-imports
+   const M = require('@/lib/parcelSearchMatch') as typeof import('@/lib/parcelSearchMatch');
+-  const base = { data: undefined, error: null as unknown, isFetching: false, schemaDrift: false, recent: [] as string[], selectedParcelId: null, cap: 10, minQueryLen: 3 };
++  const base = { data: undefined, error: null as unknown, isFetching: false, schemaDrift: false, recent: [] as string[], submitted: null, cap: 10, minQueryLen: 3 }; // task-465: submitted, no selectedParcelId
+   const rows = (...r: [string, string][]) => r.map(([parcelId, address]) => ({ parcelId, address }));
+   const tc = (cands: { parcelId: string; address: string }[]) => withResolution('text_candidates', { candidates: cands });
+   const at = (q: string, data: ConsumerParcelLookupResult | undefined) => M.buildSearchSituation({ ...base, input: q, debounced: q, data });
+@@ -471,12 +532,15 @@ describe('a street with no house number', () => {
+     const inter = at('King and Bay', withResolution('no_match'));
+     expect(inter.outcome).toBe('intersection');
+     expect(inter.overCap).toBe(false);
+-    const miss = at('zzzz qqqq', withResolution('no_match'));
++    // Dated 2026-11-25 (task-465; prior line kept as text: the typed miss showed its line): the miss line shows after Enter only.
++    const miss = M.buildSearchSituation({ ...base, input: 'zzzz qqqq', debounced: 'zzzz qqqq', submitted: 'zzzz qqqq', data: withResolution('no_match') });
+     expect(miss.showMiss).toBe(true);
+     expect(miss.overCap).toBe(false);
+     expect(at('123 Main St, Mississauga', undefined).outcome).toBe('outside_toronto');
++    // Dated 2026-11-25 (task-465, RR-0495; prior lines kept as text: a short query showed the prompt): the prompt is dropped; a short query typed
++    // without Enter shows nothing and no refine line.
+     const short = at('12', undefined);
+-    expect(short.showPrompt).toBe(true);
++    expect(short.showMiss).toBe(false);
+     expect(short.overCap).toBe(false);
+   });
+ 
+

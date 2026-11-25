@@ -69,172 +69,100 @@
             ]
           },
           {
-            "component": "Group",
+            "component": "Stack",
             "props": {
-              "key": "pill",
-              "className": "flex-nowrap items-center gap-1 rounded-full border border-zinc-800 bg-zinc-900 py-1 pl-4 pr-1"
+              "key": "box",
+              "testID": "parcel-search-box",
+              "className": "w-full gap-0 overflow-hidden rounded-[26px] border border-zinc-800 bg-zinc-900"
             },
             "children": [
               {
-                "component": "TextInput",
+                "component": "Group",
                 "props": {
-                  "key": "input",
-                  "testID": "parcel-search-input",
-                  "className": "flex-1 ph-no-capture",
-                  "size": "lg",
-                  "variant": "unstyled",
-                  "value": {
-                    "derived": "input"
-                  },
-                  "onChange": {
-                    "action": "change_input"
-                  },
-                  "placeholder": {
-                    "content": "search.input.placeholder"
-                  },
-                  "ariaLabel": {
-                    "content": "search.input.label"
-                  },
-                  "ariaDescription": {
-                    "text": {
-                      "content": "search.input.hint"
-                    },
-                    "vars": {
-                      "min": {
-                        "derived": "min_query_len"
-                      }
-                    }
-                  },
-                  "autoComplete": "off"
-                },
-                "children": []
-              }
-            ]
-          },
-          {
-            "component": "Group",
-            "props": {
-              "key": "chips",
-              "className": "mt-3 gap-2"
-            },
-            "children": [
-              {
-                "component": "Button",
-                "props": {
-                  "key": "chip-Queen & Spadina",
-                  "testID": "parcel-search-suggestion-Queen & Spadina",
-                  "size": "lg",
-                  "variant": "outline",
-                  "color": "gray",
-                  "className": "rounded-full font-mono text-xs font-normal",
-                  "ariaLabel": {
-                    "text": {
-                      "content": "search.chip.label"
-                    },
-                    "vars": {
-                      "query": {
-                        "derived": "recent.0"
-                      }
-                    }
-                  },
-                  "onClick": {
-                    "action": "set_input",
-                    "value": {
-                      "derived": "recent.0"
-                    }
-                  }
+                  "key": "bar",
+                  "className": "flex-nowrap items-center gap-2 py-1 pl-4 pr-1"
                 },
                 "children": [
                   {
-                    "derived": "recent.0"
+                    "component": "TextInput",
+                    "props": {
+                      "key": "input",
+                      "testID": "parcel-search-input",
+                      "className": "flex-1 ph-no-capture",
+                      "size": "lg",
+                      "variant": "unstyled",
+                      "value": {
+                        "derived": "input"
+                      },
+                      "onChange": {
+                        "action": "change_input"
+                      },
+                      "onSubmit": {
+                        "action": "submit"
+                      },
+                      "placeholder": {
+                        "content": "search.input.placeholder"
+                      },
+                      "ariaLabel": {
+                        "content": "search.input.label"
+                      },
+                      "ariaDescription": {
+                        "text": {
+                          "content": "search.input.hint"
+                        },
+                        "vars": {
+                          "min": {
+                            "derived": "min_query_len"
+                          }
+                        }
+                      },
+                      "autoComplete": "off"
+                    },
+                    "children": []
                   }
                 ]
               },
               {
-                "component": "Button",
+                "component": "Stack",
                 "props": {
-                  "key": "chip-26 Hurlingham Cres",
-                  "testID": "parcel-search-suggestion-26 Hurlingham Cres",
-                  "size": "lg",
-                  "variant": "outline",
-                  "color": "gray",
-                  "className": "rounded-full font-mono text-xs font-normal",
-                  "ariaLabel": {
-                    "text": {
-                      "content": "search.chip.label"
+                  "key": "drop",
+                  "testID": "parcel-search-drop",
+                  "className": "w-full gap-0 border-t border-zinc-800"
+                },
+                "children": [
+                  {
+                    "component": "Stack",
+                    "props": {
+                      "key": "outside-toronto",
+                      "className": "w-full gap-0 px-4 py-3"
                     },
-                    "vars": {
-                      "query": {
-                        "derived": "recent.1"
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "outside-toronto-text",
+                          "testID": "parcel-search-outside-toronto",
+                          "className": "text-[15px] font-normal text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "content": "search.outside_toronto.title"
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "outside-toronto-sub",
+                          "className": "text-[13px] font-normal text-zinc-400"
+                        },
+                        "children": [
+                          {
+                            "content": "search.outside_toronto"
+                          }
+                        ]
                       }
-                    }
-                  },
-                  "onClick": {
-                    "action": "set_input",
-                    "value": {
-                      "derived": "recent.1"
-                    }
-                  }
-                },
-                "children": [
-                  {
-                    "derived": "recent.1"
-                  }
-                ]
-              },
-              {
-                "component": "Button",
-                "props": {
-                  "key": "chip-Bathurst St",
-                  "testID": "parcel-search-suggestion-Bathurst St",
-                  "size": "lg",
-                  "variant": "outline",
-                  "color": "gray",
-                  "className": "rounded-full font-mono text-xs font-normal",
-                  "ariaLabel": {
-                    "text": {
-                      "content": "search.chip.label"
-                    },
-                    "vars": {
-                      "query": {
-                        "derived": "recent.2"
-                      }
-                    }
-                  },
-                  "onClick": {
-                    "action": "set_input",
-                    "value": {
-                      "derived": "recent.2"
-                    }
-                  }
-                },
-                "children": [
-                  {
-                    "derived": "recent.2"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "component": "Alert",
-            "props": {
-              "key": "outside-toronto",
-              "testID": "parcel-search-outside-toronto",
-              "color": "red",
-              "variant": "light",
-              "className": "mt-3 rounded-xl"
-            },
-            "children": [
-              {
-                "component": "Text",
-                "props": {
-                  "key": "outside-toronto-text",
-                  "className": "text-xs font-normal text-red-400"
-                },
-                "children": [
-                  {
-                    "content": "search.outside_toronto"
+                    ]
                   }
                 ]
               }
@@ -343,8 +271,8 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "33c06b5ae3b585b0"
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "3893aa2731eac197",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "4071cba8122fcf0c"
     }
   }
 }

@@ -44,12 +44,13 @@ const CONTRACT = SEMI_QUESTION_CONTRACT;
 const STYLES: PageStyles = {
   screen: L.screen, scroll: L.scroll, column: L.column, bottomPadding: LOT_MAP_BOTTOM_PADDING, maxWidth: SEARCH_MAX_WIDTH,
   bar: L.semiTop, back: L.semiBack, backIconSize: Z.backIcon, iconColor: H.icon,
-  status: L.semiLoadingText, heading: L.semiHeading,
+  // task-465 (RR-0485 "1 inside"; mock state 7): the semi page reads its own question and answer keys; the wall keeps semiHeading and semiCard*.
+  status: L.semiLoadingText, heading: L.semiQuestionHeading,
   notice: {
     error: { box: L.noticeError, icon: L.noticeIcon, text: L.noticeText },
     neutral: { box: L.notice, icon: L.noticeIconNeutral, text: L.noticeTextNeutral },
   },
-  card: { idle: L.semiCard, checked: L.semiCardChecked, row: L.semiCardRow, dotIdle: L.semiDot, dotChecked: L.semiDotChecked, text: L.semiCardText },
+  card: { idle: L.semiAnswerCard, checked: L.semiAnswerCardChecked, row: L.semiCardRow, dotIdle: L.semiDot, dotChecked: L.semiDotChecked, text: L.semiAnswerText },
   // SRCH.SEMI-3 (task-361, UX-4): while the answered lookup runs Continue is busy: the approved busy look (semi-question.html:130 `.btn.p[aria-busy="true"] { opacity:.85 }`).
   button: {
     default: { className: L.semiSelect, busyClassName: `${L.semiSelect} opacity-[0.85]`, text: L.selectText },

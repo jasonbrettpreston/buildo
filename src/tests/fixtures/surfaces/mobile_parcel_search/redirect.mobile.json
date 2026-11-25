@@ -89,99 +89,202 @@
               {
                 "component": "View",
                 "props": {
-                  "key": "pill",
-                  "className": "flex-row items-center gap-1 rounded-full border border-report-field bg-report-card py-1 pl-4 pr-1"
+                  "key": "box",
+                  "testID": "parcel-search-box",
+                  "className": "w-full overflow-hidden rounded-[26px] border border-report-field bg-report-card"
                 },
                 "children": [
                   {
-                    "component": "Icon",
+                    "component": "View",
                     "props": {
-                      "key": "search-icon",
-                      "icon": "Search",
-                      "size": 18,
-                      "color": "#4d4841"
-                    },
-                    "children": []
-                  },
-                  {
-                    "component": "Input",
-                    "props": {
-                      "key": "input",
-                      "testID": "parcel-search-input",
-                      "className": "flex-1 min-h-[44px] rounded-none border-0 bg-transparent dark:bg-transparent px-2 py-3 text-base font-normal text-report-ink shadow-none placeholder:text-report-soft",
-                      "value": {
-                        "derived": "input"
-                      },
-                      "onChangeText": {
-                        "action": "change_input"
-                      },
-                      "placeholder": {
-                        "content": "search.input.placeholder"
-                      },
-                      "placeholderTextColor": "#4d4841",
-                      "autoCapitalize": "none",
-                      "autoCorrect": false,
-                      "returnKeyType": "search",
-                      "accessibilityLabel": {
-                        "content": "search.input.label"
-                      },
-                      "accessibilityHint": {
-                        "text": {
-                          "content": "search.input.hint"
-                        },
-                        "vars": {
-                          "min": {
-                            "derived": "min_query_len"
-                          }
-                        }
-                      }
-                    },
-                    "children": []
-                  }
-                ]
-              },
-              {
-                "component": "View",
-                "props": {
-                  "key": "chips",
-                  "className": "mt-3 flex-row flex-wrap gap-2"
-                },
-                "children": [
-                  {
-                    "component": "Button",
-                    "props": {
-                      "key": "chip-Bathurst St",
-                      "testID": "parcel-search-suggestion-Bathurst St",
-                      "variant": "outline",
-                      "className": "min-h-[44px] rounded-full px-3 bg-report-button dark:bg-report-button border-report-button-border dark:border-report-button-border active:bg-report-sky dark:active:bg-report-sky",
-                      "accessibilityRole": "button",
-                      "accessibilityLabel": {
-                        "text": {
-                          "content": "search.chip.label"
-                        },
-                        "vars": {
-                          "query": {
-                            "derived": "recent.0"
-                          }
-                        }
-                      },
-                      "onPress": {
-                        "action": "set_input",
-                        "value": {
-                          "derived": "recent.0"
-                        }
-                      }
+                      "key": "bar",
+                      "className": "min-h-[52px] flex-row items-center gap-2 py-1 pl-4 pr-[6px]"
                     },
                     "children": [
                       {
-                        "component": "Text",
+                        "component": "Icon",
                         "props": {
-                          "key": "chip-text",
-                          "className": "text-[15px] font-semibold text-report-ink"
+                          "key": "search-icon",
+                          "icon": "Search",
+                          "size": 18,
+                          "color": "#4d4841"
+                        },
+                        "children": []
+                      },
+                      {
+                        "component": "Input",
+                        "props": {
+                          "key": "input",
+                          "testID": "parcel-search-input",
+                          "className": "flex-1 h-[44px] min-h-[44px] rounded-none border-0 bg-transparent dark:bg-transparent px-0 py-0 text-[16px] font-normal text-report-ink shadow-none placeholder:text-report-soft",
+                          "value": {
+                            "derived": "input"
+                          },
+                          "onChangeText": {
+                            "action": "change_input"
+                          },
+                          "onSubmitEditing": {
+                            "action": "submit"
+                          },
+                          "placeholder": {
+                            "content": "search.input.placeholder"
+                          },
+                          "placeholderTextColor": "#4d4841",
+                          "autoCapitalize": "none",
+                          "autoCorrect": false,
+                          "returnKeyType": "search",
+                          "accessibilityLabel": {
+                            "content": "search.input.label"
+                          },
+                          "accessibilityHint": {
+                            "text": {
+                              "content": "search.input.hint"
+                            },
+                            "vars": {
+                              "min": {
+                                "derived": "min_query_len"
+                              }
+                            }
+                          }
+                        },
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "component": "View",
+                    "props": {
+                      "key": "drop",
+                      "testID": "parcel-search-drop",
+                      "className": "w-full border-t border-report-line"
+                    },
+                    "children": [
+                      {
+                        "component": "Button",
+                        "props": {
+                          "key": "100026",
+                          "testID": "parcel-candidate-100026",
+                          "variant": "ghost",
+                          "className": "h-auto sm:h-auto min-h-[48px] w-full flex-row items-center justify-start gap-3 rounded-none px-4 py-[6px] bg-transparent dark:bg-transparent active:bg-report-page dark:active:bg-report-page",
+                          "accessibilityRole": "button",
+                          "accessibilityLabel": {
+                            "derived": "label.0"
+                          },
+                          "onPress": {
+                            "action": "push",
+                            "route": "/(app)/parcel-tool/100026"
+                          }
                         },
                         "children": [
                           {
-                            "derived": "recent.0"
+                            "component": "Icon",
+                            "props": {
+                              "key": "row-icon",
+                              "icon": "MapPin",
+                              "size": 18,
+                              "color": "#4d4841"
+                            },
+                            "children": []
+                          },
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "row-text",
+                              "className": "flex-1 text-[15px] leading-[20px] font-medium text-report-ink"
+                            },
+                            "children": [
+                              {
+                                "component": "Text",
+                                "props": {
+                                  "key": "100026-0",
+                                  "className": "text-[15px] leading-[20px] font-bold text-report-ink"
+                                },
+                                "children": [
+                                  {
+                                    "derived": "segments.0.0.text"
+                                  }
+                                ]
+                              },
+                              {
+                                "component": "Text",
+                                "props": {
+                                  "key": "100026-1",
+                                  "className": "text-[15px] leading-[20px] font-bold text-report-ink"
+                                },
+                                "children": [
+                                  {
+                                    "derived": "segments.0.1.text"
+                                  }
+                                ]
+                              },
+                              {
+                                "component": "Text",
+                                "props": {
+                                  "key": "100026-2",
+                                  "className": "text-[15px] leading-[20px] font-bold text-report-ink"
+                                },
+                                "children": [
+                                  {
+                                    "derived": "segments.0.2.text"
+                                  }
+                                ]
+                              },
+                              {
+                                "component": "Text",
+                                "props": {
+                                  "key": "100026-3",
+                                  "className": "text-[15px] leading-[20px] font-bold text-report-ink"
+                                },
+                                "children": [
+                                  {
+                                    "derived": "segments.0.3.text"
+                                  }
+                                ]
+                              },
+                              {
+                                "component": "Text",
+                                "props": {
+                                  "key": "100026-4",
+                                  "className": "text-[15px] leading-[20px] font-bold text-report-ink"
+                                },
+                                "children": [
+                                  {
+                                    "derived": "segments.0.4.text"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Button",
+                        "props": {
+                          "key": "report",
+                          "testID": "parcel-search-report",
+                          "variant": "link",
+                          "className": "mt-2 min-h-[44px] self-center",
+                          "accessibilityRole": "link",
+                          "onPress": {
+                            "action": "open_help",
+                            "topic": "wrong-lot",
+                            "q": {
+                              "derived": "input"
+                            }
+                          }
+                        },
+                        "children": [
+                          {
+                            "component": "Text",
+                            "props": {
+                              "key": "report-text",
+                              "className": "text-xs font-semibold text-report-ink underline"
+                            },
+                            "children": [
+                              {
+                                "content": "list.report"
+                              }
+                            ]
                           }
                         ]
                       }
@@ -194,7 +297,7 @@
                 "props": {
                   "key": "legal",
                   "testID": "parcel-search-legal",
-                  "className": "mt-3 text-[13px] leading-[18px] font-normal text-report-muted"
+                  "className": "mt-6 text-center text-[11px] leading-[15px] font-normal text-report-soft"
                 },
                 "children": [
                   {
@@ -210,8 +313,8 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "33c06b5ae3b585b0"
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "3893aa2731eac197",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "4071cba8122fcf0c"
     }
   }
 }

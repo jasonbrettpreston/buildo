@@ -65,9 +65,11 @@ describe('the question page (semi-question.tsx)', () => {
     mockHook = { ...mockHook, data: data(form(true)) };
     render(<Question />);
     expect(mockCalls.at(-1)).toBe('PCL-S1');
-    expect(screen.getByText('Is this house one half of a semi-detached pair?')).toBeTruthy();
-    expect(screen.getByText('Yes, it’s one half of a semi')).toBeTruthy(); // task-450 Q8: the curly apostrophe
-    expect(screen.getByText("No, it's detached")).toBeTruthy();
+    // Dated 2026-11-25 (task-465 McFixV2.1; RR-0485 "1 inside", finding 18, the approved mock state 7; prior lines kept as text: the question "Is
+    // this house one half of a semi-detached pair?" and the answers "Yes, it’s one half of a semi" and "No, it's detached"): the short wording.
+    expect(screen.getByText('Is this a semi?')).toBeTruthy();
+    expect(screen.getByText('Yes')).toBeTruthy();
+    expect(screen.getByText('No')).toBeTruthy();
     expect(screen.getByText('Not sure')).toBeTruthy();
     expect(screen.getAllByRole('radio')).toHaveLength(3);
     expect(screen.getAllByRole('radio').filter((n) => n.props.accessibilityState?.checked === true)).toHaveLength(0);
@@ -277,7 +279,7 @@ describe('the question page (semi-question.tsx)', () => {
       expect(screen.getByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeTruthy();
       mockHook = { ...mockHook, data: data(form(true)) };
       view.rerender(<Question />);
-      expect(screen.getByText('Is this house one half of a semi-detached pair?')).toBeTruthy();
+      expect(screen.getByText('Is this a semi?')).toBeTruthy(); // task-465 (RR-0485): the ruled question
       expect(screen.queryByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeNull();
     } finally {
       jest.useRealTimers();

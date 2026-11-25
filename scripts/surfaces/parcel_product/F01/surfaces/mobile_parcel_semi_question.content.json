@@ -1,8 +1,8 @@
 {
   "back.label": "Back to search",
-  "question.title": "Is this house one half of a semi-detached pair?",
-  "answer.yes": "Yes, it’s one half of a semi",
-  "answer.no": "No, it's detached",
+  "question.title": "Is this a semi?",
+  "answer.yes": "Yes",
+  "answer.no": "No",
   "answer.not_sure": "Not sure",
   "select.none": "Choose an answer",
   "select.go": "Continue",

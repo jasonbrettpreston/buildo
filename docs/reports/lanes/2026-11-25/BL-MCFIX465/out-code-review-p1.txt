@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-25T22:02:18.038Z file_sha256=8d29bb60c45d0e34e13892421536c11be72f111db664aaa91e1d5c2bf8ce03b1 prompt_sha256=6214e73d3f48006394b47ad203c0f38da2aaef7b09435735910bb5de798de60f
+🔍 Lens review of docs/reports/lanes/2026-11-25/BL-MCFIX465/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11613 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23515 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 36100 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 48820 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 61103 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 73617 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 86916 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 98718 chars, answer 0 chars, 120s
+[deepseek-review] deepseek-reasoner working… reasoning 111130 chars, answer 0 chars, 135s
+[deepseek-review] deepseek-reasoner working… reasoning 122799 chars, answer 0 chars, 150s
+[deepseek-review] deepseek-reasoner working… reasoning 134376 chars, answer 0 chars, 165s
+[deepseek-review] deepseek-reasoner working… reasoning 146184 chars, answer 0 chars, 180s
+[deepseek-review] deepseek-reasoner working… reasoning 157822 chars, answer 0 chars, 195s
+[deepseek-review] deepseek-reasoner working… reasoning 170002 chars, answer 0 chars, 210s
+[deepseek-review] deepseek-reasoner working… reasoning 182638 chars, answer 0 chars, 225s
+[deepseek-review] deepseek-reasoner working… reasoning 195277 chars, answer 0 chars, 240s
+[deepseek-review] deepseek-reasoner working… reasoning 207470 chars, answer 0 chars, 255s
+DEFER severity=LOW — mobile/__tests__/parcelScreens.golden.test.ts "expect(ids(t).filter((x) => /drop|candidate|refine|hint|empty|report/.test(x))).toEqual(['parcel-search-drop', 'parcel-candidate-100100', 'parcel-candidate-100102', 'parcel-candidate-100104', 'parcel-search-refine', 'parcel-search-report']);" — t is at('fetching_with_candidates'), and that fixture now carries "overCap": true and "hint": "refine" over three numbered rows, a pair buildSearchSituation cannot emit (parcelSearchMatch.test.ts shows overCap false at 9 candidates, "…data: many }).overCap).toBe(false)", true only at the 10 cap; refine is cap-or-no-number), and no rebuild test covers this situation although the fixture $comment claims none can drift — set overCap false and hint null in that block, or give it ten candidates, so the order test pins a reachable drop-down (a refine line at three matches tells the user to add a house number they already typed).
+DEFER severity=LOW — mobile/__tests__/fixtures/parcelSearch.situations.json "parcelId": "100026" (the new "rows" entry of navigating_multi_parcel) — that situation keeps "candidates": [] yet gains a lot row, while the only map-kind row rule the diff shows takes the row from candidates[0] ("expect(map.rows).toEqual([{ parcelId: 'A', address: '78 Robert St', route: '/(app)/parcel-tool/disambiguate?q=78%20Robert%20St&kind=multi_parcel' }]);") and the two other map kinds with empty candidates have rows [] — no test rebuilds navigating_multi_parcel, so the drift is unguarded; give the fixture the candidate it shows, or drop the row, and add the situation to the rebuild test.
+NIT — mobile/__tests__/parcelSearchMatch.test.ts "expect(M.buildSearchSituation({ ...base, input: '', debounced: '' })).toEqual(M.buildSearchSituation({ ...base }));" — base already holds input '' and debounced '', so the two calls are the same object and the line proves nothing about "a blank submit is never made"; pass submitted: '' (and the data a blank Enter would carry) to exercise the case the test name claims.
+NIT — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md "(h) No area line under the rows (P35-D15 b, kept): the mock's districts are examples, not read from the address data." — the new dated note enumerates (a) (b) (c) (d) (e) (f) then (h), so either an item (g) was dropped from the record or the label is wrong; relabel this to (g) or restore the missing item.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  264130ms (264.1s)
+📊 Tokens — total: 90360, input: 32379, output: 57981, reasoning: 57318

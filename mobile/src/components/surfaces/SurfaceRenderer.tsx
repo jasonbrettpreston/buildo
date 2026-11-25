@@ -42,6 +42,9 @@ export type SurfaceActions = {
   /** MF-46 follow-up (dated 2026-11-12): open Help & Support in the browser with a topic and a value (mobile/src/lib/maxbldHelp.ts). A host
    * that renders no help link need not pass it; a tree naming it there throws (the `in` guard). */
   open_help?: (topic: string, q: string) => void;
+  /** task-465 (McFixV2.1; RR-0483 "your typed search does not execute until you press enter"; Spec 126 §11b dated note 2026-11-25): the Enter key of
+   *  the search field (onSubmitEditing) runs the typed search. Optional like open_help: a host without a search field need not pass it. */
+  submit?: () => void;
 };
 /** MF-48: the REPORT callbacks (ReportPageHost.tsx holds the UI state they change). */
 export type ReportActions = {
@@ -127,6 +130,8 @@ const action = (a: Json, ctx: Ctx): ((arg?: unknown) => void) => {
       return () => act.back();
     case 'open_help':
       return () => act.open_help?.(String(a.topic), String(resolveValue(a.q, ctx)));
+    case 'submit':
+      return () => act.submit?.();
     case 'toggle_panel':
       if (a.panel !== 'size' && a.panel !== 'cost') throw new Error(`SurfaceRenderer: unknown panel "${String(a.panel)}"`);
       return () => act.toggle_panel(String(a.option), a.panel as 'size' | 'cost');
@@ -145,7 +150,8 @@ const action = (a: Json, ctx: Ctx): ((arg?: unknown) => void) => {
   }
 };
 
-const ACTION_PROPS = new Set(['onPress', 'onChangeText']);
+// task-465: onSubmitEditing (the Enter key of the search field) carries the submit action; any other prop name is not an action prop.
+const ACTION_PROPS = new Set(['onPress', 'onChangeText', 'onSubmitEditing']);
 const DATA_PROPS = new Set(['key', 'navigate']);
 
 function renderNode(n: SurfaceTree, ctx: Ctx): React.ReactNode {

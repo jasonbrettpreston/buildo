@@ -1,0 +1,1204 @@
+LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:e336754a6f2c527f46a7dfe4f53920c8b0f41075645084128ad6133533fe4154 part 1 of 1 chunk 2 of 4
+NO RULE LIST: the lens template alone judges the material under review. The material is chunk 2 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["mobile/__tests__/parcelSearchScreen.behaviour.test.tsx","mobile/__tests__/semiQuestionPage.behaviour.test.tsx","mobile/__tests__/surfaceRenderer.smoke.test.tsx","mobile/app/(app)/parcel-tool/index.tsx","mobile/src/components/surfaces/SearchBinding.tsx","mobile/src/components/surfaces/SemiQuestionBinding.tsx","mobile/src/components/surfaces/SurfaceRenderer.tsx","mobile/src/constants/lotMap.ts","mobile/src/constants/parcelSearch.ts","mobile/src/generated/surfaces/mobile_parcel_search.json","mobile/src/generated/surfaces/mobile_parcel_semi_question.json","mobile/src/lib/parcelSearchMatch.ts"]
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/mobile/__tests__/parcelSearchScreen.behaviour.test.tsx b/mobile/__tests__/parcelSearchScreen.behaviour.test.tsx
+index cad75cd712226ad883d1a0bc285f37c0db938b0c..03c5a619a3148623fa07ac06caa2609835610f65 100644
+--- a/mobile/__tests__/parcelSearchScreen.behaviour.test.tsx
++++ b/mobile/__tests__/parcelSearchScreen.behaviour.test.tsx
+@@ -6,6 +6,10 @@
+ // must-survive rows 8, 10, 11, 22, 27, 28): the field shows typed text at once; 400 ms debounce; the mockHook gets '' outside Toronto; unique navigates
+ // once and records once; Back with the same query neither re-pushes nor re-records; a candidate tap selects and does not push; SELECT pushes and
+ // records; the map kinds push the disambiguate route; a miss, an error and outside Toronto record nothing; there is no in-bar account button (A.13).
++// Dated 2026-11-25 (task-465 McFixV2.1; RR-0483 MORNING-DECISIONS.md:2523, RR-0485 :2533 item 6, RR-0487 :2543, RR-0495; prior text above kept):
++// nothing opens while typing. Enter (submitEditing) or a tap on a drop-down row opens a lot; the miss and the outside-Toronto line show after Enter
++// only; the first delete clears the rows; the box is empty when the screen regains focus after it opened a page. The old cases that typed without
++// Enter and expected a page are rewritten below with their prior titles kept in a dated note.
+ require('react-native-css-interop/test');
+ import * as React from 'react';
+ import { act, fireEvent, render, screen, within } from '@testing-library/react-native';
+@@ -20,9 +24,11 @@ jest.mock('expo-web-browser', () => ({ openBrowserAsync: (u: string) => mockOpen
+ // reports-left re-read on focus), reads useAuthStore (index.tsx:54, whose import chain loads @react-native-async-storage, a native module that is null under jest:
+ // "Test suite failed to run") and reads useParcelEntitlement (index.tsx:55). The mocks below supply the three, the signed-out shape (no token, so no re-read and no line);
+ // the reports-left line itself is pinned by the search goldens (reports_left) and the entitlement hook by its own tests, not here.
++// task-465 T9: the focus callbacks are captured so a test can fire "the screen gained focus again" (focusAgain below); each still runs on mount.
++const mockFocus = new Set<() => void>();
+ jest.mock('expo-router', () => {
+   const R = jest.requireActual('react');
+-  return { useRouter: () => ({ push: mockPush, navigate: mockNavigate }), useFocusEffect: (cb: () => void) => R.useEffect(cb, [cb]) };
++  return { useRouter: () => ({ push: mockPush, navigate: mockNavigate }), useFocusEffect: (cb: () => void) => { mockFocus.add(cb); R.useEffect(cb, [cb]); } };
+ });
+ jest.mock('@/store/authStore', () => ({ useAuthStore: (select: (s: { accessToken: string | null }) => unknown) => select({ accessToken: null }) }));
+ jest.mock('react-native-safe-area-context', () => {
+@@ -51,15 +57,22 @@ const Screen = require('../app/(app)/parcel-tool/index').default as React.Compon
+ const { useRecentSearchesStore } = require('@/store/recentSearchesStore') as typeof import('@/store/recentSearchesStore');
+ 
+ // Dated 2026-11-24 (task-450 SEARCHFIX.2, Q19): the payloads carry the server's resolution; a payload without it now reads as no_match.
+-const hit = (parcelId: string) => ({ match: { parcelId, matchType: 'exact' }, candidates: [], warnings: [], parcel: null, resolution: 'unique' });
+ const list = { match: null, candidates: [{ parcelId: 'P1', address: '1 Bathurst St' }, { parcelId: 'P2', address: '2 Bathurst St' }], warnings: [], parcel: null, resolution: 'text_candidates' };
+ const type = (text: string) => { fireEvent.changeText(screen.getByTestId('parcel-search-input'), text); act(() => { jest.advanceTimersByTime(400); }); };
++/** task-465: the Enter key of the search field. */
++const enter = () => { act(() => { fireEvent(screen.getByTestId('parcel-search-input'), 'submitEditing'); }); };
++/** task-465 T9: the screen gains focus again (every captured focus callback runs, as expo-router does on focus). */
++const focusAgain = () => { act(() => { for (const cb of [...mockFocus]) cb(); }); };
++const rows = (...r: [string, string][]) => ({ match: null, candidates: r.map(([parcelId, address]) => ({ parcelId, address })), warnings: [], parcel: null, resolution: 'text_candidates' });
++const elm = rows(['5106944', '383 Elm Ave'], ['5461541', '383 Elmwood Ave'], ['5191692', '383 Elm Grove Ave']);
++const hitAt = (parcelId: string, address: string) => ({ match: { parcelId, matchType: 'exact', address }, candidates: [], warnings: [], parcel: null, resolution: 'unique' });
+ 
+ beforeEach(() => {
+   jest.useFakeTimers();
+   mockPush.mockClear();
+   mockOpenBrowser.mockReset().mockResolvedValue({ type: 'dismiss' });
+   mockCalls.length = 0;
++  mockFocus.clear();
+   mockHook = { data: undefined, isFetching: false, error: null, refetch: jest.fn() };
+   mockNavigate.mockClear();
+   mockEntitlement = { data: undefined, isFetching: false, isError: false, refetch: jest.fn() };
+@@ -77,116 +90,234 @@ describe('parcel search screen behaviour (rows 8, 10, 11, 22, 27, 28)', () => {
+     act(() => { jest.advanceTimersByTime(1); });
+     expect(mockCalls).toContain('26 Hurlingham Cres');
+   });
+-  it('outside Toronto: the hook gets "", the notice shows, nothing is pushed or recorded', () => {
++  // Dated 2026-11-25 (task-465 T7; prior title kept: "outside Toronto: the hook gets "", the notice shows, nothing is pushed or recorded").
++  it('T7 outside Toronto inside the box: nothing while typing; after Enter the line shows in the drop-down; the hook gets "" throughout; no push or record', () => {
+     render(<Screen />);
+     type('100 City Centre Dr, Mississauga');
+     expect(mockCalls.at(-1)).toBe('');
+-    expect(screen.getByTestId('parcel-search-outside-toronto')).toBeTruthy();
++    expect(screen.queryByTestId('parcel-search-outside-toronto')).toBeNull();
++    enter();
++    expect(mockCalls.at(-1)).toBe('');
++    expect(within(screen.getByTestId('parcel-search-drop')).getByTestId('parcel-search-outside-toronto')).toBeTruthy();
++    expect(screen.getByText('Outside Toronto')).toBeTruthy();
++    expect(mockCalls.filter((q) => q !== '')).toEqual([]);
++    expect(mockPush).not.toHaveBeenCalled();
++    expect(useRecentSearchesStore.getState().recent).toEqual([]);
++  });
++  it('T1 typing an exact address never navigates; its one row shows under the box', () => {
++    render(<Screen />);
++    mockHook = { ...mockHook, data: hitAt('5293897', '41 Derwyn Rd') };
++    type('41 Derwyn Rd');
++    act(() => { jest.advanceTimersByTime(400); });
+     expect(mockPush).not.toHaveBeenCalled();
++    expect(screen.getByTestId('parcel-candidate-5293897')).toBeTruthy();
+     expect(useRecentSearchesStore.getState().recent).toEqual([]);
+   });
+-  it('unique navigates once and records once; a re-render with the same route does not re-push (Back)', () => {
++  // Dated 2026-11-25 (task-465 T2; prior title kept: "unique navigates once and records once; a re-render with the same route does not re-push (Back)").
++  it('T2 Enter on a unique opens the lot once and records it; a re-render does not re-push (Back)', () => {
+     const { rerender } = render(<Screen />);
+-    mockHook = { ...mockHook, data: hit('100026') };
+-    type('26 Hurlingham Cres');
++    mockHook = { ...mockHook, data: hitAt('5293897', '41 Derwyn Rd') };
++    type('41 Derwyn Rd');
++    enter();
+     expect(mockPush).toHaveBeenCalledTimes(1);
+-    expect(mockPush).toHaveBeenCalledWith('/(app)/parcel-tool/100026');
+-    expect(useRecentSearchesStore.getState().recent).toEqual(['26 Hurlingham Cres']);
++    expect(mockPush).toHaveBeenCalledWith('/(app)/parcel-tool/5293897');
++    expect(useRecentSearchesStore.getState().recent).toEqual(['41 Derwyn Rd']);
+     rerender(<Screen />);
+     expect(mockPush).toHaveBeenCalledTimes(1);
+   });
+-  it('no push while fetching; edit then retype pushes again', () => {
++  it('T3 Enter before the debounce queries the typed text at once', () => {
++    render(<Screen />);
++    mockHook = { ...mockHook, data: hitAt('5476455', '679 Queen St W') };
++    fireEvent.changeText(screen.getByTestId('parcel-search-input'), '679 Queen St W');
++    act(() => { jest.advanceTimersByTime(100); });
++    enter();
++    expect(mockCalls).toContain('679 Queen St W');
++    expect(mockPush).toHaveBeenCalledWith('/(app)/parcel-tool/5476455');
++    expect(useRecentSearchesStore.getState().recent).toEqual(['679 Queen St W']);
++  });
++  // Dated 2026-11-25 (task-465 T16; prior title kept: "no push while fetching; edit then retype pushes again").
++  it('T16 Enter does not push while fetching; edit then retype and Enter pushes again', () => {
+     const { rerender } = render(<Screen />);
+-    mockHook = { ...mockHook, data: hit('100026'), isFetching: true };
++    mockHook = { ...mockHook, data: hitAt('100026', '26 Hurlingham Cres'), isFetching: true };
+     type('26 Hurlingham Cres');
++    enter();
+     expect(mockPush).not.toHaveBeenCalled();
+     mockHook = { ...mockHook, isFetching: false };
+     rerender(<Screen />);
+     expect(mockPush).toHaveBeenCalledTimes(1);
+     mockHook = { ...mockHook, data: undefined };
+     type('26 Hurlingham Cr');
+-    mockHook = { ...mockHook, data: hit('100026') };
++    mockHook = { ...mockHook, data: hitAt('100026', '26 Hurlingham Cres') };
+     type('26 Hurlingham Cres');
++    expect(mockPush).toHaveBeenCalledTimes(1);
++    enter();
+     expect(mockPush).toHaveBeenCalledTimes(2);
+   });
+-  it('the address list: a tap selects (no push, no record); SELECT pushes the selected lot and records the query', () => {
++  // Dated 2026-11-25 (task-465 T4; prior titles kept: "the address list: a tap selects (no push, no record); SELECT pushes the selected lot and records the
++  // query" and "OUTPUT fold MEDIUM 1 (P35-D17 a, nothing pre-checked): a new debounced query clears the checked card, even when the same lot is listed again").
++  it('T4 a tap on a row opens that lot and records the query; there is no Select button and no radio card', () => {
+     render(<Screen />);
+-    mockHook = { ...mockHook, data: list };
+-    type('Bathurst St');
+-    expect(screen.getByTestId('parcel-search-select').props.accessibilityState).toMatchObject({ disabled: true });
+-    fireEvent.press(screen.getByTestId('parcel-candidate-P2'));
++    mockHook = { ...mockHook, data: elm };
++    type('383 El');
+     expect(mockPush).not.toHaveBeenCalled();
+-    expect(useRecentSearchesStore.getState().recent).toEqual([]);
+-    fireEvent.press(screen.getByTestId('parcel-search-select'));
+-    expect(mockPush).toHaveBeenCalledWith('/(app)/parcel-tool/P2');
+-    expect(useRecentSearchesStore.getState().recent).toEqual(['Bathurst St']);
+-  });
+-  it('OUTPUT fold MEDIUM 1 (P35-D17 a, nothing pre-checked): a new debounced query clears the checked card, even when the same lot is listed again', () => {
+-    render(<Screen />);
+-    mockHook = { ...mockHook, data: list };
+-    type('Bathurst St');
+-    fireEvent.press(screen.getByTestId('parcel-candidate-P2'));
+-    expect(screen.getByTestId('parcel-candidate-P2').props.accessibilityState).toMatchObject({ checked: true });
+-    type('Bathurst Street');
+-    expect(screen.getByTestId('parcel-candidate-P2').props.accessibilityState).toMatchObject({ checked: false });
+-    expect(screen.getByTestId('parcel-search-select').props.accessibilityState).toMatchObject({ disabled: true });
++    expect(screen.queryByTestId('parcel-search-select')).toBeNull();
++    expect(screen.queryAllByRole('radio')).toHaveLength(0);
++    fireEvent.press(screen.getByTestId('parcel-candidate-5191692'));
++    expect(mockPush).toHaveBeenCalledWith('/(app)/parcel-tool/5191692');
++    expect(useRecentSearchesStore.getState().recent).toEqual(['383 El']);
+   });
+-  it('an intersection pushes the map route (the list never renders) and records', () => {
++  it('T5 Enter on several matches keeps the rows and shows the hint; a capped list shows the refine line instead', () => {
+     render(<Screen />);
+-    mockHook = { ...mockHook, data: { match: null, candidates: [], warnings: [], parcel: null } };
+-    type('Queen & Spadina');
+-    expect(mockPush).toHaveBeenCalledWith('/(app)/parcel-tool/disambiguate?q=Queen%20%26%20Spadina&kind=intersection');
+-    expect(screen.queryAllByRole('radio')).toHaveLength(0);
+-    expect(useRecentSearchesStore.getState().recent).toEqual(['Queen & Spadina']);
++    mockHook = { ...mockHook, data: elm };
++    type('383 El');
++    expect(screen.queryByTestId('parcel-search-hint')).toBeNull();
++    enter();
++    expect(screen.getByTestId('parcel-search-hint')).toBeTruthy();
++    expect(screen.getByTestId('parcel-candidate-5106944')).toBeTruthy();
++    expect(mockPush).not.toHaveBeenCalled();
++    const ten = rows(...Array.from({ length: 10 }, (_, i): [string, string] => [`P${i}`, `12 Elm ${['Ave', 'St', 'Rd', 'Cres', 'Dr', 'Blvd', 'Crt', 'Pl', 'Way', 'Ln'][i]}`]));
++    mockHook = { ...mockHook, data: ten };
++    type('12 Elm');
++    enter();
++    expect(screen.getByTestId('parcel-search-refine')).toBeTruthy();
++    expect(screen.queryByTestId('parcel-search-hint')).toBeNull();
++    expect(mockPush).not.toHaveBeenCalled();
+   });
+-  it('a miss and an error record nothing; Retry calls refetch with no argument', () => {
++  // Dated 2026-11-25 (task-465 T6; prior title kept: "a miss and an error record nothing; Retry calls refetch with no argument").
++  it('T6 a miss shows only after Enter, as "No lot found for ..."; a miss and an error record nothing; Retry calls refetch with no argument', () => {
+     render(<Screen />);
+-    mockHook = { ...mockHook, data: { match: null, candidates: [], warnings: [], parcel: null } };
+-    type('zzzz qqqq');
++    mockHook = { ...mockHook, data: { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match' } };
++    type('108 Zzzz St');
++    expect(screen.queryByTestId('parcel-search-empty')).toBeNull();
++    enter();
++    expect(within(screen.getByTestId('parcel-search-drop')).getByText('No lot found for 108 Zzzz St')).toBeTruthy();
+     expect(screen.getByTestId('parcel-search-empty')).toBeTruthy();
++    expect(screen.getByText('Check the house number and street name.')).toBeTruthy();
+     mockHook = { ...mockHook, data: undefined, error: new Error('network') };
+-    type('zzzz qqqqq');
++    type('108 Zzzz Str');
+     fireEvent.press(screen.getByTestId('parcel-search-retry'));
+     expect(mockHook.refetch).toHaveBeenCalledWith();
+     expect(useRecentSearchesStore.getState().recent).toEqual([]);
+     expect(mockPush).not.toHaveBeenCalled();
+   });
+-  it('a chip sets the input (the debounce still applies); there is no in-bar account button (A.13)', () => {
+-    useRecentSearchesStore.getState().add('Bathurst St');
++  it('T17 a short Enter shows the miss line: No lot found for 26, nothing fetched, no push (RR-0495)', () => {
+     render(<Screen />);
+-    fireEvent.press(screen.getByTestId('parcel-search-suggestion-Bathurst St'));
+-    expect(screen.getByTestId('parcel-search-input').props.value).toBe('Bathurst St');
+-    expect(mockCalls).not.toContain('Bathurst St');
+-    act(() => { jest.advanceTimersByTime(400); });
+-    expect(mockCalls).toContain('Bathurst St');
+-    expect(screen.queryByTestId('parcel-search-account')).toBeNull();
++    type('26');
++    enter();
++    expect(screen.getByTestId('parcel-search-empty')).toBeTruthy();
++    expect(screen.getByText('No lot found for 26')).toBeTruthy();
++    expect(mockHook.refetch).not.toHaveBeenCalled();
++    expect(mockPush).not.toHaveBeenCalled();
++    expect(screen.queryByTestId('parcel-search-prompt')).toBeNull();
+   });
+-  it('task-362 AC5: the address list report link opens Help in the in-app browser sheet with the topic and the typed address (search.html:235)', () => {
++  it('T8 the first delete clears the list', () => {
+     render(<Screen />);
+-    mockHook = { ...mockHook, data: list };
+-    type('Bathurst St');
+-    fireEvent.press(screen.getByTestId('parcel-search-report'));
+-    expect(mockOpenBrowser).toHaveBeenCalledTimes(1);
+-    // task-450 AC6 (B.7, doc-2:49): the link opens the help topic "Wrong address or lot".
+-    expect(mockOpenBrowser).toHaveBeenCalledWith('https://maxbld.ca/help#topic=wrong-lot&q=Bathurst%20St');
++    mockHook = { ...mockHook, data: elm };
++    type('383 El');
++    expect(screen.getByTestId('parcel-candidate-5106944')).toBeTruthy();
++    fireEvent.changeText(screen.getByTestId('parcel-search-input'), '383 E');
++    expect(screen.queryByTestId('parcel-candidate-5106944')).toBeNull();
++    expect(screen.queryByTestId('parcel-search-drop')).toBeNull();
++  });
++  it('T9 the box is empty when the screen regains focus after it opened a page; a focus with no earlier push leaves the box alone', () => {
++    render(<Screen />);
++    type('41 Derw');
++    focusAgain();
++    expect(screen.getByTestId('parcel-search-input').props.value).toBe('41 Derw');
++    mockHook = { ...mockHook, data: hitAt('5293897', '41 Derwyn Rd') };
++    type('41 Derwyn Rd');
++    enter();
++    expect(mockPush).toHaveBeenCalledTimes(1);
++    focusAgain();
++    expect(screen.getByTestId('parcel-search-input').props.value).toBe('');
++    expect(screen.getByTestId('parcel-search-suggestion-41 Derwyn Rd')).toBeTruthy();
++    focusAgain();
++    expect(mockPush).toHaveBeenCalledTimes(1);
++  });
++  // Dated 2026-11-25 (task-465 T10; prior title kept: "an intersection pushes the map route (the list never renders) and records").
++  it('T10 the map kinds open only on Enter: multi_parcel and an intersection push the disambiguate route with its kind', () => {
++    render(<Screen />);
++    mockHook = { ...mockHook, data: { match: null, candidates: [{ parcelId: '5259138', address: '78 Robert St' }, { parcelId: '5438421', address: '78 Robert St' }], warnings: [], parcel: null, resolution: 'multi_parcel' } };
++    type('78 Robert St');
+     expect(mockPush).not.toHaveBeenCalled();
++    enter();
++    expect(mockPush).toHaveBeenLastCalledWith('/(app)/parcel-tool/disambiguate?q=78%20Robert%20St&kind=multi_parcel');
++    mockHook = { ...mockHook, data: { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match' } };
++    type('King and Bay');
++    expect(mockPush).toHaveBeenCalledTimes(1);
++    enter();
++    expect(mockPush).toHaveBeenLastCalledWith('/(app)/parcel-tool/disambiguate?q=King%20and%20Bay&kind=intersection');
++    expect(screen.queryAllByRole('radio')).toHaveLength(0);
++    expect(useRecentSearchesStore.getState().recent).toEqual(['King and Bay', '78 Robert St']);
++  });
++  it('T11 a held unsure lot opens its lot route on Enter (the report screen redirects to the semi page)', () => {
++    render(<Screen />);
++    mockHook = { ...mockHook, data: hitAt('5334051', '14 Norwood Ter') };
++    type('14 Norwood Ter');
++    enter();
++    expect(mockPush).toHaveBeenCalledWith('/(app)/parcel-tool/5334051');
+   });
+-  it('task-450 AC1 (ruled B): a street with no house number shows the refine line and keeps the rows', () => {
++  // Dated 2026-11-25 (task-465 T12; prior title kept: "task-450 AC1 (ruled B): a street with no house number shows the refine line and keeps the rows").
++  it('T12 a street with no number: the refine line shows with the rows while typing and after Enter; no push (task-450 AC1, ruled B)', () => {
+     render(<Screen />);
+     mockHook = { ...mockHook, data: list };
+-    type('Bathurst St');
++    type('Gerrard St');
+     expect(screen.getByTestId('parcel-search-refine')).toBeTruthy();
+     expect(screen.getByTestId('parcel-candidate-P1')).toBeTruthy();
++    enter();
++    expect(screen.getByTestId('parcel-search-refine')).toBeTruthy();
+     expect(screen.getByTestId('parcel-candidate-P2')).toBeTruthy();
+-    type('2 Bathurst St');
++    expect(mockPush).not.toHaveBeenCalled();
++    type('2 Gerrard St');
+     expect(screen.queryByTestId('parcel-search-refine')).toBeNull();
+   });
+-  it('task-450 AC4 (L5): the prompt carries the minimum length from the setting, not a typed 3', () => {
++  // Dated 2026-11-25 (task-465 T13; prior title kept: "a chip sets the input (the debounce still applies); there is no in-bar account button (A.13)").
++  it('T13 a chip tap runs its address at once (one push, no Enter); there is no in-bar account button (A.13)', () => {
++    useRecentSearchesStore.getState().add('41 Derwyn Rd');
++    mockHook = { ...mockHook, data: hitAt('5293897', '41 Derwyn Rd') };
++    render(<Screen />);
++    fireEvent.press(screen.getByTestId('parcel-search-suggestion-41 Derwyn Rd'));
++    expect(screen.getByTestId('parcel-search-input').props.value).toBe('41 Derwyn Rd');
++    expect(mockCalls).toContain('41 Derwyn Rd');
++    expect(mockPush).toHaveBeenCalledTimes(1);
++    expect(mockPush).toHaveBeenCalledWith('/(app)/parcel-tool/5293897');
++    expect(screen.queryByTestId('parcel-search-account')).toBeNull();
++  });
++  it('T14 a blank Enter does nothing', () => {
++    render(<Screen />);
++    const before = JSON.stringify(screen.toJSON());
++    enter();
++    fireEvent.changeText(screen.getByTestId('parcel-search-input'), '   ');
++    enter();
++    expect(mockPush).not.toHaveBeenCalled();
++    expect(screen.queryByTestId('parcel-search-drop')).toBeNull();
++    fireEvent.changeText(screen.getByTestId('parcel-search-input'), '');
++    expect(JSON.stringify(screen.toJSON())).toBe(before);
++  });
++  it('T15 a row label is the address, else the parcel id', () => {
++    render(<Screen />);
++    mockHook = { ...mockHook, data: rows(['100114', ''], ['100116', '116 Bathurst St']) };
++    type('11 Bathurst');
++    expect(screen.getByLabelText('100114')).toBeTruthy();
++    expect(screen.getByLabelText('116 Bathurst St')).toBeTruthy();
++  });
++  it('task-362 AC5: the drop-down report link opens Help in the in-app browser sheet with the topic and the typed address (search.html:235)', () => {
++    render(<Screen />);
++    mockHook = { ...mockHook, data: list };
++    type('Bathurst St');
++    fireEvent.press(screen.getByTestId('parcel-search-report'));
++    expect(mockOpenBrowser).toHaveBeenCalledTimes(1);
++    // task-450 AC6 (B.7, doc-2:49): the link opens the help topic "Wrong address or lot".
++    expect(mockOpenBrowser).toHaveBeenCalledWith('https://maxbld.ca/help#topic=wrong-lot&q=Bathurst%20St');
++    expect(mockPush).not.toHaveBeenCalled();
++  });
++  // Dated 2026-11-25 (task-465, RR-0495; prior title kept: "task-450 AC4 (L5): the prompt carries the minimum length from the setting, not a typed 3"):
++  // the prompt line is dropped; the setting still fills {min} in the field's accessibility hint.
++  it('task-450 AC4 (L5): the field hint carries the minimum length from the setting, not a typed 3', () => {
+     // eslint-disable-next-line @typescript-eslint/no-require-imports
+     const { SEARCH_MIN_QUERY_LEN } = require('@/components/surfaces/SearchBinding') as typeof import('@/components/surfaces/SearchBinding');
+     render(<Screen />);
+-    type('12');
+-    expect(screen.getByText('Type at least ' + SEARCH_MIN_QUERY_LEN + ' characters to search.')).toBeTruthy();
++    expect(screen.getByTestId('parcel-search-input').props.accessibilityHint).toBe('Enter at least ' + SEARCH_MIN_QUERY_LEN + ' characters to search for a lot');
+   });
+ });
+ 
+diff --git a/mobile/__tests__/semiQuestionPage.behaviour.test.tsx b/mobile/__tests__/semiQuestionPage.behaviour.test.tsx
+index f687be2f2a63bb6a3c7d9ec2b66b9511bab710ca..e92d396aaeb61dce55f4cf730849bbb86d8e294a 100644
+--- a/mobile/__tests__/semiQuestionPage.behaviour.test.tsx
++++ b/mobile/__tests__/semiQuestionPage.behaviour.test.tsx
+@@ -65,9 +65,11 @@ describe('the question page (semi-question.tsx)', () => {
+     mockHook = { ...mockHook, data: data(form(true)) };
+     render(<Question />);
+     expect(mockCalls.at(-1)).toBe('PCL-S1');
+-    expect(screen.getByText('Is this house one half of a semi-detached pair?')).toBeTruthy();
+-    expect(screen.getByText('Yes, it’s one half of a semi')).toBeTruthy(); // task-450 Q8: the curly apostrophe
+-    expect(screen.getByText("No, it's detached")).toBeTruthy();
++    // Dated 2026-11-25 (task-465 McFixV2.1; RR-0485 "1 inside", finding 18, the approved mock state 7; prior lines kept as text: the question "Is
++    // this house one half of a semi-detached pair?" and the answers "Yes, it’s one half of a semi" and "No, it's detached"): the short wording.
++    expect(screen.getByText('Is this a semi?')).toBeTruthy();
++    expect(screen.getByText('Yes')).toBeTruthy();
++    expect(screen.getByText('No')).toBeTruthy();
+     expect(screen.getByText('Not sure')).toBeTruthy();
+     expect(screen.getAllByRole('radio')).toHaveLength(3);
+     expect(screen.getAllByRole('radio').filter((n) => n.props.accessibilityState?.checked === true)).toHaveLength(0);
+@@ -277,7 +279,7 @@ describe('the question page (semi-question.tsx)', () => {
+       expect(screen.getByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeTruthy();
+       mockHook = { ...mockHook, data: data(form(true)) };
+       view.rerender(<Question />);
+-      expect(screen.getByText('Is this house one half of a semi-detached pair?')).toBeTruthy();
++      expect(screen.getByText('Is this a semi?')).toBeTruthy(); // task-465 (RR-0485): the ruled question
+       expect(screen.queryByText('Couldn’t reach the lot service. Check your connection and try again.')).toBeNull();
+     } finally {
+       jest.useRealTimers();
+diff --git a/mobile/__tests__/surfaceRenderer.smoke.test.tsx b/mobile/__tests__/surfaceRenderer.smoke.test.tsx
+index fee1055e59e73455b7f6c901a77ba2be0bcab5d8..4dec934df84997ea3edf6f7c196e80c844be5681 100644
+--- a/mobile/__tests__/surfaceRenderer.smoke.test.tsx
++++ b/mobile/__tests__/surfaceRenderer.smoke.test.tsx
+@@ -26,6 +26,8 @@ const actions = (): jest.Mocked<SurfaceActions> => ({
+   change_input: jest.fn(), set_input: jest.fn(), retry: jest.fn(), select: jest.fn(), push: jest.fn(), back: jest.fn(),
+   // MF-46 follow-up (dated 2026-11-12): the search host passes open_help ("Report incorrect address match" on the address list).
+   open_help: jest.fn(),
++  // task-465 (RR-0483): the search field's Enter key (onSubmitEditing) fires submit.
++  submit: jest.fn(),
+ });
+ const show = (k: string, a = actions()) => {
+   const s = S[k] as SearchSituation;
+@@ -33,7 +35,8 @@ const show = (k: string, a = actions()) => {
+   return a;
+ };
+ // task-456 X2 (mcfixreborn-g3 GROUNDER-A.md:102): reports_left joins the rendered situations (the A.6 line was a props golden only).
+-const GOLDEN_SITUATIONS = ['static', 'loading', 'redirect', 'ambiguous', 'miss', 'empty', 'schema_drift', 'rate_limited', 'unauthorized', 'error', 'reports_left'];
++// task-465: suggest (the typing state, the drop-down rows) joins them.
++const GOLDEN_SITUATIONS = ['static', 'loading', 'redirect', 'ambiguous', 'suggest', 'miss', 'empty', 'schema_drift', 'rate_limited', 'unauthorized', 'error', 'reports_left'];
+ 
+ describe('MF-46 follow-up: "Report incorrect address match" (OUTPUT regression F1)', () => {
+   it('the address list carries the report link; a press calls open_help with the topic and the typed address', () => {
+@@ -70,7 +73,8 @@ describe('mobile render smoke (FE-33 mobile case)', () => {
+     const input = screen.getByTestId('parcel-search-input');
+     expect([input.props.returnKeyType, input.props.autoCapitalize, input.props.autoCorrect]).toEqual(['search', 'none', false]);
+     expect(input.props.accessibilityLabel).toBe('Search a Toronto address');
+-    expect(screen.getByTestId('parcel-search-prompt')).toBeTruthy();
++    // Dated 2026-11-25 (task-465 O14, RR-0495; prior line kept as text: the idle page showed parcel-search-prompt): the prompt line is dropped.
++    expect(screen.queryByTestId('parcel-search-prompt')).toBeNull();
+   });
+   it('the chips carry the legacy role, label and testID and set the input', () => {
+     const a = show('static');
+@@ -99,20 +103,27 @@ describe('mobile render smoke (FE-33 mobile case)', () => {
+     expect(screen.getByTestId('parcel-search-entitlement')).toBeTruthy();
+     expect(screen.queryByTestId('parcel-search-empty')).toBeNull();
+   });
+-  it('the address list: radio cards, the checked card, the amber word, the label fallback; a tap selects, SELECT pushes', () => {
+-    const a = show('ambiguous');
+-    const radios = screen.getAllByRole('radio');
+-    expect(radios).toHaveLength(10);
+-    expect(screen.getByTestId('parcel-candidate-100102').props.accessibilityState).toMatchObject({ checked: true });
++  // Dated 2026-11-25 (task-465 McFixV2.1, RR-0487; prior title kept: "the address list: radio cards, the checked card, the amber word, the label
++  // fallback; a tap selects, SELECT pushes"): the rows are plain taps under the box; no radio, no checked card, no count badge, no Select.
++  it('the drop-down rows: ten rows, the label fallback, the refine line; a tap pushes the lot of that row; no radio and no Select', () => {
++    const a = show('suggest');
++    expect(screen.queryAllByRole('radio')).toHaveLength(0);
++    expect(within(screen.getByTestId('parcel-search-drop')).getAllByLabelText(/Bathurst St|100114/)).toHaveLength(10);
+     expect(screen.getByLabelText('100114')).toBeTruthy();
+-    expect(screen.getByText('candidates', { exact: false }).props.children).toContain('10 candidates');
++    expect(screen.queryByText('candidates', { exact: false })).toBeNull();
++    expect(screen.queryByTestId('parcel-search-select')).toBeNull();
+     fireEvent.press(screen.getByTestId('parcel-candidate-100100'));
+-    expect(a.select).toHaveBeenCalledWith('100100');
+-    expect(a.push).not.toHaveBeenCalled();
+-    fireEvent.press(screen.getByTestId('parcel-search-select'));
+-    expect(a.push).toHaveBeenCalledWith('/(app)/parcel-tool/100102');
++    expect(a.push).toHaveBeenCalledWith('/(app)/parcel-tool/100100');
++    expect(a.select).not.toHaveBeenCalled();
+     expect(screen.getByTestId('parcel-search-refine')).toBeTruthy();
+   });
++  it('task-465: Enter in the field (onSubmitEditing) calls submit with no argument; the miss line reads "No lot found for ..." with its hint', () => {
++    const a = show('miss');
++    fireEvent(screen.getByTestId('parcel-search-input'), 'submitEditing');
++    expect(a.submit).toHaveBeenCalledWith();
++    expect(screen.getByText('No lot found for zzzz qqqq')).toBeTruthy();
++    expect(screen.getByText('Check the house number and street name.')).toBeTruthy();
++  });
+   it('typing calls change_input with the text; there is no account button (A.13)', () => {
+     const a = show('static');
+     expect(screen.queryByTestId('parcel-search-account')).toBeNull();
+diff --git a/mobile/app/(app)/parcel-tool/index.tsx b/mobile/app/(app)/parcel-tool/index.tsx
+index 4f5a5d57813b119cb10077c57c9dd148f5bbbda3..089afa543679b8cc2ce5327e8339a231a53757bc 100644
+--- a/mobile/app/(app)/parcel-tool/index.tsx
++++ b/mobile/app/(app)/parcel-tool/index.tsx
+@@ -12,6 +12,9 @@
+ // never on a result count (operator ruling 2026-09-16): `unique` opens the lot, `text_candidates` shows the address list here, the map kinds
+ // open `disambiguate` (MF-53). MaxBLD is its own product (Spec 116 OD5): nothing here may reference a lead-gen concept, and the query is
+ // never logged or tracked.
++// Dated 2026-11-25 (task-465 McFixV2.1; RR-0483 MORNING-DECISIONS.md:2523, RR-0485 :2533 item 6, RR-0487 :2543; prior text kept): nothing opens
++// while typing. Enter (the submit action) or a chip tap runs the typed text at once (no debounce wait); a tap on a drop-down row opens that row's page.
++// `unique` and the map kinds open only for a submitted query. After a page was opened, the next focus of this screen empties the box (finding 21).
+ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+ import { useFocusEffect, useRouter } from 'expo-router';
+ import { SurfaceRenderer, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
+@@ -34,18 +37,14 @@ import { useAuthStore } from '@/store/authStore';
+ export default function ParcelSearchScreen() {
+   const router = useRouter();
+   const [input, setInput] = useState('');
+-  const [selectedParcelId, setSelectedParcelId] = useState<string | null>(null);
++  // task-465: the text run with Enter or a chip tap; cleared by the next keystroke. Prior state (kept as text): selectedParcelId, the checked card.
++  const [submitted, setSubmitted] = useState<string | null>(null);
+   const recent = useRecentSearchesStore((s) => s.recent);
+   const addRecent = useRecentSearchesStore((s) => s.add);
+ 
+   // Debounce (config.debounce_ms) so typeahead exploration does not burn the 60/min rate bucket.
+   const debounced = useDebouncedValue(input, SEARCH_DEBOUNCE_MS);
+ 
+-  // P35-D17 a (nothing pre-checked; OUTPUT fold MEDIUM 1): a new debounced query clears the checked address card.
+-  useEffect(() => {
+-    setSelectedParcelId(null);
+-  }, [debounced]);
+-
+   // SRCH.A6 (task-320; RR-0307): the reports-left line reads the served count (GET /api/parcels/entitlement) and re-reads it each time this screen gains
+   // focus, so the number is current after a report was produced. A failed read or no plan leaves `data` undefined or null: no line (v8 draws none).
+   // After a failed re-read the query keeps its last data: a failed read draws NO line, so the data is dropped when the query is in error (output review r2).
+@@ -59,7 +58,8 @@ export default function ParcelSearchScreen() {
+   );
+ 
+   // The Toronto-only rule (operator ruling 2026-09-16 (b)): an out-of-Toronto address is refused visibly and never sent ('' disables the hook).
+-  const { data, isFetching, error, refetch } = useParcelSearch(searchQueryArg(debounced));
++  // task-465: a submitted text is queried at once, so Enter never waits for the debounce.
++  const { data, isFetching, error, refetch } = useParcelSearch(searchQueryArg(submitted ?? debounced));
+   // task-452 SEARCHFIX.4: a refused lookup (limit, expired) shows the wall in place of the page once the entitlement read has answered; while the read is
+   // pending ('wait') the page shows its loading state (neither the notice nor the miss copy). A failed read shows the wall's error state (round 2,
+   // RR-0468); a plain 403 or no plan keep today's notice.
+@@ -70,32 +70,46 @@ export default function ParcelSearchScreen() {
+     () => buildSearchSituation({
+       input,
+       debounced,
++      submitted,
+       data: waiting ? undefined : data,
+       error: waiting ? null : error,
+       isFetching: waiting || isFetching,
+       schemaDrift: error instanceof ParcelLookupSchemaError,
+       recent,
+-      selectedParcelId,
+       cap: SEARCH_CANDIDATE_LIMIT,
+       minQueryLen: SEARCH_MIN_QUERY_LEN,
+       entitlement: entitlement ? { reportsLeft: entitlement.reportsLeft, reportsLimit: entitlement.reportsLimit, resetsOnDisplay: entitlement.resetsOnDisplay } : null,
+     }),
+-    [input, debounced, data, error, isFetching, recent, selectedParcelId, entitlement, waiting],
++    [input, debounced, submitted, data, error, isFetching, recent, entitlement, waiting],
+   );
+ 
+-  // A search is recorded only when it opens a page (P35-D16 a): the lot, SELECT, the map page. One navigation, one record.
++  // A search is recorded only when it opens a page (P35-D16 a): the lot, a row tap, the map page. One navigation, one record. task-465: the submitted
++  // text is recorded when there is one (an Enter before the debounce), and the next focus of this screen empties the box (pushedRef).
++  const pushedRef = useRef(false);
+   const navigate = useCallback(
+     (route: string) => {
+-      addRecent(debounced);
++      addRecent(submitted ?? debounced);
++      pushedRef.current = true;
+       router.push(route);
+     },
+-    [addRecent, debounced, router],
++    [addRecent, submitted, debounced, router],
+   );
+ 
+   // `unique` navigates straight to the lot; the map kinds to the map surface. The ref stops the screen bouncing the user forward again when they
+   // navigate BACK with the query still in the box; it is cleared the moment the outcome stops being navigable, so retyping navigates again.
+   const goBack = useGoBack();
+   const navigatedForRef = useRef<string | null>(null);
++  // task-465 (finding 21, mock "Coming back from a report: Empty box"): only after this screen opened a page; a tab switch or any other focus keeps a
++  // half-typed address. Stable deps, so a re-render never re-runs it.
++  useFocusEffect(
++    useCallback(() => {
++      if (!pushedRef.current) return;
++      pushedRef.current = false;
++      navigatedForRef.current = null;
++      setInput('');
++      setSubmitted(null);
++    }, []),
++  );
+   const route = situation.route;
+   useEffect(() => {
+     if (isFetching) return;
+@@ -110,17 +124,30 @@ export default function ParcelSearchScreen() {
+ 
+   const actions = useMemo(
+     () => ({
+-      change_input: (text: string) => setInput(text),
+-      set_input: (value: string) => setInput(value),
++      change_input: (text: string) => {
++        setInput(text);
++        setSubmitted(null);
++      },
++      // task-465: a chip is a saved address: a tap sets the text and runs it, as typing it and pressing Enter.
++      set_input: (value: string) => {
++        setInput(value);
++        setSubmitted(value.trim() === '' ? null : value.trim());
++      },
++      // task-465 (RR-0483): Enter runs the typed text; a blank box does nothing.
++      submit: () => {
++        const text = input.trim();
++        if (text !== '') setSubmitted(text);
++      },
+       retry: () => void refetch(),
+-      select: (parcelId: string) => setSelectedParcelId(parcelId),
++      // The address cards are gone (RR-0487); the action stays in the renderer's set for the map page and the semi page.
++      select: () => undefined,
+       push: (to: string) => navigate(to),
+       // The search page renders no back control; the action exists for the shared renderer's action set. Guarded as #64 so it can never strand a cold open.
+       back: goBack,
+       // MF-46 follow-up (P35-D18 a): "Report incorrect address match" opens Help & Support in the in-app browser sheet (task-362; openBrowserAsync).
+       open_help: openHelp,
+     }),
+-    [refetch, navigate, goBack],
++    [input, refetch, navigate, goBack],
+   );
+ 
+   if (wall) return <SurfaceRenderer tree={wall.tree} content={wall.content} data={wall.data} actions={wall.actions} />;
+diff --git a/mobile/src/components/surfaces/SearchBinding.tsx b/mobile/src/components/surfaces/SearchBinding.tsx
+index 96d49f72a6dd21cde2dcc9f108486f25c8823ed3..5803a2d3e9e479bfeb96f59c6f73c300bdf69bbb 100644
+--- a/mobile/src/components/surfaces/SearchBinding.tsx
++++ b/mobile/src/components/surfaces/SearchBinding.tsx
+@@ -24,7 +24,7 @@ import {
+   SEARCH_MAX_WIDTH,
+ } from '@/constants/parcelSearch';
+ import { REPORT_HEX as R } from '@/constants/reportPage';
+-import { diffCandidateAddress, parcelSearchRoute, type AddressSegment, type SearchSituation } from '@/lib/parcelSearchMatch';
++import { diffCandidateAddress, type AddressSegment, type SearchSituation } from '@/lib/parcelSearchMatch';
+ import { reportsLeftShown } from '@/lib/parcelSearchCore';
+ 
+ /** The generated slice: the descriptor's config values and the content strings (scripts/surfaces/emit-mobile-surfaces.mjs). */
+@@ -46,7 +46,8 @@ export type PropsNode = { component: string; props: Record<string, unknown>; chi
+ export type Child = PropsNode | Ref | Template;
+ 
+ /** P35-D14 a: the closed list of derived names (patterns), declared in the descriptor's deviation entry. */
+-export const DERIVED_NAMES = [/^input$/, /^min_query_len$/, /^candidate_count$/, /^recent\.(0|[1-9][0-9]*)$/, /^label\.(0|[1-9][0-9]*)$/, /^segments\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.text$/];
++// Dated 2026-11-25 (task-465; prior list kept as text: it also held /^candidate_count$/): the candidate count badge is gone with the radio cards (RR-0487).
++export const DERIVED_NAMES = [/^input$/, /^min_query_len$/, /^recent\.(0|[1-9][0-9]*)$/, /^label\.(0|[1-9][0-9]*)$/, /^segments\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.text$/];
+ 
+ /** SRCH.DAYLIGHT (task-322): the prop colours are the report's Daylight hexes (reportPage.ts REPORT_HEX, twins of the report-* keys of mobile/tailwind.config.js); the dark PARCEL_SEARCH_HEX stays for the Account screen and the shelf. */
+ const H = { primary: R.amber, onPrimary: R.ink, check: R.ink, textMuted: R.muted, placeholder: R.muted } as const;
+@@ -68,26 +69,37 @@ const header = (): PropsNode =>
+     node('Text', { key: 'tagline', className: L.tagline }, [content('search.tagline')]),
+   ]);
+ 
+-const pill = (s: SearchSituation): PropsNode =>
+-  node('View', { key: 'pill', className: L.pill }, [
+-    node('Icon', { key: 'search-icon', icon: 'Search', size: I.field, color: H.textMuted }),
+-    node('Input', {
+-      key: 'input',
+-      testID: 'parcel-search-input',
+-      className: L.input,
+-      value: derived('input'),
+-      onChangeText: { action: 'change_input' },
+-      placeholder: content('search.input.placeholder'),
+-      placeholderTextColor: H.placeholder,
+-      autoCapitalize: 'none',
+-      autoCorrect: false,
+-      returnKeyType: 'search',
+-      accessibilityLabel: content('search.input.label'),
+-      accessibilityHint: { text: content('search.input.hint'), vars: { min: derived('min_query_len') } }, // task-450 L5: the setting fills {min}
+-    }),
+-    ...(s.isFetching
+-      ? [node('ActivityIndicator', { key: 'spinner', testID: 'parcel-search-spinner', size: 'small', color: H.primary, accessibilityLabel: content('search.searching') })]
+-      : []),
++/**
++ * task-465 (McFixV2.1; RR-0483 MORNING-DECISIONS.md:2523, RR-0487 :2543, the approved mock MOCK-465-approved.html): the box is one object, the bar
++ * (search icon, the field, the spinner slot at the right edge) and, when there is an answer, the drop-down under a thin grey line. Enter runs the
++ * search (onSubmitEditing, action `submit`); nothing opens while typing. Prior shape (kept as text): a pill holding the icon, the field and the spinner.
++ */
++const box = (s: SearchSituation): PropsNode =>
++  node('View', { key: 'box', testID: 'parcel-search-box', className: L.box }, [
++    node('View', { key: 'bar', className: L.bar }, [
++      node('Icon', { key: 'search-icon', icon: 'Search', size: I.field, color: H.textMuted }),
++      node('Input', {
++        key: 'input',
++        testID: 'parcel-search-input',
++        className: L.input,
++        value: derived('input'),
++        onChangeText: { action: 'change_input' },
++        onSubmitEditing: { action: 'submit' },
++        placeholder: content('search.input.placeholder'),
++        placeholderTextColor: H.placeholder,
++        autoCapitalize: 'none',
++        autoCorrect: false,
++        returnKeyType: 'search',
++        accessibilityLabel: content('search.input.label'),
++        accessibilityHint: { text: content('search.input.hint'), vars: { min: derived('min_query_len') } }, // task-450 L5: the setting fills {min}
++      }),
++      ...(s.isFetching
++        ? [node('View', { key: 'spinner-slot', className: L.spinnerSlot }, [
++          node('ActivityIndicator', { key: 'spinner', testID: 'parcel-search-spinner', size: 'small', color: H.primary, accessibilityLabel: content('search.searching') }),
++        ])]
++        : []),
++    ]),
++    ...drop(s),
+   ]);
+ 
+ /** MF-58 (ruling 2026-11-10 items 16 and 5): the legal line, always shown. SRCH.LEGAL (task-389; operator "1 a 2 b 3 a 4 a 5 c 6 accept", 2026-11-20): it is the last block of the page, after every result block (v8 search.html:267-269). */
+@@ -99,25 +111,26 @@ const legal = (): PropsNode => node('Text', { key: 'legal', testID: 'parcel-sear
+  * three; loading, a failed read and no plan draw no line (v8 draws none).
+  */
+ const reportsLeft = (s: SearchSituation): PropsNode[] =>
+-  reportsLeftShown(s.entitlement)
++  s.showCount && reportsLeftShown(s.entitlement)
+     ? [node('Text', { key: 'reports-left', testID: 'parcel-search-reports-left', className: L.allowance }, [{
+       text: content('search.reports_left'),
+       vars: { left: entitlement('reportsLeft'), allowance: entitlement('reportsLimit'), reset: entitlement('resetsOnDisplay') },
+     }])]
+     : [];
+ 
++/** task-465 (O7, O16; mock .chip): the recent searches show at rest only, as small plain pills; a tap runs that address (set_input submits it). */
+ const chips = (s: SearchSituation): PropsNode[] =>
+-  s.recent.length === 0
++  s.recent.length === 0 || !s.showChips
+     ? []
+     : [node('View', { key: 'chips', className: L.chipRow }, s.recent.map((q, i) => node('Button', {
+       key: `chip-${q}`,
+       testID: `parcel-search-suggestion-${q}`,
+-      variant: 'outline',
++      variant: 'ghost',
+       className: L.chip,
+       accessibilityRole: 'button',
+       accessibilityLabel: { text: content('search.chip.label'), vars: { query: derived(`recent.${i}`) } },
+       onPress: { action: 'set_input', value: derived(`recent.${i}`) },
+-    }, [node('Text', { key: 'chip-text', className: L.chipText }, [derived(`recent.${i}`)])])))];
++    }, [node('View', { key: 'chip-pill', className: L.chipPill }, [node('Text', { key: 'chip-text', className: L.chipText }, [derived(`recent.${i}`)])])])))];
+ 
+ const notice = (key: string, testID: string, icon: string, iconClassName: string, textClassName: string, text: Child, extra: PropsNode[] = [], className: string = L.notice): PropsNode =>
+   node('Alert', { key, testID, icon, iconClassName, className }, [
+@@ -125,10 +138,8 @@ const notice = (key: string, testID: string, icon: string, iconClassName: string
+     ...extra,
+   ]);
+ 
++// task-465 (mock state 5, "No red banner"): the outside-Toronto line moved into the drop-down (msg below); the other notices stay here.
+ const notices = (s: SearchSituation): PropsNode[] => [
+-  ...(s.outcome === 'outside_toronto'
+-    ? [notice('outside-toronto', 'parcel-search-outside-toronto', 'Ban', L.noticeIcon, L.noticeText, content('search.outside_toronto'), [], L.noticeError)]
+-    : []),
+   ...(s.errors.rateLimited
+     ? [notice('ratelimit', 'parcel-search-ratelimit', 'AlertTriangle', L.noticeIcon, L.noticeText,
+       { text: content('search.ratelimit'), vars: { seconds: contract('errors.429.retryAfterSeconds') } }, [], L.noticeError)]
+@@ -158,73 +169,67 @@ const segments = (s: SearchSituation, i: number, parcelId: string): PropsNode[]
+   segmentsOf(s, i).map((seg, j) => node('Text', { key: `${parcelId}-${j}`, className: seg.differs ? L.segmentDiffers : L.segment }, [derived(`segments.${i}.${j}.text`)]));
+ 
+ const segmentsOf = (s: SearchSituation, i: number): AddressSegment[] => {
+-  const c = s.candidates[i];
+-  return c ? diffCandidateAddress(s.query, c.address || c.parcelId) : [];
++  const r = s.rows[i];
++  return r ? diffCandidateAddress(s.query, r.address || r.parcelId) : [];
+ };
+ 
+-const addressList = (s: SearchSituation): PropsNode[] => {
+-  if (s.candidates.length === 0) return [];
+-  const route = s.selectedParcelId ? parcelSearchRoute('unique', { parcelId: s.selectedParcelId, query: s.query }) : null;
+-  return [
+-    node('View', { key: 'list-header', testID: 'parcel-search-list-header', className: L.listHeader }, [
+-      node('Text', { key: 'rail', className: L.rail }, [content('list.rail')]),
+-      node('Text', { key: 'badge', className: L.badge }, [{ text: content('list.badge'), vars: { count: derived('candidate_count') } }]),
+-    ]),
+-    ...s.candidates.map((c, i) => {
+-      const checked = c.parcelId === s.selectedParcelId;
+-      return node('Button', {
+-        key: c.parcelId,
+-        testID: `parcel-candidate-${c.parcelId}`,
+-        variant: 'outline',
+-        className: checked ? L.cardChecked : L.card,
+-        role: 'radio',
+-        accessibilityState: { checked },
+-        accessibilityLabel: derived(`label.${i}`),
+-        onPress: { action: 'select', parcelId: contract(`candidates.${i}.parcelId`) },
+-      }, [node('View', { key: 'card-row', className: L.cardRow }, [
+-        node('Text', { key: 'card-text', className: L.cardText }, segments(s, i, c.parcelId)),
+-        ...(checked ? [node('Icon', { key: 'check', icon: 'Check', size: I.button, color: H.check })] : []),
+-      ])]);
+-    }),
+-    node('Button', {
+-      key: 'select',
+-      testID: 'parcel-search-select',
+-      variant: 'default',
+-      className: L.select,
+-      disabled: route === null,
++/** One answer line in the drop-down: an icon, the line and, when given, a second smaller line. */
++const msg = (key: string, testID: string, first: Child, second: PropsNode[] = []): PropsNode =>
++  node('View', { key, className: L.msg }, [
++    node('Icon', { key: `${key}-icon`, icon: 'Info', size: I.msg, color: H.textMuted }),
++    node('View', { key: `${key}-body`, className: L.msgBody }, [node('Text', { key: `${key}-text`, testID, className: L.msgTitle }, [first]), ...second]),
++  ]);
++
++/**
++ * task-465 (McFixV2.1; RR-0483, RR-0487, RR-0495; plan section 3(b)): the drop-down under the box. The lines (the miss, outside Toronto) show only
++ * after Enter; the rows show while typing and after Enter, each a tap that opens its page (no radio cards, no SELECT, no title or count badge); after
++ * Enter one line under the rows says why the user is asked (several matches) or asks for a house number (the refine line). The help link
++ * "Report incorrect address match" (P35-D18 a, O9) follows the rows.
++ * Prior blocks (kept as text): the address list (a title rail, the count badge, radio cards, SELECT), the refine line, the miss and the prompt
++ * below the page, in that order (must-survive row 17).
++ */
++const drop = (s: SearchSituation): PropsNode[] => {
++  const lines: PropsNode[] = [
++    ...(s.showMiss
++      ? [msg('miss', 'parcel-search-empty', { text: content('search.miss'), vars: { query: derived('input') } },
++        [node('Text', { key: 'miss-hint', className: L.msgSub }, [content('search.miss.hint')])])]
++      : []),
++    ...(s.showOutside
++      ? [msg('outside-toronto', 'parcel-search-outside-toronto', content('search.outside_toronto.title'),
++        [node('Text', { key: 'outside-toronto-sub', className: L.msgSub }, [content('search.outside_toronto')])])]
++      : []),
++    ...s.rows.map((r, i) => node('Button', {
++      key: r.parcelId,
++      testID: `parcel-candidate-${r.parcelId}`,
++      variant: 'ghost',
++      className: i === 0 ? L.rowFirst : L.row,
+       accessibilityRole: 'button',
+-      accessibilityState: { disabled: route === null },
+-      accessibilityLabel: content('list.select.label'),
+-      onPress: route === null ? null : { action: 'push', route },
++      accessibilityLabel: derived(`label.${i}`),
++      onPress: { action: 'push', route: r.route },
+     }, [
+-      node('Text', { key: 'select-text', className: L.selectText }, [content('list.select')]),
+-      node('Icon', { key: 'select-icon', icon: 'ArrowRight', size: I.button, color: H.onPrimary }),
+-    ]),
++      node('Icon', { key: 'row-icon', icon: 'MapPin', size: I.row, color: H.textMuted }),
++      node('Text', { key: 'row-text', className: L.rowText }, segments(s, i, r.parcelId)),
++    ])),
++    ...(s.hint === 'several' ? [node('Text', { key: 'hint', testID: 'parcel-search-hint', className: L.hint }, [content('list.hint')])] : []),
++    ...(s.hint === 'refine' ? [node('Text', { key: 'refine', testID: 'parcel-search-refine', className: L.hint }, [content('list.refine')])] : []),
+     // MF-46 follow-up (P35-D18 a, dated 2026-11-12): "Report incorrect address match" opens Help & Support with the topic and the query.
+     // Dated 2026-11-24 (task-450 AC6, B.7 doc-2:49; prior topic address_match): the topic is wrong-lot ("Wrong address or lot").
+-    node('Button', {
+-      key: 'report',
+-      testID: 'parcel-search-report',
+-      variant: 'link',
+-      className: L.report,
+-      accessibilityRole: 'link',
+-      onPress: { action: 'open_help', topic: 'wrong-lot', q: derived('input') },
+-    }, [node('Text', { key: 'report-text', className: L.reportText }, [content('list.report')])]),
++    ...(s.rows.length > 0
++      ? [node('Button', {
++        key: 'report',
++        testID: 'parcel-search-report',
++        variant: 'link',
++        className: L.report,
++        accessibilityRole: 'link',
++        onPress: { action: 'open_help', topic: 'wrong-lot', q: derived('input') },
++      }, [node('Text', { key: 'report-text', className: L.reportText }, [content('list.report')])])]
++      : []),
+   ];
++  return lines.length === 0 ? [] : [node('View', { key: 'drop', testID: 'parcel-search-drop', className: L.drop }, lines)];
+ };
+ 
+-const tail = (s: SearchSituation): PropsNode[] => [
+-  ...(s.overCap ? [node('Text', { key: 'refine', testID: 'parcel-search-refine', className: L.refine }, [content('list.refine')])] : []),
+-  ...(s.showMiss
+-    ? [node('View', { key: 'miss', className: L.miss }, [
+-      node('Icon', { key: 'miss-icon', icon: 'MapPin', size: I.miss, color: H.textMuted }),
+-      node('Text', { key: 'miss-text', testID: 'parcel-search-empty', className: L.missText }, [content('search.miss')]),
+-    ])]
+-    : []),
+-  ...(s.showPrompt ? [node('Text', { key: 'prompt', testID: 'parcel-search-prompt', className: L.prompt }, [{ text: content('search.prompt'), vars: { min: derived('min_query_len') } }])] : []),
+-];
+-
+-/** The props tree of one render. Block order is the legacy one (must-survive row 17). A navigable outcome adds `navigate` (the effect pushes it). */
++/** The props tree of one render. Block order: the header, the box (with its drop-down), the count line, the chips, the notices, the legal line last
++ *  (task-465; prior order, must-survive row 17: pill, count, chips, notices, list, tail, legal). A navigable outcome adds `navigate` (the effect pushes it). */
+ export function searchProps(s: SearchSituation): PropsNode {
+   return node('SafeAreaView', { className: L.screen, edges: { top: 'additive' }, testID: 'parcel-search-screen', ...(s.route ? { navigate: s.route } : {}) }, [
+     node('ScrollView', {
+@@ -234,12 +239,10 @@ export function searchProps(s: SearchSituation): PropsNode {
+       keyboardShouldPersistTaps: 'handled',
+     }, [node('View', { key: 'column', testID: 'parcel-search-column', className: L.column, style: { maxWidth: SEARCH_MAX_WIDTH } }, [
+       header(),
+-      pill(s),
++      box(s),
+       ...reportsLeft(s),
+       ...chips(s),
+       ...notices(s),
+-      ...addressList(s),
+-      ...tail(s),
+       legal(),
+     ])]),
+   ]);
+@@ -252,15 +255,14 @@ export function searchData(s: SearchSituation): BindingData {
+   return {
+     contract: {
+       [CONTRACT]: { candidates: s.candidates, errors: { '429': { retryAfterSeconds: s.errors.retryAfterSeconds } } },
+-      ...(reportsLeftShown(s.entitlement) ? { [ENTITLEMENT]: { reportsLeft: s.entitlement.reportsLeft, reportsLimit: s.entitlement.reportsLimit, resetsOnDisplay: s.entitlement.resetsOnDisplay } } : {}),
++      ...(s.showCount && reportsLeftShown(s.entitlement) ? { [ENTITLEMENT]: { reportsLeft: s.entitlement.reportsLeft, reportsLimit: s.entitlement.reportsLimit, resetsOnDisplay: s.entitlement.resetsOnDisplay } } : {}),
+     },
+     derived: {
+       input: s.input,
+       min_query_len: SEARCH_MIN_QUERY_LEN, // task-450 L5: the setting (config.min_query_len through sliceNumber), never a typed 3
+-      candidate_count: s.candidates.length,
+       recent: s.recent,
+-      label: s.candidates.map((c) => c.address || c.parcelId),
+-      segments: s.candidates.map((c, i) => segmentsOf(s, i)),
++      label: s.rows.map((r) => r.address || r.parcelId),
++      segments: s.rows.map((_r, i) => segmentsOf(s, i)),
+     },
+   };
+ }
+diff --git a/mobile/src/components/surfaces/SemiQuestionBinding.tsx b/mobile/src/components/surfaces/SemiQuestionBinding.tsx
+index 12c86d1b227d2152a242137513580338218ae7a2..dd36694cb7ee3326d664aef53cdefd86a3f9d6c9 100644
+--- a/mobile/src/components/surfaces/SemiQuestionBinding.tsx
++++ b/mobile/src/components/surfaces/SemiQuestionBinding.tsx
+@@ -44,12 +44,13 @@ const CONTRACT = SEMI_QUESTION_CONTRACT;
+ const STYLES: PageStyles = {
+   screen: L.screen, scroll: L.scroll, column: L.column, bottomPadding: LOT_MAP_BOTTOM_PADDING, maxWidth: SEARCH_MAX_WIDTH,
+   bar: L.semiTop, back: L.semiBack, backIconSize: Z.backIcon, iconColor: H.icon,
+-  status: L.semiLoadingText, heading: L.semiHeading,
++  // task-465 (RR-0485 "1 inside"; mock state 7): the semi page reads its own question and answer keys; the wall keeps semiHeading and semiCard*.
++  status: L.semiLoadingText, heading: L.semiQuestionHeading,
+   notice: {
+     error: { box: L.noticeError, icon: L.noticeIcon, text: L.noticeText },
+     neutral: { box: L.notice, icon: L.noticeIconNeutral, text: L.noticeTextNeutral },
+   },
+-  card: { idle: L.semiCard, checked: L.semiCardChecked, row: L.semiCardRow, dotIdle: L.semiDot, dotChecked: L.semiDotChecked, text: L.semiCardText },
++  card: { idle: L.semiAnswerCard, checked: L.semiAnswerCardChecked, row: L.semiCardRow, dotIdle: L.semiDot, dotChecked: L.semiDotChecked, text: L.semiAnswerText },
+   // SRCH.SEMI-3 (task-361, UX-4): while the answered lookup runs Continue is busy: the approved busy look (semi-question.html:130 `.btn.p[aria-busy="true"] { opacity:.85 }`).
+   button: {
+     default: { className: L.semiSelect, busyClassName: `${L.semiSelect} opacity-[0.85]`, text: L.selectText },
+diff --git a/mobile/src/components/surfaces/SurfaceRenderer.tsx b/mobile/src/components/surfaces/SurfaceRenderer.tsx
+index 27010d8a1029f29fa73426c6277ea973e8b8cc7a..25f98cc0713863f42105b91d2360c12f0ad0a261 100644
+--- a/mobile/src/components/surfaces/SurfaceRenderer.tsx
++++ b/mobile/src/components/surfaces/SurfaceRenderer.tsx
+@@ -42,6 +42,9 @@ export type SurfaceActions = {
+   /** MF-46 follow-up (dated 2026-11-12): open Help & Support in the browser with a topic and a value (mobile/src/lib/maxbldHelp.ts). A host
+    * that renders no help link need not pass it; a tree naming it there throws (the `in` guard). */
+   open_help?: (topic: string, q: string) => void;
++  /** task-465 (McFixV2.1; RR-0483 "your typed search does not execute until you press enter"; Spec 126 §11b dated note 2026-11-25): the Enter key of
++   *  the search field (onSubmitEditing) runs the typed search. Optional like open_help: a host without a search field need not pass it. */
++  submit?: () => void;
+ };
+ /** MF-48: the REPORT callbacks (ReportPageHost.tsx holds the UI state they change). */
+ export type ReportActions = {
+@@ -127,6 +130,8 @@ const action = (a: Json, ctx: Ctx): ((arg?: unknown) => void) => {
+       return () => act.back();
+     case 'open_help':
+       return () => act.open_help?.(String(a.topic), String(resolveValue(a.q, ctx)));
++    case 'submit':
++      return () => act.submit?.();
+     case 'toggle_panel':
+       if (a.panel !== 'size' && a.panel !== 'cost') throw new Error(`SurfaceRenderer: unknown panel "${String(a.panel)}"`);
+       return () => act.toggle_panel(String(a.option), a.panel as 'size' | 'cost');
+@@ -145,7 +150,8 @@ const action = (a: Json, ctx: Ctx): ((arg?: unknown) => void) => {
+   }
+ };
+ 
+-const ACTION_PROPS = new Set(['onPress', 'onChangeText']);
++// task-465: onSubmitEditing (the Enter key of the search field) carries the submit action; any other prop name is not an action prop.
++const ACTION_PROPS = new Set(['onPress', 'onChangeText', 'onSubmitEditing']);
+ const DATA_PROPS = new Set(['key', 'navigate']);
+ 
+ function renderNode(n: SurfaceTree, ctx: Ctx): React.ReactNode {
+diff --git a/mobile/src/constants/lotMap.ts b/mobile/src/constants/lotMap.ts
+index b24cadac50c75e1fdb27012bba84afe52ff716b4..294d7abd7cce145e9b1f897e39346e6b6f298e0c 100644
+--- a/mobile/src/constants/lotMap.ts
++++ b/mobile/src/constants/lotMap.ts
+@@ -54,6 +54,15 @@ export const LOT_MAP_LAYOUT = {
+   semiDot: 'h-[22px] w-[22px] rounded-full border-2 border-report-field bg-report-card',
+   semiDotChecked: 'h-[22px] w-[22px] rounded-full border-[7px] border-report-ink bg-report-card',
+   semiCardText: 'flex-1 text-base font-normal text-report-ink',
++  // task-465 (McFixV2.1; RR-0485 "1 inside", finding 19, the approved mock state 7 .semi h3 / .ans div): the question is the focus, 26/32 bold; the
++  // answers are smaller and lighter, 15/20 at 48 px. New keys, because the report-limit wall (WallBinding.tsx) reads semiHeading, semiCard,
++  // semiCardChecked and semiCardText and has no ruling for a new look.
++  semiQuestionHeading: 'mt-6 w-full text-[26px] leading-[32px] font-bold text-report-ink',
++  semiAnswerCard:
++    'mt-3 h-auto sm:h-auto min-h-[48px] w-full flex-col items-start justify-start rounded-[20px] px-4 py-3 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky',
++  semiAnswerCardChecked:
++    'mt-3 h-auto sm:h-auto min-h-[48px] w-full flex-col items-start justify-start rounded-[20px] px-4 py-3 bg-report-card dark:bg-report-card border-report-ink dark:border-report-ink active:bg-report-sky dark:active:bg-report-sky',
++  semiAnswerText: 'flex-1 text-[15px] leading-[20px] font-normal text-report-muted',
+   semiSelect: 'mt-6 min-h-[48px] w-full rounded-xl',
+   semiRetry: 'mt-3 min-h-[48px] w-full rounded-xl bg-report-button dark:bg-report-button border-report-button-border dark:border-report-button-border',
+   semiLoadingText: 'mt-6 text-base font-normal text-report-muted',
+diff --git a/mobile/src/constants/parcelSearch.ts b/mobile/src/constants/parcelSearch.ts
+index 89d53e7e8b433f1be3841f1393121fcd665c9e69..bb695ed681731668ec70d43f35781d005fefd9b0 100644
+--- a/mobile/src/constants/parcelSearch.ts
++++ b/mobile/src/constants/parcelSearch.ts
+@@ -136,16 +136,36 @@ export const PARCEL_SEARCH_LAYOUT = {
+   wordmarkAccent: 'text-2xl font-bold tracking-tight text-report-amber-ink',
+   tagline: 'mt-1 text-[12px] font-semibold uppercase tracking-widest text-report-muted',
+   pill: 'flex-row items-center gap-1 rounded-full border border-report-field bg-report-card py-1 pl-4 pr-1',
++  // task-465 (McFixV2.1; RR-0483, RR-0487 approved mock MOCK-465-approved.html .box/.bar/.drop/.rowi/.msg/.hint): the box is one object; closed it is
++  // a pill, open the drop-down hangs from it under a thin grey line. rounded-[26px] (not rounded-full, which turns a tall box into a capsule).
++  box: 'w-full overflow-hidden rounded-[26px] border border-report-field bg-report-card',
++  bar: 'min-h-[52px] flex-row items-center gap-2 py-1 pl-4 pr-[6px]',
++  /** The spinner at the right edge of the box, in a 44 px slot (mock .go). */
++  spinnerSlot: 'h-[44px] w-[44px] items-center justify-center',
++  drop: 'w-full border-t border-report-line',
++  /** A drop-down row: 48 px, the address only (P35-D15 b: no area line); the first row has no top rule (mock .rowi:first-child). */
++  row: 'h-auto sm:h-auto min-h-[48px] w-full flex-row items-center justify-start gap-3 rounded-none border-t border-report-line px-4 py-[6px] bg-transparent dark:bg-transparent active:bg-report-page dark:active:bg-report-page',
++  rowFirst: 'h-auto sm:h-auto min-h-[48px] w-full flex-row items-center justify-start gap-3 rounded-none px-4 py-[6px] bg-transparent dark:bg-transparent active:bg-report-page dark:active:bg-report-page',
++  rowText: 'flex-1 text-[15px] leading-[20px] font-medium text-report-ink',
++  /** One answer line in the drop-down (the miss, outside Toronto, the prompt): an icon, a 15/20 line and a 13/18 line under it. */
++  msg: 'w-full flex-row items-start gap-3 px-4 py-3',
++  msgBody: 'flex-1',
++  msgTitle: 'text-[15px] leading-[20px] font-normal text-report-ink',
++  msgSub: 'mt-[2px] text-[13px] leading-[18px] font-normal text-report-soft',
++  /** The one line under the rows after Enter (mock .hint): more than one match, or the refine line. */
++  hint: 'border-t border-report-line px-4 pt-2 pb-[10px] text-[12px] leading-[16px] font-normal text-report-soft',
+   input:
+-    'flex-1 min-h-[44px] rounded-none border-0 bg-transparent dark:bg-transparent px-2 py-3 text-base font-normal text-report-ink shadow-none placeholder:text-report-soft',
+-  /** MF-58: the legal line under the address input (ruling 2026-11-10 items 16 and 5); 13/18 muted as small pages v8 (.legal). */
+-  legal: 'mt-3 text-[13px] leading-[18px] font-normal text-report-muted',
+-  /** SRCH.A6 (task-320): the reports-left line under the box, v8 .small: one small centred muted line. */
+-  allowance: 'mt-3 text-center text-[13px] leading-[18px] font-normal text-report-muted',
+-  chipRow: 'mt-3 flex-row flex-wrap gap-2',
+-  chip:
+-    'min-h-[44px] rounded-full px-3 bg-report-button dark:bg-report-button border-report-button-border dark:border-report-button-border active:bg-report-sky dark:active:bg-report-sky',
+-  chipText: 'text-[15px] font-semibold text-report-ink',
++    'flex-1 h-[44px] min-h-[44px] rounded-none border-0 bg-transparent dark:bg-transparent px-0 py-0 text-[16px] font-normal text-report-ink shadow-none placeholder:text-report-soft',
++  /** MF-58: the legal line under the address input (ruling 2026-11-10 items 16 and 5); 13/18 muted as small pages v8 (.legal).
++   *  task-465 (finding 6, mock .legal): smaller and quieter, 11/15 in report-soft (the mock's #8a8172 is under WCAG AA on the page; report-soft is 5.61:1). */
++  legal: 'mt-6 text-center text-[11px] leading-[15px] font-normal text-report-soft',
++  /** SRCH.A6 (task-320): the reports-left line under the box, v8 .small: one small centred muted line. task-465 (mock .count): 12/16 in report-soft. */
++  allowance: 'mt-4 text-center text-[12px] leading-[16px] font-normal text-report-soft',
++  chipRow: 'mt-2 flex-row flex-wrap justify-center gap-[6px]',
++  /** task-465 (O16, mock .chip): a 32 px plain pill inside a transparent 44 px Button, so the 44 px floor holds. */
++  chip: 'h-auto sm:h-auto min-h-[44px] px-0 bg-transparent dark:bg-transparent active:bg-transparent dark:active:bg-transparent',
++  chipPill: 'min-h-[32px] flex-row items-center rounded-full border border-report-button-border px-3',
++  chipText: 'text-[13px] leading-[18px] font-normal text-report-muted',
+   notice: 'mt-3 rounded-xl bg-report-card border-report-button-border',
+   /** The v8 error banner: the report's refused fill and ring. */
+   noticeError: 'mt-3 rounded-xl bg-report-no-fill border-report-no-ring',
+@@ -165,8 +185,9 @@ export const PARCEL_SEARCH_LAYOUT = {
+     'mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-ink dark:border-report-ink active:bg-report-sky dark:active:bg-report-sky',
+   cardRow: 'w-full flex-row items-center justify-between gap-2',
+   cardText: 'flex-1 text-base font-normal text-report-ink',
+-  segment: 'text-base font-normal text-report-ink',
+-  segmentDiffers: 'text-base font-semibold text-report-amber-ink',
++  // task-465 (O12; mock .rowi .a b i): the typed part is bold and the rest medium, both ink (prior: the differing part in amber, P35-D17 a).
++  segment: 'text-[15px] leading-[20px] font-bold text-report-ink',
++  segmentDiffers: 'text-[15px] leading-[20px] font-medium text-report-ink',
+   select: 'mt-4 min-h-[44px] w-full rounded-xl',
+   selectText: 'text-base font-bold text-report-ink',
+   refine: 'mt-3 text-center text-xs font-normal text-report-soft',
+@@ -179,7 +200,7 @@ export const PARCEL_SEARCH_LAYOUT = {
+ } as const;
+ 
+ /** Icon sizes in px (lucide `size`), the legacy values (Spec 117 §6.1). */
+-export const PARCEL_SEARCH_ICON = { field: 18, notice: 14, miss: 20, button: 16 } as const;
++export const PARCEL_SEARCH_ICON = { field: 18, notice: 14, miss: 20, button: 16, row: 18, msg: 18 } as const;
+ 
+ /** The scroll content's bottom padding: the S-004 shelf plus the legacy 24 (the sum stays out of the binding: FE-05). */
+ export const SEARCH_BOTTOM_PADDING = PARCEL_SHELF_HEIGHT + 24;
+diff --git a/mobile/src/generated/surfaces/mobile_parcel_search.json b/mobile/src/generated/surfaces/mobile_parcel_search.json
+index 4b4844bc5077bf1889284d02df4c1eff4cd0b690..5eb64c64ece11d63eac3a010b9b5a63062bc6b6c 100644
+--- a/mobile/src/generated/surfaces/mobile_parcel_search.json
++++ b/mobile/src/generated/surfaces/mobile_parcel_search.json
+@@ -1,5 +1,5 @@
+ {
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha a7806d91231d6c36)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha beca7754c1df0764)",
+   "surface": "mobile_parcel_search",
+   "config": {
+     "debounce_ms": 400,
+@@ -52,12 +52,9 @@
+     "footer.help": "Help & Support",
+     "footer.privacy": "Privacy Policy",
+     "footer.terms": "Terms of Service",
+-    "list.badge": "{count} candidates",
+-    "list.rail": "Ambiguous address query",
++    "list.hint": "More than one address matches. Tap the one you mean.",
+     "list.refine": "Add a house number to narrow it down.",
+     "list.report": "Report incorrect address match",
+-    "list.select": "Select",
+-    "list.select.label": "Open the selected lot",
+     "search.chip.label": "Search {query}",
+     "search.entitlement": "Your subscription doesn't include the parcel tool right now. This isn't a missing address — reactivate to search lots again.",
+     "search.error": "Couldn’t reach the lot service. Check your connection and try again.",
+@@ -65,9 +62,10 @@
+     "search.input.label": "Search a Toronto address",
+     "search.input.placeholder": "Enter a Toronto address",
+     "search.legal": "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.",
+-    "search.miss": "No parcel found for that address.",
++    "search.miss": "No lot found for {query}",
++    "search.miss.hint": "Check the house number and street name.",
+     "search.outside_toronto": "Lots are only available in Toronto.",
+-    "search.prompt": "Type at least {min} characters to search.",
++    "search.outside_toronto.title": "Outside Toronto",
+     "search.ratelimit": "Too many searches. Try again in {seconds}s.",
+     "search.reports_left": "{left} of {allowance} reports left until {reset}",
+     "search.retry.label": "Retry the search",
+diff --git a/mobile/src/generated/surfaces/mobile_parcel_semi_question.json b/mobile/src/generated/surfaces/mobile_parcel_semi_question.json
+index 2a4f8b730416489662511d25a1050914781749a9..73e1428b42c94ee44adacfa4f3180bc7fbb3a30f 100644
+--- a/mobile/src/generated/surfaces/mobile_parcel_semi_question.json
++++ b/mobile/src/generated/surfaces/mobile_parcel_semi_question.json
+@@ -1,5 +1,5 @@
+ {
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 5cd9194e62939d1a)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 19ccfd49ee8f50c7)",
+   "surface": "mobile_parcel_semi_question",
+   "config": {
+     "continue_wait_ms": 60000
+@@ -13,9 +13,9 @@
+   },
+   "content": {
+     "back.label": "Back to search",
+-    "question.title": "Is this house one half of a semi-detached pair?",
+-    "answer.yes": "Yes, it’s one half of a semi",
+-    "answer.no": "No, it's detached",
++    "question.title": "Is this a semi?",
++    "answer.yes": "Yes",
++    "answer.no": "No",
+     "answer.not_sure": "Not sure",
+     "select.none": "Choose an answer",
+     "select.go": "Continue",
+diff --git a/mobile/src/lib/parcelSearchMatch.ts b/mobile/src/lib/parcelSearchMatch.ts
+index 78f8ec5fba704f814a98e45edd02c35f6291a101..c6053798d2472fa4b6bf819b20c446262d5b933c 100644
+--- a/mobile/src/lib/parcelSearchMatch.ts
++++ b/mobile/src/lib/parcelSearchMatch.ts
+@@ -302,6 +302,9 @@ export function classifyParcelSearchError(error: unknown, schemaDrift: boolean):
+   return { rateLimited: retryAfterSeconds != null, retryAfterSeconds, entitlement, unexpected, schemaDrift: unexpected && schemaDrift };
+ }
+ 
++/** task-465 (McFixV2.1; RR-0483, RR-0487): one row of the drop-down under the box: the address, and the page a tap on it opens. */
++export type SearchRow = { parcelId: string; address: string; route: string };
++
+ export type SearchSituation = {
+   /** The raw field text (shown at once); everything else reads the debounced query. */
+   input: string;
+@@ -314,52 +317,100 @@ export type SearchSituation = {
+   /** Show the refine line: the list hit the cap, or (task-450, ruled B) a candidate list for a query with no house number; the list stays. */
+   overCap: boolean;
+   showMiss: boolean;
+-  showPrompt: boolean;
+   /** On-device recent searches, newest first (P35-D16 a). */
+   recent: string[];
+-  /** The checked address card, or null (P35-D17 a: nothing pre-checked). */
+-  selectedParcelId: string | null;
+-  /** Where the outcome navigates (unique, map kinds), else null: the screen's effect pushes it. */
++  /** task-465 (RR-0483): the text the user ran with Enter (or a chip tap), else null. Prior field (kept as text): selectedParcelId, the checked
++   *  address card of P35-D17 a; the radio cards and SELECT are gone on the phone (RR-0487), so the field left the situation. */
++  submitted: string | null;
++  /** task-465: the drop-down rows (text_candidates capped; unique gives its match; multi_parcel its first address with the map route). */
++  rows: SearchRow[];
++  /** task-465: the one line under the rows: 'several' (more than one match, after Enter), 'refine' (the cap, or a street with no number), or none. */
++  hint: 'several' | 'refine' | null;
++  /** task-465: the outside-Toronto line in the drop-down, after Enter only (RR-0483; finding 32). Prior field (kept as text): showPrompt, the
++   *  "Type at least N characters" line, dropped by RR-0495: a too-short Enter shows the miss line instead. */
++  showOutside: boolean;
++  /** task-465: the recent-search chips show at rest only (an empty box; mock state 1). */
++  showChips: boolean;
++  /** task-465 O7: the reports-left line hides while the drop-down is open (mock states 2 to 5). */
++  showCount: boolean;
++  /** Where the outcome navigates (unique, map kinds), else null: the screen's effect pushes it. task-465: only for a submitted query whose fetch has settled. */
+   route: string | null;
+   /** SRCH.A6 (task-320): the served count fields the reports-left line binds; absent or null (loading, read failed, no plan) draws no line. */
+   entitlement?: EntitlementLine | null;
+ };
+ 
+-/** The situation of one render, from the hook's values (rows 14, 16; the truth table in parcelSearchMatch.test.ts). */
++/**
++ * The situation of one render, from the hook's values (rows 14, 16; the truth table in parcelSearchMatch.test.ts).
++ *
++ * Dated 2026-11-25 (task-465 McFixV2.1; RR-0483 MORNING-DECISIONS.md:2523 "your typed search does not execute until you press enter or select an
++ * address. And if you press enter with an incomplete address - you get the error"; RR-0485 :2533 "they need to press enter"; RR-0487 :2543 "465 Mock
++ * approved"; prior text kept): the match-type ruling of 2026-09-16 above ("unique -> navigate straight to the lot") is replaced in part. Nothing opens
++ * while typing: unique and the map kinds (multi_parcel, unlinked, intersection) open only on Enter (`submitted`) or a tap on a row. While typing the
++ * rows drop under the box; the miss, the prompt and the outside-Toronto line show only after Enter. The rows hide as soon as the box no longer starts
++ * with the text they were found for (the first delete clears the list).
++ */
+ export function buildSearchSituation(args: {
+   input: string;
+   debounced: string;
++  /** task-465: the text run with Enter or a chip tap, else null; it wins over the debounced text. */
++  submitted: string | null;
+   data: ConsumerParcelLookupResult | undefined;
+   error: unknown;
+   isFetching: boolean;
+   schemaDrift: boolean;
+   recent: readonly string[];
+-  selectedParcelId: string | null;
+   cap: number;
+   minQueryLen: number;
+   /** SRCH.A6: the entitlement read's data, undefined while loading or after a failed read. */
+   entitlement?: EntitlementLine | null;
+ }): SearchSituation {
+-  const { debounced, data, error, isFetching } = args;
+-  const outcome = deriveMatchType(debounced, error ? undefined : data);
++  const { data, error, isFetching, submitted } = args;
++  const query = submitted ?? args.debounced;
++  const outcome = deriveMatchType(query, error ? undefined : data);
+   const candidates = outcome === 'text_candidates' && data ? data.candidates.slice(0, args.cap) : [];
+   // task-450 (2a, RR-0443 c; QUESTIONS-RULED.md Q8.1 B): a candidate list for a query with no house number also asks for one; the rows are kept.
+-  const noNumber = outcome === 'text_candidates' && !hasHouseNumber(debounced);
+-  const selected = candidates.some((c) => c.parcelId === args.selectedParcelId) ? args.selectedParcelId : null;
++  const noNumber = outcome === 'text_candidates' && !hasHouseNumber(query);
++  const overCap = noNumber || isOverCandidateCap(candidates, args.cap);
++  const ran = submitted !== null;
++  // task-465 (mock "The list clears on the first delete"): the rows belong to `query`; once the box no longer starts with it they hide.
++  const current = args.input.trim().toLowerCase().startsWith(query.trim().toLowerCase());
++  const lot = (parcelId: string): string => parcelSearchRoute('unique', { parcelId, query }) ?? '';
++  const first = data?.candidates[0];
++  const rows: SearchRow[] = !current
++    ? []
++    : outcome === 'text_candidates'
++      ? candidates.map((c) => ({ parcelId: c.parcelId, address: c.address, route: lot(c.parcelId) }))
++      : outcome === 'unique' && data?.match
++        ? [{ parcelId: data.match.parcelId, address: data.match.address, route: lot(data.match.parcelId) }]
++        : outcome === 'multi_parcel' && first
++          ? [{ parcelId: first.parcelId, address: first.address, route: parcelSearchRoute('multi_parcel', { query }) ?? '' }]
++          : [];
++  // O4 (QUESTIONS-RULED.md; RR-0483 "you get the error", RR-0443 c "select from the available addresses that are close"): one close row after Enter
++  // shows the miss line above it. RR-0495 (O14, second addendum): a non-blank Enter shorter than min_query_len shows the miss line too (nothing is sent).
++  const short = query.trim().length < args.minQueryLen && outcome !== 'outside_toronto';
++  const showMiss = ran && error == null && (short || outcome === 'no_match' || (outcome === 'text_candidates' && rows.length === 1));
++  const showOutside = ran && outcome === 'outside_toronto';
++  // The refine line keeps its task-450 timing (ruled B, kept: it shows with the rows while typing too); the several-matches line shows after Enter only.
++  const hint = outcome !== 'text_candidates' || rows.length === 0 ? null : overCap ? 'refine' : ran && rows.length > 1 ? 'several' : null;
++  const dropOpen = rows.length > 0 || showMiss || showOutside || hint !== null;
+   return {
+     input: args.input,
+-    query: debounced,
++    query,
+     outcome,
+     isFetching,
+     errors: classifyParcelSearchError(error, args.schemaDrift),
+     candidates,
+-    overCap: noNumber || isOverCandidateCap(candidates, args.cap),
++    overCap,
+     // task-450 V4 (Spec 99 §6.5 :527-530): a settled miss keeps its line on a re-fetch; isFetching is not a render gate here.
+-    showMiss: outcome === 'no_match' && error == null,
+-    showPrompt: outcome !== 'outside_toronto' && debounced.trim().length < args.minQueryLen && error == null,
++    showMiss,
+     recent: [...args.recent],
+-    selectedParcelId: selected,
+-    route: parcelSearchRoute(outcome, { parcelId: data?.match?.parcelId ?? null, query: debounced }),
++    submitted,
++    rows,
++    hint,
++    showOutside,
++    showChips: args.input.trim() === '',
++    showCount: !dropOpen,
++    route: ran && !isFetching ? parcelSearchRoute(outcome, { parcelId: data?.match?.parcelId ?? null, query }) : null,
+     // Only when a read answered: the key is left off otherwise so every other situation is unchanged.
+     ...(args.entitlement ? { entitlement: { reportsLeft: args.entitlement.reportsLeft, reportsLimit: args.entitlement.reportsLimit, resetsOnDisplay: args.entitlement.resetsOnDisplay } } : {}),
+   };
+

@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-25T22:02:18.040Z file_sha256=23c367e5df5cf275d786da4c822c1223e14518850ac88f24120ca1f54866456f prompt_sha256=9df32da574e2f7447f3d2613a98c634ced94459a6aa6c1e2d7e3fab24d5838a2
+🔍 Lens review of docs/reports/lanes/2026-11-25/BL-MCFIX465/in-out-code-review-p4.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11538 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23964 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 36116 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 48883 chars, answer 0 chars, 60s
+DEFER severity=MED — src/tests/surfaces/search-web-binding.ui.test.tsx "expect(screen.queryAllByRole('radio')).toHaveLength(0);" — the render above it was switched to SITUATIONS.static, a page that never drew radio cards, so this assertion is vacuous and card item 2 (no radio cards on a result page) is guarded by nothing here — render the ambiguous situation for this check (or drop the line, since the (c) case already pins the row as an A with an href).
+DEFER severity=LOW — src/tests/surfaces/search-web-binding.ui.test.tsx "const set_input = vi.fn(); const push = vi.fn(); const submit = vi.fn();" — push is passed in `actions: { push, submit }` and never asserted, so the row onClick push the plan keeps for action-name parity is unverified and the mock is dead weight — fire a click on the row and assert push, or drop the mock.
+DEFER severity=LOW — src/tests/surfaces/search-web-binding.ui.test.tsx "const mapRow = nodes(map as unknown as Json).find((n) => n.props?.testID === 'parcel-candidate-100026') as Json;" — the `as Json` hides a possible undefined from find, so if the fixture parcel id changes the next line "mapRow.props.href" throws a bare TypeError instead of naming the missing row — assert the lookup first (expect(mapRow).toBeDefined()) or read it as `mapRow?.props`.
+DEFER severity=LOW — src/tests/surfaces/site-footer.logic.test.ts "it('eleven goldens: the last child of the screen is the footer', () => {" — the body now pins 12, so the test name misstates the count and a red reads "eleven goldens" — retitle to twelve, as the same change did in search-web-binding.ui.test.tsx.
+DEFER severity=NIT — src/tests/surfaces/search-web-binding.ui.test.tsx "const all = { change_input: vi.fn(), set_input: vi.fn(), retry: vi.fn(), select: vi.fn(), push: vi.fn() };" — select is now a dead key: there is no SELECT control left (this file asserts `parcel-search-select` is null) — remove `select` from the object.
+DEFER severity=NIT — src/tests/surfaces/search-web-binding.ui.test.tsx "//   (c) actions reach the mount's callbacks (a chip sets the input; SELECT pushes the web route of the checked lot);" — the file header still states SELECT pushes, while the note added three lines below says there is no SELECT — mark that clause superseded like the other "prior text kept" lines.
+DEFER severity=NIT — src/tests/surfaces/search-web-binding.ui.test.tsx "expect([C['search.input.hint']].every((t) => (t as string).includes('{min}') && !(t as string).includes('3'))).toBe(true);" — vestigial single-element array wrapper left from the two-key check, `.every` over one item — assert on the string directly and keep the two checks.
+REJECT — src/tests/surfaces/search-reports-left.logic.test.ts "expect(others).toHaveLength(11);" — looks off by one against the new 12-state count — it is right: `others` filters out the single `hit` state (golden reports_left), so 12 - 1 = 11, and the sibling pins (12 states, 105 goldens, 442 strings) agree with each other.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  67711ms (67.7s)
+📊 Tokens — total: 30571, input: 15765, output: 14806, reasoning: 14007

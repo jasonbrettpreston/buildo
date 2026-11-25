@@ -304,7 +304,7 @@ interface Allow { file: string; rule: string; component: string; handler: string
 const SIGN_IN = 'mobile/app/(auth)/sign-in.tsx';
 const SIGN_UP = 'mobile/app/(auth)/sign-up.tsx';
 const LOGIN_FORM = 'src/components/auth/LoginForm.tsx';
-const WEB_SEARCH = 'src/components/surfaces/web/SearchBinding.tsx';
+// task-465 (dated 2026-11-25): the WEB_SEARCH constant (src/components/surfaces/web/SearchBinding.tsx) went with its one entry, audit 46 (below).
 const ALLOW: Allow[] = [
   // --- The six audited VIOLATIONS, named exceptions (operator 2026-11-11 "yes"). Audit #3 is one control that breaks two rules. ---
   // Dated 2026-11-12 (MF-48 Stage B with MF-74; operator "Ball y"): #3 is FIXED and its two entries leave the list (the list only shrinks). The
@@ -336,8 +336,9 @@ const ALLOW: Allow[] = [
   { file: SIGN_UP, rule: 'NAV-1', component: 'Pressable', handler: "setMethod('phone')", count: 1, kind: 'disclosure', audit: 21,
     why: 'opens the sign-up phone bottom sheet (a sheet is a self-contained task, ios.md:14), gated off by PHONE_AUTH_ENABLED; the same control as the sign-in phone button (audit 17)' },
   // --- Audited FLAGs the rules reach: a real router call missing a guard; not navigation by state. Owed by the named row. ---
-  { file: WEB_SEARCH, rule: 'NAV-6', component: 'node:Button#select', handler: 'action:push', count: 1, kind: 'flag', audit: 46,
-    why: 'owed: MF-44 (Button component={Link} href={route}, disabled while route is null; unwired while MAXBLD_WEB_LIVE=false)' },
+  // Dated 2026-11-25 (task-465 McFixV2.1, plan third addendum; prior entry kept as text: { file: WEB_SEARCH, rule: 'NAV-6', component: 'node:Button#select',
+  // handler: 'action:push', count: 1, kind: 'flag', audit: 46, why: 'owed: MF-44 (Button component={Link} href={route}, ...)' }): the Select button is gone and
+  // the drop-down rows meet what it owed: a lot row is a web binding Button with an href key (Button component={Link} href), so NAV-6 finds nothing.
   // --- Audited OK: a real mechanism the rule's shape reaches. ---
   { file: 'src/app/login/page.tsx', rule: 'NAV-6', component: 'button', handler: "router.push(safeRedirectPath(params.get('redirect')))", count: 1, kind: 'ok', audit: 27,
     why: 'Continue as Dev (dev mode only): a programmatic move to a computed, same-origin-guarded target (src/lib/auth/safe-redirect.ts, protected), not a link' },

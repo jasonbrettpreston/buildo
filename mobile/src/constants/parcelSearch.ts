@@ -136,16 +136,36 @@ export const PARCEL_SEARCH_LAYOUT = {
   wordmarkAccent: 'text-2xl font-bold tracking-tight text-report-amber-ink',
   tagline: 'mt-1 text-[12px] font-semibold uppercase tracking-widest text-report-muted',
   pill: 'flex-row items-center gap-1 rounded-full border border-report-field bg-report-card py-1 pl-4 pr-1',
+  // task-465 (McFixV2.1; RR-0483, RR-0487 approved mock MOCK-465-approved.html .box/.bar/.drop/.rowi/.msg/.hint): the box is one object; closed it is
+  // a pill, open the drop-down hangs from it under a thin grey line. rounded-[26px] (not rounded-full, which turns a tall box into a capsule).
+  box: 'w-full overflow-hidden rounded-[26px] border border-report-field bg-report-card',
+  bar: 'min-h-[52px] flex-row items-center gap-2 py-1 pl-4 pr-[6px]',
+  /** The spinner at the right edge of the box, in a 44 px slot (mock .go). */
+  spinnerSlot: 'h-[44px] w-[44px] items-center justify-center',
+  drop: 'w-full border-t border-report-line',
+  /** A drop-down row: 48 px, the address only (P35-D15 b: no area line); the first row has no top rule (mock .rowi:first-child). */
+  row: 'h-auto sm:h-auto min-h-[48px] w-full flex-row items-center justify-start gap-3 rounded-none border-t border-report-line px-4 py-[6px] bg-transparent dark:bg-transparent active:bg-report-page dark:active:bg-report-page',
+  rowFirst: 'h-auto sm:h-auto min-h-[48px] w-full flex-row items-center justify-start gap-3 rounded-none px-4 py-[6px] bg-transparent dark:bg-transparent active:bg-report-page dark:active:bg-report-page',
+  rowText: 'flex-1 text-[15px] leading-[20px] font-medium text-report-ink',
+  /** One answer line in the drop-down (the miss, outside Toronto, the prompt): an icon, a 15/20 line and a 13/18 line under it. */
+  msg: 'w-full flex-row items-start gap-3 px-4 py-3',
+  msgBody: 'flex-1',
+  msgTitle: 'text-[15px] leading-[20px] font-normal text-report-ink',
+  msgSub: 'mt-[2px] text-[13px] leading-[18px] font-normal text-report-soft',
+  /** The one line under the rows after Enter (mock .hint): more than one match, or the refine line. */
+  hint: 'border-t border-report-line px-4 pt-2 pb-[10px] text-[12px] leading-[16px] font-normal text-report-soft',
   input:
-    'flex-1 min-h-[44px] rounded-none border-0 bg-transparent dark:bg-transparent px-2 py-3 text-base font-normal text-report-ink shadow-none placeholder:text-report-soft',
-  /** MF-58: the legal line under the address input (ruling 2026-11-10 items 16 and 5); 13/18 muted as small pages v8 (.legal). */
-  legal: 'mt-3 text-[13px] leading-[18px] font-normal text-report-muted',
-  /** SRCH.A6 (task-320): the reports-left line under the box, v8 .small: one small centred muted line. */
-  allowance: 'mt-3 text-center text-[13px] leading-[18px] font-normal text-report-muted',
-  chipRow: 'mt-3 flex-row flex-wrap gap-2',
-  chip:
-    'min-h-[44px] rounded-full px-3 bg-report-button dark:bg-report-button border-report-button-border dark:border-report-button-border active:bg-report-sky dark:active:bg-report-sky',
-  chipText: 'text-[15px] font-semibold text-report-ink',
+    'flex-1 h-[44px] min-h-[44px] rounded-none border-0 bg-transparent dark:bg-transparent px-0 py-0 text-[16px] font-normal text-report-ink shadow-none placeholder:text-report-soft',
+  /** MF-58: the legal line under the address input (ruling 2026-11-10 items 16 and 5); 13/18 muted as small pages v8 (.legal).
+   *  task-465 (finding 6, mock .legal): smaller and quieter, 11/15 in report-soft (the mock's #8a8172 is under WCAG AA on the page; report-soft is 5.61:1). */
+  legal: 'mt-6 text-center text-[11px] leading-[15px] font-normal text-report-soft',
+  /** SRCH.A6 (task-320): the reports-left line under the box, v8 .small: one small centred muted line. task-465 (mock .count): 12/16 in report-soft. */
+  allowance: 'mt-4 text-center text-[12px] leading-[16px] font-normal text-report-soft',
+  chipRow: 'mt-2 flex-row flex-wrap justify-center gap-[6px]',
+  /** task-465 (O16, mock .chip): a 32 px plain pill inside a transparent 44 px Button, so the 44 px floor holds. */
+  chip: 'h-auto sm:h-auto min-h-[44px] px-0 bg-transparent dark:bg-transparent active:bg-transparent dark:active:bg-transparent',
+  chipPill: 'min-h-[32px] flex-row items-center rounded-full border border-report-button-border px-3',
+  chipText: 'text-[13px] leading-[18px] font-normal text-report-muted',
   notice: 'mt-3 rounded-xl bg-report-card border-report-button-border',
   /** The v8 error banner: the report's refused fill and ring. */
   noticeError: 'mt-3 rounded-xl bg-report-no-fill border-report-no-ring',
@@ -165,8 +185,9 @@ export const PARCEL_SEARCH_LAYOUT = {
     'mt-2 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-3 py-3 bg-report-card dark:bg-report-card border-report-ink dark:border-report-ink active:bg-report-sky dark:active:bg-report-sky',
   cardRow: 'w-full flex-row items-center justify-between gap-2',
   cardText: 'flex-1 text-base font-normal text-report-ink',
-  segment: 'text-base font-normal text-report-ink',
-  segmentDiffers: 'text-base font-semibold text-report-amber-ink',
+  // task-465 (O12; mock .rowi .a b i): the typed part is bold and the rest medium, both ink (prior: the differing part in amber, P35-D17 a).
+  segment: 'text-[15px] leading-[20px] font-bold text-report-ink',
+  segmentDiffers: 'text-[15px] leading-[20px] font-medium text-report-ink',
   select: 'mt-4 min-h-[44px] w-full rounded-xl',
   selectText: 'text-base font-bold text-report-ink',
   refine: 'mt-3 text-center text-xs font-normal text-report-soft',
@@ -179,7 +200,7 @@ export const PARCEL_SEARCH_LAYOUT = {
 } as const;
 
 /** Icon sizes in px (lucide `size`), the legacy values (Spec 117 §6.1). */
-export const PARCEL_SEARCH_ICON = { field: 18, notice: 14, miss: 20, button: 16 } as const;
+export const PARCEL_SEARCH_ICON = { field: 18, notice: 14, miss: 20, button: 16, row: 18, msg: 18 } as const;
 
 /** The scroll content's bottom padding: the S-004 shelf plus the legacy 24 (the sum stays out of the binding: FE-05). */
 export const SEARCH_BOTTOM_PADDING = PARCEL_SHELF_HEIGHT + 24;

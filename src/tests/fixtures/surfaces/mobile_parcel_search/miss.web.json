@@ -69,58 +69,109 @@
             ]
           },
           {
-            "component": "Group",
+            "component": "Stack",
             "props": {
-              "key": "pill",
-              "className": "flex-nowrap items-center gap-1 rounded-full border border-zinc-800 bg-zinc-900 py-1 pl-4 pr-1"
+              "key": "box",
+              "testID": "parcel-search-box",
+              "className": "w-full gap-0 overflow-hidden rounded-[26px] border border-zinc-800 bg-zinc-900"
             },
             "children": [
               {
-                "component": "TextInput",
+                "component": "Group",
                 "props": {
-                  "key": "input",
-                  "testID": "parcel-search-input",
-                  "className": "flex-1 ph-no-capture",
-                  "size": "lg",
-                  "variant": "unstyled",
-                  "value": {
-                    "derived": "input"
-                  },
-                  "onChange": {
-                    "action": "change_input"
-                  },
-                  "placeholder": {
-                    "content": "search.input.placeholder"
-                  },
-                  "ariaLabel": {
-                    "content": "search.input.label"
-                  },
-                  "ariaDescription": {
-                    "text": {
-                      "content": "search.input.hint"
-                    },
-                    "vars": {
-                      "min": {
-                        "derived": "min_query_len"
-                      }
-                    }
-                  },
-                  "autoComplete": "off"
+                  "key": "bar",
+                  "className": "flex-nowrap items-center gap-2 py-1 pl-4 pr-1"
                 },
-                "children": []
-              }
-            ]
-          },
-          {
-            "component": "Text",
-            "props": {
-              "key": "miss",
-              "testID": "parcel-search-empty",
-              "className": "mt-10 text-center text-base font-normal text-zinc-400"
-            },
-            "children": [
+                "children": [
+                  {
+                    "component": "TextInput",
+                    "props": {
+                      "key": "input",
+                      "testID": "parcel-search-input",
+                      "className": "flex-1 ph-no-capture",
+                      "size": "lg",
+                      "variant": "unstyled",
+                      "value": {
+                        "derived": "input"
+                      },
+                      "onChange": {
+                        "action": "change_input"
+                      },
+                      "onSubmit": {
+                        "action": "submit"
+                      },
+                      "placeholder": {
+                        "content": "search.input.placeholder"
+                      },
+                      "ariaLabel": {
+                        "content": "search.input.label"
+                      },
+                      "ariaDescription": {
+                        "text": {
+                          "content": "search.input.hint"
+                        },
+                        "vars": {
+                          "min": {
+                            "derived": "min_query_len"
+                          }
+                        }
+                      },
+                      "autoComplete": "off"
+                    },
+                    "children": []
+                  }
+                ]
+              },
               {
-                "content": "search.miss"
+                "component": "Stack",
+                "props": {
+                  "key": "drop",
+                  "testID": "parcel-search-drop",
+                  "className": "w-full gap-0 border-t border-zinc-800"
+                },
+                "children": [
+                  {
+                    "component": "Stack",
+                    "props": {
+                      "key": "miss",
+                      "className": "w-full gap-0 px-4 py-3"
+                    },
+                    "children": [
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "miss-text",
+                          "testID": "parcel-search-empty",
+                          "className": "text-[15px] font-normal text-zinc-100"
+                        },
+                        "children": [
+                          {
+                            "text": {
+                              "content": "search.miss"
+                            },
+                            "vars": {
+                              "query": {
+                                "derived": "input"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "component": "Text",
+                        "props": {
+                          "key": "miss-hint",
+                          "className": "text-[13px] font-normal text-zinc-400"
+                        },
+                        "children": [
+                          {
+                            "content": "search.miss.hint"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
               }
             ]
           }
@@ -227,8 +278,8 @@
   },
   "fingerprint": {
     "files": {
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "74f2becdf1b51862",
-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "33c06b5ae3b585b0"
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json": "3893aa2731eac197",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "4071cba8122fcf0c"
     }
   }
 }

@@ -29,6 +29,10 @@ export const INTENTIONALLY_CHANGED: Record<string, string> = {
   'accessibilityLabel=Open lot at ${c.address || c.parcelId}': 'a tap now selects a radio card labelled with the address; SELECT opens the lot (accepted 2026-11-09 item 1, P35-D17 a)',
   'Parcel {c.parcelId}': 'the radio cards carry the address only, as the layout (accepted 2026-11-09 item 1; plan v3 §2.2)',
   'More than {SEARCH_CANDIDATE_LIMIT} lots match. Add a house number to narrow it down.': 'the refine line becomes "Add a house number to narrow it down." at every row count, because it now also shows for a street with no house number next to a shorter list (RR-0443 c, MORNING-DECISIONS.md:2284 "they need to select from the available addresses that are close"; task-450 QUESTIONS-RULED.md Q8.2)',
+  // McFixV2.1 (task-465; dated 2026-11-25): three ruled changes.
+  'parcel-search-prompt': 'the type-more prompt line is dropped; Enter on a too-short entry shows the No lot found line (operator RR-0495, MORNING-DECISIONS.md:2579, verbatim "correct"; task-465)',
+  'Type at least {SEARCH_MIN_QUERY_LEN} characters to search.': 'the type-more prompt line is dropped (operator RR-0495, MORNING-DECISIONS.md:2579, verbatim "correct"; task-465)',
+  'No parcel found for that address.': 'the miss line becomes "No lot found for <the typed text>" under the box after Enter (task-465 card item 3; operator RR-0483, MD:2523 "can\'t find 41 derwyn"; RR-0487, MD:2543, the approved mock state 4)',
 };
 
 const fill = (s: string): string => s.replace(/\$?\{([A-Z_]+)\}/g, (m, k: string) => CONFIG[k] ?? m).replace(/\$?\{[^}]+\}/g, '{}');

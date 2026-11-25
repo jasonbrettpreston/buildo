@@ -3,11 +3,11 @@ id: TASK-465
 title: >-
   McFixV2.1 Search box the Google way: Enter runs the search, suggestions and
   messages drop under the box, the box is the only focus; semi question reworded
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-MCFIX465'
 created_date: '2026-11-25T17:05:00Z'
-updated_date: '2026-11-25T19:37:00Z'
+updated_date: '2026-11-25T22:14:00Z'
 labels:
   - McFixV2
 milestone: m-1
@@ -27,6 +27,10 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-25/BL-MCFIX465/REPORT.md
+  - docs/reports/lanes/2026-11-25/BL-MCFIX465/FINDINGS.md
+  - docs/reports/lanes/2026-11-25/BL-MCFIX465/GROUNDER.md
+  - docs/reports/lanes/2026-11-25/BL-MCFIX465/TRIAGE.md
 type: fix
 ordinal: 159210
 ---
@@ -55,7 +59,7 @@ What changes (each needs the approved mock first; this replaces parts of the app
 
 Constraints: no database step. Reuse the existing builders (addressList, notice, chips, reportsLeft in SearchBinding.tsx; PageTableBinding for the semi page) and the existing settings (debounce_ms, min_query_len, candidate_cap); a new component needs a named reason. The hand-off to the loading screen and the one-time report calculation belong to task-267, not here.
 
-Files: mobile/app/(app)/parcel-tool/index.tsx, mobile/src/components/surfaces/SearchBinding.tsx, mobile/src/components/surfaces/SurfaceRenderer.tsx, mobile/src/components/surfaces/SemiQuestionBinding.tsx, mobile/src/constants/parcelSearch.ts, mobile/src/lib/parcelSearchMatch.ts, mobile/src/constants/lotMap.ts, src/components/surfaces/web/SearchBinding.tsx, src/lib/surfaces/maxbld-web.ts, scripts/surfaces/_schema/bindings.json, scripts/surfaces/_schema/census/mobile-product.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json, mobile/__tests__/fixtures/parcelSearch.situations.json, mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json, mobile/__tests__/fixtures/surfaces/mobile_parcel_semi_question.goldens.json, mobile/src/generated/surfaces/mobile_parcel_search.json, mobile/src/generated/surfaces/mobile_parcel_semi_question.json, src/tests/fixtures/surfaces/mobile_parcel_search, src/tests/fixtures/surfaces/mobile_parcel_semi_question, mobile/__tests__/parcelSearchScreen.behaviour.test.tsx, mobile/__tests__/parcelSearchMatch.test.ts, mobile/__tests__/parcelScreens.golden.test.ts, mobile/__tests__/surfaceRenderer.smoke.test.tsx, mobile/__tests__/semiQuestionPage.behaviour.test.tsx, src/tests/semi-question-design.logic.test.ts, src/tests/surfaces/search-parity.golden.test.ts, src/tests/surfaces/search-web-binding.ui.test.tsx, src/tests/maxbld-web-pages.logic.test.ts, src/tests/surfaces/nav-by-route.logic.test.ts, docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, docs/specs/00-architecture/117_maxbld_brand.md, docs/specs/03-mobile/99_mobile_state_architecture.md, docs/specs/02-web-admin/126_maxbld_surface_standard.md
+Files: mobile/app/(app)/parcel-tool/index.tsx, mobile/src/components/surfaces/SearchBinding.tsx, mobile/src/components/surfaces/SurfaceRenderer.tsx, mobile/src/components/surfaces/SemiQuestionBinding.tsx, mobile/src/constants/parcelSearch.ts, mobile/src/lib/parcelSearchMatch.ts, mobile/src/constants/lotMap.ts, src/components/surfaces/web/SearchBinding.tsx, src/lib/surfaces/maxbld-web.ts, scripts/surfaces/_schema/bindings.json, scripts/surfaces/_schema/census/mobile-product.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json, mobile/__tests__/fixtures/parcelSearch.situations.json, mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json, mobile/__tests__/fixtures/surfaces/mobile_parcel_semi_question.goldens.json, mobile/src/generated/surfaces/mobile_parcel_search.json, mobile/src/generated/surfaces/mobile_parcel_semi_question.json, src/tests/fixtures/surfaces/mobile_parcel_search, src/tests/fixtures/surfaces/mobile_parcel_semi_question, mobile/__tests__/parcelSearchScreen.behaviour.test.tsx, mobile/__tests__/parcelSearchMatch.test.ts, mobile/__tests__/parcelScreens.golden.test.ts, mobile/__tests__/surfaceRenderer.smoke.test.tsx, mobile/__tests__/semiQuestionPage.behaviour.test.tsx, src/tests/semi-question-design.logic.test.ts, src/tests/surfaces/search-parity.golden.test.ts, src/tests/surfaces/search-web-binding.ui.test.tsx, src/tests/maxbld-web-pages.logic.test.ts, src/tests/surfaces/nav-by-route.logic.test.ts, docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, docs/specs/00-architecture/117_maxbld_brand.md, docs/specs/03-mobile/99_mobile_state_architecture.md, docs/specs/02-web-admin/126_maxbld_surface_standard.md, src/tests/surfaces/admin-media.golden.test.ts, src/tests/surfaces/site-footer.logic.test.ts, docs/reports/generated/127-surface-registry.md, docs/reports/generated/127-surface-review-queue.md, docs/reports/generated/rule-lists-by-kind.md, src/tests/surfaces/contract-binding.logic.test.ts, src/tests/surfaces/parcel-legacy-oracle.logic.test.ts, src/tests/surfaces/search-reports-left.logic.test.ts, src/tests/surfaces/surface-conformance.logic.test.ts, src/tests/surfaces/surface-validate.logic.test.ts
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -71,11 +75,11 @@ Files: mobile/app/(app)/parcel-tool/index.tsx, mobile/src/components/surfaces/Se
 <!-- DOD:BEGIN -->
 - [ ] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
 - [ ] #2 The tests were written first and proven red, then green — "Every lock is proven in BOTH directions" (docs/specs/00-architecture/08_agents.md:462)
-- [ ] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
-- [ ] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
-- [ ] #5 Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — "A ruling enters a row as a verbatim dated note." (docs/specs/00-architecture/137_mcqueue.md:109)
+- [x] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
+- [x] #5 Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — "A ruling enters a row as a verbatim dated note." (docs/specs/00-architecture/137_mcqueue.md:109)
 - [ ] #6 The task file and its queue row are updated in the same commit as the work — "The status line changes in the same commit as the work." (docs/specs/00-architecture/137_mcqueue.md:84)
-- [ ] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
+- [x] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
 - [ ] #8 Nothing was added that the card or ruling did not name — "no change adds a tool, field or rule its card or ruling did not name" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
@@ -334,4 +338,42 @@ rg#5 MED folded The answer labels be
 2026-11-25 taken on the board at lane launch (lane BL-MCFIX465, worktree /Users/brettpreston_macmini/Buildo-wt-mcfix465, branch wf2/mcfix465), RR-0240
 
 2026-11-25 (RR-0495, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2579, operator verbatim "correct" to the lane's option a): the type-more prompt line is dropped; Enter on a too-short entry shows the No lot found line. The plan grounder folds the exact plan text.
+
+Build (lane BL-MCFIX465, 2026-11-25): plan PLAN-465-v1 as folded (addenda ea79b4d9e: typing state partial with golden suggest, refine line keeps its task-450 timing; 1aee693d6: RR-0495, the prompt line dropped, a short Enter shows the miss line). Deviation recorded once: none beyond the addenda. Notes: (1) the web rows push the web route of their lot (parcelSearchPath unique, WEB_BASE); a multi_parcel row on the web has no handler (rendered disabled) because the web never navigates to the core's disambiguate?q= path (maxbld-web.ts, MF-44 security S-7); no web golden carries that case. (2) The mobile jest tests are not run by the commit hook: their red and green are UNVERIFIED until the push station; an in-memory tsx probe over every search situation (layout rules, derived names, ref resolution) was clean; mobile tsc clean. (3) maxbld-web-pages.logic.test.ts needed no edit (its :134 equality holds with the new WEB_STATIC_SITUATION).
+
+Files line (2026-11-25, lane BL-MCFIX465): + src/tests/surfaces/admin-media.golden.test.ts and src/tests/surfaces/site-footer.logic.test.ts, under the plan line "Other tests that read the search goldens (...) were not read in full; a red one is added to the Files line by the backlog CLI before its commit": both are count pins that went red in the work-commit related run because the search page gains one web golden (suggest): admin-media fresh.size 70 to 71, site-footer web search goldens 11 to 12. Go: orchestrator message to lane BL-MCFIX465, 2026-11-25 ("go, under the plan own rule"). Only the two counts and a dated note change in each.
+
+Files line (2026-11-25, lane BL-MCFIX465): + docs/reports/generated/127-surface-registry.md, 127-surface-review-queue.md and rule-lists-by-kind.md. The work commit was refused by the commit-msg hook check-task-files: "docs/reports/generated/127-surface-registry.md is outside the Files: line of task-465 ... Declare it on the task or move it to its own task." (the same for the other two). scripts/hooks/check-task-files.mjs:10 always allows only the task file, docs/reports/reviews/<task>/ and docs/reports/lanes/; the note in QUESTIONS-RULED.md that these pages are exempt (docs/reports/) was wrong. The pre-commit generator checks require all three current (generate-surface-registry.mjs --check, rule-lists.mjs page --check). Precedent: task-450 carries the same three on its Files line. Go: orchestrator message to lane BL-MCFIX465, 2026-11-25.
+
+Files line (2026-11-25, station FAIL on b3791a88c, RR-0467; plan line "a red one is added to the Files line by the backlog CLI before its commit"; go: orchestrator message to lane BL-MCFIX465 of 2026-11-25): + src/tests/surfaces/contract-binding.logic.test.ts: the non_display_keys pin 81 -> 82 and its last four names, because bindings.json gains onSubmitEditing (plan step 4). The web prop onSubmit, added beside it in b3791a88c, is removed: the plan adds it only if SV-SBIND asks, and SV-SBIND does not judge its object value.
+
+Files line (2026-11-25, station FAIL on b3791a88c, RR-0467; plan line "a red one is added to the Files line by the backlog CLI before its commit"; go: orchestrator message to lane BL-MCFIX465 of 2026-11-25): + src/tests/surfaces/parcel-legacy-oracle.logic.test.ts: three legacy literals become ruled changes in INTENTIONALLY_CHANGED: the testID parcel-search-prompt and the text Type at least {SEARCH_MIN_QUERY_LEN} characters to search. (RR-0495, the prompt dropped) and the text No parcel found for that address. (card item 3: it becomes No lot found; RR-0483, RR-0487 mock state 4); the planted-red list is unchanged (it measures against the same list).
+
+Files line (2026-11-25, station FAIL on b3791a88c, RR-0467; plan line "a red one is added to the Files line by the backlog CLI before its commit"; go: orchestrator message to lane BL-MCFIX465 of 2026-11-25): + src/tests/surfaces/search-reports-left.logic.test.ts: the count of committed states without a reports-left line 10 -> 11 (the typing state partial, golden suggest, O8).
+
+Files line (2026-11-25, station FAIL on b3791a88c, RR-0467; plan line "a red one is added to the Files line by the backlog CLI before its commit"; go: orchestrator message to lane BL-MCFIX465 of 2026-11-25): + src/tests/surfaces/surface-conformance.logic.test.ts: the C-1 notes: S-screen goldens 103 -> 105 (suggest on both targets) and S-sbind strings 444 -> 442 (search content: list.rail, list.badge, list.select, list.select.label and search.prompt removed; list.hint, search.miss.hint and search.outside_toronto.title added).
+
+Files line (2026-11-25, station FAIL on b3791a88c, RR-0467; plan line "a red one is added to the Files line by the backlog CLI before its commit"; go: orchestrator message to lane BL-MCFIX465 of 2026-11-25): + src/tests/surfaces/surface-validate.logic.test.ts: the exact status string, the same two numbers (105 goldens, 442 strings).
+
+Files line (2026-11-25, station FAIL on b3791a88c; plan third addendum, NAV-6 option 1 real links; go: orchestrator message to lane BL-MCFIX465): + src/tests/surfaces/nav-by-route.logic.test.ts: allow-list entry audit 46 (node:Button#select, the owed Button component={Link} href) deleted with a dated note, and its now unused WEB_SEARCH constant with it; a lot row on the web is a Button with an href (its web route), drawn as Button component={Link} href, and keeps onClick push for action-name parity; a map-kind row (multi_parcel) has href undefined and onClick null (no web route, S-7). The web UI test checks the href. surface-validate accepts the href literal (non_display_keys lists href).
+
+Merge of wf2/board (2026-11-25, 7be07be67, task-469 folded): the card conflicted on two hunks; the board side was taken (task-469 plan section 3) and this lane re-added its 10 Files-line paths and its notes above through the CLI. The merge commit was made with git -c core.quotepath=false commit, as scripts/board/board-commit.zsh:13 does: check-partial-staging.sh:23-30 lists staged paths quoted, so the task-343 card (a non-ASCII middle dot in its name, 32,726 bytes) read as size unreadable (orchestrator go; the defect goes to the loose-ends card).
+
+Output review round 1 (2026-11-25, lane BL-MCFIX465): code-review lens over 2fd2f6042..HEAD in 4 chunks (context-r3.md), outputs in docs/reports/lanes/2026-11-25/BL-MCFIX465/ (out-code-review-p1..p4.txt, FINDINGS.md): CRITICAL 0, HIGH 0, MED 6, LOW 15, NIT 1. Grounder owed: nothing is fixed or folded before it rules (RR-0359).
+
+Round 1 fix (2026-11-25, lane BL-MCFIX465; output grounder Cairn-Ground-O465 CONFIRMED out-code-review-p4#1 MED, LANE-STEPS PART A): search-web-binding.ui.test.tsx :118 and :120: the no-dead-control case renders the static page (its recent chips are the buttons) and pins at least three buttons before the disabled loop. Red: commit attempt with SearchBinding.tsx:427 '|| click === undefined' removed in the tree (red2.out); green: the landed commit with it restored byte-identical (green3.out).
+
+Output review round 2 (2026-11-25, lane BL-MCFIX465): code-review lens over 2fd2f6042..HEAD (fix ab8c2911e, station PASS) in 4 chunks, context-r4.md; outputs re-made under the same names in docs/reports/lanes/2026-11-25/BL-MCFIX465/: CRITICAL 0, HIGH 0, MED 2, LOW 12, NIT 7. Round-2 grounder owed; round-1 GROUNDER.md and TRIAGE.md stay outside the repo.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+task-465 McFixV2.1 Search box the Google way landed: Enter runs the search (submit action) and nothing opens while typing; suggestions drop under the box as tappable rows, with the several-matches line, the refine line, "No lot found for <text>" with its hint (also a too-short Enter, RR-0495) and the outside-Toronto line inside the drop-down; no radio cards, SELECT, list title, count badge or prompt line on phone or web; the list clears on the first delete and the box empties on return from a page; chips, count and legal line smaller and quieter; the semi page reads "Is this a semi?" with Yes, No, Not sure, the question larger than the answers. Commits: b3791a88c (work), 0aa1b011e (station fixes), 2af96802f (board merge), ab8c2911e (round 1 fix). Red in the lane: red.out, red2.out; green: green.out, green2.out, green3.out. The phone jest red is UNVERIFIED (the hook runs only the web tests); the station PASS on ab8c2911e (covering 2af96802f and 0aa1b011e) is the evidence.
+
+Review round 1: 1 fixed, 0 task, 0 ruling, 0 wontfix, 15 pile; grounder /Users/brettpreston_macmini/Buildo-scratch/lanes-20261125/BL-MCFIX465/og-r1/GROUNDER.md (round 1 as ruled, outputs at 20c686665); triage /Users/brettpreston_macmini/Buildo-scratch/lanes-20261125/BL-MCFIX465/og-r1/TRIAGE.md
+
+out-code-review-p4#1 MED fixed ab8c2911e
+
+Review round 2: 0 fixed, 0 task, 0 ruling, 0 wontfix, 17 pile; grounder docs/reports/lanes/2026-11-25/BL-MCFIX465/GROUNDER.md; triage docs/reports/lanes/2026-11-25/BL-MCFIX465/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->
