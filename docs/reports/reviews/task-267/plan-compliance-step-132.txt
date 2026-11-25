@@ -1,0 +1,41 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-25T19:25:03.486Z file_sha256=3d976496fafdd39ec3eac0526e6eaa62671e7339bfab07db59bee0a4bf3426a9 prompt_sha256=f7c08b340a54c1fa86cee2aa06cd45fcf90cdf938cdfb6b15ca1e1d172b682b5
+🔍 Lens review of docs/reports/reviews/task-267/in-plan-compliance-step-132.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 12056 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 24400 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 36267 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 48269 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 61165 chars, answer 0 chars, 75s
+BUG severity=HIGH — AC#3 write_scope "The brief file opens with a front-matter block (docs/specs/00-architecture/08_agents.md:144)" — plan §4.2 "OUTSIDE FILES LINE: src/app/api/parcels/lookup/types.ts (the response field `checked`, the X-4 a field, and the flag) and src/lib/entitlements/index.ts:559 (export usageFor), both needed only under A2" — no brief with a `write_scope` front-matter is produced; scope is a prose FILES list with two paths discovered inside build step 2, so it is neither declared nor frozen — add a step 0 committing the brief with write_scope listing every FILES path plus the A2-conditional ones, or drop the conditional files from the plan.
+
+BUG severity=HIGH — AC#1 pre-registration "Pre-register the task's `rules[]` and expected moves (.cursor/MCBYLAWS-QUEUE.md:109)" — plan §7 "#### 7. Notes owed (backlog CLI only)" — the only queue action the plan commits is post-plan notes; no `rules[]` and no expected-moves pre-registration exists as a standalone commit before the build — add step 0 that commits the pre-registered rules[] and expected moves alone.
+
+BUG severity=HIGH — AC#5 grounder "one grounder re-executes every claim in the fold (docs/specs/00-architecture/08_agents.md:458)" — plan §9 "Nothing was run; this was read only." — the fold is not grounder-validated, six claims stay open including "Whether the checked view (viewOf with no href) passes the mobile Zod schema without a core change" — run the grounder over the six UNVERIFIED items and record the re-executed results before plan-lock.
+
+BUG severity=HIGH — grounder resolution on the new states "these are lifecycle states of the report screen: rows in the existing report lifecycle data (report-presentation.json) drawn by the existing ReportBinding" — plan §10 "report-presentation.json is unchanged." — the new checking/ready/holding states are placed in the census row mobile-product.json (:299-325) and a new content key instead of the ruled report-presentation.json rows, a placement no pasted line names — either add the three rows to report-presentation.json or obtain a dated ruling for the census placement.
+
+DEFER severity=MED — AC#6 "Red tests first, then the code, through the real hooks." — plan §5 "The mobile jest files are run by no hook. Run them by hand or in Mobile CI and keep the output." — red-first cannot be witnessed through the hooks for the primary screen tests (reportChecked.behaviour, reportScreen.mount), so the AC is satisfied by a manual claim only — record the manual red output in the lane report or wire the mobile jest set into a hook arm before the build.
+
+DEFER severity=MED — held ruling "build as rows of the page table once the PAGE.TABLE pilot passes." — plan §"Built after task-465 lands." — the plan never cites the PAGE.TABLE pilot result nor shows the 2026-11-20 hold lifted, so its build order starts from an open operator hold — cite the pilot outcome or a later ruling that lifts the hold, otherwise leave 267 and 317 held.
+
+DEFER severity=MED — RR-0485 item 5 "'5. Always - except for a tracked/stored lot or one that has previously been opened'" — plan §3 (b) "the checked view is null for an unknown lot or unusable pace (the producer's promise)" — the plan adds a third skip arm the ruling does not enumerate, and "readWhatWeChecked (what-we-checked.ts:167), which returns null on any error" turns a transient read error into a silent skip of the ruled animation — gate the skip on the two ruled cases only and treat a missing checked view with a page present as holding, not as a skip.
+
+DEFER severity=MED — Spec 126:869 "it doesnt need a title... it should be processing" with the relay "remove the title 'and any section labels'" — plan §3 "The label 'Checks for this lot' is drawn VISIBLE in the mock. It conflicts with Spec 126:869 ('any section labels'). Left open as O8." — a live spec clause is left in conflict at plan-lock, with a recommendation to keep the label and a plan-authored Spec 126 note standing in for a ruling — send O8 to the operator as a dated decision with a register row, or default to the clause and drop checks.label.
+
+MET — RR-0490 3 b — plan §5 "an error during the lines, then checking until the end, then error (RR-0490 3 b)" — a failure arriving during the lines does not cut them short.
+MET — RR-0491 centred — plan §4.5 "screen 3's spinner and words are centred" — the single approved change is carried.
+MET — RR-0278 — plan §5 "G3 'meter counts unchanged' (it.each on parcelId): new lot counted 1; already counted 0; at limit 403 with 0" — charging stays tied to report production.
+MET — core.8 — plan §8.9 "(a) Read the existing registered 60 000 (maxbld_page_continue_wait_ms, via the semi slice). No database step" against "(c) A typed number. Breaks Spec 128 Rule 3" — the give-up is kept a registered variable, no literal committed.
+MET — x-tooling.1 — plan §4.11 "generate-surface-registry.mjs default run ... its --check must be clean" — generators rerun and checked.
+MET — Spec 136 fe.31 — plan §4.5 "checkedProps renders screens 1-5 from existing kinds only (View, Text, Button, ActivityIndicator)" — existing components, no new kind.
+MET — Spec 136 fe.35 — plan §3 O6 "the mock draws the lot's address in the bar" and §7 "the new title (the address replaces 'Checking your lot')" — no live-progress word kept.
+MET — RR-0477 — plan §8 "That is a database step, so its own card by RR-0477" — O7(b) is kept off this batch.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 8
+Rules met: core.8, x-tooling.1
+
+---
+⏱  82192ms (82.2s)
+📊 Tokens — total: 45165, input: 27225, output: 17940, reasoning: 16522
