@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-SFX8'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-25T17:26:00Z'
+updated_date: '2026-11-25T18:27:00Z'
 labels:
   - SEARCHFIX-LATER
 milestone: m-1
@@ -239,6 +239,8 @@ rg#4 MED folded 454 lands first, the
 2026-11-25 output review round 1: context-r3.md; one code-review lens part (out-code-review-p1.txt) on the whole diff 8abc92777..5e4d68bc1; 7 findings (2 MED, 4 LOW, 1 NIT; no CRITICAL or HIGH), FINDINGS.md in docs/reports/lanes/2026-11-25/BL-SFX8/. Grounder owed; nothing triaged or fixed by the lane.
 
 2026-11-25 close (records only): the output grounder Cairn-Ground-O456 ruled round 1 (7 ids: 1 CONFIRMED LOW pile, 6 REJECTED; no CRITICAL, HIGH or MED); GROUNDER.md and TRIAGE.md copied byte for byte. The orchestrator ran the migration 309 db test in a throwaway container (RR-0475 item 4): 10 of 10 passed (db-green.out line 1748); the same run's 8 failures in 5 other files are outside this diff. UNVERIFIED: the red runs of the two phone cases (plan steps 1-2) were never seen. The McFrontend-Task: MF-53 trailer on 2606cb7ab was ruled correct by the grounder.
+
+2026-11-25 landing: fold 80fe1d9ca on wf2/board; station PASS on 80fe1d9ca (~/Buildo-scratch/push-station/pass/80fe1d9caf293e52b3e37504e8a9dd8607f7d19f.pass); pushed by the operator to origin wf1/mb-rulings (push.log 2026-11-25T18:18:51Z rc=0); Mobile CI run 45675135719 on that tip: see the conclusion in ~/Buildo-scratch/lanes-20261125/ci-80fe1d9ca.out. No database step.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
