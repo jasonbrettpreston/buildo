@@ -816,3 +816,70 @@ export function makeCoaNoticeVariance(overrides: Partial<CoaNoticeVarianceRow> =
   }
   return base;
 }
+
+// ─── Stored report reads (task-456 D4, Std §5.1: typed test data through factories) ───
+
+import type { StoredRow, LotStamp } from '@/lib/report-projection/project';
+
+/** One stored parcel_maxbld_scenarios row; the defaults are a current-looking `permitted` row (shas are placeholders: a test that needs the seed shas passes them). */
+export function makeStoredScenarioRow(o: Partial<StoredRow> = {}): StoredRow {
+  return {
+    building_type: 'detached_house',
+    field_id: 'permitted',
+    increment: '1',
+    status: 'permitted',
+    value: null,
+    unit: null,
+    reason: null,
+    flags: [],
+    content_sha: 'c',
+    catalogue_sha: 'cat',
+    switchboard_sha: 'sw',
+    settings_sha: 's',
+    layer2_table_version: 'T1',
+    switches: [],
+    ...o,
+  };
+}
+
+/** The lot's Layer 2 stamp row (bylaw_resolution_lot_stamps); ungated by default. */
+export function makeLotStamp(o: Partial<LotStamp> = {}): LotStamp {
+  return { lot_gate: null, table_version: 'T1', evaluator_version: 'E1', ...o };
+}
+
+/**
+ * The parcels row the stored read selects (the select list of PARCEL_SQL, src/lib/report-projection/read-stored.ts).
+ * No shared type exists for it, so the test builder declares one.
+ */
+export interface StoredParcelRow {
+  id: number;
+  parcel_id: string;
+  zoning_zn_string: string | null;
+  address: string | null;
+  lot_size_sqm: string | number | null;
+  is_corner_lot: boolean | null;
+  is_heritage_designated: boolean | null;
+  is_in_ravine_protection_area: boolean | null;
+}
+
+/** A stored parcels row; extra planted columns (a leak test) are allowed through the Record part. */
+export function makeStoredParcelRow(
+  o: Partial<StoredParcelRow> & Record<string, unknown> = {},
+): StoredParcelRow & Record<string, unknown> {
+  return {
+    id: 7,
+    parcel_id: 'P-123',
+    zoning_zn_string: 'R',
+    address: '1 Test St',
+    lot_size_sqm: '395.6',
+    is_corner_lot: false,
+    is_heritage_designated: null,
+    is_in_ravine_protection_area: null,
+    ...o,
+  };
+}
+
+/** A witness column catalog (table → columns) for the src SQL ledger tests. */
+export function makeSqlCatalog(o: Record<string, string[]> = {}): Record<string, string[]> {
+  return { permits: ['id', 'status', 'name'], entities: ['id', 'name'], ...o };
+}

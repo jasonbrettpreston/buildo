@@ -9,6 +9,8 @@
 // Not built here, by ruling or by missing data (see task-12): A.11 (web twin needed by the FE-07 parity lock), C.5 and C.7 (footprint presence and the
 // primary frontage street name are not in the map field whitelist, pinned below so a field cannot arrive without a ruling), C.6 (RR-0172: the map's own
 // road labels), C.10 (tap selects, already built). Root test: reads committed files as text, no DB, no network, no mobile import.
+// Dated note 2026-11-25 (task-456 R5; mcfixreborn-g3 GROUNDER-C.md:123, GROUNDER-D.md:124): C.5 and C.7 have since landed under task-336
+// (SRCH.LOTCARD, RR-0284): frontageStreet and hasFootprint are in the map field whitelist (14 -> 16 entries), pinned below. The prior text is kept.
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -95,7 +97,8 @@ describe('GAP.13 C.1: the choose-your-lot heading (choose-lot.html:265)', () => 
   });
 });
 
-describe('GAP.13: fingerprints follow the content files, and no field was added', () => {
+// Dated 2026-11-25 (task-456 R5; prior title kept: "GAP.13: fingerprints follow the content files, and no field was added"): the second case pins the two ruled fields that were added (RR-0284).
+describe('GAP.13: fingerprints follow the content files', () => {
   it.each([SEARCH, MAP])('%s: every committed golden fingerprint equals the current sha16 of its content and descriptor files', (id) => {
     for (const f of goldenFiles(id)) {
       const files = rj(f).fingerprint.files as Record<string, string>;

@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SFX8'
 created_date: '2026-11-24T14:47:00Z'
-updated_date: '2026-11-25T16:29:00Z'
+updated_date: '2026-11-25T16:38:00Z'
 labels:
   - SEARCHFIX-LATER
 milestone: m-1
@@ -219,4 +219,8 @@ rg#4 MED folded 454 lands first, the
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-25 taken on the board at lane launch (lane BL-SFX8, worktree /Users/brettpreston_macmini/Buildo-wt-sfx8, branch wf2/sfx8), RR-0240
+
+2026-11-25 red attempt (commit i): web tests of plan steps 3-9 staged with temporary unstaged source edits (geometry.ts cap and ft rounding, sliceConfig.ts clamp, entitlement route session bypass and uid parameter); D2 and X6 red with no edit; saved as red-web.out in the lane folder.
+
+2026-11-25 red proven (red-web.out, lane folder): 10 named cases failed, nothing else (1101 passed); sources restored, git diff --exit-code 0 on geometry.ts, sliceConfig.ts, entitlement/route.ts. The entitlement session-bypass red was a typed fallback context instead of deleting the 401 line, which would not typecheck. Green: src-sql-ledger.mjs --confirm refuses no recorded statements; the NAV-1 lock climbs && / || chains; one sign-up disclosure entry (RR-0478).
 <!-- SECTION:NOTES:END -->

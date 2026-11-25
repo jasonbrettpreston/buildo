@@ -10,7 +10,7 @@
 // only once the orchestrator has written `scripts/steps/_schema/src-sql-ledger.json`
 // and filled `CLOSED_INTERPOLATED_SET`; they are red on a fresh worktree by design.
 
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 
 import fs from 'node:fs';
 import os from 'node:os';
@@ -18,6 +18,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import * as ssl from '../../scripts/analysis/src-sql-ledger.mjs';
+import { makeSqlCatalog } from './factories';
 
 const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url)).replace(/[/\\]$/, '');
 
@@ -48,7 +49,8 @@ const FIXTURE = [
 
 const FIXTURE_REL = 'src/app/api/x/route.ts';
 
-const CATALOG = { permits: ['id', 'status', 'name'], entities: ['id', 'name'] };
+// task-456 D4 (Std §5.1): the catalog comes from the typed builder in factories.ts.
+const CATALOG = makeSqlCatalog();
 
 describe('src-sql-ledger — extractSql (pure AST extraction)', () => {
   beforeAll(async () => {
@@ -307,6 +309,34 @@ describe('runtime confirmation comparator (P1-C-src (c), PARTIAL until a live te
       ]);
       expect(ssl.readRecordedStatements(path.join(dir, 'missing'))).toEqual([]);
     } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  // task-456 D2 (mcfixreborn-g2 GROUNDER-B.md:67): --confirm with no recorded statements is a failure that names the folder, never a silent exit 0.
+  it('--confirm on a missing folder exits 1 and names it', async () => {
+    const dir = path.join(os.tmpdir(), `src-sql-ledger-missing-${process.pid}-${Date.now()}`);
+    const err = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    try {
+      expect(await ssl.main(['--confirm', dir])).toBe(1);
+      expect(err.mock.calls.map((c) => String(c[0])).join('')).toContain(`no recorded statements in ${dir}`);
+    } finally {
+      err.mockRestore();
+      out.mockRestore();
+    }
+  });
+
+  it('--confirm on an empty folder exits 1', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'src-sql-ledger-empty-'));
+    const err = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    try {
+      expect(await ssl.main(['--confirm', dir])).toBe(1);
+      expect(err.mock.calls.map((c) => String(c[0])).join('')).toContain(`no recorded statements in ${dir}`);
+    } finally {
+      err.mockRestore();
+      out.mockRestore();
       fs.rmSync(dir, { recursive: true, force: true });
     }
   });

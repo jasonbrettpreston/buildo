@@ -807,7 +807,13 @@ export async function main(argv) {
       return 1;
     }
     const ledger = await readSrcSqlLedger(REPO_ROOT);
-    const r = confirmRecorded(ledger, readRecordedStatements(dir));
+    // task-456 D2 (mcfixreborn-g2 GROUNDER-B.md:67): a missing or empty trace folder confirms nothing, so it is a failure, never exit 0.
+    const stmts = readRecordedStatements(dir);
+    if (stmts.length === 0) {
+      process.stderr.write(`no recorded statements in ${dir}\n`);
+      return 1;
+    }
+    const r = confirmRecorded(ledger, stmts);
     process.stdout.write(
       `src-sql-ledger confirm (PARTIAL — 34 mocked test files and getClient() callers are not seen): `
       + `${r.confirmed} confirmed, ${r.dynamic} dynamic (closed interpolated set), ${r.untagged} untagged\n`,
