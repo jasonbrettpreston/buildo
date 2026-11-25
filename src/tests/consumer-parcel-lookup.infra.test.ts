@@ -73,10 +73,8 @@ describe('route source-shape locks (Spec 100 §3)', () => {
     expect(src).toContain('rateLimited');
     expect(src).toContain('unauthorized');
   });
-  it('the two rate buckets: search 60/min (q) + lookup 30/min (parcelId)', () => {
+  it('the two rate buckets: search (q) + lookup (parcelId); their limits are the settings rows (task-454; values pinned in parcel-lookup-gate.infra.test.ts)', () => {
     const src = route();
-    expect(src).toMatch(/SEARCH_LIMIT_PER_MIN\s*=\s*60/);
-    expect(src).toMatch(/LOOKUP_LIMIT_PER_MIN\s*=\s*30/);
     expect(src).toContain('parcels-search:${ctx.uid}');
     expect(src).toContain('parcels-lookup:${ctx.uid}');
   });

@@ -39,7 +39,10 @@ const dbQuery = vi.fn(async (text: string, params: unknown[] = []): Promise<Row[
 });
 vi.mock('@/lib/db/client', () => ({
   query: (...a: [string, unknown[]?]) => dbQuery(...a),
-  pool: { query: vi.fn(async () => ({ rows: [], rowCount: 0 })) }, // no parcel_tool entitlement: the unmetered lead_gen path, no meter write
+  // no parcel_tool entitlement: the unmetered lead_gen path, no meter write. task-454: the search settings read (readSearchSettings, its bound keys) answers the seed defaults.
+  pool: { query: vi.fn(async (_text: string, params?: unknown[]) => (Array.isArray(params?.[0]) && (params[0] as unknown[]).includes('parcel_lookup_search_per_min')
+    ? { rows: Object.entries({ parcel_lookup_search_per_min: '60', parcel_lookup_detail_per_min: '30', parcel_entitlement_read_per_min: '30', parcel_lookup_slow_query_ms: '500', maxbld_page_candidate_cap: '10' }).map(([variable_key, variable_value]) => ({ variable_key, variable_value })) }
+    : { rows: [], rowCount: 0 })) },
   withTransaction: vi.fn(async () => { throw new Error('the search routes meter nothing here'); }),
 }));
 vi.mock('@/lib/auth/get-user-context', () => ({ getCurrentUserContext: vi.fn(async () => ({ uid: 'u-318', subscription_status: 'active' })) }));
@@ -97,7 +100,7 @@ describe('SRCH.ROUTE: one route per case', () => {
   it('two lots printing one address (26 Kenneth Ave, sample 9) -> the lot map', async () => {
     state.exact['26|KENNETH'] = [{ parcel_id: '5112332', address: '26 Kenneth Ave' }, { parcel_id: '5427844', address: '26 Kenneth Ave' }];
     const { data, route } = await search('26 Kenneth Ave');
-    expect(readParams(0)).toEqual(['26', 'KENNETH']); // the exact read ran on the parsed keys
+    expect(readParams(0)).toEqual(['26', 'KENNETH', 11]); // the exact read ran on the parsed keys; task-454: its window is the cap + 1 (the cap setting, 10)
     expect(data.resolution).toBe('multi_parcel');
     expect(data.match).toBeNull();
     expect(data.map?.lots.map((l: { parcelId: string }) => l.parcelId)).toEqual(['5112332', '5427844']);
@@ -125,7 +128,7 @@ describe('SRCH.ROUTE: one route per case', () => {
       { parcel_id: '1001', address: '1 Derwyn Rd' }, { parcel_id: '1010', address: '10 Derwyn Rd' }, { parcel_id: '1011', address: '11 Derwyn Rd' },
     ];
     const { data, route } = await search('Derwyn Road');
-    expect(dbQuery.mock.calls.some((c: unknown[]) => JSON.stringify(c[1]) === JSON.stringify(['DERWYN%', null]))).toBe(true); // the typeahead prefix, no number
+    expect(dbQuery.mock.calls.some((c: unknown[]) => JSON.stringify(c[1]) === JSON.stringify(['DERWYN%', null, 10]))).toBe(true); // the typeahead prefix, no number
     expect(data.resolution).toBe('text_candidates');
     expect(data.map).toBeNull();
     expect(data.candidates.map((c) => c.address)).toEqual(['1 Derwyn Rd', '10 Derwyn Rd', '11 Derwyn Rd']);
@@ -167,7 +170,7 @@ describe('SRCH.ROUTE: one route per case', () => {
     state.exact['41|DERWYN'] = [{ parcel_id: '5293897', address: '41 Derwyn Rd' }];
     state.lotForm['5293897'] = { lot_form_detected: 'detached', lot_form_basis: 'o4_not_met', unsure: false };
     const { data, route } = await search('41 Derwyn Road, Toronto');
-    expect(readParams(0)).toEqual(['41', 'DERWYN']); // the city suffix after the comma is dropped
+    expect(readParams(0)).toEqual(['41', 'DERWYN', 11]); // the city suffix after the comma is dropped
     expect(data.resolution).toBe('unique');
     expect(dbQuery.mock.calls.some((c) => /FROM parcels WHERE parcel_id = \$1/.test(String(c[0])) && c[1]?.[0] === '5293897')).toBe(true); // the report read is for the matched lot
     expect(data.map).toBeNull();
@@ -184,10 +187,11 @@ describe('SRCH.FUZZY: a mis-typed street (task-333, RR-0277: the permit pipeline
     state.fuzzy = [{ parcel_id: '5293897', address: '41 Derwyn Rd' }];
     const { data, route } = await search('41 Derwin Road');
     expect(dbQuery.mock.calls.map((c) => String(c[0]).includes('levenshtein('))).toEqual([false, false, false, true]); // exact, typeahead, unlinked, then the matcher
-    expect(readParams(3)).toEqual(['41', 'DERWIN']);
+    expect(readParams(3)).toEqual(['41', 'DERWIN', 10]); // task-454: the third parameter is the cap setting (10)
     const sql = String(dbQuery.mock.calls[3]![0]);
     expect(sql).toContain("variable_key = 'enrich_heritage_address_levenshtein_threshold'"); // the threshold is the pipeline's variable, no literal
-    expect(sql).toContain('LIMIT 10');
+    expect(sql).toContain('LIMIT $3'); // task-454: the cap is a bound parameter, never typed in the statement
+    expect(sql).not.toMatch(/LIMIT \d/);
     expect(data.resolution).toBe('text_candidates');
     expect(data.match).toBeNull();
     expect(data.map).toBeNull();
@@ -197,7 +201,7 @@ describe('SRCH.FUZZY: a mis-typed street (task-333, RR-0277: the permit pipeline
 
   it('a nonsense street matches nothing and stays no_match', async () => {
     const { data, route } = await search('41 Qzxqzx Road');
-    expect(readParams(3)).toEqual(['41', 'QZXQZX']);
+    expect(readParams(3)).toEqual(['41', 'QZXQZX', 10]);
     expect(data.resolution).toBe('no_match');
     expect(data.candidates).toEqual([]);
     expect(route).toBe(parcelSearchPath('no_match' as SearchOutcome, { parcelId: null, query: '41 Qzxqzx Road' }, BASE));
@@ -209,7 +213,8 @@ describe('SRCH.FUZZY: a mis-typed street (task-333, RR-0277: the permit pipeline
   });
 
   it('the admin call (no options) never runs the matcher: a mis-typed street stays no_match there', async () => {
-    const out = await resolveAddress('41 Derwin Road');
+    const withCap = { candidateCap: 10 } as Parameters<typeof resolveAddress>[1]; // task-454: the admin route passes only the cap
+    const out = await resolveAddress('41 Derwin Road', withCap);
     expect(out.resolution).toBe('no_match');
     expect(dbQuery.mock.calls.some((c) => String(c[0]).includes('levenshtein('))).toBe(false);
   });

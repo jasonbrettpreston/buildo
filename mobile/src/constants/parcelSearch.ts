@@ -14,22 +14,14 @@
 // The debounce and the minimum query length have no constant here: config.debounce_ms and config.min_query_len of the generated slice are their one home (registered logic
 // variables maxbld_page_debounce_ms and maxbld_page_min_query_len), read through the reader in SearchBinding.tsx.
 
-/**
- * The candidate cap. Ground truth: `src/lib/admin/parcel-lookup.ts` slices the exact-match branch
- * to 10 and the typeahead query is `LIMIT 10`; Spec 100 §2 item 6 states "`candidates` (<=10)".
- * Beyond this the operator's 2026-09-16 ruling says: ask for a house number, do not list.
- */
-export const SEARCH_CANDIDATE_LIMIT = 10;
-
-/**
- * MF-35 (P35-D16 a): how many recent searches the search page keeps and shows as chips. Ground truth: the legacy page showed three suggestion
- * chips, and the ruling keeps that count ("max 3"). Read by mobile/src/store/recentSearchesStore.ts.
- */
-export const SEARCH_RECENT_MAX = 3;
+// task-454 SEARCHFIX.6 (MORNING-DECISIONS.md:1494 "register them"; Spec 128 Rule 3): the candidate cap and the recent-search count have no constant here
+// either: they are the registered settings maxbld_page_candidate_cap and maxbld_page_recent_max (config.candidate_cap and config.recent_max of the generated
+// slice), read in SearchBinding.tsx and recentSearchesStore.ts. Prior text: SEARCH_CANDIDATE_LIMIT = 10 and SEARCH_RECENT_MAX = 3 were typed here.
 
 // The SEARCH archetype's third declared parameter, `guards.rate_bucket`, is deliberately NOT
-// mirrored here. It is `parcels-search:{uid}`, 60/min, 60s window
-// (`src/app/api/parcels/lookup/route.ts`), it is enforced entirely server-side, and the client
+// mirrored here. It is `parcels-search:{uid}` over a 60 s window; its per-minute count is the server
+// setting parcel_lookup_search_per_min (default 60, read by `src/app/api/parcels/lookup/route.ts`;
+// task-454), it is enforced entirely server-side, and the client
 // reacts to the 429 it produces rather than to the bucket's name. A TS constant nobody reads would
 // be a second copy of a server fact with nothing keeping it honest — the descriptor's
 // `guards.rate_bucket` is its one home.

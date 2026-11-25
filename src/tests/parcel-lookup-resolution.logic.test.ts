@@ -21,15 +21,19 @@ type Row = Record<string, unknown>;
 const rows = (...sets: Row[][]) => { for (const s of sets) query.mockResolvedValueOnce(s); };
 const r = (parcel_id: string, address: string) => ({ parcel_id, address });
 
-/** The consumer route's call: the unlinked read runs only when asked (admin never pays for it; PLAN panel regression MEDIUM-3). */
-const CONSUMER = { classifyUnlinked: true } as const;
+/** The consumer route's call: the unlinked read runs only when asked (admin never pays for it; PLAN panel regression MEDIUM-3). task-454: every call passes the cap setting (default 10). */
+const CONSUMER = { classifyUnlinked: true, candidateCap: 10 } as const;
+/** task-454: the admin route's call passes only the cap (no option); the cast keeps the call typed before the cap is a member of the options. */
+const ADMIN = { candidateCap: 10 } as Parameters<typeof resolveAddress>[1];
+/** task-454: the consumer call with a non-default cap of 4. */
+const CAP4 = { ...CONSUMER, candidateCap: 4 };
 
 beforeEach(() => query.mockReset());
 
 describe('T1 resolveAddress: the outcome name (one rule, both paths)', () => {
   it('exact, 1 row -> unique; match as today', async () => {
     rows([r('P1', '5 Elm St')]);
-    const out = await resolveAddress('5 Elm St');
+    const out = await resolveAddress('5 Elm St', ADMIN);
     expect(out.resolution).toBe('unique');
     expect(out.match).toEqual({ parcelId: 'P1', matchType: 'exact', address: '5 Elm St' });
     expect(out.lotMap).toBeNull();
@@ -37,7 +41,7 @@ describe('T1 resolveAddress: the outcome name (one rule, both paths)', () => {
 
   it('exact, 2 rows printing ONE address -> multi_parcel (the map); candidates unchanged for admin', async () => {
     rows([r('P1', '5 Elm St'), r('P2', '5 Elm St')]);
-    const out = await resolveAddress('5 Elm St');
+    const out = await resolveAddress('5 Elm St', ADMIN);
     expect(out.resolution).toBe('multi_parcel');
     expect(out.candidates).toEqual([{ parcelId: 'P1', address: '5 Elm St' }, { parcelId: 'P2', address: '5 Elm St' }]);
     expect(out.truncated).toBe(false);
@@ -46,7 +50,7 @@ describe('T1 resolveAddress: the outcome name (one rule, both paths)', () => {
 
   it('exact, 2 rows printing DIFFERENT addresses -> text_candidates (the list, today)', async () => {
     rows([r('P1', '32 Acacia Ave'), r('P2', '32 Acacia Rd')]);
-    const out = await resolveAddress('32 Acacia');
+    const out = await resolveAddress('32 Acacia', ADMIN);
     expect(out.resolution).toBe('text_candidates');
     expect(out.lotMap).toBeNull();
     expect(out.candidates).toHaveLength(2);
@@ -54,7 +58,7 @@ describe('T1 resolveAddress: the outcome name (one rule, both paths)', () => {
 
   it('exact, 11 rows printing one address -> multi_parcel with truncated (too many lots); no lot ids sent', async () => {
     rows(Array.from({ length: 11 }, (_, i) => r(`P${i}`, '1 Big Rd')));
-    const out = await resolveAddress('1 Big Rd');
+    const out = await resolveAddress('1 Big Rd', ADMIN);
     expect(out.resolution).toBe('multi_parcel');
     expect(out.truncated).toBe(true);
     expect(out.candidates).toHaveLength(10);
@@ -63,7 +67,7 @@ describe('T1 resolveAddress: the outcome name (one rule, both paths)', () => {
 
   it('typeahead, 1 row -> unique', async () => {
     rows([], [r('P9', '7 Oak Ave')]);
-    const out = await resolveAddress('7 Oak');
+    const out = await resolveAddress('7 Oak', ADMIN);
     expect(out.resolution).toBe('unique');
     expect(out.match?.matchType).toBe('typeahead');
   });
@@ -72,7 +76,7 @@ describe('T1 resolveAddress: the outcome name (one rule, both paths)', () => {
   // close"): the one row above opens because it is the typed address in full; a row the typed text is only a prefix of is the list.
   it('typeahead, 1 row that is NOT the typed address in full -> text_candidates, never unique', async () => {
     rows([], [r('P9', '7 Oakwood Ave')]);
-    const out = await resolveAddress('7 Oak');
+    const out = await resolveAddress('7 Oak', ADMIN);
     expect(out.resolution).toBe('text_candidates');
     expect(out.match).toBeNull();
     expect(out.candidates).toEqual([{ parcelId: 'P9', address: '7 Oakwood Ave' }]);
@@ -80,21 +84,21 @@ describe('T1 resolveAddress: the outcome name (one rule, both paths)', () => {
 
   it('typeahead, 2+ rows printing one address with a house number -> multi_parcel', async () => {
     rows([], [r('P1', '7 Oak Ave'), r('P2', '7 Oak Ave'), r('P3', '7 Oak Ave')]);
-    const out = await resolveAddress('7 Oak');
+    const out = await resolveAddress('7 Oak', ADMIN);
     expect(out.resolution).toBe('multi_parcel');
     expect(out.lotMap).toEqual({ kind: 'multi_parcel', parcelIds: ['P1', 'P2', 'P3'], num: '7', truncated: false });
   });
 
   it('typeahead, 2+ rows printing one address WITHOUT a house number -> text_candidates (never a map without a number)', async () => {
     rows([r('P1', 'Oak Ave'), r('P2', 'Oak Ave')]);
-    const out = await resolveAddress('Oak Ave');
+    const out = await resolveAddress('Oak Ave', ADMIN);
     expect(out.resolution).toBe('text_candidates');
     expect(query).toHaveBeenCalledTimes(1); // no exact read without a number, no unlinked read
   });
 
   it('typeahead, rows printing different addresses -> text_candidates', async () => {
     rows([], [r('P1', '7 Oak Ave'), r('P2', '7 Oakdale Rd')]);
-    expect((await resolveAddress('7 Oak')).resolution).toBe('text_candidates');
+    expect((await resolveAddress('7 Oak', ADMIN)).resolution).toBe('text_candidates');
   });
 
   it('typeahead miss + one unlinked live point -> unlinked with its pin', async () => {
@@ -137,8 +141,9 @@ describe('T1 resolveAddress: the outcome name (one rule, both paths)', () => {
     expect(sql).toMatch(/UPPER\(ap\.maint_stage\) = 'REGULAR'/);
     expect(sql).toMatch(/ap\.retired_at IS NULL/);
     expect(sql).toMatch(/NOT EXISTS \(SELECT 1 FROM parcel_address_points/);
-    expect(sql).toMatch(/LIMIT 11/);
-    expect(query.mock.calls[2]![1]).toEqual(['MAIN%', '12']);
+    expect(sql).toMatch(/LIMIT \$3/); // task-454: the probe window is a bound parameter (UNLINKED_PROBE_ROWS, not the cap setting)
+    expect(sql).not.toMatch(/LIMIT \d/);
+    expect(query.mock.calls[2]![1]).toEqual(['MAIN%', '12', 11]);
   });
 
   it('a street carrying a LIKE wildcard (% or _) never runs the unlinked read (security L-1)', async () => {
@@ -149,31 +154,43 @@ describe('T1 resolveAddress: the outcome name (one rule, both paths)', () => {
 
   it('the admin call (no option) never reads the unlinked statement: a miss stays no_match with two reads, as today', async () => {
     rows([], []);
-    const out = await resolveAddress('12 Main St');
+    const out = await resolveAddress('12 Main St', ADMIN);
     expect(out.resolution).toBe('no_match');
     expect(query).toHaveBeenCalledTimes(2);
   });
 
   it('rows whose printed address is empty never count as one address (legacy columns; regression MEDIUM-5) -> text_candidates', async () => {
     rows([r('P1', ''), r('P2', '')]);
-    expect((await resolveAddress('5 Elm St')).resolution).toBe('text_candidates');
+    expect((await resolveAddress('5 Elm St', ADMIN)).resolution).toBe('text_candidates');
   });
 
   it('10 typeahead rows on one printed address -> multi_parcel without truncated (the typeahead LIMIT 10 has no overflow probe)', async () => {
     rows([], Array.from({ length: 10 }, (_, i) => r(`P${i}`, '7 Oak Ave')));
-    const out = await resolveAddress('7 Oak');
+    const out = await resolveAddress('7 Oak', ADMIN);
     expect([out.resolution, out.truncated, (out.lotMap as { truncated: boolean }).truncated]).toEqual(['multi_parcel', undefined, false]);
   });
 
   it('the WF3 city-suffix strip still runs on the new path ("..., Toronto")', async () => {
     rows([r('P1', '482 Richmond St W'), r('P2', '482 Richmond St W')]);
-    const out = await resolveAddress('482 Richmond St W, Toronto');
+    const out = await resolveAddress('482 Richmond St W, Toronto', ADMIN);
     expect(out.resolution).toBe('multi_parcel');
-    expect(query.mock.calls[0]![1]).toEqual(['482', 'RICHMOND']);
+    expect(query.mock.calls[0]![1]).toEqual(['482', 'RICHMOND', 11]); // task-454: the exact window is the cap + 1
+  });
+
+  it('task-454: a cap of 4 reads 5 exact rows, lists 4 and sets truncated; the typeahead binds the cap; no statement types a LIMIT number', async () => {
+    rows(Array.from({ length: 5 }, (_, i) => r(`P${i}`, `${i} Big Rd`)));
+    const out = await resolveAddress('1 Big Rd', CAP4);
+    expect([out.resolution, out.truncated, out.candidates.length]).toEqual(['text_candidates', true, 4]);
+    expect(query.mock.calls[0]![1]).toEqual(['1', 'BIG', 5]);
+    query.mockReset();
+    rows([], Array.from({ length: 4 }, (_, i) => r(`P${i}`, `7 Oak Ave ${i}`)));
+    await resolveAddress('7 Oak', CAP4);
+    expect(query.mock.calls[1]![1]).toEqual(['OAK%', '7', 4]);
+    for (const c of query.mock.calls) expect(String(c[0])).not.toMatch(/LIMIT \d/);
   });
 
   it('an unparseable query is no_match with no read', async () => {
-    expect((await resolveAddress('   ')).resolution).toBe('no_match');
+    expect((await resolveAddress('   ', ADMIN)).resolution).toBe('no_match');
     expect(query).not.toHaveBeenCalled();
   });
 });

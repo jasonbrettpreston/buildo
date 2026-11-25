@@ -2,7 +2,10 @@
 //             docs/specs/02-web-admin/33_web_admin_engineering_protocol.md §5 + §12 + §13
 //
 // GET /api/admin/parcels/lookup — admin-only, READ-ONLY lookup for the Parcel Cost Model Tool.
-// ?q=<address> (free-text → exact | ≤10 candidates) XOR ?parcelId=<id> (direct — candidate click).
+// ?q=<address> (free-text → exact | at most the candidate cap setting of candidates) XOR ?parcelId=<id> (direct — candidate click).
+// Settings (task-454 SEARCHFIX.6; operator, verbatim, 2026-11-20: "yes follow the rules register them.", MORNING-DECISIONS.md:1494; Spec 128 Rule 3): the
+// candidate cap (maxbld_page_candidate_cap) and the slow-query mark (parcel_lookup_slow_query_ms, default 500 ms, Spec 33 §12) are read once, inside the
+// try, through the consumer route's reader (readSearchSettings); a missing or out-of-bounds row is the generic 500. Prior text: SLOW_QUERY_MS = 500 typed here.
 // A miss is a valid 200 result (match:null), NOT an error (Spec 89 §2.5).
 //
 // Auth: verifyAdminAuth FIRST line (Spec 33 §5; also blanket-guarded by route-guard.ts).
@@ -14,6 +17,7 @@
 
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+import { pool } from '@/lib/db/client';
 import * as Sentry from '@sentry/nextjs';
 import { withApiEnvelope } from '@/lib/api/with-api-envelope';
 import { verifyAdminAuth } from '@/lib/auth/verify-admin';
@@ -21,6 +25,7 @@ import { ok } from '@/features/leads/api/envelope';
 import { badRequestZod, internalError } from '@/features/leads/api/error-mapping';
 import { logInfo, logWarn } from '@/lib/logger';
 import {
+  readSearchSettings,
   resolveAddress,
   fetchParcelById,
   fetchCoaProjects,
@@ -30,7 +35,6 @@ import {
 import { ParcelLookupQuerySchema, ParcelLookupResponseSchema, type ParcelLookupResponse } from './types';
 
 const TAG = '[api/parcel-lookup]';
-const SLOW_QUERY_MS = 500; // Spec 33 §12
 
 export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   // Spec 33 §5 admin auth boundary — FIRST line (defense-in-depth atop route-guard.ts).
@@ -52,16 +56,17 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
 
   const t0 = Date.now();
   try {
+    const settings = await readSearchSettings(pool);
     // Resolution: direct id (candidate click) bypasses address parsing (Spec 89 §3.4).
     // MF-53: the admin tool reads only match / candidates / truncated (the added resolution fields are the consumer's; Spec 89 §3 note).
     const resolution: Pick<Resolution, 'match' | 'candidates' | 'truncated'> = parcelId
       ? { match: { parcelId, matchType: 'direct' as const, address: '' }, candidates: [] }
-      : await resolveAddress(q!);
+      : await resolveAddress(q!, { candidateCap: settings.candidate_cap });
 
     let response: ParcelLookupResponse = {
       match: resolution.match,
       candidates: resolution.candidates,
-      // >10 parcels share the address (large condo) — tell the admin the list is not complete.
+      // more parcels than the cap share the address (large condo) — tell the admin the list is not complete.
       warnings: resolution.truncated ? ['more matches exist — refine the address (e.g. add a unit number)'] : [],
       parcel: null,
     };
@@ -93,7 +98,7 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
       matchType: response.match?.matchType ?? (response.candidates.length ? 'candidates' : 'miss'),
       duration_ms,
     });
-    if (duration_ms > SLOW_QUERY_MS) {
+    if (duration_ms > settings.slow_query_ms) {
       // Spec 33 §12 — slow-query WARN + Sentry breadcrumb.
       logWarn(TAG, 'slow_query', { duration_ms, q: q ?? null, parcelId: parcelId ?? null });
       Sentry.addBreadcrumb({ category: 'slow_query', data: { route: 'GET /api/admin/parcels/lookup', duration_ms } });

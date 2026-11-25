@@ -1,0 +1,1354 @@
+LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:f79d5221ca67f4732291e69c2d61a7258bd55901b7d71641fe1a5bf68e18d5e5 part 1 of 1 chunk 3 of 4
+NO RULE LIST: the lens template alone judges the material under review. The material is chunk 3 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json","scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json","src/app/api/admin/parcels/lookup/route.ts","src/app/api/parcels/entitlement/route.ts","src/app/api/parcels/lookup/route.ts","src/features/admin-controls/generated/logic-variable-groups.json","src/lib/admin/parcel-lookup.ts","src/lib/parcels/lookup-flow.ts","src/lib/surfaces/generated/surface-descriptor.d.ts","src/tests/consumer-parcel-lookup.infra.test.ts","src/tests/control-panel.logic.test.ts","src/tests/customer-report-read.logic.test.ts","src/tests/db/consumer-parcel-lookup.db.test.ts","src/tests/db/parcel-lookup.db.test.ts","src/tests/parcel-lookup-gate.infra.test.ts","src/tests/parcel-lookup-resolution.logic.test.ts","src/tests/parcels-entitlement.infra.test.ts","src/tests/parcels-lookup-page.logic.test.ts","src/tests/report-projection-settings.logic.test.ts","src/tests/search-parser-guard.logic.test.ts","src/tests/search-routing.logic.test.ts"]
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json
+index 8f184d2e5a0020c41ca05bbdc34cd29900eb9967..a81d83cb6cf7e282aa1b570bd4cf7cfdb1b4ba90 100644
+--- a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json
++++ b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json
+@@ -110,7 +110,8 @@
+         "chain_position": "n/a",
+         "owner_spec": "docs/specs/02-web-admin/86_control_panel.md",
+         "evidence": [
+-          "src/lib/entitlements/index.ts:408-411"
++          "src/lib/entitlements/index.ts:408-411",
++          "src/lib/admin/parcel-lookup.ts — readSearchSettings (task-454: parcel_entitlement_read_per_min)"
+         ]
+       },
+       {
+@@ -180,7 +181,7 @@
+     "entitlement": "none",
+     "flag": "none",
+     "permission": "none",
+-    "rate_bucket": "parcels-entitlement:<uid> 30/min (src/app/api/parcels/entitlement/route.ts:31-36)"
++    "rate_bucket": "parcels-entitlement:<uid>, 60 s window, the count is the setting parcel_entitlement_read_per_min (default 30/min; task-454) (src/app/api/parcels/entitlement/route.ts)"
+   },
+   "render": {
+     "targets": [
+@@ -299,10 +300,12 @@
+   },
+   "config": {
+     "answer": "logic_variables",
+-    "why": "The two monthly allowances are logic variables with seed bounds 1-1000; a value outside them shows the counts as null (a display degrades; the lookup meter fails closed).",
++    "why": "The two monthly allowances are logic variables with seed bounds 1-1000; a value outside them shows the counts as null (a display degrades; the lookup meter fails closed). task-454 SEARCHFIX.6 (operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1494; Spec 128 Rule 3): the read limit of the bucket parcels-entitlement:{uid} (a 60 s window) is the logic variable parcel_entitlement_read_per_min, read through readSearchSettings after auth and before the rate limit; a missing, non-whole or out-of-bounds row (of it or of any search setting read with it) is the generic 500.",
+     "evidence": [
+       "src/lib/entitlements/index.ts:408-411",
+-      "scripts/seeds/logic_variables.json parcel_tool_report_limit_plan / parcel_tool_report_limit_trial"
++      "scripts/seeds/logic_variables.json parcel_tool_report_limit_plan / parcel_tool_report_limit_trial",
++      "src/app/api/parcels/entitlement/route.ts — readSearchSettings(pool) before withRateLimit (task-454)",
++      "scripts/seeds/logic_variables.json parcel_entitlement_read_per_min"
+     ],
+     "logic_variables": [
+       {
+@@ -316,6 +319,13 @@
+         "min": 1,
+         "max": 1000,
+         "on_invalid": "fail"
++      },
++      {
++        "name": "parcel_entitlement_read_per_min",
++        "min": 1,
++        "max": 300,
++        "on_invalid": "fail",
++        "why": "readSearchSettings (src/lib/admin/parcel-lookup.ts) reads it with the other search settings in one read; a missing row, a value that is not a whole number or one outside min and max throws and the route answers the generic 500."
+       }
+     ],
+     "retired": []
+diff --git a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
+index da5e8c91aef1b5cf8b8d6a81f8a61bff5992fffa..7876135c23b5d7882212c6729069db3d75efa4eb 100644
+--- a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
++++ b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
+@@ -40,7 +40,7 @@
+       "ambiguous: src/lib/admin/parcel-lookup.ts:362-369 (>1 exact -> candidates, match null) surfaced at src/app/api/parcels/lookup/route.ts:86-88",
+       "miss: src/lib/admin/parcel-lookup.ts:340 (no street name) and src/app/api/parcels/lookup/route.ts:96 (unknown parcelId -> 200 match:null, parcel:null)",
+       "partial: src/lib/parcels/consumer-lookup.ts:77-79, 100-102, 111-113, 133-136 (tier-stratified safeParse degradation -> warnings[] entries, payload still returned)",
+-      "degraded: src/app/api/parcels/lookup/route.ts:120-122 (slow_query logWarn above SLOW_QUERY_MS=500, route.ts:41)",
++      "degraded: src/app/api/parcels/lookup/route.ts (slow_query logWarn above the setting parcel_lookup_slow_query_ms, default 500 ms; task-454)",
+       "unauthorized: src/app/api/parcels/lookup/route.ts:54 (401) and route.ts:59 (403 inactive subscription)",
+       "rate_limited: src/app/api/parcels/lookup/route.ts:76",
+       "error: src/app/api/parcels/lookup/route.ts:126-128"
+@@ -489,7 +489,8 @@
+         "chain_position": "n/a",
+         "owner_spec": "docs/specs/02-web-admin/128_surface_standard_policy.md",
+         "evidence": [
+-          "src/lib/parcels/lot-map.ts — readLotMapLimits (MF-53, migration 307)"
++          "src/lib/parcels/lot-map.ts — readLotMapLimits (MF-53, migration 307)",
++          "src/lib/admin/parcel-lookup.ts — readSearchSettings (task-454: the search settings)"
+         ]
+       }
+     ]
+@@ -760,11 +761,14 @@
+   },
+   "config": {
+     "answer": "logic_variables",
+-    "why": "Dated 2026-11-11 (MF-53; DECISIONS-v3 item 2 b, operator \"b\"): the choose-your-lot map neighbour radius and limit are logic variables read on the unlinked-with-pin path only, failing closed (500) outside the seed bounds. The lookup route's own literal caps (LIMIT 11 / 10, 60/min, 30/min) are not yet registered: the follow-up card of the same ruling moves them to admin settings.",
++    "why": "Dated 2026-11-11 (MF-53; DECISIONS-v3 item 2 b, operator \"b\"): the choose-your-lot map neighbour radius and limit are logic variables read on the unlinked-with-pin path only, failing closed (500) outside the seed bounds. task-454 SEARCHFIX.6 (operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1494; Spec 128 Rule 3): the route's two rate limits (parcel_lookup_search_per_min on the q path, parcel_lookup_detail_per_min on the parcelId path; a 60 s window), the slow-query mark (parcel_lookup_slow_query_ms) and the candidate cap (maxbld_page_candidate_cap: the exact read takes cap + 1 rows, the typeahead and the mistyped-street reads take the cap) are logic variables read in one read (readSearchSettings) after the query parse and before the rate limit, failing closed (500) when a row is missing, not a whole number or outside the seed bounds. Prior text: \"The lookup route's own literal caps (LIMIT 11 / 10, 60/min, 30/min) are not yet registered: the follow-up card of the same ruling moves them to admin settings.\"",
+     "evidence": [
+       "src/lib/parcels/lot-map.ts — readLotMapLimits",
+       "scripts/seeds/logic_variables.json parcel_map_neighbour_radius_m / parcel_map_neighbour_limit",
+-      "migrations/307_parcel_map_logic_variables.sql"
++      "migrations/307_parcel_map_logic_variables.sql",
++      "src/lib/admin/parcel-lookup.ts — readSearchSettings, SEARCH_SETTING_KEYS (task-454)",
++      "src/app/api/parcels/lookup/route.ts — readSearchSettings(pool) before withRateLimit (task-454)",
++      "scripts/seeds/logic_variables.json parcel_lookup_search_per_min / parcel_lookup_detail_per_min / parcel_lookup_slow_query_ms / maxbld_page_candidate_cap"
+     ],
+     "logic_variables": [
+       {
+@@ -778,6 +782,34 @@
+         "min": 1,
+         "max": 50,
+         "on_invalid": "fail"
++      },
++      {
++        "name": "parcel_lookup_search_per_min",
++        "min": 1,
++        "max": 600,
++        "on_invalid": "fail",
++        "why": "readSearchSettings (src/lib/admin/parcel-lookup.ts) reads it with the other search settings in one read; a missing row, a value that is not a whole number or one outside min and max throws and the route answers the generic 500."
++      },
++      {
++        "name": "parcel_lookup_detail_per_min",
++        "min": 1,
++        "max": 300,
++        "on_invalid": "fail",
++        "why": "readSearchSettings (src/lib/admin/parcel-lookup.ts) reads it with the other search settings in one read; a missing row, a value that is not a whole number or one outside min and max throws and the route answers the generic 500."
++      },
++      {
++        "name": "parcel_lookup_slow_query_ms",
++        "min": 50,
++        "max": 10000,
++        "on_invalid": "fail",
++        "why": "readSearchSettings (src/lib/admin/parcel-lookup.ts) reads it with the other search settings in one read; a missing row, a value that is not a whole number or one outside min and max throws and the route answers the generic 500."
++      },
++      {
++        "name": "maxbld_page_candidate_cap",
++        "min": 10,
++        "max": 50,
++        "on_invalid": "fail",
++        "why": "readSearchSettings (src/lib/admin/parcel-lookup.ts) reads it with the other search settings in one read; a missing row, a value that is not a whole number or one outside min and max throws and the route answers the generic 500."
+       }
+     ],
+     "retired": []
+diff --git a/src/app/api/admin/parcels/lookup/route.ts b/src/app/api/admin/parcels/lookup/route.ts
+index 144b6582e1a9bb011cd22274e47aa3a662152e97..a68dbf69ca7ae7bbc5ed1c695c276c4a146d1b57 100644
+--- a/src/app/api/admin/parcels/lookup/route.ts
++++ b/src/app/api/admin/parcels/lookup/route.ts
+@@ -2,7 +2,10 @@
+ //             docs/specs/02-web-admin/33_web_admin_engineering_protocol.md §5 + §12 + §13
+ //
+ // GET /api/admin/parcels/lookup — admin-only, READ-ONLY lookup for the Parcel Cost Model Tool.
+-// ?q=<address> (free-text → exact | ≤10 candidates) XOR ?parcelId=<id> (direct — candidate click).
++// ?q=<address> (free-text → exact | at most the candidate cap setting of candidates) XOR ?parcelId=<id> (direct — candidate click).
++// Settings (task-454 SEARCHFIX.6; operator, verbatim, 2026-11-20: "yes follow the rules register them.", MORNING-DECISIONS.md:1494; Spec 128 Rule 3): the
++// candidate cap (maxbld_page_candidate_cap) and the slow-query mark (parcel_lookup_slow_query_ms, default 500 ms, Spec 33 §12) are read once, inside the
++// try, through the consumer route's reader (readSearchSettings); a missing or out-of-bounds row is the generic 500. Prior text: SLOW_QUERY_MS = 500 typed here.
+ // A miss is a valid 200 result (match:null), NOT an error (Spec 89 §2.5).
+ //
+ // Auth: verifyAdminAuth FIRST line (Spec 33 §5; also blanket-guarded by route-guard.ts).
+@@ -14,6 +17,7 @@
+ 
+ import type { NextRequest } from 'next/server';
+ import { NextResponse } from 'next/server';
++import { pool } from '@/lib/db/client';
+ import * as Sentry from '@sentry/nextjs';
+ import { withApiEnvelope } from '@/lib/api/with-api-envelope';
+ import { verifyAdminAuth } from '@/lib/auth/verify-admin';
+@@ -21,6 +25,7 @@ import { ok } from '@/features/leads/api/envelope';
+ import { badRequestZod, internalError } from '@/features/leads/api/error-mapping';
+ import { logInfo, logWarn } from '@/lib/logger';
+ import {
++  readSearchSettings,
+   resolveAddress,
+   fetchParcelById,
+   fetchCoaProjects,
+@@ -30,7 +35,6 @@ import {
+ import { ParcelLookupQuerySchema, ParcelLookupResponseSchema, type ParcelLookupResponse } from './types';
+ 
+ const TAG = '[api/parcel-lookup]';
+-const SLOW_QUERY_MS = 500; // Spec 33 §12
+ 
+ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+   // Spec 33 §5 admin auth boundary — FIRST line (defense-in-depth atop route-guard.ts).
+@@ -52,16 +56,17 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+ 
+   const t0 = Date.now();
+   try {
++    const settings = await readSearchSettings(pool);
+     // Resolution: direct id (candidate click) bypasses address parsing (Spec 89 §3.4).
+     // MF-53: the admin tool reads only match / candidates / truncated (the added resolution fields are the consumer's; Spec 89 §3 note).
+     const resolution: Pick<Resolution, 'match' | 'candidates' | 'truncated'> = parcelId
+       ? { match: { parcelId, matchType: 'direct' as const, address: '' }, candidates: [] }
+-      : await resolveAddress(q!);
++      : await resolveAddress(q!, { candidateCap: settings.candidate_cap });
+ 
+     let response: ParcelLookupResponse = {
+       match: resolution.match,
+       candidates: resolution.candidates,
+-      // >10 parcels share the address (large condo) — tell the admin the list is not complete.
++      // more parcels than the cap share the address (large condo) — tell the admin the list is not complete.
+       warnings: resolution.truncated ? ['more matches exist — refine the address (e.g. add a unit number)'] : [],
+       parcel: null,
+     };
+@@ -93,7 +98,7 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+       matchType: response.match?.matchType ?? (response.candidates.length ? 'candidates' : 'miss'),
+       duration_ms,
+     });
+-    if (duration_ms > SLOW_QUERY_MS) {
++    if (duration_ms > settings.slow_query_ms) {
+       // Spec 33 §12 — slow-query WARN + Sentry breadcrumb.
+       logWarn(TAG, 'slow_query', { duration_ms, q: q ?? null, parcelId: parcelId ?? null });
+       Sentry.addBreadcrumb({ category: 'slow_query', data: { route: 'GET /api/admin/parcels/lookup', duration_ms } });
+diff --git a/src/app/api/parcels/entitlement/route.ts b/src/app/api/parcels/entitlement/route.ts
+index 13c925e67e3b8fe41658703da47c08ceb32cac65..840fd816f6de31dc697ae7e8c2c2a35b9fed863c 100644
+--- a/src/app/api/parcels/entitlement/route.ts
++++ b/src/app/api/parcels/entitlement/route.ts
+@@ -8,7 +8,10 @@
+ //
+ // Auth: getCurrentUserContext FIRST await (Spec 90 §11; route-guard '/api/parcels'). No entitlement guard: it reports
+ // the entitlement, including its absence (no parcel_tool row -> 200 with every field null).
+-// Rate: `parcels-entitlement:${uid}` 30/min. Read-only: no lock, no write.
++// Rate: `parcels-entitlement:${uid}`, a 60 s window; the count is the setting parcel_entitlement_read_per_min (default 30), read through readSearchSettings
++//   after auth and before the limiter (task-454 SEARCHFIX.6; operator, verbatim, 2026-11-20: "yes follow the rules register them.", MORNING-DECISIONS.md:1494;
++//   Spec 128 Rule 3); a missing or out-of-bounds row is the generic 500. Prior text: "30/min". Read-only: no lock, no write.
++// Log: a success logs uid and duration (task-454, g3 GROUNDER-F D4; the lot-size route's shape), never the counts.
+ // Status: 200 · 401 no session · 429 rate limited · 500 logged+sanitized.
+ 
+ import type { NextRequest } from 'next/server';
+@@ -18,26 +21,38 @@ import { withRateLimit } from '@/lib/auth/rate-limit';
+ import { pool } from '@/lib/db/client';
+ import { ok } from '@/features/leads/api/envelope';
+ import { internalError, rateLimited, unauthorized } from '@/features/leads/api/error-mapping';
++import { readSearchSettings } from '@/lib/admin/parcel-lookup';
+ import { readParcelToolUsage } from '@/lib/entitlements';
++import { logInfo } from '@/lib/logger';
+ import { ParcelToolEntitlementResponseSchema } from './types';
+ 
+-const RATE_WINDOW_SEC = 60;
+-const ENTITLEMENT_LIMIT_PER_MIN = 30;
++const TAG = '[api/parcel-entitlement]';
++const RATE_WINDOW_SEC = 60; // "a minute"; the count is a setting (task-454)
+ 
+ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+   const ctx = await getCurrentUserContext(request, pool);
+   if (!ctx) return unauthorized();
++  const t0 = Date.now();
++
++  let limit: number;
++  try {
++    limit = (await readSearchSettings(pool)).entitlement_per_min;
++  } catch (cause) {
++    return internalError(cause, { route: 'GET /api/parcels/entitlement' });
++  }
+ 
+   const rateLimit = await withRateLimit(request, {
+     key: `parcels-entitlement:${ctx.uid}`,
+-    limit: ENTITLEMENT_LIMIT_PER_MIN,
++    limit,
+     windowSec: RATE_WINDOW_SEC,
+   });
+   if (!rateLimit.allowed) return rateLimited(rateLimit.remaining);
+ 
+   try {
+     const usage = await readParcelToolUsage(pool, ctx.uid);
+-    return ok(ParcelToolEntitlementResponseSchema.parse(usage));
++    const body = ParcelToolEntitlementResponseSchema.parse(usage);
++    logInfo(TAG, 'parcel entitlement', { uid: ctx.uid, duration_ms: Date.now() - t0 });
++    return ok(body);
+   } catch (cause) {
+     return internalError(cause, { route: 'GET /api/parcels/entitlement' });
+   }
+diff --git a/src/app/api/parcels/lookup/route.ts b/src/app/api/parcels/lookup/route.ts
+index 0c0cb9dd0dfef5acf839e5895b6920da5ed6cc88..a046be2794692584cab6aa7e548f75fb83f78e9c 100644
+--- a/src/app/api/parcels/lookup/route.ts
++++ b/src/app/api/parcels/lookup/route.ts
+@@ -2,7 +2,7 @@
+ // 🔗 SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §7 + §11b.7 rules 5-6 (MF-45, dated note 2026-11-11)
+ //
+ // GET /api/parcels/lookup — CONSUMER (mobile) read-only lookup for the Parcel Cost Tool.
+-// ?q=<address> (free-text → exact | ≤10 candidates) XOR ?parcelId=<id> (direct — candidate click).
++// ?q=<address> (free-text → exact | at most the candidate cap setting of candidates) XOR ?parcelId=<id> (direct — candidate click).
+ // A miss OR an unknown parcelId is a valid 200 result (match:null, parcel:null), NOT a 404
+ // (Spec 100 §2.6 — the shape drives the client state machine).
+ //
+@@ -18,7 +18,11 @@
+ //   SRCH.METER-2 (task-360, 2026-11-19): that unsure lot's `page` is not sent either (null; neither the stored read nor the compute runs, meter semi_pending) until
+ //   the request carries semi=answered, so a page that is sent is a page that is counted. Prior text: the page was sent and only the meter said semi_pending.
+ //   A new lot past the allowance → 403 REPORT_LIMIT_REACHED, no payload. Fail closed: a meter error is a 500, never an unmetered payload.
+-// Rate: `parcels-search:${uid}` 60/min on the q path; `parcels-lookup:${uid}` 30/min on parcelId.
++// Rate: `parcels-search:${uid}` on the q path and `parcels-lookup:${uid}` on parcelId, a 60 s window; the per-minute counts are the settings
++//   parcel_lookup_search_per_min (default 60) and parcel_lookup_detail_per_min (default 30). task-454 SEARCHFIX.6 (operator, verbatim, 2026-11-20: "yes
++//   follow the rules register them.", MORNING-DECISIONS.md:1494; Spec 128 Rule 3): they, the slow-query mark (parcel_lookup_slow_query_ms) and the
++//   candidate cap (maxbld_page_candidate_cap) are read in ONE read (readSearchSettings) after the parse and before the limiter, whose number comes from
++//   it; a missing or out-of-bounds row is the generic 500. Prior text: "60/min on the q path; 30/min on parcelId" (typed constants).
+ // MF-48 Stage B (Spec 100 §3.2 dated note 2026-11-12, B-3 a): a hit also carries `page`, the mobile report page view built by MF-57's core from the
+ //   lot's producer response (src/lib/parcels/report-page.ts); null for every lot until MB-44 serves one. The meter is unchanged by it.
+ // Response: the WHITELIST (Spec 100 §3.2) — Tier 1 cost menu + headline areas, Tier 2 neighbourhood;
+@@ -49,15 +53,12 @@ import {
+ import { openReport } from '@/lib/entitlements';
+ import { logInfo, logWarn } from '@/lib/logger';
+ import { hasEvaluatedOption } from '@/lib/parcels/consumer-lookup';
+-import { runLookupFlow } from '@/lib/parcels/lookup-flow';
++import { readSearchSettings, runLookupFlow } from '@/lib/parcels/lookup-flow';
+ import { parcelToolAccess } from '@/lib/parcels/tool-gate';
+ import { ConsumerParcelLookupQuerySchema } from './types';
+ 
+ const TAG = '[api/parcel-lookup]';
+-const SLOW_QUERY_MS = 500;
+-const RATE_WINDOW_SEC = 60;
+-const SEARCH_LIMIT_PER_MIN = 60; // q path — typeahead exploration is chatty (Spec 100 §3)
+-const LOOKUP_LIMIT_PER_MIN = 30; // parcelId path — detail budget kept separate
++const RATE_WINDOW_SEC = 60; // the window of both buckets ("a minute"); the counts are settings (task-454)
+ 
+ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+   // 1. Auth — Firebase uid + profile (Bearer for mobile). The first call (Spec 90 §11).
+@@ -82,17 +83,25 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+   if (!parsed.success) return badRequestZod(parsed.error);
+   const { q, parcelId, semi } = parsed.data;
+ 
+-  // 4. Rate limit — separate buckets so heavy searching cannot exhaust the detail budget.
++  // 4. The search settings (task-454): one read; the limiter's number comes from it. A bad row throws to the generic 500 (no data, no database text).
++  let settings: Awaited<ReturnType<typeof readSearchSettings>>;
++  try {
++    settings = await readSearchSettings(pool);
++  } catch (cause) {
++    return internalError(cause, { route: 'GET /api/parcels/lookup' });
++  }
++
++  // 5. Rate limit — separate buckets so heavy searching cannot exhaust the detail budget (q: chatty typeahead exploration, Spec 100 §3).
+   const rl = q
+-    ? { key: `parcels-search:${ctx.uid}`, limit: SEARCH_LIMIT_PER_MIN }
+-    : { key: `parcels-lookup:${ctx.uid}`, limit: LOOKUP_LIMIT_PER_MIN };
++    ? { key: `parcels-search:${ctx.uid}`, limit: settings.search_per_min }
++    : { key: `parcels-lookup:${ctx.uid}`, limit: settings.detail_per_min };
+   const rateLimit = await withRateLimit(request, { key: rl.key, limit: rl.limit, windowSec: RATE_WINDOW_SEC });
+   if (!rateLimit.allowed) return rateLimited(rateLimit.remaining);
+ 
+   const t0 = Date.now();
+   try {
+     // The flow (resolve, map, lot row, page, response, boundary parse) lives in src/lib/parcels/lookup-flow.ts (Standard 10.3); the meter and the log stay here (RR-0331).
+-    const { response, body, parcelRef, pageSource, computeMs } = await runLookupFlow({ q, parcelId, semi });
++    const { response, body, parcelRef, pageSource, computeMs } = await runLookupFlow({ q, parcelId, semi, candidateCap: settings.candidate_cap });
+ 
+     // Meter (MF-45; RR-0278 2026-11-19): only a hit whose report is produced (`page` sent) on the parcel_tool path counts. Candidates, a miss, a
+     // map or a dangling id show no report and count nothing; nor does an unsure lot before its semi question (SEMI-B, the app asks it before the
+@@ -134,7 +143,7 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+       page_source: pageSource, // LOAD.1: stored, computed or none
+       compute_ms: computeMs, // LOAD.1: the compute entry's time when it ran (about 0 while the switch is off), null when W served the page
+     });
+-    if (duration_ms > SLOW_QUERY_MS) {
++    if (duration_ms > settings.slow_query_ms) {
+       logWarn(TAG, 'slow_query', { duration_ms, outcome });
+     }
+ 
+diff --git a/src/features/admin-controls/generated/logic-variable-groups.json b/src/features/admin-controls/generated/logic-variable-groups.json
+index 2fe32fb21160aa6702845627a834b1bbdf95bcb3..379ceac8a7c3004fcb73348e7f94cab95b10ad59 100644
+--- a/src/features/admin-controls/generated/logic-variable-groups.json
++++ b/src/features/admin-controls/generated/logic-variable-groups.json
+@@ -1263,7 +1263,13 @@
+       "maxbld_page_entitlement_stale_ms",
+       "maxbld_page_lookup_retry_max",
+       "maxbld_page_lookup_stale_ms",
+-      "maxbld_page_continue_wait_ms"
++      "maxbld_page_continue_wait_ms",
++      "parcel_lookup_search_per_min",
++      "parcel_lookup_detail_per_min",
++      "parcel_entitlement_read_per_min",
++      "parcel_lookup_slow_query_ms",
++      "maxbld_page_candidate_cap",
++      "maxbld_page_recent_max"
+     ]
+   },
+   {
+diff --git a/src/lib/admin/parcel-lookup.ts b/src/lib/admin/parcel-lookup.ts
+index 1a08e7db8a3ec6211e3f58527853073eeecd6010..519b1b1a42eabaf3d81d9f8644648c010fd01572 100644
+--- a/src/lib/admin/parcel-lookup.ts
++++ b/src/lib/admin/parcel-lookup.ts
+@@ -1,7 +1,8 @@
+ // 🔗 SPEC LINK: docs/specs/02-web-admin/89_parcel_cost_model_tool.md §3 (API) + §4 (normative mapping)
+ //
+ // Business logic for the Parcel Cost Model Tool lookup (route stays thin — standards §10.3):
+-//   resolveAddress()   — free-text → exact parcel | ≤10 candidates (Spec 54 normalized keys)
++//   resolveAddress()   — free-text → exact parcel | at most candidateCap candidates (Spec 54 normalized keys)
++//   readSearchSettings() — task-454: the five server search settings in one read (rate limits, slow-query mark, candidate cap)
+ //   fetchParcelById()  — ONE row, explicit projection of ALL mapped columns (raw SQL: the Spec 88
+ //                        cost columns are absent from drizzle schema.ts — known mig-206 drift)
+ //   fetchCoaProjects() — nearby CoA list by neighbourhood_id (undecided-first)
+@@ -11,6 +12,8 @@
+ // Parameterized SQL ONLY ($1…) — user input is never interpolated into SQL strings.
+ 
+ import { query } from '@/lib/db/client';
++import type { Queryable } from '@/lib/entitlements';
++import seedJson from '../../../scripts/seeds/logic_variables.json';
+ import { normalizeAddressNumber, parseLinearName } from '@/lib/parcels/address';
+ import { logWarn } from '@/lib/logger';
+ import type { LotMapSeed } from '@/lib/parcels/lot-map';
+@@ -128,6 +131,73 @@ function ident(col: string): string {
+   return `"${col}"`;
+ }
+ 
++// ── task-454 SEARCHFIX.6: the search settings (Spec 128 Rule 3) ──────────────
++// Operator, verbatim, 2026-11-20: "yes follow the rules register them." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1494). The limits the
++// lookup and entitlement routes typed (60 and 30 a minute, 30 a minute, the 500 ms slow-query mark, the cap of 10) are registered logic variables with
++// seed bounds (scripts/seeds/logic_variables.json, the one source). One read per request; every caller passes the result in (resolveAddress reads nothing).
++/** The five server keys, spelled out so the variable-effect scan sees them read here. */
++export const SEARCH_SETTING_KEYS = {
++  search_per_min: 'parcel_lookup_search_per_min',
++  detail_per_min: 'parcel_lookup_detail_per_min',
++  entitlement_per_min: 'parcel_entitlement_read_per_min',
++  slow_query_ms: 'parcel_lookup_slow_query_ms',
++  candidate_cap: 'maxbld_page_candidate_cap',
++} as const;
++export type SearchSettings = { [K in keyof typeof SEARCH_SETTING_KEYS]: number };
++
++export class SearchSettingsError extends Error {
++  constructor(readonly bad: string[]) {
++    super(`logic_variables missing, not a whole number or outside the seed bounds: ${bad.join(', ')}`);
++    this.name = 'SearchSettingsError';
++  }
++}
++
++type SeedRow = { min?: number; max?: number; default?: number };
++const SEED = seedJson as unknown as Record<string, SeedRow>;
++/** The seed bounds of one key (the seed is the bound authority; a key without bounds throws, here and at load). */
++const boundsOf = (k: string): { min: number; max: number } => {
++  const row = SEED[k];
++  if (!row || typeof row.min !== 'number' || typeof row.max !== 'number' || typeof row.default !== 'number') throw new Error(`logic_variables seed has no bounds for ${k}`);
++  return { min: row.min, max: row.max };
++};
++for (const k of Object.values(SEARCH_SETTING_KEYS)) boundsOf(k); // fail at load on a seed without bounds
++
++/**
++ * The five settings in ONE read (the readLotSizeSettings shape, through db.query so a route passes pool). A row that is missing, not a whole number
++ * or outside its seed bounds throws SearchSettingsError naming the keys (fail closed: the route's generic 500, no data, no database text).
++ */
++export async function readSearchSettings(db: Queryable): Promise<SearchSettings> {
++  const keys = Object.values(SEARCH_SETTING_KEYS);
++  const res = await db.query<{ variable_key: string; variable_value: string | number | null }>(
++    'SELECT variable_key, variable_value FROM logic_variables WHERE variable_key = ANY($1::text[])',
++    [keys],
++  );
++  const raw = new Map(res.rows.map((r) => [r.variable_key, r.variable_value === null ? NaN : Number(r.variable_value)]));
++  const bad: string[] = [];
++  const read = (k: string): number => {
++    const v = raw.get(k) ?? NaN;
++    const b = boundsOf(k);
++    if (!Number.isInteger(v) || v < b.min || v > b.max) bad.push(k);
++    return v;
++  };
++  const out: SearchSettings = {
++    search_per_min: read(SEARCH_SETTING_KEYS.search_per_min),
++    detail_per_min: read(SEARCH_SETTING_KEYS.detail_per_min),
++    entitlement_per_min: read(SEARCH_SETTING_KEYS.entitlement_per_min),
++    slow_query_ms: read(SEARCH_SETTING_KEYS.slow_query_ms),
++    candidate_cap: read(SEARCH_SETTING_KEYS.candidate_cap),
++  };
++  if (bad.length) throw new SearchSettingsError(bad);
++  return out;
++}
++
++/**
++ * task-454 (PLAN-454-v1 Step 3): the row window of the unlinked read. It is a probe window, NOT a setting: its rows only decide whether one address
++ * is printed (the `one` test below), never the length of a list. No new setting without a ruling (RR-0392, MORNING-DECISIONS.md:1975); Spec 128
++ * Rule 3 names debounce, page size, stale time and rate limit.
++ */
++export const UNLINKED_PROBE_ROWS = 11;
++
+ // ── Address resolution (Spec 89 §3; Spec 54 keys) ────────────────────────────
+ /**
+  * MF-53 (Spec 100 §2.6 dated note 2026-11-11; operator ruling 2026-09-16, "we should know the difference and just present the right one"):
+@@ -138,7 +208,7 @@ export type ParcelResolution = 'unique' | 'text_candidates' | 'multi_parcel' | '
+ export interface Resolution {
+   match: ParcelMatch | null;
+   candidates: ParcelCandidate[];
+-  /** true when >10 parcels share the address (e.g. a large condo) — the list is truncated. */
++  /** true when more than candidateCap parcels share the address (e.g. a large condo) — the list is truncated. */
+   truncated?: boolean;
+   /** MF-53: added; match / candidates / truncated are unchanged on every outcome (the admin tool reads only those, Spec 89 §3). */
+   resolution: ParcelResolution;
+@@ -308,18 +378,23 @@ const displayAddress = `TRIM(COALESCE(address_number, '') || ' ' || COALESCE(lin
+  * with NO lot link (`unlinked`), else `no_match`. The admin call leaves it off and keeps today's two reads (PLAN panel regression MEDIUM-3).
+  * `opts.matchMistyped` (task-333 SRCH.FUZZY, the consumer route only): on that final miss, read the permit pipeline's address matcher (below).
+  */
+-/** The exact read on the parcels normalized keys (idx_parcels_address); one statement, also read by the SEARCHFIX.1 letter and dash fallback. */
+-function readExact(num: string, streetName: string): Promise<{ parcel_id: string; address: string }[]> {
++/**
++ * The exact read on the parcels normalized keys (idx_parcels_address); one statement, also read by the SEARCHFIX.1 letter and dash fallback.
++ * task-454: the window is the cap plus one row (a row past the cap means more exist: truncated), a bound parameter, never typed in the statement.
++ */
++function readExact(num: string, streetName: string, cap: number): Promise<{ parcel_id: string; address: string }[]> {
+   return query<{ parcel_id: string; address: string }>(
+     `SELECT parcel_id, ${displayAddress} AS address
+        FROM parcels
+        WHERE addr_num_normalized = $1 AND street_name_normalized = $2
+-       ORDER BY parcel_id LIMIT 11`,
+-    [num, streetName],
++       ORDER BY parcel_id LIMIT $3`,
++    [num, streetName, cap + 1],
+   );
+ }
+ 
+ /**
++ * task-454: `opts.candidateCap` (required, no default number) is the setting maxbld_page_candidate_cap the route read (readSearchSettings); the resolver
++ * reads no setting itself, so the raw-first re-entry below adds no read.
+  * SEARCHFIX.1 (task-449): `keepPeriods` (an argument, not an option) runs the reads on the street key with its periods kept. A query holding a period
+  * whose raw key differs from the stripped one is first run that way (exact, typeahead and unlinked reads only: no matcher, no fallback), and that
+  * result is returned unless it is no_match; only then does the stripped key run every step. Raw first, so a stored key with a period (". GASPAR CRT")
+@@ -327,7 +402,7 @@ function readExact(num: string, streetName: string): Promise<{ parcel_id: string
+  */
+ export async function resolveAddress(
+   q: string,
+-  opts: { classifyUnlinked?: boolean; matchMistyped?: boolean } = {},
++  opts: { classifyUnlinked?: boolean; matchMistyped?: boolean; candidateCap: number },
+   keepPeriods = false,
+ ): Promise<Resolution> {
+   if (!keepPeriods && q.includes('.') && parseFreeTextAddress(q, true).streetName !== parseFreeTextAddress(q).streetName) {
+@@ -337,12 +412,13 @@ export async function resolveAddress(
+   const { num, streetName } = parseFreeTextAddress(q, keepPeriods);
+   const typed = typedDirection(q);
+   const typedType = typedStreetType(q);
++  const cap = opts.candidateCap;
+   if (!streetName) return { match: null, candidates: [], resolution: 'no_match', lotMap: null };
+ 
+   // 1) Exact match on the parcels normalized keys (idx_parcels_address).
+   if (num) {
+-    let exact = await readExact(num, streetName);
+-    const exactTruncated = exact.length > 10; // LIMIT 11 → an 11th row means more exist (Gemini fold); read before the guard narrows
++    let exact = await readExact(num, streetName, cap);
++    const exactTruncated = exact.length > cap; // the window is cap + 1 → a row past the cap means more exist (Gemini fold); read before the guard narrows
+     const exactG = guardByDirection(exact, exactTruncated ? null : typed); // a truncated window cannot prove a narrowed row is the only one: unchanged (output review r2 #2)
+     if (exactG.conflict) return conflictList(exactG.rows);
+     exact = exactG.rows;
+@@ -362,7 +438,7 @@ export async function resolveAddress(
+     if (exact.length > 1) {
+       return {
+         match: null,
+-        candidates: exact.slice(0, 10).map((r) => ({ parcelId: r.parcel_id, address: r.address })),
++        candidates: exact.slice(0, cap).map((r) => ({ parcelId: r.parcel_id, address: r.address })),
+         truncated: exactTruncated,
+         ...classifyRows(exact, num, exactTruncated),
+       };
+@@ -385,12 +461,12 @@ export async function resolveAddress(
+        AND (ap.address_status IS NULL OR UPPER(ap.address_status) IN ('CURRENT', 'NONE'))
+        AND UPPER(ap.maint_stage) = 'REGULAR'
+        AND ap.retired_at IS NULL
+-     ORDER BY address LIMIT 10`,
+-    [likePrefix(streetName), num || null],
++     ORDER BY address LIMIT $3`,
++    [likePrefix(streetName), num || null, cap],
+   );
+-  // SEARCHFIX.1 (ST1, AC #2): a window of 10 may be cut short (no overflow probe), so it cannot prove a narrowed row is the only one on the typed
+-  // side: unchanged, the list ("Gerrard St W"). The exact path's own truncation rule (above), on the typeahead's LIMIT 10.
+-  const typeaheadG = guardByDirection(typeahead, typeahead.length >= 10 ? null : typed);
++  // SEARCHFIX.1 (ST1, AC #2): a full window (the cap) may be cut short (no overflow probe), so it cannot prove a narrowed row is the only one on the
++  // typed side: unchanged, the list ("Gerrard St W"). The exact path's own truncation rule (above), on the typeahead's window (task-454: the cap).
++  const typeaheadG = guardByDirection(typeahead, typeahead.length >= cap ? null : typed);
+   if (typeaheadG.conflict) return conflictList(typeaheadG.rows);
+   typeahead = typeaheadG.rows;
+   if (typeahead.length === 1) {
+@@ -407,7 +483,8 @@ export async function resolveAddress(
+     };
+   }
+   const candidates = typeahead.map((r) => ({ parcelId: r.parcel_id, address: r.address }));
+-  // The typeahead LIMIT 10 has no overflow probe: measured 0 (street, number) keys reach more than 10 linked lots (MF-53 plan v4 §8 item 8).
++  // The typeahead window has no overflow probe: measured 0 (street, number) keys reach more than 10 linked lots (MF-53 plan v4 §8 item 8), which is
++  // why the cap setting's minimum is 10 (task-454: a lower cap would cut this list with no warning).
+   if (typeahead.length > 1) return { match: null, candidates, ...classifyRows(typeahead, num, false) };
+ 
+   // 3) MF-53 unlinked (consumer only): live points with this number and NO lot link. Skipped for a street carrying a LIKE wildcard, so the
+@@ -423,8 +500,8 @@ export async function resolveAddress(
+          AND UPPER(ap.maint_stage) = 'REGULAR'
+          AND ap.retired_at IS NULL
+          AND NOT EXISTS (SELECT 1 FROM parcel_address_points pap WHERE pap.address_point_id = ap.address_point_id)
+-       ORDER BY address, ap.address_point_id LIMIT 11`,
+-      [likePrefix(streetName), num],
++       ORDER BY address, ap.address_point_id LIMIT $3`,
++      [likePrefix(streetName), num, UNLINKED_PROBE_ROWS],
+     );
+     if (unlinked.length > 0) {
+       const first = unlinked[0]!; // unlinked.length > 0 was tested on the line above, so unlinked[0] exists
+@@ -453,8 +530,8 @@ export async function resolveAddress(
+        WHERE addr_num_normalized = $1
+          AND levenshtein(normalize_address(street_name_normalized), normalize_address($2))
+              <= (SELECT variable_value FROM logic_variables WHERE variable_key = 'enrich_heritage_address_levenshtein_threshold')
+-       ORDER BY levenshtein(normalize_address(street_name_normalized), normalize_address($2)), address, parcel_id LIMIT 10`,
+-      [num, streetName],
++       ORDER BY levenshtein(normalize_address(street_name_normalized), normalize_address($2)), address, parcel_id LIMIT $3`,
++      [num, streetName, cap],
+     );
+     if (near.length > 0) {
+       return { match: null, candidates: near.map((r) => ({ parcelId: r.parcel_id, address: r.address })), resolution: 'text_candidates', lotMap: null };
+@@ -468,8 +545,8 @@ export async function resolveAddress(
+     const nums = [...new Set(bare.slice(1).filter((n): n is string => Boolean(n)).map((n) => normalizeAddressNumber(n)))];
+     const seen = new Set<string>();
+     const rows: { parcel_id: string; address: string }[] = [];
+-    for (const n of nums) for (const r of await readExact(n, streetName)) if (!seen.has(r.parcel_id)) { seen.add(r.parcel_id); rows.push(r); }
+-    if (rows.length > 0) return conflictList(rows.slice(0, 10));
++    for (const n of nums) for (const r of await readExact(n, streetName, cap)) if (!seen.has(r.parcel_id)) { seen.add(r.parcel_id); rows.push(r); }
++    if (rows.length > 0) return conflictList(rows.slice(0, cap));
+   }
+   return { match: null, candidates, resolution: 'no_match', lotMap: null };
+ }
+diff --git a/src/lib/parcels/lookup-flow.ts b/src/lib/parcels/lookup-flow.ts
+index 3ca39b1a0e0f57b3dc776949cf01067c5813aa94..ca68112eb77bcc5f347ae50adc0f9d4da6dd6e67 100644
+--- a/src/lib/parcels/lookup-flow.ts
++++ b/src/lib/parcels/lookup-flow.ts
+@@ -8,7 +8,10 @@
+ // gate, the query parse, the two rate buckets, the meter decision and its openReport call, the log line, the refusal mapping and the error boundary.
+ // This module imports no meter, entitlement or usage code and writes nothing; a thrown read or compute error propagates to the route's catch (a 500: no page, no meter).
+ // The raw q is never logged here or returned beyond the resolver's own fields (Spec 100 §2.8).
++// task-454 SEARCHFIX.6 (MORNING-DECISIONS.md:1494; Spec 128 Rule 3): the route reads the search settings once (readSearchSettings, re-exported here so
++// the route keeps importing no resolver module) and passes the candidate cap in; this module reads no setting.
+ import { resolveAddress, fetchParcelById, fetchCoaProjects } from '@/lib/admin/parcel-lookup';
++export { readSearchSettings } from '@/lib/admin/parcel-lookup';
+ import { assembleConsumerPayload, assembleLotMap } from '@/lib/parcels/consumer-lookup';
+ import { resolveLotMap } from '@/lib/parcels/lot-map';
+ import { readLotForm } from '@/lib/parcels/lot-form';
+@@ -35,12 +38,12 @@ function requireQ(q: string | undefined): string {
+   return q;
+ }
+ 
+-export async function runLookupFlow(input: { q?: string | undefined; parcelId?: string | undefined; semi?: string | undefined }): Promise<LookupFlowResult> {
+-  const { q, parcelId, semi } = input;
++export async function runLookupFlow(input: { q?: string | undefined; parcelId?: string | undefined; semi?: string | undefined; candidateCap: number }): Promise<LookupFlowResult> {
++  const { q, parcelId, semi, candidateCap } = input;
+   // Resolution: direct id (candidate click) bypasses address parsing.
+   const resolved = parcelId
+     ? { match: { parcelId, matchType: 'direct' as const, address: '' }, candidates: [], truncated: false, resolution: 'unique' as const, lotMap: null }
+-    : await resolveAddress(requireQ(q), { classifyUnlinked: true, matchMistyped: true });
++    : await resolveAddress(requireQ(q), { classifyUnlinked: true, matchMistyped: true, candidateCap });
+ 
+   // The map read runs only on the resolver's own seed (never on the parcelId path).
+   const map = resolved.lotMap ? assembleLotMap(await resolveLotMap(resolved.lotMap)) : null;
+diff --git a/src/lib/surfaces/generated/surface-descriptor.d.ts b/src/lib/surfaces/generated/surface-descriptor.d.ts
+index bcd19fcd0b0edecf54acc3e15dff65901f8dcce2..f7541594f5620f3c897ef09ebf6d20a4b72fc399 100644
+--- a/src/lib/surfaces/generated/surface-descriptor.d.ts
++++ b/src/lib/surfaces/generated/surface-descriptor.d.ts
+@@ -344,6 +344,10 @@ export type SurfaceDescriptor = {
+   lookup_retry_max?: "UNRESEARCHED" | number;
+   /** FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): how long a lookup read (typeahead search or detail by parcel) stays fresh, in milliseconds. */
+   lookup_stale_ms?: "UNRESEARCHED" | number;
++  /** task-454 SEARCHFIX.6 (Spec 128 Rule 3; operator, verbatim, 2026-11-20: "yes follow the rules register them.", MORNING-DECISIONS.md:1494): the most addresses a search lists before it asks for a house number (the candidate cap); the server re */
++  candidate_cap?: "UNRESEARCHED" | number;
++  /** task-454 SEARCHFIX.6 (Spec 128 Rule 3; operator, verbatim, 2026-11-20: "yes follow the rules register them.", MORNING-DECISIONS.md:1494): how many recent searches the search page keeps and shows as chips (0 = none). */
++  recent_max?: "UNRESEARCHED" | number;
+ };
+   sharing: {
+   answer: "UNRESEARCHED" | "sole" | "shared" | "none";
+diff --git a/src/tests/consumer-parcel-lookup.infra.test.ts b/src/tests/consumer-parcel-lookup.infra.test.ts
+index 979c6952c45355496605d5b12d32f06de2af71ae..832f5794beba2f953919d8b0b7428403a4ae7594 100644
+--- a/src/tests/consumer-parcel-lookup.infra.test.ts
++++ b/src/tests/consumer-parcel-lookup.infra.test.ts
+@@ -73,10 +73,8 @@ describe('route source-shape locks (Spec 100 §3)', () => {
+     expect(src).toContain('rateLimited');
+     expect(src).toContain('unauthorized');
+   });
+-  it('the two rate buckets: search 60/min (q) + lookup 30/min (parcelId)', () => {
++  it('the two rate buckets: search (q) + lookup (parcelId); their limits are the settings rows (task-454; values pinned in parcel-lookup-gate.infra.test.ts)', () => {
+     const src = route();
+-    expect(src).toMatch(/SEARCH_LIMIT_PER_MIN\s*=\s*60/);
+-    expect(src).toMatch(/LOOKUP_LIMIT_PER_MIN\s*=\s*30/);
+     expect(src).toContain('parcels-search:${ctx.uid}');
+     expect(src).toContain('parcels-lookup:${ctx.uid}');
+   });
+diff --git a/src/tests/control-panel.logic.test.ts b/src/tests/control-panel.logic.test.ts
+index 1846a55eb342ceaa1b258d29fc9902dbb42efa7c..bac04deb601e6a0f0ae34bbe242211b7f6b2e292 100644
+--- a/src/tests/control-panel.logic.test.ts
++++ b/src/tests/control-panel.logic.test.ts
+@@ -265,7 +265,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
+   // MF-19 plan v3 (operator 2026-11-15 R-5 a): the side range of the width and depth entry, migration 324
+   'user_lot_size_side_min_m',
+   'user_lot_size_side_max_m',
+-  // FIX.PROJ (task-372, D9; core.8): the report projection's pinned lot-size window, group "MaxBLD Lot Size" (seed only; the DB mirror migration is owed)
++  // FIX.PROJ (task-372, D9; core.8): the report projection's pinned lot-size window, group "MaxBLD Lot Size" (seed only)
+   'maxbld_report_lot_size_implausible_min_sqm',
+   'maxbld_report_lot_size_implausible_max_sqm',
+   // MB-93 the internal preview switch (operator 2026-11-11 "D-1 b and D-2 to D-8 a", D-3 a): admin group "MaxBLD Internal Preview", migration 308
+@@ -851,6 +851,9 @@ const EXPECTED_LOGIC_VAR_KEYS = [
+   // task-395 FIX.CONFIG-BOUNDS: the six page settings, group "Parcel Lookup", seed rows only (no migration; apply-logic-variables inserts seed keys).
+   'maxbld_page_debounce_ms', 'maxbld_page_min_query_len', 'maxbld_page_entitlement_stale_ms',
+   'maxbld_page_lookup_retry_max', 'maxbld_page_lookup_stale_ms', 'maxbld_page_continue_wait_ms',
++  // task-454 SEARCHFIX.6 (MORNING-DECISIONS.md:1494 "register them"; Spec 128 Rule 3): the search limits typed into the code, group "Parcel Lookup", seed rows only.
++  'parcel_lookup_search_per_min', 'parcel_lookup_detail_per_min', 'parcel_entitlement_read_per_min',
++  'parcel_lookup_slow_query_ms', 'maxbld_page_candidate_cap', 'maxbld_page_recent_max',
+ ];
+ 
+ describe('LOGIC_VAR_DEFAULTS — complete key set', () => {
+diff --git a/src/tests/customer-report-read.logic.test.ts b/src/tests/customer-report-read.logic.test.ts
+index fc81019c6938f0b747f233b5e8d310d7b3f545da..b6e0a14b73ea11d9972ee5546d52f14a1b6b35d3 100644
+--- a/src/tests/customer-report-read.logic.test.ts
++++ b/src/tests/customer-report-read.logic.test.ts
+@@ -87,7 +87,12 @@ const ROWS = (extra: Json = {}): Json[] => [
+ ];
+ const CURRENT_LOT: Lot = { parcel: PARCEL_ROW, stamp: STAMP, present: true, rows: ROWS() };
+ const GATED_LOT: Lot = { ...CURRENT_LOT, stamp: { ...STAMP, lot_gate: 'under_min_area' }, rows: [] };
+-const script = (lot: Lot, switchOn = true) => async (text: string) => {
++/** task-454 SEARCHFIX.6: the lookup route reads its search settings rows first (readSearchSettings, the shared ANY read, told apart by its bound keys); the seed defaults. */
++const SEARCH_SETTINGS = { rows: Object.entries({ parcel_lookup_search_per_min: '60', parcel_lookup_detail_per_min: '30', parcel_entitlement_read_per_min: '30', parcel_lookup_slow_query_ms: '500', maxbld_page_candidate_cap: '10' }).map(([variable_key, variable_value]) => ({ variable_key, variable_value })) };
++const isSearchSettings = (text: string, params: unknown): boolean =>
++  /FROM logic_variables WHERE variable_key = ANY/.test(text) && Array.isArray(params) && Array.isArray(params[0]) && (params[0] as unknown[]).includes('parcel_lookup_search_per_min');
++const script = (lot: Lot, switchOn = true) => async (text: string, params?: unknown) => {
++  if (isSearchSettings(text, params)) return SEARCH_SETTINGS;
+   if (/FROM logic_variables/.test(text)) return { rows: switchOn ? [{ variable_value: '1' }] : [] };
+   if (/FROM parcels WHERE parcel_id/.test(text)) return { rows: lot.parcel ? [lot.parcel] : [] };
+   if (/FROM bylaw_resolution_lot_stamps/.test(text)) return { rows: lot.stamp ? [lot.stamp] : [] };
+@@ -335,13 +340,15 @@ describe('T7 the route: the real lookup route over the real read module', () =>
+     expect((poolQuery.mock.calls as Array<[string]>).filter(([t]) => /parcel_maxbld_scenarios|bylaw_resolution_lot_stamps/.test(t))).toEqual([]);
+   });
+   it('a thrown read is a 500 with no payload, not a miss', async () => {
+-    poolQuery.mockImplementation(async (text: string) => {
++    poolQuery.mockImplementation(async (text: string, params?: unknown) => {
++      if (isSearchSettings(text, params)) return SEARCH_SETTINGS;
+       if (/FROM entitlements/.test(text)) return { rows: [], rowCount: 0 };
+       throw new Error('db down');
+     });
+     const r = await call();
+     expect(r.status).toBe(500);
+     expect(r.body.data).toBeNull();
++    expect(JSON.stringify(r.body)).not.toContain('db down');
+   });
+   it('the route meters only a produced page: its meter branch is guarded by page === null (source pin)', () => {
+     expect(read('src/app/api/parcels/lookup/route.ts')).toMatch(/body\.page === null\) meter = 'not_produced'/);
+diff --git a/src/tests/db/consumer-parcel-lookup.db.test.ts b/src/tests/db/consumer-parcel-lookup.db.test.ts
+index 0bd4439819b26974bd5b90ec1a270e033392a1c6..5df3e4ef660fd27d8ec0c27baab61ba17a86d7f4 100644
+--- a/src/tests/db/consumer-parcel-lookup.db.test.ts
++++ b/src/tests/db/consumer-parcel-lookup.db.test.ts
+@@ -13,6 +13,9 @@ import { assembleConsumerPayload, CONSUMER_HEADLINE_COLS } from '@/lib/parcels/c
+ import { ConsumerParcelSchema } from '@/app/api/parcels/lookup/types';
+ import { T3_GROUPS } from '@/lib/admin/parcel-lookup';
+ 
++/** task-454: every resolveAddress call passes the cap setting (default 10); the admin form, no option. */
++const ADMIN = { candidateCap: 10 } as Parameters<typeof resolveAddress>[1];
++
+ const sq = (x0: number, y0: number, side: number): string => JSON.stringify({
+   type: 'Polygon', coordinates: [[[x0, y0], [x0 + side, y0], [x0 + side, y0 + side], [x0, y0 + side], [x0, y0]]],
+ });
+@@ -43,7 +46,7 @@ describe.skipIf(!dbAvailable())('Spec 100 consumer parcel-lookup — live DB', (
+       ],
+     );
+ 
+-    const res = await resolveAddress('999 Consumertest Ave');
++    const res = await resolveAddress('999 Consumertest Ave', ADMIN);
+     expect(res.match).not.toBeNull();
+     expect(res.match!.matchType).toBe('exact');
+ 
+@@ -74,7 +77,7 @@ describe.skipIf(!dbAvailable())('Spec 100 consumer parcel-lookup — live DB', (
+         [`CLKP-TEST-A${id}`, sq(46 + id * 0.01, 46, 0.0002), num, streetName],
+       );
+     }
+-    const res = await resolveAddress('12 Ambitest Rd');
++    const res = await resolveAddress('12 Ambitest Rd', ADMIN);
+     expect(res.match).toBeNull();
+     expect(res.candidates.length).toBeGreaterThanOrEqual(2);
+     expect(res.candidates.length).toBeLessThanOrEqual(10);
+diff --git a/src/tests/db/parcel-lookup.db.test.ts b/src/tests/db/parcel-lookup.db.test.ts
+index 3859bc3e93dc459a1c5023e55674b2f753d53aa6..e17f1ec6286542c3be42ce4e0eeb09bc4cbc9ac5 100644
+--- a/src/tests/db/parcel-lookup.db.test.ts
++++ b/src/tests/db/parcel-lookup.db.test.ts
+@@ -17,6 +17,9 @@ import {
+ } from '@/lib/admin/parcel-lookup';
+ import { ParcelPayloadSchema, GROUP_KEYS } from '@/app/api/admin/parcels/lookup/types';
+ 
++/** task-454: every resolveAddress call passes the cap setting (default 10); the admin form, no option. */
++const ADMIN = { candidateCap: 10 } as Parameters<typeof resolveAddress>[1];
++
+ const sq = (x0: number, y0: number, side: number): string => JSON.stringify({
+   type: 'Polygon', coordinates: [[[x0, y0], [x0 + side, y0], [x0 + side, y0 + side], [x0, y0 + side], [x0, y0]]],
+ });
+@@ -37,7 +40,7 @@ describe.skipIf(!dbAvailable())('Spec 89 parcel-lookup — live DB', () => {
+   it('SMOKE: real address resolves → full payload Zod-valid → all 9 groups populated (<500ms budget)', async () => {
+     if (!realData) return; // fresh DB — fixture cases below still run
+     const t0 = Date.now();
+-    const res = await resolveAddress('26 Hurlingham Cres');
++    const res = await resolveAddress('26 Hurlingham Cres', ADMIN);
+     expect(res.match).not.toBeNull();
+     expect(res.match!.matchType).toBe('exact');
+ 
+@@ -65,7 +68,7 @@ describe.skipIf(!dbAvailable())('Spec 89 parcel-lookup — live DB', () => {
+ 
+   it('SMOKE: typeahead — partial street resolves to candidates with the production status filter', async () => {
+     if (!realData) return;
+-    const res = await resolveAddress('Hurlingham Cres'); // no number → typeahead path
++    const res = await resolveAddress('Hurlingham Cres', ADMIN); // no number → typeahead path
+     // Either a unique typeahead match or a candidate list — never a silent empty on a real street.
+     expect(res.match !== null || res.candidates.length > 0).toBe(true);
+   }, 30_000);
+@@ -130,7 +133,7 @@ describe.skipIf(!dbAvailable())('Spec 89 parcel-lookup — live DB', () => {
+   });
+ 
+   it('injection attempt resolves to a safe miss (parameterized SQL)', async () => {
+-    const res = await resolveAddress(`26 Hurlingham'; DROP TABLE parcels; --`);
++    const res = await resolveAddress(`26 Hurlingham'; DROP TABLE parcels; --`, ADMIN);
+     expect(res.match === null || res.match.matchType === 'exact' || res.match.matchType === 'typeahead').toBe(true);
+     const { rows: [c] } = await pool.query(`SELECT count(*)::int AS n FROM information_schema.tables WHERE table_name='parcels'`);
+     expect(c.n).toBe(1); // parcels still exists
+diff --git a/src/tests/parcel-lookup-gate.infra.test.ts b/src/tests/parcel-lookup-gate.infra.test.ts
+index a7352dce0b9bf60e3a7bd78745eaee7b48da5d1a..9b9a27932428078232ea128197b8d6bc8aa54578 100644
+--- a/src/tests/parcel-lookup-gate.infra.test.ts
++++ b/src/tests/parcel-lookup-gate.infra.test.ts
+@@ -11,6 +11,9 @@
+ //       reportsLimit and resetsOn and no parcel; trial and plan limits told apart; a parse failure charges nothing; the raw
+ //       q never reaches the meter or the log.
+ //   T10 a limits-read failure or an insert failure -> 500 and no payload (fail closed).
++//   task-454 SEARCHFIX.6 (MORNING-DECISIONS.md:1494 "register them"; Spec 128 Rule 3): the two rate limits, the slow-query mark and the candidate cap are
++//   read from their settings rows (one read, readSearchSettings); a missing or out-of-bounds row is the generic 500 with no database text; a
++//   non-default row moves the limiter, the cap and the warning. Every 500 body is checked for the raw error text (Std 2.1; g3 GROUNDER-E C1).
+ 
+ import { describe, it, expect, beforeEach, vi } from 'vitest';
+ import type { NextRequest } from 'next/server';
+@@ -49,9 +52,11 @@ vi.mock('@/lib/parcels/report-page', async (orig) => {
+ // SRCH.METER-2 (task-360): the one-lot compute at the pick (LOAD.1, task-266) is mocked so a test can prove it is NOT run for a held (unsure, unanswered) lot.
+ vi.mock('@/lib/parcels/report-compute', () => ({ computeCustomerPageResponse: vi.fn(async () => null) }));
+ const logInfo = vi.fn();
+-vi.mock('@/lib/logger', () => ({ logInfo: (...a: unknown[]) => logInfo(...a), logWarn: vi.fn(), logError: vi.fn() }));
++const logWarn = vi.fn();
++vi.mock('@/lib/logger', () => ({ logInfo: (...a: unknown[]) => logInfo(...a), logWarn: (...a: unknown[]) => logWarn(...a), logError: vi.fn() }));
+ 
+ import { getCurrentUserContext } from '@/lib/auth/get-user-context';
++import { withRateLimit } from '@/lib/auth/rate-limit';
+ import { resolveAddress, fetchParcelById } from '@/lib/admin/parcel-lookup';
+ import { REPORT_LIMIT_KEYS } from '@/lib/entitlements';
+ import { assembleConsumerPayload } from '@/lib/parcels/consumer-lookup';
+@@ -80,9 +85,20 @@ const call = async (qs = 'parcelId=P-45'): Promise<{ status: number; body: Body
+ function ctx(leadGen: string | null) {
+   vi.mocked(getCurrentUserContext).mockResolvedValue({ uid: UID, subscription_status: leadGen } as never);
+ }
+-/** pool.query: the gate's parcel_tool read (getEntitlementStatus). */
++/** task-454: the search settings rows the pool answers (the seed defaults; a test sets a non-default value, or null for a missing row). */
++const SEARCH_DEFAULTS: Record<string, string | null> = { parcel_lookup_search_per_min: '60', parcel_lookup_detail_per_min: '30', parcel_entitlement_read_per_min: '30', parcel_lookup_slow_query_ms: '500', maxbld_page_candidate_cap: '10' };
++let settings: Record<string, string | null> = { ...SEARCH_DEFAULTS };
++/** The settings read is told from the other logic_variables reads by its bound keys (the statement text is the shared ANY read). */
++const isSearchSettings = (text: string, params: unknown): boolean =>
++  /FROM logic_variables WHERE variable_key = ANY/.test(text) && Array.isArray(params) && Array.isArray(params[0]) && (params[0] as unknown[]).includes('parcel_lookup_search_per_min');
++const settingsRows = () => {
++  const rows = Object.entries(settings).filter(([, v]) => v !== null).map(([variable_key, variable_value]) => ({ variable_key, variable_value }));
++  return { rows, rowCount: rows.length };
++};
++/** pool.query: the gate's parcel_tool read (getEntitlementStatus) and the search settings read. */
+ function parcelTool(status: string | null) {
+-  poolQuery.mockImplementation(async (text: string) => {
++  poolQuery.mockImplementation(async (text: string, params?: unknown) => {
++    if (isSearchSettings(text, params)) return settingsRows();
+     if (/FROM entitlements WHERE user_id = \$1 AND product = \$2/.test(text)) return { rows: status ? [{ status, trial_started_at: null }] : [], rowCount: status ? 1 : 0 };
+     throw new Error(`unexpected pool query: ${text}`);
+   });
+@@ -133,6 +149,7 @@ const withEvaluatedOption = (...a: Parameters<typeof assembleConsumerPayload>) =
+ 
+ beforeEach(() => {
+   vi.clearAllMocks();
++  settings = { ...SEARCH_DEFAULTS };
+   vi.mocked(assembleConsumerPayload).mockImplementation(withEvaluatedOption);
+   vi.mocked(readCustomerPageResponse).mockResolvedValue(GOLDEN.response_fixture);
+   poolQuery.mockReset();
+@@ -167,6 +184,7 @@ describe('T8 the gate: product x status (Spec 96 §10 status set; D-4 a)', () =>
+     const r = await call();
+     expect(r.status).toBe(500);
+     expect(r.body.data).toBeNull();
++    expect(JSON.stringify(r.body)).not.toContain('db down');
+     expect(vi.mocked(fetchParcelById)).not.toHaveBeenCalled();
+     expect(meterCalls()).toBe(0);
+   });
+@@ -285,6 +303,7 @@ describe('T9 the meter (D-2, D-3, D-5, D-6 a)', () => {
+     const r = await call();
+     expect(r.status).toBe(500);
+     expect(meterCalls()).toBe(0);
++    expect(JSON.stringify(r.body)).not.toContain('leaked'); // the parse error names the key: never in the body
+   });
+   it('the log line carries access and meter and never the raw q (Spec 100 §2.8)', async () => {
+     await call(`q=${encodeURIComponent(RAW_Q)}`);
+@@ -462,6 +481,63 @@ describe('T10 fail closed: the payload is never served unmetered', () => {
+     expect(r.status).toBe(500);
+     expect(r.body.data).toBeNull();
+     expect(JSON.stringify(r.body)).not.toContain('lot_size');
++    expect(JSON.stringify(r.body)).not.toContain('db down');
++    expect(JSON.stringify(r.body)).not.toContain('insert failed');
++  });
++});
++
++describe('task-454 SEARCHFIX.6 the search settings rows (readSearchSettings; Spec 128 Rule 3)', () => {
++  beforeEach(() => { ctx(null); parcelTool('active'); });
++  it.each([
++    ['a missing row', { parcel_lookup_search_per_min: null }],
++    ['a row below its bounds', { parcel_lookup_detail_per_min: '0' }],
++    ['a row above its bounds', { maxbld_page_candidate_cap: '51' }],
++    ['a row that is not a whole number', { parcel_lookup_slow_query_ms: '500.5' }],
++  ])('%s -> 500 on both paths, no data, no database text, nothing resolved or metered', async (_l, over) => {
++    settings = { ...SEARCH_DEFAULTS, ...over };
++    for (const qs of [`q=${encodeURIComponent(RAW_Q)}`, 'parcelId=P-45']) {
++      const r = await call(qs);
++      expect([qs, r.status, r.body.data]).toEqual([qs, 500, null]);
++      const flat = JSON.stringify(r.body);
++      for (const leak of ['logic_variables', 'parcel_lookup', 'maxbld_page', 'bounds']) expect([qs, leak, flat.includes(leak)]).toEqual([qs, leak, false]);
++    }
++    expect(vi.mocked(resolveAddress)).not.toHaveBeenCalled();
++    expect(vi.mocked(fetchParcelById)).not.toHaveBeenCalled();
++    expect(vi.mocked(withRateLimit)).not.toHaveBeenCalled();
++    expect(meterCalls()).toBe(0);
++  });
++  it('the settings are read once per request, after the gate (a 403 reads none)', async () => {
++    await call();
++    expect(poolQuery.mock.calls.filter((c) => isSearchSettings(String(c[0]), c[1]))).toHaveLength(1);
++    poolQuery.mockClear();
++    ctx(null); parcelTool('expired');
++    expect((await call()).status).toBe(403);
++    expect(poolQuery.mock.calls.filter((c) => isSearchSettings(String(c[0]), c[1]))).toHaveLength(0);
++  });
++  it('non-default rows move the code: search 7 and detail 8 a minute (window 60 s), cap 12 into the resolver (the cap bounds are 10 to 50), the slow mark at 50 ms', async () => {
++    settings = { ...SEARCH_DEFAULTS, parcel_lookup_search_per_min: '7', parcel_lookup_detail_per_min: '8', parcel_lookup_slow_query_ms: '50', maxbld_page_candidate_cap: '12' };
++    let now = 1_000_000;
++    const clock = vi.spyOn(Date, 'now').mockImplementation(() => (now += 60));
++    try {
++      await call(`q=${encodeURIComponent(RAW_Q)}`);
++      expect(vi.mocked(withRateLimit).mock.calls[0]?.[1]).toEqual({ key: `parcels-search:${UID}`, limit: 7, windowSec: 60 });
++      expect(vi.mocked(resolveAddress).mock.calls[0]?.[1]).toMatchObject({ candidateCap: 12 });
++      expect(logWarn.mock.calls.some((c) => c[1] === 'slow_query')).toBe(true);
++      await call('parcelId=P-45');
++      expect(vi.mocked(withRateLimit).mock.calls[1]?.[1]).toEqual({ key: `parcels-lookup:${UID}`, limit: 8, windowSec: 60 });
++    } finally {
++      clock.mockRestore();
++    }
++  });
++  it('the default rows: search 60 and detail 30 a minute; the q path passes the cap 10; a fast lookup logs no slow_query', async () => {
++    await call(`q=${encodeURIComponent(RAW_Q)}`);
++    await call('parcelId=P-45');
++    expect(vi.mocked(withRateLimit).mock.calls.map((c) => c[1])).toEqual([
++      { key: `parcels-search:${UID}`, limit: 60, windowSec: 60 },
++      { key: `parcels-lookup:${UID}`, limit: 30, windowSec: 60 },
++    ]);
++    expect(vi.mocked(resolveAddress).mock.calls[0]?.[1]).toMatchObject({ candidateCap: 10 });
++    expect(logWarn.mock.calls.some((c) => c[1] === 'slow_query')).toBe(false);
+   });
+ });
+ 
+@@ -529,5 +605,6 @@ describe('MF-53 the map block on the route', () => {
+     const r = await call(`q=${encodeURIComponent(RAW_Q)}`);
+     expect(r.status).toBe(500);
+     expect(r.body.data).toBeNull();
++    expect(JSON.stringify(r.body)).not.toContain('logic_variables missing');
+   });
+ });
+diff --git a/src/tests/parcel-lookup-resolution.logic.test.ts b/src/tests/parcel-lookup-resolution.logic.test.ts
+index 3a0f2829870e51e69611625f6eea4494eb61e9e5..35d2678cc9eb154a281fb5efb23406967462e87a 100644
+--- a/src/tests/parcel-lookup-resolution.logic.test.ts
++++ b/src/tests/parcel-lookup-resolution.logic.test.ts
+@@ -21,15 +21,19 @@ type Row = Record<string, unknown>;
+ const rows = (...sets: Row[][]) => { for (const s of sets) query.mockResolvedValueOnce(s); };
+ const r = (parcel_id: string, address: string) => ({ parcel_id, address });
+ 
+-/** The consumer route's call: the unlinked read runs only when asked (admin never pays for it; PLAN panel regression MEDIUM-3). */
+-const CONSUMER = { classifyUnlinked: true } as const;
++/** The consumer route's call: the unlinked read runs only when asked (admin never pays for it; PLAN panel regression MEDIUM-3). task-454: every call passes the cap setting (default 10). */
++const CONSUMER = { classifyUnlinked: true, candidateCap: 10 } as const;
++/** task-454: the admin route's call passes only the cap (no option); the cast keeps the call typed before the cap is a member of the options. */
++const ADMIN = { candidateCap: 10 } as Parameters<typeof resolveAddress>[1];
++/** task-454: the consumer call with a non-default cap of 4. */
++const CAP4 = { ...CONSUMER, candidateCap: 4 };
+ 
+ beforeEach(() => query.mockReset());
+ 
+ describe('T1 resolveAddress: the outcome name (one rule, both paths)', () => {
+   it('exact, 1 row -> unique; match as today', async () => {
+     rows([r('P1', '5 Elm St')]);
+-    const out = await resolveAddress('5 Elm St');
++    const out = await resolveAddress('5 Elm St', ADMIN);
+     expect(out.resolution).toBe('unique');
+     expect(out.match).toEqual({ parcelId: 'P1', matchType: 'exact', address: '5 Elm St' });
+     expect(out.lotMap).toBeNull();
+@@ -37,7 +41,7 @@ describe('T1 resolveAddress: the outcome name (one rule, both paths)', () => {
+ 
+   it('exact, 2 rows printing ONE address -> multi_parcel (the map); candidates unchanged for admin', async () => {
+     rows([r('P1', '5 Elm St'), r('P2', '5 Elm St')]);
+-    const out = await resolveAddress('5 Elm St');
++    const out = await resolveAddress('5 Elm St', ADMIN);
+     expect(out.resolution).toBe('multi_parcel');
+     expect(out.candidates).toEqual([{ parcelId: 'P1', address: '5 Elm St' }, { parcelId: 'P2', address: '5 Elm St' }]);
+     expect(out.truncated).toBe(false);
+@@ -46,7 +50,7 @@ describe('T1 resolveAddress: the outcome name (one rule, both paths)', () => {
+ 
+   it('exact, 2 rows printing DIFFERENT addresses -> text_candidates (the list, today)', async () => {
+     rows([r('P1', '32 Acacia Ave'), r('P2', '32 Acacia Rd')]);
+-    const out = await resolveAddress('32 Acacia');
++    const out = await resolveAddress('32 Acacia', ADMIN);
+     expect(out.resolution).toBe('text_candidates');
+     expect(out.lotMap).toBeNull();
+     expect(out.candidates).toHaveLength(2);
+@@ -54,7 +58,7 @@ describe('T1 resolveAddress: the outcome name (one rule, both paths)', () => {
+ 
+   it('exact, 11 rows printing one address -> multi_parcel with truncated (too many lots); no lot ids sent', async () => {
+     rows(Array.from({ length: 11 }, (_, i) => r(`P${i}`, '1 Big Rd')));
+-    const out = await resolveAddress('1 Big Rd');
++    const out = await resolveAddress('1 Big Rd', ADMIN);
+     expect(out.resolution).toBe('multi_parcel');
+     expect(out.truncated).toBe(true);
+     expect(out.candidates).toHaveLength(10);
+@@ -63,7 +67,7 @@ describe('T1 resolveAddress: the outcome name (one rule, both paths)', () => {
+ 
+   it('typeahead, 1 row -> unique', async () => {
+     rows([], [r('P9', '7 Oak Ave')]);
+-    const out = await resolveAddress('7 Oak');
++    const out = await resolveAddress('7 Oak', ADMIN);
+     expect(out.resolution).toBe('unique');
+     expect(out.match?.matchType).toBe('typeahead');
+   });
+@@ -72,7 +76,7 @@ describe('T1 resolveAddress: the outcome name (one rule, both paths)', () => {
+   // close"): the one row above opens because it is the typed address in full; a row the typed text is only a prefix of is the list.
+   it('typeahead, 1 row that is NOT the typed address in full -> text_candidates, never unique', async () => {
+     rows([], [r('P9', '7 Oakwood Ave')]);
+-    const out = await resolveAddress('7 Oak');
++    const out = await resolveAddress('7 Oak', ADMIN);
+     expect(out.resolution).toBe('text_candidates');
+     expect(out.match).toBeNull();
+     expect(out.candidates).toEqual([{ parcelId: 'P9', address: '7 Oakwood Ave' }]);
+@@ -80,21 +84,21 @@ describe('T1 resolveAddress: the outcome name (one rule, both paths)', () => {
+ 
+   it('typeahead, 2+ rows printing one address with a house number -> multi_parcel', async () => {
+     rows([], [r('P1', '7 Oak Ave'), r('P2', '7 Oak Ave'), r('P3', '7 Oak Ave')]);
+-    const out = await resolveAddress('7 Oak');
++    const out = await resolveAddress('7 Oak', ADMIN);
+     expect(out.resolution).toBe('multi_parcel');
+     expect(out.lotMap).toEqual({ kind: 'multi_parcel', parcelIds: ['P1', 'P2', 'P3'], num: '7', truncated: false });
+   });
+ 
+   it('typeahead, 2+ rows printing one address WITHOUT a house number -> text_candidates (never a map without a number)', async () => {
+     rows([r('P1', 'Oak Ave'), r('P2', 'Oak Ave')]);
+-    const out = await resolveAddress('Oak Ave');
++    const out = await resolveAddress('Oak Ave', ADMIN);
+     expect(out.resolution).toBe('text_candidates');
+     expect(query).toHaveBeenCalledTimes(1); // no exact read without a number, no unlinked read
+   });
+ 
+   it('typeahead, rows printing different addresses -> text_candidates', async () => {
+     rows([], [r('P1', '7 Oak Ave'), r('P2', '7 Oakdale Rd')]);
+-    expect((await resolveAddress('7 Oak')).resolution).toBe('text_candidates');
++    expect((await resolveAddress('7 Oak', ADMIN)).resolution).toBe('text_candidates');
+   });
+ 
+   it('typeahead miss + one unlinked live point -> unlinked with its pin', async () => {
+@@ -137,8 +141,9 @@ describe('T1 resolveAddress: the outcome name (one rule, both paths)', () => {
+     expect(sql).toMatch(/UPPER\(ap\.maint_stage\) = 'REGULAR'/);
+     expect(sql).toMatch(/ap\.retired_at IS NULL/);
+     expect(sql).toMatch(/NOT EXISTS \(SELECT 1 FROM parcel_address_points/);
+-    expect(sql).toMatch(/LIMIT 11/);
+-    expect(query.mock.calls[2]![1]).toEqual(['MAIN%', '12']);
++    expect(sql).toMatch(/LIMIT \$3/); // task-454: the probe window is a bound parameter (UNLINKED_PROBE_ROWS, not the cap setting)
++    expect(sql).not.toMatch(/LIMIT \d/);
++    expect(query.mock.calls[2]![1]).toEqual(['MAIN%', '12', 11]);
+   });
+ 
+   it('a street carrying a LIKE wildcard (% or _) never runs the unlinked read (security L-1)', async () => {
+@@ -149,31 +154,43 @@ describe('T1 resolveAddress: the outcome name (one rule, both paths)', () => {
+ 
+   it('the admin call (no option) never reads the unlinked statement: a miss stays no_match with two reads, as today', async () => {
+     rows([], []);
+-    const out = await resolveAddress('12 Main St');
++    const out = await resolveAddress('12 Main St', ADMIN);
+     expect(out.resolution).toBe('no_match');
+     expect(query).toHaveBeenCalledTimes(2);
+   });
+ 
+   it('rows whose printed address is empty never count as one address (legacy columns; regression MEDIUM-5) -> text_candidates', async () => {
+     rows([r('P1', ''), r('P2', '')]);
+-    expect((await resolveAddress('5 Elm St')).resolution).toBe('text_candidates');
++    expect((await resolveAddress('5 Elm St', ADMIN)).resolution).toBe('text_candidates');
+   });
+ 
+   it('10 typeahead rows on one printed address -> multi_parcel without truncated (the typeahead LIMIT 10 has no overflow probe)', async () => {
+     rows([], Array.from({ length: 10 }, (_, i) => r(`P${i}`, '7 Oak Ave')));
+-    const out = await resolveAddress('7 Oak');
++    const out = await resolveAddress('7 Oak', ADMIN);
+     expect([out.resolution, out.truncated, (out.lotMap as { truncated: boolean }).truncated]).toEqual(['multi_parcel', undefined, false]);
+   });
+ 
+   it('the WF3 city-suffix strip still runs on the new path ("..., Toronto")', async () => {
+     rows([r('P1', '482 Richmond St W'), r('P2', '482 Richmond St W')]);
+-    const out = await resolveAddress('482 Richmond St W, Toronto');
++    const out = await resolveAddress('482 Richmond St W, Toronto', ADMIN);
+     expect(out.resolution).toBe('multi_parcel');
+-    expect(query.mock.calls[0]![1]).toEqual(['482', 'RICHMOND']);
++    expect(query.mock.calls[0]![1]).toEqual(['482', 'RICHMOND', 11]); // task-454: the exact window is the cap + 1
++  });
++
++  it('task-454: a cap of 4 reads 5 exact rows, lists 4 and sets truncated; the typeahead binds the cap; no statement types a LIMIT number', async () => {
++    rows(Array.from({ length: 5 }, (_, i) => r(`P${i}`, `${i} Big Rd`)));
++    const out = await resolveAddress('1 Big Rd', CAP4);
++    expect([out.resolution, out.truncated, out.candidates.length]).toEqual(['text_candidates', true, 4]);
++    expect(query.mock.calls[0]![1]).toEqual(['1', 'BIG', 5]);
++    query.mockReset();
++    rows([], Array.from({ length: 4 }, (_, i) => r(`P${i}`, `7 Oak Ave ${i}`)));
++    await resolveAddress('7 Oak', CAP4);
++    expect(query.mock.calls[1]![1]).toEqual(['OAK%', '7', 4]);
++    for (const c of query.mock.calls) expect(String(c[0])).not.toMatch(/LIMIT \d/);
+   });
+ 
+   it('an unparseable query is no_match with no read', async () => {
+-    expect((await resolveAddress('   ')).resolution).toBe('no_match');
++    expect((await resolveAddress('   ', ADMIN)).resolution).toBe('no_match');
+     expect(query).not.toHaveBeenCalled();
+   });
+ });
+diff --git a/src/tests/parcels-entitlement.infra.test.ts b/src/tests/parcels-entitlement.infra.test.ts
+index 82a394365f52d81f8cc338d90f8461e324a3cd92..2c5e258b05928532e24b46f6cf0f313a2c938da9 100644
+--- a/src/tests/parcels-entitlement.infra.test.ts
++++ b/src/tests/parcels-entitlement.infra.test.ts
+@@ -9,6 +9,9 @@
+ //   401 no session; 429 rate limited; 200 all null with no parcel_tool row (a legal state, never an error); 200 with the
+ //   server-computed counts; a status outside the allowed set -> the status with null counts; a read failure -> 500 with no
+ //   data; the .strict() schema rejects an extra key; read-only (no lock, no write); the bucket is parcels-entitlement:{uid}.
++// task-454 SEARCHFIX.6 (MORNING-DECISIONS.md:1494 "register them"; Spec 128 Rule 3): the bucket's limit is the setting parcel_entitlement_read_per_min,
++//   read through readSearchSettings before the limiter (a missing or out-of-bounds row is the generic 500); the route logs its success with uid and
++//   duration (g3 GROUNDER-F D4); a 500 body carries no database text (g3 GROUNDER-E C1).
+ 
+ import { describe, it, expect, beforeEach, vi } from 'vitest';
+ import fs from 'node:fs';
+@@ -19,7 +22,8 @@ const poolQuery = vi.fn();
+ vi.mock('@/lib/db/client', () => ({ pool: { query: (...a: unknown[]) => poolQuery(...a) }, withTransaction: vi.fn() }));
+ vi.mock('@/lib/auth/get-user-context', () => ({ getCurrentUserContext: vi.fn() }));
+ vi.mock('@/lib/auth/rate-limit', () => ({ withRateLimit: vi.fn(async () => ({ allowed: true, remaining: 10 })) }));
+-vi.mock('@/lib/logger', () => ({ logInfo: vi.fn(), logWarn: vi.fn(), logError: vi.fn() }));
++const logInfo = vi.fn();
++vi.mock('@/lib/logger', () => ({ logInfo: (...a: unknown[]) => logInfo(...a), logWarn: vi.fn(), logError: vi.fn() }));
+ 
+ import { getCurrentUserContext } from '@/lib/auth/get-user-context';
+ import { withRateLimit } from '@/lib/auth/rate-limit';
+@@ -34,8 +38,19 @@ const call = async (): Promise<{ status: number; body: Body }> => {
+   const res = await GET(req());
+   return { status: res.status, body: (await res.json()) as Body };
+ };
++/** task-454: the search settings rows (the seed defaults; a test sets a non-default value, or null for a missing row). */
++const SEARCH_DEFAULTS: Record<string, string | null> = { parcel_lookup_search_per_min: '60', parcel_lookup_detail_per_min: '30', parcel_entitlement_read_per_min: '30', parcel_lookup_slow_query_ms: '500', maxbld_page_candidate_cap: '10' };
++let settings: Record<string, string | null> = { ...SEARCH_DEFAULTS };
++/** The settings read is told from the report-limit read by its bound keys (both are the shared ANY statement). */
++const isSearchSettings = (text: string, params: unknown): boolean =>
++  /FROM logic_variables WHERE variable_key = ANY/.test(text) && Array.isArray(params) && Array.isArray(params[0]) && (params[0] as unknown[]).includes('parcel_lookup_search_per_min');
++const otherReads = () => poolQuery.mock.calls.filter((c) => !isSearchSettings(String(c[0]), c[1]));
+ function db(o: { status?: string | null; used?: number; throws?: boolean } = {}) {
+-  poolQuery.mockImplementation(async (text: string) => {
++  poolQuery.mockImplementation(async (text: string, params?: unknown) => {
++    if (isSearchSettings(text, params)) {
++      const rows = Object.entries(settings).filter(([, v]) => v !== null).map(([variable_key, variable_value]) => ({ variable_key, variable_value }));
++      return { rows, rowCount: rows.length };
++    }
+     if (o.throws) throw new Error('db down');
+     if (/FROM entitlements/.test(text)) {
+       return o.status ? { rows: [{ status: o.status, plan_key: 'basic', current_period_end: '2026-12-05T10:00:00.000Z', created_at: '2026-01-01T00:00:00.000Z', now: '2026-11-20T12:00:00.000Z' }], rowCount: 1 } : { rows: [], rowCount: 0 };
+@@ -50,6 +65,7 @@ const NULLS = { status: null, reportsUsed: null, reportsLimit: null, reportsLeft
+ beforeEach(() => {
+   vi.clearAllMocks();
+   poolQuery.mockReset();
++  settings = { ...SEARCH_DEFAULTS };
+   vi.mocked(getCurrentUserContext).mockResolvedValue({ uid: UID, subscription_status: null } as never);
+   db();
+ });
+@@ -62,12 +78,37 @@ describe('T11 GET /api/parcels/entitlement (the entitlement read contract)', ()
+     expect(r.body.error?.code).toBe('UNAUTHORIZED');
+     expect(poolQuery).not.toHaveBeenCalled();
+   });
+-  it('rate limited -> 429 on the parcels-entitlement:{uid} bucket, nothing read', async () => {
++  it('rate limited -> 429 on the parcels-entitlement:{uid} bucket, nothing read but the settings', async () => {
+     vi.mocked(withRateLimit).mockResolvedValueOnce({ allowed: false, remaining: 0 } as never);
+     const r = await call();
+     expect(r.status).toBe(429);
+-    expect(vi.mocked(withRateLimit).mock.calls[0]?.[1]).toMatchObject({ key: `parcels-entitlement:${UID}` });
+-    expect(poolQuery).not.toHaveBeenCalled();
++    expect(vi.mocked(withRateLimit).mock.calls[0]?.[1]).toEqual({ key: `parcels-entitlement:${UID}`, limit: 30, windowSec: 60 });
++    expect(otherReads()).toHaveLength(0);
++  });
++  it('task-454: a non-default row moves the limit (9 a minute, window 60 s)', async () => {
++    settings = { ...SEARCH_DEFAULTS, parcel_entitlement_read_per_min: '9' };
++    await call();
++    expect(vi.mocked(withRateLimit).mock.calls[0]?.[1]).toEqual({ key: `parcels-entitlement:${UID}`, limit: 9, windowSec: 60 });
++  });
++  it.each([
++    ['a missing row', { parcel_entitlement_read_per_min: null }],
++    ['a row below its bounds', { parcel_entitlement_read_per_min: '0' }],
++    ['a row above its bounds', { parcel_entitlement_read_per_min: '301' }],
++    ['another search row out of bounds', { parcel_lookup_search_per_min: '601' }],
++  ])('task-454: %s -> 500 with no data and no database text, no limiter call, nothing else read', async (_l, over) => {
++    settings = { ...SEARCH_DEFAULTS, ...over };
++    const r = await call();
++    expect(r.status).toBe(500);
++    expect(r.body.data).toBeNull();
++    const flat = JSON.stringify(r.body);
++    for (const leak of ['logic_variables', 'parcel_entitlement', 'parcel_lookup', 'bounds']) expect([leak, flat.includes(leak)]).toEqual([leak, false]);
++    expect(vi.mocked(withRateLimit)).not.toHaveBeenCalled();
++    expect(otherReads()).toHaveLength(0);
++  });
++  it('task-454 (g3 GROUNDER-F D4): a success logs uid and duration', async () => {
++    db({ status: 'active', used: 1 });
++    expect((await call()).status).toBe(200);
++    expect(logInfo).toHaveBeenCalledWith('[api/parcel-entitlement]', 'parcel entitlement', { uid: UID, duration_ms: expect.any(Number) });
+   });
+   it('no parcel_tool row -> 200 with every field null (the no-plan state)', async () => {
+     const r = await call();
+@@ -93,6 +134,7 @@ describe('T11 GET /api/parcels/entitlement (the entitlement read contract)', ()
+     const r = await call();
+     expect(r.status).toBe(500);
+     expect(r.body.data).toBeNull();
++    expect(JSON.stringify(r.body)).not.toContain('db down');
+   });
+   it('read-only: no lock and no write', async () => {
+     db({ status: 'active', used: 1 });
+diff --git a/src/tests/parcels-lookup-page.logic.test.ts b/src/tests/parcels-lookup-page.logic.test.ts
+index c1528e7ed655a9ec3de3a06eddc9307a2213262d..69708be7d00f51f6508b6110164fa7c75dcdb98f 100644
+--- a/src/tests/parcels-lookup-page.logic.test.ts
++++ b/src/tests/parcels-lookup-page.logic.test.ts
+@@ -63,11 +63,17 @@ const call = async (qs = 'parcelId=P-48'): Promise<{ status: number; body: Body
+   return { status: res.status, body: (await res.json()) as Body };
+ };
+ 
++/** task-454 SEARCHFIX.6: the lookup route reads its search settings rows first (readSearchSettings, the shared ANY read, told apart by its bound keys); the seed defaults. */
++const SEARCH_SETTINGS = { rows: Object.entries({ parcel_lookup_search_per_min: '60', parcel_lookup_detail_per_min: '30', parcel_entitlement_read_per_min: '30', parcel_lookup_slow_query_ms: '500', maxbld_page_candidate_cap: '10' }).map(([variable_key, variable_value]) => ({ variable_key, variable_value })) };
++const isSearchSettings = (text: string, params: unknown): boolean =>
++  /FROM logic_variables WHERE variable_key = ANY/.test(text) && Array.isArray(params) && Array.isArray(params[0]) && (params[0] as unknown[]).includes('parcel_lookup_search_per_min');
++
+ beforeEach(() => {
+   vi.clearAllMocks();
+   // The transitional lead_gen path (unmetered): the page logic is the same on both access paths and needs no meter mock.
+   vi.mocked(getCurrentUserContext).mockResolvedValue({ uid: UID, subscription_status: 'active' } as never);
+-  poolQuery.mockImplementation(async (text: string) => {
++  poolQuery.mockImplementation(async (text: string, params?: unknown) => {
++    if (isSearchSettings(text, params)) return SEARCH_SETTINGS;
+     if (/FROM entitlements WHERE user_id = \$1 AND product = \$2/.test(text)) return { rows: [], rowCount: 0 };
+     throw new Error(`unexpected pool query: ${text}`);
+   });
+@@ -168,7 +174,8 @@ describe('T-B3 (6) EI-D1 at the producer: a legacy value can never ride the page
+ // and flip this pin (Spec 100 §3.2 dated note 2026-11-12, MF-48 Stage B).
+ describe('T-B3 (7) the meter is unchanged by a page today (owner MB-94 c / MB-44)', () => {
+   it('a parcel_tool hit with a served page and no evaluated legacy option is served and not counted', async () => {
+-    poolQuery.mockImplementation(async (text: string) => {
++    poolQuery.mockImplementation(async (text: string, params?: unknown) => {
++    if (isSearchSettings(text, params)) return SEARCH_SETTINGS;
+       if (/FROM entitlements WHERE user_id = \$1 AND product = \$2/.test(text)) return { rows: [{ status: 'active', trial_started_at: null }], rowCount: 1 };
+       throw new Error(`unexpected pool query: ${text}`);
+     });
+diff --git a/src/tests/report-projection-settings.logic.test.ts b/src/tests/report-projection-settings.logic.test.ts
+index 8fbc1d7f03bb29aa43dbcc8d475da3dddeee7426..7e465e58b5b3a19252ca73253448511dac752997 100644
+--- a/src/tests/report-projection-settings.logic.test.ts
++++ b/src/tests/report-projection-settings.logic.test.ts
+@@ -1,6 +1,6 @@
+ // SPEC LINK: docs/specs/01-pipeline/132_step_standard_handbook.md core.8 (every number an admin surface uses is a registered logic variable; unit constants and definitional windows are pinned, min = max);
+ //            docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.44 (the conversion factor is content/settings, never code; operator 2026-11-14, MORNING-DECISIONS.md:241);
+-//            ONE-13 a (MORNING-DECISIONS.md:738: lots under 50 m2 or over 5,000 m2 show Not yet evaluated).
++//            ONE-13 a (MORNING-DECISIONS.md:738); the 50 and 5,000 words: backlog/decisions/decision-37 (RR-0167).
+ //
+ // FIX.PROJ (task-372; D2 and D9 of the BL-GROUND verdicts): the report projection reads the square-feet factor and the lot-size window from the
+ // registered, pinned logic variables, never from a number typed in code. Tests written FIRST (red before the readers exist).
+diff --git a/src/tests/search-parser-guard.logic.test.ts b/src/tests/search-parser-guard.logic.test.ts
+index 2dcf60793b32d1a062c6d6dcaaaffc3b9534e9cf..b8d834c8a0ae198f78e95cecfcf7cc4f06cf454f 100644
+--- a/src/tests/search-parser-guard.logic.test.ts
++++ b/src/tests/search-parser-guard.logic.test.ts
+@@ -37,7 +37,9 @@ import { findUndocumentedBangs } from './non-null-assertion-comment.logic.test';
+ import { readFileSync } from 'node:fs';
+ import { join } from 'node:path';
+ 
+-const opts = { classifyUnlinked: true, matchMistyped: true } as const; // the consumer route's call
++const opts = { classifyUnlinked: true, matchMistyped: true, candidateCap: 10 } as const; // the consumer route's call (task-454: with the cap setting, default 10)
++/** task-454: the admin route's call passes only the cap (no option); the cast keeps the call typed before the cap is a member of the options. */
++const ADMIN = { candidateCap: 10 } as Parameters<typeof resolveAddress>[1];
+ const E = { parcel_id: 'E1', address: '100 Queen St E' };
+ const W = { parcel_id: 'W1', address: '100 Queen St W' };
+ 
+@@ -118,7 +120,7 @@ describe('A.4 the guard after the match (resolveAddress)', () => {
+   it('the exact read is still keyed on the stripped street (the join key is untouched)', async () => {
+     state.exact['100|QUEEN'] = [E, W];
+     await resolveAddress('100 Queen St W', opts);
+-    expect(dbQuery.mock.calls[0]![1]).toEqual(['100', 'QUEEN']);
++    expect(dbQuery.mock.calls[0]![1]).toEqual(['100', 'QUEEN', 11]); // task-454: the exact window is the cap + 1
+   });
+ 
+   it("no direction typed: today's result exactly (both rows, the list)", async () => {
+@@ -212,7 +214,7 @@ describe('A.4 the guard after the match (resolveAddress)', () => {
+   it('end to end with a unit: 100 Queen St W Unit 4 returns the W lot', async () => {
+     state.exact['100|QUEEN'] = [E, W];
+     const out = await resolveAddress('100 Queen St W Unit 4', opts);
+-    expect(dbQuery.mock.calls[0]![1]).toEqual(['100', 'QUEEN']);
++    expect(dbQuery.mock.calls[0]![1]).toEqual(['100', 'QUEEN', 11]); // task-454: the exact window is the cap + 1
+     expect(out.match?.parcelId).toBe('W1');
+   });
+ 
+@@ -224,7 +226,7 @@ describe('A.4 the guard after the match (resolveAddress)', () => {
+ 
+   it('the admin call (no options) takes the same guard and reads only match, candidates, truncated', async () => {
+     state.exact['100|QUEEN'] = [E, W];
+-    const out = await resolveAddress('100 Queen St W');
++    const out = await resolveAddress('100 Queen St W', ADMIN);
+     expect(out.match?.parcelId).toBe('W1');
+     expect(out.candidates).toEqual([]);
+   });
+diff --git a/src/tests/search-routing.logic.test.ts b/src/tests/search-routing.logic.test.ts
+index 55dc4f6c752cde764888e78dcf9e38fbbb353426..52cf769b29a8d1bc5e2349d5cab52aac2a06bfeb 100644
+--- a/src/tests/search-routing.logic.test.ts
++++ b/src/tests/search-routing.logic.test.ts
+@@ -39,7 +39,10 @@ const dbQuery = vi.fn(async (text: string, params: unknown[] = []): Promise<Row[
+ });
+ vi.mock('@/lib/db/client', () => ({
+   query: (...a: [string, unknown[]?]) => dbQuery(...a),
+-  pool: { query: vi.fn(async () => ({ rows: [], rowCount: 0 })) }, // no parcel_tool entitlement: the unmetered lead_gen path, no meter write
++  // no parcel_tool entitlement: the unmetered lead_gen path, no meter write. task-454: the search settings read (readSearchSettings, its bound keys) answers the seed defaults.
++  pool: { query: vi.fn(async (_text: string, params?: unknown[]) => (Array.isArray(params?.[0]) && (params[0] as unknown[]).includes('parcel_lookup_search_per_min')
++    ? { rows: Object.entries({ parcel_lookup_search_per_min: '60', parcel_lookup_detail_per_min: '30', parcel_entitlement_read_per_min: '30', parcel_lookup_slow_query_ms: '500', maxbld_page_candidate_cap: '10' }).map(([variable_key, variable_value]) => ({ variable_key, variable_value })) }
++    : { rows: [], rowCount: 0 })) },
+   withTransaction: vi.fn(async () => { throw new Error('the search routes meter nothing here'); }),
+ }));
+ vi.mock('@/lib/auth/get-user-context', () => ({ getCurrentUserContext: vi.fn(async () => ({ uid: 'u-318', subscription_status: 'active' })) }));
+@@ -97,7 +100,7 @@ describe('SRCH.ROUTE: one route per case', () => {
+   it('two lots printing one address (26 Kenneth Ave, sample 9) -> the lot map', async () => {
+     state.exact['26|KENNETH'] = [{ parcel_id: '5112332', address: '26 Kenneth Ave' }, { parcel_id: '5427844', address: '26 Kenneth Ave' }];
+     const { data, route } = await search('26 Kenneth Ave');
+-    expect(readParams(0)).toEqual(['26', 'KENNETH']); // the exact read ran on the parsed keys
++    expect(readParams(0)).toEqual(['26', 'KENNETH', 11]); // the exact read ran on the parsed keys; task-454: its window is the cap + 1 (the cap setting, 10)
+     expect(data.resolution).toBe('multi_parcel');
+     expect(data.match).toBeNull();
+     expect(data.map?.lots.map((l: { parcelId: string }) => l.parcelId)).toEqual(['5112332', '5427844']);
+@@ -125,7 +128,7 @@ describe('SRCH.ROUTE: one route per case', () => {
+       { parcel_id: '1001', address: '1 Derwyn Rd' }, { parcel_id: '1010', address: '10 Derwyn Rd' }, { parcel_id: '1011', address: '11 Derwyn Rd' },
+     ];
+     const { data, route } = await search('Derwyn Road');
+-    expect(dbQuery.mock.calls.some((c: unknown[]) => JSON.stringify(c[1]) === JSON.stringify(['DERWYN%', null]))).toBe(true); // the typeahead prefix, no number
++    expect(dbQuery.mock.calls.some((c: unknown[]) => JSON.stringify(c[1]) === JSON.stringify(['DERWYN%', null, 10]))).toBe(true); // the typeahead prefix, no number
+     expect(data.resolution).toBe('text_candidates');
+     expect(data.map).toBeNull();
+     expect(data.candidates.map((c) => c.address)).toEqual(['1 Derwyn Rd', '10 Derwyn Rd', '11 Derwyn Rd']);
+@@ -167,7 +170,7 @@ describe('SRCH.ROUTE: one route per case', () => {
+     state.exact['41|DERWYN'] = [{ parcel_id: '5293897', address: '41 Derwyn Rd' }];
+     state.lotForm['5293897'] = { lot_form_detected: 'detached', lot_form_basis: 'o4_not_met', unsure: false };
+     const { data, route } = await search('41 Derwyn Road, Toronto');
+-    expect(readParams(0)).toEqual(['41', 'DERWYN']); // the city suffix after the comma is dropped
++    expect(readParams(0)).toEqual(['41', 'DERWYN', 11]); // the city suffix after the comma is dropped
+     expect(data.resolution).toBe('unique');
+     expect(dbQuery.mock.calls.some((c) => /FROM parcels WHERE parcel_id = \$1/.test(String(c[0])) && c[1]?.[0] === '5293897')).toBe(true); // the report read is for the matched lot
+     expect(data.map).toBeNull();
+@@ -184,10 +187,11 @@ describe('SRCH.FUZZY: a mis-typed street (task-333, RR-0277: the permit pipeline
+     state.fuzzy = [{ parcel_id: '5293897', address: '41 Derwyn Rd' }];
+     const { data, route } = await search('41 Derwin Road');
+     expect(dbQuery.mock.calls.map((c) => String(c[0]).includes('levenshtein('))).toEqual([false, false, false, true]); // exact, typeahead, unlinked, then the matcher
+-    expect(readParams(3)).toEqual(['41', 'DERWIN']);
++    expect(readParams(3)).toEqual(['41', 'DERWIN', 10]); // task-454: the third parameter is the cap setting (10)
+     const sql = String(dbQuery.mock.calls[3]![0]);
+     expect(sql).toContain("variable_key = 'enrich_heritage_address_levenshtein_threshold'"); // the threshold is the pipeline's variable, no literal
+-    expect(sql).toContain('LIMIT 10');
++    expect(sql).toContain('LIMIT $3'); // task-454: the cap is a bound parameter, never typed in the statement
++    expect(sql).not.toMatch(/LIMIT \d/);
+     expect(data.resolution).toBe('text_candidates');
+     expect(data.match).toBeNull();
+     expect(data.map).toBeNull();
+@@ -197,7 +201,7 @@ describe('SRCH.FUZZY: a mis-typed street (task-333, RR-0277: the permit pipeline
+ 
+   it('a nonsense street matches nothing and stays no_match', async () => {
+     const { data, route } = await search('41 Qzxqzx Road');
+-    expect(readParams(3)).toEqual(['41', 'QZXQZX']);
++    expect(readParams(3)).toEqual(['41', 'QZXQZX', 10]);
+     expect(data.resolution).toBe('no_match');
+     expect(data.candidates).toEqual([]);
+     expect(route).toBe(parcelSearchPath('no_match' as SearchOutcome, { parcelId: null, query: '41 Qzxqzx Road' }, BASE));
+@@ -209,7 +213,8 @@ describe('SRCH.FUZZY: a mis-typed street (task-333, RR-0277: the permit pipeline
+   });
+ 
+   it('the admin call (no options) never runs the matcher: a mis-typed street stays no_match there', async () => {
+-    const out = await resolveAddress('41 Derwin Road');
++    const withCap = { candidateCap: 10 } as Parameters<typeof resolveAddress>[1]; // task-454: the admin route passes only the cap
++    const out = await resolveAddress('41 Derwin Road', withCap);
+     expect(out.resolution).toBe('no_match');
+     expect(dbQuery.mock.calls.some((c) => String(c[0]).includes('levenshtein('))).toBe(false);
+   });
+

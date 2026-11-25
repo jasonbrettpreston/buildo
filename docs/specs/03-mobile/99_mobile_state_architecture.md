@@ -176,6 +176,8 @@ These stores survive app close and are reset on sign-out via §B5. Spec 77 §3.2
 
 > Dated note 2026-11-10 (M-246, prior text kept; MF-35 · McFrontend queue · lane MF-35 build; operator, verbatim: "D15 b, D16 a, D17 a D18 a, D-2 a , D-9 a, D-1 a"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-10: MF-35 v3 and MF-51 decisions"; plan `~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md`): the `recentSearchesStore` row above is added by MF-35 (P35-D16 a: the MaxBLD search page's recent searches on the phone, max 3, newest first, duplicates ignoring case removed, saved only when a search opens a page, cleared at sign-out). A searched street address is none of the Layer 4b items (tokens, keys, payment credentials, government IDs, photo content; :97), so Layer 4a applies. `storeReset.coverage.test.ts` finds the new store with no count change (its guard is `>= 6`).
 
+> Dated note 2026-11-25 (task-454): SEARCH_RECENT_MAX is now the setting maxbld_page_recent_max.
+
 ### 3.4a UI-Only SharedValues (Layer 5 — orthogonal to Layers 1-4)
 
 These are NOT Zustand stores. They use `react-native-reanimated`'s `makeMutable()` and live exclusively on the UI thread. They are **never** read by router effects, hydrated from server, persisted to MMKV, or reset in §B5 sign-out — they are process-local UI state for animations.

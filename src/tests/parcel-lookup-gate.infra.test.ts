@@ -11,6 +11,9 @@
 //       reportsLimit and resetsOn and no parcel; trial and plan limits told apart; a parse failure charges nothing; the raw
 //       q never reaches the meter or the log.
 //   T10 a limits-read failure or an insert failure -> 500 and no payload (fail closed).
+//   task-454 SEARCHFIX.6 (MORNING-DECISIONS.md:1494 "register them"; Spec 128 Rule 3): the two rate limits, the slow-query mark and the candidate cap are
+//   read from their settings rows (one read, readSearchSettings); a missing or out-of-bounds row is the generic 500 with no database text; a
+//   non-default row moves the limiter, the cap and the warning. Every 500 body is checked for the raw error text (Std 2.1; g3 GROUNDER-E C1).
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { NextRequest } from 'next/server';
@@ -49,9 +52,11 @@ vi.mock('@/lib/parcels/report-page', async (orig) => {
 // SRCH.METER-2 (task-360): the one-lot compute at the pick (LOAD.1, task-266) is mocked so a test can prove it is NOT run for a held (unsure, unanswered) lot.
 vi.mock('@/lib/parcels/report-compute', () => ({ computeCustomerPageResponse: vi.fn(async () => null) }));
 const logInfo = vi.fn();
-vi.mock('@/lib/logger', () => ({ logInfo: (...a: unknown[]) => logInfo(...a), logWarn: vi.fn(), logError: vi.fn() }));
+const logWarn = vi.fn();
+vi.mock('@/lib/logger', () => ({ logInfo: (...a: unknown[]) => logInfo(...a), logWarn: (...a: unknown[]) => logWarn(...a), logError: vi.fn() }));
 
 import { getCurrentUserContext } from '@/lib/auth/get-user-context';
+import { withRateLimit } from '@/lib/auth/rate-limit';
 import { resolveAddress, fetchParcelById } from '@/lib/admin/parcel-lookup';
 import { REPORT_LIMIT_KEYS } from '@/lib/entitlements';
 import { assembleConsumerPayload } from '@/lib/parcels/consumer-lookup';
@@ -80,9 +85,20 @@ const call = async (qs = 'parcelId=P-45'): Promise<{ status: number; body: Body 
 function ctx(leadGen: string | null) {
   vi.mocked(getCurrentUserContext).mockResolvedValue({ uid: UID, subscription_status: leadGen } as never);
 }
-/** pool.query: the gate's parcel_tool read (getEntitlementStatus). */
+/** task-454: the search settings rows the pool answers (the seed defaults; a test sets a non-default value, or null for a missing row). */
+const SEARCH_DEFAULTS: Record<string, string | null> = { parcel_lookup_search_per_min: '60', parcel_lookup_detail_per_min: '30', parcel_entitlement_read_per_min: '30', parcel_lookup_slow_query_ms: '500', maxbld_page_candidate_cap: '10' };
+let settings: Record<string, string | null> = { ...SEARCH_DEFAULTS };
+/** The settings read is told from the other logic_variables reads by its bound keys (the statement text is the shared ANY read). */
+const isSearchSettings = (text: string, params: unknown): boolean =>
+  /FROM logic_variables WHERE variable_key = ANY/.test(text) && Array.isArray(params) && Array.isArray(params[0]) && (params[0] as unknown[]).includes('parcel_lookup_search_per_min');
+const settingsRows = () => {
+  const rows = Object.entries(settings).filter(([, v]) => v !== null).map(([variable_key, variable_value]) => ({ variable_key, variable_value }));
+  return { rows, rowCount: rows.length };
+};
+/** pool.query: the gate's parcel_tool read (getEntitlementStatus) and the search settings read. */
 function parcelTool(status: string | null) {
-  poolQuery.mockImplementation(async (text: string) => {
+  poolQuery.mockImplementation(async (text: string, params?: unknown) => {
+    if (isSearchSettings(text, params)) return settingsRows();
     if (/FROM entitlements WHERE user_id = \$1 AND product = \$2/.test(text)) return { rows: status ? [{ status, trial_started_at: null }] : [], rowCount: status ? 1 : 0 };
     throw new Error(`unexpected pool query: ${text}`);
   });
@@ -133,6 +149,7 @@ const withEvaluatedOption = (...a: Parameters<typeof assembleConsumerPayload>) =
 
 beforeEach(() => {
   vi.clearAllMocks();
+  settings = { ...SEARCH_DEFAULTS };
   vi.mocked(assembleConsumerPayload).mockImplementation(withEvaluatedOption);
   vi.mocked(readCustomerPageResponse).mockResolvedValue(GOLDEN.response_fixture);
   poolQuery.mockReset();
@@ -167,6 +184,7 @@ describe('T8 the gate: product x status (Spec 96 §10 status set; D-4 a)', () =>
     const r = await call();
     expect(r.status).toBe(500);
     expect(r.body.data).toBeNull();
+    expect(JSON.stringify(r.body)).not.toContain('db down');
     expect(vi.mocked(fetchParcelById)).not.toHaveBeenCalled();
     expect(meterCalls()).toBe(0);
   });
@@ -285,6 +303,7 @@ describe('T9 the meter (D-2, D-3, D-5, D-6 a)', () => {
     const r = await call();
     expect(r.status).toBe(500);
     expect(meterCalls()).toBe(0);
+    expect(JSON.stringify(r.body)).not.toContain('leaked'); // the parse error names the key: never in the body
   });
   it('the log line carries access and meter and never the raw q (Spec 100 §2.8)', async () => {
     await call(`q=${encodeURIComponent(RAW_Q)}`);
@@ -462,6 +481,63 @@ describe('T10 fail closed: the payload is never served unmetered', () => {
     expect(r.status).toBe(500);
     expect(r.body.data).toBeNull();
     expect(JSON.stringify(r.body)).not.toContain('lot_size');
+    expect(JSON.stringify(r.body)).not.toContain('db down');
+    expect(JSON.stringify(r.body)).not.toContain('insert failed');
+  });
+});
+
+describe('task-454 SEARCHFIX.6 the search settings rows (readSearchSettings; Spec 128 Rule 3)', () => {
+  beforeEach(() => { ctx(null); parcelTool('active'); });
+  it.each([
+    ['a missing row', { parcel_lookup_search_per_min: null }],
+    ['a row below its bounds', { parcel_lookup_detail_per_min: '0' }],
+    ['a row above its bounds', { maxbld_page_candidate_cap: '51' }],
+    ['a row that is not a whole number', { parcel_lookup_slow_query_ms: '500.5' }],
+  ])('%s -> 500 on both paths, no data, no database text, nothing resolved or metered', async (_l, over) => {
+    settings = { ...SEARCH_DEFAULTS, ...over };
+    for (const qs of [`q=${encodeURIComponent(RAW_Q)}`, 'parcelId=P-45']) {
+      const r = await call(qs);
+      expect([qs, r.status, r.body.data]).toEqual([qs, 500, null]);
+      const flat = JSON.stringify(r.body);
+      for (const leak of ['logic_variables', 'parcel_lookup', 'maxbld_page', 'bounds']) expect([qs, leak, flat.includes(leak)]).toEqual([qs, leak, false]);
+    }
+    expect(vi.mocked(resolveAddress)).not.toHaveBeenCalled();
+    expect(vi.mocked(fetchParcelById)).not.toHaveBeenCalled();
+    expect(vi.mocked(withRateLimit)).not.toHaveBeenCalled();
+    expect(meterCalls()).toBe(0);
+  });
+  it('the settings are read once per request, after the gate (a 403 reads none)', async () => {
+    await call();
+    expect(poolQuery.mock.calls.filter((c) => isSearchSettings(String(c[0]), c[1]))).toHaveLength(1);
+    poolQuery.mockClear();
+    ctx(null); parcelTool('expired');
+    expect((await call()).status).toBe(403);
+    expect(poolQuery.mock.calls.filter((c) => isSearchSettings(String(c[0]), c[1]))).toHaveLength(0);
+  });
+  it('non-default rows move the code: search 7 and detail 8 a minute (window 60 s), cap 12 into the resolver (the cap bounds are 10 to 50), the slow mark at 50 ms', async () => {
+    settings = { ...SEARCH_DEFAULTS, parcel_lookup_search_per_min: '7', parcel_lookup_detail_per_min: '8', parcel_lookup_slow_query_ms: '50', maxbld_page_candidate_cap: '12' };
+    let now = 1_000_000;
+    const clock = vi.spyOn(Date, 'now').mockImplementation(() => (now += 60));
+    try {
+      await call(`q=${encodeURIComponent(RAW_Q)}`);
+      expect(vi.mocked(withRateLimit).mock.calls[0]?.[1]).toEqual({ key: `parcels-search:${UID}`, limit: 7, windowSec: 60 });
+      expect(vi.mocked(resolveAddress).mock.calls[0]?.[1]).toMatchObject({ candidateCap: 12 });
+      expect(logWarn.mock.calls.some((c) => c[1] === 'slow_query')).toBe(true);
+      await call('parcelId=P-45');
+      expect(vi.mocked(withRateLimit).mock.calls[1]?.[1]).toEqual({ key: `parcels-lookup:${UID}`, limit: 8, windowSec: 60 });
+    } finally {
+      clock.mockRestore();
+    }
+  });
+  it('the default rows: search 60 and detail 30 a minute; the q path passes the cap 10; a fast lookup logs no slow_query', async () => {
+    await call(`q=${encodeURIComponent(RAW_Q)}`);
+    await call('parcelId=P-45');
+    expect(vi.mocked(withRateLimit).mock.calls.map((c) => c[1])).toEqual([
+      { key: `parcels-search:${UID}`, limit: 60, windowSec: 60 },
+      { key: `parcels-lookup:${UID}`, limit: 30, windowSec: 60 },
+    ]);
+    expect(vi.mocked(resolveAddress).mock.calls[0]?.[1]).toMatchObject({ candidateCap: 10 });
+    expect(logWarn.mock.calls.some((c) => c[1] === 'slow_query')).toBe(false);
   });
 });
 
@@ -529,5 +605,6 @@ describe('MF-53 the map block on the route', () => {
     const r = await call(`q=${encodeURIComponent(RAW_Q)}`);
     expect(r.status).toBe(500);
     expect(r.body.data).toBeNull();
+    expect(JSON.stringify(r.body)).not.toContain('logic_variables missing');
   });
 });

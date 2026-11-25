@@ -1,7 +1,7 @@
 // SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md P4 (tunables are data), docs/specs/02-web-admin/128_surface_standard_policy.md Rule 3 (every page setting is a registered logic variable with bounds and an on_invalid posture)
 //
 // FIX.TUNE (task-378) and FIX.CONFIG-BOUNDS (task-395): the one reader of a number the phone takes from a generated surface slice (scripts/surfaces/emit-mobile-surfaces.mjs).
-// The slice carries each number's registered bounds beside it (`bounds.<key>` = min, max, on_invalid, copied from its seed row). The reader applies them: in range, the value; out of
+// The slice carries each number's registered bounds beside it (`bounds.<key>` = min and max from its seed row, on_invalid from the descriptor entry; task-454 L8). The reader applies them: in range, the value; out of
 // range, the stated failure behaviour (fail throws, clamp returns the nearest bound and warns, naming the key and both values: a clamp is never silent). A key that is missing, not a
 // finite number, without a bounds entry, or whose entry is null or malformed throws, naming the key: a silent undefined would reach a timer or a query option and fail later and far from the cause.
 

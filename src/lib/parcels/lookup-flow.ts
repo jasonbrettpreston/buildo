@@ -8,7 +8,10 @@
 // gate, the query parse, the two rate buckets, the meter decision and its openReport call, the log line, the refusal mapping and the error boundary.
 // This module imports no meter, entitlement or usage code and writes nothing; a thrown read or compute error propagates to the route's catch (a 500: no page, no meter).
 // The raw q is never logged here or returned beyond the resolver's own fields (Spec 100 §2.8).
+// task-454 SEARCHFIX.6 (MORNING-DECISIONS.md:1494; Spec 128 Rule 3): the route reads the search settings once (readSearchSettings, re-exported here so
+// the route keeps importing no resolver module) and passes the candidate cap in; this module reads no setting.
 import { resolveAddress, fetchParcelById, fetchCoaProjects } from '@/lib/admin/parcel-lookup';
+export { readSearchSettings } from '@/lib/admin/parcel-lookup';
 import { assembleConsumerPayload, assembleLotMap } from '@/lib/parcels/consumer-lookup';
 import { resolveLotMap } from '@/lib/parcels/lot-map';
 import { readLotForm } from '@/lib/parcels/lot-form';
@@ -35,12 +38,12 @@ function requireQ(q: string | undefined): string {
   return q;
 }
 
-export async function runLookupFlow(input: { q?: string | undefined; parcelId?: string | undefined; semi?: string | undefined }): Promise<LookupFlowResult> {
-  const { q, parcelId, semi } = input;
+export async function runLookupFlow(input: { q?: string | undefined; parcelId?: string | undefined; semi?: string | undefined; candidateCap: number }): Promise<LookupFlowResult> {
+  const { q, parcelId, semi, candidateCap } = input;
   // Resolution: direct id (candidate click) bypasses address parsing.
   const resolved = parcelId
     ? { match: { parcelId, matchType: 'direct' as const, address: '' }, candidates: [], truncated: false, resolution: 'unique' as const, lotMap: null }
-    : await resolveAddress(requireQ(q), { classifyUnlinked: true, matchMistyped: true });
+    : await resolveAddress(requireQ(q), { classifyUnlinked: true, matchMistyped: true, candidateCap });
 
   // The map read runs only on the resolver's own seed (never on the parcelId path).
   const map = resolved.lotMap ? assembleLotMap(await resolveLotMap(resolved.lotMap)) : null;

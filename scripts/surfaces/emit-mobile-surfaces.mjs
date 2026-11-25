@@ -8,7 +8,8 @@
 //   mobile/__tests__/fixtures/surfaces/<id>.goldens.json    the committed mobile goldens (src/tests/fixtures/surfaces/<id>/*.mobile.json), for
 //                                                            the mobile jest golden test (kept out of the app bundle).
 // One source each: the descriptor, the content file, the goldens. Pure over committed files; no DB, no network.
-// CLI: --write writes; --check (default) prints GEN-STALE / GEN-HAND-EDIT / GEN-STRAY lines and exits 1, else prints `surfaces ok (N surfaces, G goldens)`.
+// CLI: --write writes every output and removes the GEN-STRAY files (task-454 L8: a stray slice or golden copy no converted surface owns; nothing else in the
+// two dirs); --check (default) prints GEN-STALE / GEN-HAND-EDIT / GEN-STRAY lines and exits 1, else prints `surfaces ok (N surfaces, G goldens)`.
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -28,7 +29,9 @@ const SHA_RE = /input_sha ([0-9a-f]{16})/;
 // FIX.CONFIG-BOUNDS (task-395; Spec 128 Rule 3; operator, verbatim, 2026-11-20: "yes follow the rules register them.", MORNING-DECISIONS.md:1494): each key is a REGISTERED logic
 // variable, named here (one map: config key -> seed row). The slice number is resolved from that seed row (scripts/seeds/logic_variables.json) at generate time and the slice carries the
 // row's bounds beside it (`bounds.<key>`), which mobile/src/lib/sliceConfig.ts applies. Only the phone reads the slice; no web binding reads these keys today.
+// task-454 SEARCHFIX.6 (same ruling and rule): candidate_cap and recent_max of the search page join them (the cap is also read by the server, from the same row).
 const SEED = 'scripts/seeds/logic_variables.json';
+const SCHEMA_FILE = 'scripts/surfaces/_schema/surface.schema.json';
 export const PAGE_SETTINGS = {
   debounce_ms: 'maxbld_page_debounce_ms',
   min_query_len: 'maxbld_page_min_query_len',
@@ -36,19 +39,32 @@ export const PAGE_SETTINGS = {
   entitlement_stale_ms: 'maxbld_page_entitlement_stale_ms',
   lookup_retry_max: 'maxbld_page_lookup_retry_max',
   lookup_stale_ms: 'maxbld_page_lookup_stale_ms',
+  candidate_cap: 'maxbld_page_candidate_cap',
+  recent_max: 'maxbld_page_recent_max',
 };
 const CONFIG_KEYS = Object.keys(PAGE_SETTINGS);
+/**
+ * task-454 L4 (g3 GROUNDER-D D4): the smallest number of each key that needs a config.logic_variables entry, read once from the schema's own per-key rule
+ * (config.allOf[].if.properties.<key>.minimum): 1 for debounce_ms and min_query_len (a 0 there states that a binding module has no such setting), 0 for
+ * every other key, and for a key whose rule names no minimum (so its entry stays required for every number, 0 included). Schema data, not a key list.
+ */
+const CONFIG_RULES = JSON.parse(fs.readFileSync(path.join(REPO, SCHEMA_FILE), 'utf8')).properties?.config?.allOf ?? [];
+export const ENTRY_FROM = Object.fromEntries(CONFIG_KEYS.map((k) => {
+  const min = CONFIG_RULES.find((r) => r?.if?.required?.[0] === k)?.if?.properties?.[k]?.minimum;
+  return [k, typeof min === 'number' ? min : 0];
+}));
 
 /**
  * The registered bounds of each number in `config`, and the problem lines: a number whose descriptor declares no config.logic_variables entry for its seed row, a seed row that
- * is absent, an entry whose min, max or on_invalid differs from the row (or is not fail or clamp), a descriptor value that is not the row's default, a value outside min and max.
- * Only numbers are judged: a config holding only UNRESEARCHED keys gives {} and no problem. Pure over its arguments.
+ * is absent, an entry whose on_invalid is not fail or clamp, an entry whose min or max differs from the row, a descriptor value that is not the row's default, a value outside
+ * min and max. The bounds carry min and max from the seed row and on_invalid from the descriptor entry. Only numbers are judged: a config holding only UNRESEARCHED keys
+ * gives {} and no problem; a number below ENTRY_FROM of its key (a 0 the schema allows without an entry) is emitted as it is, with no bounds. Pure over its arguments.
  */
 export function pageSettingBounds(config, entries, seed) {
   const bounds = {};
   const problems = [];
   for (const [k, v] of Object.entries(config ?? {})) {
-    if (typeof v !== 'number') continue;
+    if (typeof v !== 'number' || v < (ENTRY_FROM[k] ?? 0)) continue;
     const name = PAGE_SETTINGS[k];
     const entry = Array.isArray(entries) ? entries.find((e) => e && e.name === name) : undefined;
     const row = seed?.[name];
@@ -130,14 +146,22 @@ export function checkOutputs(root = REPO, outputs = buildOutputs(root)) {
   return lines;
 }
 
+/** task-454 L8 (g3 GROUNDER-F D10): write every output, then remove each file checkOutputs names GEN-STRAY (only those; a file already gone is no error). */
+export function writeOutputs(root = REPO, outputs = buildOutputs(root)) {
+  for (const [rel, t] of outputs) {
+    fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+    fs.writeFileSync(path.join(root, rel), t);
+  }
+  const stray = checkOutputs(root, outputs).filter((l) => l.startsWith('GEN-STRAY ')).map((l) => l.slice('GEN-STRAY '.length));
+  for (const rel of stray) fs.rmSync(path.join(root, rel), { force: true });
+  return { written: outputs.size, removed: stray };
+}
+
 function main(argv) {
   const outputs = buildOutputs(REPO);
   if (argv.includes('--write')) {
-    for (const [rel, t] of outputs) {
-      fs.mkdirSync(path.dirname(path.join(REPO, rel)), { recursive: true });
-      fs.writeFileSync(path.join(REPO, rel), t);
-    }
-    console.log(`wrote ${outputs.size} files`);
+    const { written, removed } = writeOutputs(REPO, outputs);
+    console.log(`wrote ${written} files${removed.length ? `, removed ${removed.length} stray: ${removed.join(', ')}` : ''}`);
     return;
   }
   const lines = checkOutputs(REPO, outputs);

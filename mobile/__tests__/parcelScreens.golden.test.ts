@@ -11,8 +11,7 @@
 // SELECT is disabled with nothing checked; every component is in mapping.mobile.SEARCH; every child node carries a key (RG-15).
 import fs from 'node:fs';
 import path from 'node:path';
-import { DERIVED_NAMES, SEARCH_DEBOUNCE_MS, SEARCH_MIN_QUERY_LEN, SEARCH_SLICE, searchProps, type PropsNode } from '@/components/surfaces/SearchBinding';
-import { SEARCH_CANDIDATE_LIMIT } from '@/constants/parcelSearch';
+import { DERIVED_NAMES, SEARCH_CANDIDATE_LIMIT, SEARCH_DEBOUNCE_MS, SEARCH_MIN_QUERY_LEN, SEARCH_SLICE, searchProps, type PropsNode } from '@/components/surfaces/SearchBinding';
 import type { SearchSituation } from '@/lib/parcelSearchMatch';
 
 type Json = Record<string, unknown>;
@@ -209,7 +208,7 @@ describe('one home for the config values (row 24, RG-14)', () => {
     expect(/export const SEARCH_MIN_QUERY_LEN = sliceNumber\(SEARCH_SLICE, 'min_query_len'\)/.test(src)).toBe(true);
   });
   it('the slice config equals the constants, and the content strings that state them carry the same numbers', () => {
-    expect(SEARCH_SLICE.config).toEqual({ debounce_ms: SEARCH_DEBOUNCE_MS, min_query_len: SEARCH_MIN_QUERY_LEN, entitlement_stale_ms: 0, lookup_retry_max: 3, lookup_stale_ms: 60000 }); // FIX.TUNE (task-378): the phone tunables are declared beside them
+    expect(SEARCH_SLICE.config).toEqual({ debounce_ms: SEARCH_DEBOUNCE_MS, min_query_len: SEARCH_MIN_QUERY_LEN, entitlement_stale_ms: 0, lookup_retry_max: 3, lookup_stale_ms: 60000, candidate_cap: 10, recent_max: 3 }); // FIX.TUNE (task-378): the phone tunables are declared beside them; task-454: the cap and the recent count
     // Dated 2026-11-24 (task-450 L5 and Q8.2; prior text kept: the strings held "at least ${SEARCH_MIN_QUERY_LEN} characters" and "More than
     // ${SEARCH_CANDIDATE_LIMIT} lots"): the minimum length is a {min} template filled from the setting, and the refine line names no count.
     expect(SEARCH_SLICE.content['search.prompt']).toContain('at least {min} characters');

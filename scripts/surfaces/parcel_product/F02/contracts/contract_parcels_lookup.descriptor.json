@@ -40,7 +40,7 @@
       "ambiguous: src/lib/admin/parcel-lookup.ts:362-369 (>1 exact -> candidates, match null) surfaced at src/app/api/parcels/lookup/route.ts:86-88",
       "miss: src/lib/admin/parcel-lookup.ts:340 (no street name) and src/app/api/parcels/lookup/route.ts:96 (unknown parcelId -> 200 match:null, parcel:null)",
       "partial: src/lib/parcels/consumer-lookup.ts:77-79, 100-102, 111-113, 133-136 (tier-stratified safeParse degradation -> warnings[] entries, payload still returned)",
-      "degraded: src/app/api/parcels/lookup/route.ts:120-122 (slow_query logWarn above SLOW_QUERY_MS=500, route.ts:41)",
+      "degraded: src/app/api/parcels/lookup/route.ts (slow_query logWarn above the setting parcel_lookup_slow_query_ms, default 500 ms; task-454)",
       "unauthorized: src/app/api/parcels/lookup/route.ts:54 (401) and route.ts:59 (403 inactive subscription)",
       "rate_limited: src/app/api/parcels/lookup/route.ts:76",
       "error: src/app/api/parcels/lookup/route.ts:126-128"
@@ -489,7 +489,8 @@
         "chain_position": "n/a",
         "owner_spec": "docs/specs/02-web-admin/128_surface_standard_policy.md",
         "evidence": [
-          "src/lib/parcels/lot-map.ts — readLotMapLimits (MF-53, migration 307)"
+          "src/lib/parcels/lot-map.ts — readLotMapLimits (MF-53, migration 307)",
+          "src/lib/admin/parcel-lookup.ts — readSearchSettings (task-454: the search settings)"
         ]
       }
     ]
@@ -760,11 +761,14 @@
   },
   "config": {
     "answer": "logic_variables",
-    "why": "Dated 2026-11-11 (MF-53; DECISIONS-v3 item 2 b, operator \"b\"): the choose-your-lot map neighbour radius and limit are logic variables read on the unlinked-with-pin path only, failing closed (500) outside the seed bounds. The lookup route's own literal caps (LIMIT 11 / 10, 60/min, 30/min) are not yet registered: the follow-up card of the same ruling moves them to admin settings.",
+    "why": "Dated 2026-11-11 (MF-53; DECISIONS-v3 item 2 b, operator \"b\"): the choose-your-lot map neighbour radius and limit are logic variables read on the unlinked-with-pin path only, failing closed (500) outside the seed bounds. task-454 SEARCHFIX.6 (operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1494; Spec 128 Rule 3): the route's two rate limits (parcel_lookup_search_per_min on the q path, parcel_lookup_detail_per_min on the parcelId path; a 60 s window), the slow-query mark (parcel_lookup_slow_query_ms) and the candidate cap (maxbld_page_candidate_cap: the exact read takes cap + 1 rows, the typeahead and the mistyped-street reads take the cap) are logic variables read in one read (readSearchSettings) after the query parse and before the rate limit, failing closed (500) when a row is missing, not a whole number or outside the seed bounds. Prior text: \"The lookup route's own literal caps (LIMIT 11 / 10, 60/min, 30/min) are not yet registered: the follow-up card of the same ruling moves them to admin settings.\"",
     "evidence": [
       "src/lib/parcels/lot-map.ts — readLotMapLimits",
       "scripts/seeds/logic_variables.json parcel_map_neighbour_radius_m / parcel_map_neighbour_limit",
-      "migrations/307_parcel_map_logic_variables.sql"
+      "migrations/307_parcel_map_logic_variables.sql",
+      "src/lib/admin/parcel-lookup.ts — readSearchSettings, SEARCH_SETTING_KEYS (task-454)",
+      "src/app/api/parcels/lookup/route.ts — readSearchSettings(pool) before withRateLimit (task-454)",
+      "scripts/seeds/logic_variables.json parcel_lookup_search_per_min / parcel_lookup_detail_per_min / parcel_lookup_slow_query_ms / maxbld_page_candidate_cap"
     ],
     "logic_variables": [
       {
@@ -778,6 +782,34 @@
         "min": 1,
         "max": 50,
         "on_invalid": "fail"
+      },
+      {
+        "name": "parcel_lookup_search_per_min",
+        "min": 1,
+        "max": 600,
+        "on_invalid": "fail",
+        "why": "readSearchSettings (src/lib/admin/parcel-lookup.ts) reads it with the other search settings in one read; a missing row, a value that is not a whole number or one outside min and max throws and the route answers the generic 500."
+      },
+      {
+        "name": "parcel_lookup_detail_per_min",
+        "min": 1,
+        "max": 300,
+        "on_invalid": "fail",
+        "why": "readSearchSettings (src/lib/admin/parcel-lookup.ts) reads it with the other search settings in one read; a missing row, a value that is not a whole number or one outside min and max throws and the route answers the generic 500."
+      },
+      {
+        "name": "parcel_lookup_slow_query_ms",
+        "min": 50,
+        "max": 10000,
+        "on_invalid": "fail",
+        "why": "readSearchSettings (src/lib/admin/parcel-lookup.ts) reads it with the other search settings in one read; a missing row, a value that is not a whole number or one outside min and max throws and the route answers the generic 500."
+      },
+      {
+        "name": "maxbld_page_candidate_cap",
+        "min": 10,
+        "max": 50,
+        "on_invalid": "fail",
+        "why": "readSearchSettings (src/lib/admin/parcel-lookup.ts) reads it with the other search settings in one read; a missing row, a value that is not a whole number or one outside min and max throws and the route answers the generic 500."
       }
     ],
     "retired": []
