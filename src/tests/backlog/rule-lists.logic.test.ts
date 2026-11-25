@@ -384,6 +384,23 @@ describe('V2.LIST: every task gets the five words, the plan protocol and its mil
       expect(r.status, `${p}: ${r.stderr}`).toBe(0);
     }
   });
+  it('task-464 (RR-0475 item 1): a Files line naming a top-level generator script resolves (step-pipeline); a non-generator top-level .mjs is still refused', () => {
+    const main = script(CLI, ['resolve', '--files', 'scripts/generate-logic-variable-groups.mjs', '--type', 'fix', '--letter', 'S']);
+    expect(main.status, main.stderr).toBe(0);
+    expect(ids(JSON.parse(main.stdout) as Res)).toEqual(expect.arrayContaining(['step-132', 'eng-back', 'eng-shared', 'plan-protocol', 'inc-S', 'ms-S']));
+    const generators = ['bylaw-handbook', 'bylaw-layer2-input', 'bylaw-provisions', 'db-docs', 'lineage-docs', 'logic-variable-effect', 'logic-variable-groups', 'logic-vars-docs', 'script', 'step-handbook', 'system-map'];
+    for (const g of generators) {
+      const p = `scripts/generate-${g}.mjs`;
+      const r = script(CLI, ['resolve', '--files', p, '--type', 'fix', '--letter', 'S']);
+      expect(r.status, `${p}: ${r.stderr}`).toBe(0);
+      expect(ids(JSON.parse(r.stdout) as Res), p).toContain('step-132');
+    }
+    // survive-the-fix control: the glob stays narrow (a widening to scripts/*.mjs would resolve this lane tool)
+    const ctl = script(CLI, ['resolve', '--files', 'scripts/ai-env-check.mjs', '--type', 'fix', '--letter', 'S']);
+    expect(ctl.status, ctl.stdout + ctl.stderr).toBe(3);
+    expect(ctl.stderr).toContain('matched by no row of scripts/analysis/rule-lists.json');
+    expect(ctl.stderr).toContain('scripts/ai-env-check.mjs');
+  });
   it('verifyResolved (what validate and check-tasks run): a resolved set that lacks an every_task list or the milestone list is named; the real resolution passes', async () => {
     const { verifyResolved } = await mod();
     const t = real();
