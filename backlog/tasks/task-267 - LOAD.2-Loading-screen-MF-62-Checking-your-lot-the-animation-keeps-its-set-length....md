@@ -3,11 +3,11 @@ id: TASK-267
 title: >-
   LOAD.2 Loading screen (MF-62 Checking your lot): the animation keeps its set
   length...
-status: WAITS
+status: RUNNING
 assignee:
-  - '@lane-BL-LOAD2'
+  - '@lane-BL-MCFIX267'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-25T22:42:00Z'
+updated_date: '2026-11-25T22:45:00Z'
 due_date: '2026-11-26'
 labels:
   - McFixV2
@@ -527,4 +527,6 @@ McFixV2 addition 2026-11-25 (operator phone walk; rulings RR-0483, RR-0485, RR-0
 2026-11-25 (RR-0493, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2571, operator verbatim: "approved" to the three points put to him): 60 seconds from the pick is the failure limit; the label Checks for this lot is shown as the mock draws it (replaces Spec 126:869 for that one label); a no-report lot shows the no-report screen at once (approved as read; one A/B put back to him).
 
 2026-11-25 (RR-0494, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2575, operator verbatim "A"): a lot with no report shows the no-report screen at once, not after the lines. Confirms RR-0493.
+
+2026-11-25 taken on the board at lane launch (lane BL-MCFIX267, worktree /Users/brettpreston_macmini/Buildo-wt-mcfix267, branch wf2/mcfix267), RR-0240
 <!-- SECTION:NOTES:END -->
