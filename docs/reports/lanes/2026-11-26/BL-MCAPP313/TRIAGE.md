@@ -1,0 +1,12 @@
+# TRIAGE BL-MCAPP313 (task-313), ROUND 2 (grounder Cairn-Ground-O313b): 11 CONFIRMED (2 LOW, 9 NIT); no CRITICAL or HIGH stands (RR-0385 item 3: round 2 resolves CRITICAL and HIGH only, LOW and NIT are recorded). Round 1 (10 CONFIRMED, the one HIGH fixed in 2f95dc250) is in the round 1 ruling outside the repo, named in the Final Summary history line.
+out-code-review-p2#1 pile:"panel cites RR-0509 at MD:2646, Spec 117 at :2645, quoted words exact, LOW is recorded (RR-0385 round 2)"
+out-code-review-p3#2 pile:"short buffer throws RangeError before the not-a-PNG line in a test helper, NIT is recorded (RR-0385 round 2)"
+out-code-review-p3#3 pile:"Keyboard.dismiss spy restored at the end of the body not in a finally, NIT is recorded (RR-0385 round 2)"
+out-code-review-p3#4 pile:"keyless sibling reads as key undefined in a test helper, the lock still goes red, NIT is recorded (RR-0385 round 2)"
+out-code-review-p3#5 pile:"readdir of the (app) folder would take a helper file as a route, not reachable today, NIT is recorded (RR-0385 round 2)"
+out-code-review-p5#1 pile:"gate offline, error and give-up answers are drawn but not logged, the person sees Try again, LOW is recorded (RR-0385 round 2)"
+out-code-review-p6#2 pile:"STRAY sweep runs under --write and can exit 1 after wrote N goldens, same as wall-golden-capture.ts, NIT is recorded (RR-0385 round 2)"
+out-code-review-p6#3 pile:"owns.components names the gate but evidence.files does not, no check reads the pair, NIT is recorded (RR-0385 round 2)"
+out-code-review-p6#7 pile:"field_whitelist names status while the why says no field is read, no check reads it, NIT is recorded (RR-0385 round 2)"
+out-code-review-p7#4 pile:"status as never in the entitlement test helper, test only, NIT is recorded (RR-0385 round 2)"
+out-code-review-p7#6 pile:"less-than escape in a test regex is a no-op, the plant still goes red, NIT is recorded (RR-0385 round 2)"
