@@ -5,6 +5,9 @@
 // entitlement read contract; operator 2026-11-11 "4. will we need to build this later.. we have the tokens now").
 // Read by the app search page's reports-left line (the left count, the allowance and the served reset label) and the Account page. A display, never a gate: the lookup's
 // 403 REPORT_LIMIT_REACHED is the gate. Every value is server-computed (FE-05).
+// Dated 2026-11-26 (task-313, McApp card 1; prior text kept): the MaxBLD phone front door (MaxbldAppGate) also reads this route, for offline and
+// error only; the plan check stays the lookup's 403. The caller's context is the trade-less one ({ needsTrade: false }): a MaxBLD account may have
+// no user_profiles row or no trade, and is not a 401 for that.
 //
 // Auth: getCurrentUserContext FIRST await (Spec 90 §11; route-guard '/api/parcels'). No entitlement guard: it reports
 // the entitlement, including its absence (no parcel_tool row -> 200 with every field null).
@@ -30,7 +33,7 @@ const TAG = '[api/parcel-entitlement]';
 const RATE_WINDOW_SEC = 60; // "a minute"; the count is a setting (task-454)
 
 export const GET = withApiEnvelope(async function GET(request: NextRequest) {
-  const ctx = await getCurrentUserContext(request, pool);
+  const ctx = await getCurrentUserContext(request, pool, { needsTrade: false });
   if (!ctx) return unauthorized();
   const t0 = Date.now();
 

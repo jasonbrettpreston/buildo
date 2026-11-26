@@ -38,7 +38,7 @@ const RATE_WINDOW_SEC = 86_400; // D-4: "a day"; the count is the admin setting 
 
 export const POST = withApiEnvelope(async function POST(request: NextRequest) {
   // 1. Auth — the first call (Spec 90 §11).
-  const ctx = await getCurrentUserContext(request, pool);
+  const ctx = await getCurrentUserContext(request, pool, { needsTrade: false });
   if (!ctx) return unauthorized();
   const t0 = Date.now();
   const done = (outcome: string, parcel_id: string | null) =>

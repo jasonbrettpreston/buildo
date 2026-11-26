@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MCAPP313'
 created_date: '2026-11-19T13:07:00Z'
-updated_date: '2026-11-26T16:24:00Z'
+updated_date: '2026-11-26T16:27:00Z'
 labels:
   - queue-row
   - McApp
@@ -346,4 +346,8 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0233 · task-313 · Backlog; o
 2026-11-26 (grounder Cairn-Ground-P313b, hb.txt section C): MaxbldAppGate.tsx is owned by shell_app_tabs, the (app) shell that mounts it, not by the Opening: C-4 (src/tests/surfaces/surface-conformance.logic.test.ts:431-434) forbids a converted surface to own a component. The plan's M5 sentence is wrong on the owner and right on the effect: the 11 unowned files do not grow.
 
 2026-11-26 (grounder Cairn-Ground-P313b, hb.txt section D): four smaller choices ruled acceptable as built: (1) the Opening's Try again is two button rows, retry_offline and retry_error, one when-flag each; (2) the Opening descriptor's guards are session authenticated and entitlement none (it reads only the state of the entitlement read, no field); (3) the parcel-tool fence plant 'placed before <Tabs' is anchored on function LeadAppLayout() (plan M4 text); (4) the parcel overload of getCurrentUserContext is declared first, so a 2-argument call falls through to the lead overload and a mocked helper keeps the lead return type.
+
+2026-11-26 (lane BL-MCAPP313): commit 0 landed as d64c6aacd (prereg-MF-49-1.json round 205, docs/reports/panels/MF-49.json, this task file); the work commit is its child.
+
+2026-11-26 (lane BL-MCAPP313): phone run before the work commit (grounder F): run 1 failed one case, maxbldAppGate.behaviour 'still pending at REPORT_GIVE_UP_MS ... Try again restarts the clock' (phone-tests-run1.out): after the give-up timer had set the clock to the same instant, Try again changed only a ref and set the same state value, so nothing re-rendered and the Opening stayed in error. Fix in MaxbldAppGate.tsx: the clock start is state (setSince on Try again), so a restart re-renders. Run 2: npm --prefix mobile run typecheck clean; 11 suites (authGate, appShell, maxbldAppGate.behaviour, openingScreens.golden, routerTelemetry, signIn.behaviour, appIcon, subscriptionGate, wallScreens.golden, semiQuestionPage.behaviour, spec99.mandates.lint) 178 of 178 passed (phone-tests.out).
 <!-- SECTION:NOTES:END -->

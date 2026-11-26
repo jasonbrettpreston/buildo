@@ -1,0 +1,315 @@
+{
+  "kind": "SURFACE",
+  "status": "generated",
+  "docs": {
+    "purpose": "The Opening page of the MaxBLD phone app, its own start-up screen (task-313 McApp card 1, the front door; RR-0499 \"1a\", RR-0503 3 A). The front door draws it while the first entitlement read has no answer: the plain wordmark \"MaxBLD\" and \"Lot Intelligence\" as two header lines; \"Connecting…\" for the whole loading state; with no network a neutral notice \"Can't reach MaxBLD\" / \"Check your connection and try again.\" and Try again; when the read fails, or is still pending after the give-up bound, a tone-error notice \"Something went wrong\" / \"Try again in a moment.\" and Try again. Once the read has answered, the person is on the Lookup (the parcel-tool Stack and its one shelf) and the page is not drawn again.",
+    "data_story": "It reads one contract, GET /api/parcels/entitlement (contract_parcels_entitlement), through useParcelEntitlement (the query key the search page reads, so the search page reuses the answer). It draws no field of it: only whether the read is pending, paused (no network), in error, or has data picks the state (decideMaxbldGate in mobile/src/lib/appShell.ts). The plan is not checked here: the server 403 on the parcel routes is the plan check (RR-0503 Q1 A). It emits **no analytics event**; the redirect to the Lookup emits the DEV-only route_decision (Spec 99 §7.3).",
+    "under_126": "**CONVERTED (task-313)** — LIST, drawn from the rows of screens.mobile_parcel_opening in scripts/surfaces/_schema/static-page.json by pageProps (PageTableBinding.tsx) through OpeningBinding.tsx and the shared SurfaceRenderer.tsx, the third screens row after the semi page and the wall. Its one mount is the MaxBLD front door MaxbldAppGate.tsx, the (app) group layout of the MaxBLD build ((app)/_layout.tsx routes on APP_PRODUCT); a converted surface owns no component (C-4), so the (app) shell shell_app_tabs owns the gate."
+  },
+  "evidence": {
+    "files": [
+      "mobile/src/components/parcel/MaxbldAppGate.tsx",
+      "mobile/src/components/surfaces/OpeningBinding.tsx",
+      "mobile/src/lib/appShell.ts",
+      "mobile/app/(app)/_layout.tsx"
+    ],
+    "contracts": [
+      "mobile/src/components/parcel/MaxbldAppGate.tsx — useParcelEntitlement() (GET /api/parcels/entitlement)"
+    ],
+    "tables": [
+      "src/lib/entitlements/index.ts — readParcelToolUsage (the entitlements row of product parcel_tool)"
+    ],
+    "gate": [
+      "mobile/src/lib/appShell.ts — decideMaxbldGate",
+      "src/lib/parcels/tool-gate.ts — parcelToolAccess (the server 403 is the plan check)"
+    ],
+    "states": [
+      "mobile/src/lib/appShell.ts — decideMaxbldGate",
+      "mobile/__tests__/fixtures/opening.situations.json — goldens"
+    ],
+    "emits": [
+      "mobile/src/components/parcel/MaxbldAppGate.tsx — route_decision (DEV only) on the redirect; no other track() call"
+    ]
+  },
+  "identity": {
+    "id": "mobile_parcel_opening",
+    "route": "mobile/app/(app)/_layout.tsx",
+    "archetype": "LIST",
+    "platforms": [
+      "mobile"
+    ],
+    "owns": {
+      "components": []
+    },
+    "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-16)",
+    "spec": "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md",
+    "spec_refs": [
+      "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4",
+      "docs/specs/00-architecture/116_multi_product_architecture.md §3",
+      "docs/specs/03-mobile/99_mobile_state_architecture.md §5.3"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "It reads only the state of the entitlement read as parsed by ParcelToolEntitlementSchema (a plain object, additive_only), no field of it.",
+      "evidence": [
+        "mobile/src/lib/schemas.ts — ParcelToolEntitlementSchema"
+      ]
+    },
+    "ref": "S-097"
+  },
+  "inputs": {
+    "answer": "contract",
+    "why": "One GET /api/parcels/entitlement through useParcelEntitlement, the same TanStack entry the search page reads; the page reads its status and fetchStatus, never a field.",
+    "evidence": [
+      "mobile/src/components/parcel/MaxbldAppGate.tsx — useParcelEntitlement()",
+      "mobile/src/hooks/useParcelLookup.ts — export function useParcelEntitlement"
+    ],
+    "contract_ref": [
+      "/api/parcels/entitlement"
+    ],
+    "query_key": [
+      "parcel-entitlement"
+    ],
+    "field_whitelist": [
+      "status"
+    ],
+    "tables": [
+      {
+        "table": "entitlements",
+        "columns": [
+          "user_id",
+          "product",
+          "status"
+        ],
+        "producing_steps": "none",
+        "chain_position": "n/a",
+        "owner_spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+        "evidence": [
+          "src/lib/entitlements/index.ts — readParcelToolUsage"
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "It writes nothing. Its one action is Try again, a refetch of the entitlement read.",
+    "evidence": [
+      "mobile/src/components/parcel/MaxbldAppGate.tsx — retry: tryAgain (refetch)"
+    ],
+    "contract_ref": [],
+    "tables": []
+  },
+  "state": {
+    "answer": "none",
+    "why": "No store and no field of its own: it reads the existing entitlement query and a give-up clock local to the mount.",
+    "evidence": [
+      "mobile/src/components/parcel/MaxbldAppGate.tsx"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "query_cache",
+    "why": "useParcelEntitlement declares staleTime ENTITLEMENT_STALE_MS (the search slice config entitlement_stale_ms, 0); not persisted (persistFilter.ts), so with no network the page shows its offline state.",
+    "evidence": [
+      "mobile/src/hooks/useParcelLookup.ts — staleTime: ENTITLEMENT_STALE_MS",
+      "mobile/src/lib/persistFilter.ts"
+    ],
+    "offline": "blocked",
+    "stale_time_ms": 0,
+    "gc_time_ms": 86400000
+  },
+  "guards": {
+    "session": {
+      "answer": "authenticated",
+      "why": "It is drawn inside the (app) group of a signed-in person; AuthGate sends a signed-out person to sign-in. The plan is not checked here (RR-0503 Q1 A): the server 403 on the parcel routes is the plan check.",
+      "evidence": [
+        "mobile/src/lib/auth/decideAuthGateRoute.ts — the MaxBLD arm",
+        "src/lib/parcels/tool-gate.ts"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "entitlements is read as the table owner through the entitlement route; no client read.",
+      "evidence": [
+        "src/lib/entitlements/index.ts — readParcelToolUsage"
+      ]
+    },
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "the entitlement route bucket parcels-entitlement (parcel_entitlement_read_per_min); the page makes no request of its own beyond that read",
+    "disclosure": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "none",
+    "breakpoints": "mobile_first",
+    "export": "none",
+    "list": {
+      "item_archetype": "two header lines and one status or one notice and one button",
+      "pagination": "none",
+      "recycling": "none — one notice"
+    }
+  },
+  "checks": [
+    {
+      "id": "parcelopening_stable_gate",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Spec 99 §6.5: once the entitlement read has data the front door never returns to the Opening; a failed refetch keeps the route drawn. The gate reads status and fetchStatus only, never isFetching. Locked by mobile/__tests__/appShell.test.ts (decideMaxbldGate)."
+    },
+    {
+      "id": "parcelopening_offline_not_error",
+      "kind": "empty_state",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "A paused read (no network) is the offline state; a 401, 429 or 500, or a read still pending past REPORT_GIVE_UP_MS, is the error state, not a connection problem. Locked by mobile/__tests__/appShell.test.ts and maxbldAppGate.behaviour.test.tsx."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "loading",
+      "golden": "loading"
+    },
+    {
+      "name": "offline",
+      "golden": "offline"
+    },
+    {
+      "name": "error",
+      "golden": "error"
+    }
+  ],
+  "errors": {
+    "answer": "inline",
+    "why": "The page is itself the failure UI of the first entitlement read: offline when the device reports no network, error when the read fails or stalls. Try again refetches.",
+    "evidence": [
+      "mobile/src/lib/appShell.ts — decideMaxbldGate"
+    ],
+    "classes": [
+      {
+        "class": "offline",
+        "ui": "No network (the read is paused): the neutral notice \"Can't reach MaxBLD\" / \"Check your connection and try again.\" and Try again."
+      },
+      {
+        "class": "500",
+        "ui": "The read failed (a 401, 429 or 500) or is still pending after REPORT_GIVE_UP_MS: the tone-error notice \"Something went wrong\" / \"Try again in a moment.\" and Try again."
+      }
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "No client analytics on the page; the front door emits the DEV-only route_decision on a redirect (Spec 99 §7.3), never in a production build.",
+    "evidence": [
+      "mobile/src/components/parcel/MaxbldAppGate.tsx"
+    ],
+    "analytics": [],
+    "ledger_events": [],
+    "breadcrumbs": []
+  },
+  "offers": {
+    "answer": "none",
+    "why": "No sponsored placement is rendered.",
+    "evidence": [
+      "mobile/src/components/surfaces/OpeningBinding.tsx"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "The page counts nothing; the entitlement read is a display read and meters nothing.",
+    "evidence": [
+      "src/app/api/parcels/entitlement/route.ts"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "No tunable of its own: the one time bound is REPORT_GIVE_UP_MS, the registered 60 000 the report loading screen reads (task-267).",
+    "evidence": [
+      "mobile/src/hooks/useParcelLookup.ts — REPORT_GIVE_UP_MS"
+    ]
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "It shares contract_parcels_entitlement and its query with the search page (S-002) and the wall (S-096).",
+    "evidence": [
+      "mobile/src/hooks/useParcelLookup.ts — useParcelEntitlement"
+    ],
+    "surfaces": [
+      "mobile_parcel_search",
+      "mobile_parcel_wall"
+    ]
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": [
+      "top"
+    ]
+  },
+  "deviations": [
+    {
+      "from": "Spec 126 §11a.1 closed binding set: a client derivation picks the state",
+      "why": "decideMaxbldGate (mobile/src/lib/appShell.ts) maps the state of the entitlement read to the flags loading, offline and error (the closed list OPENING_FLAG_NAMES); no field of the read is drawn.",
+      "adjudicated_by": "task-313 plan grounder (docs/reports/reviews/task-313/GROUNDER-PLAN.md; RR-0499, RR-0503)",
+      "date": "2026-11-26"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "With no network the app cannot open: the entitlement read is not persisted, so the stored reports are not reachable offline (a persisted gate answer would let a lapsed plan in offline, Spec 99 §4).",
+      "measured": "mobile/src/lib/persistFilter.ts keeps parcel-entitlement out of the persisted cache.",
+      "check_id": "parcelopening_offline_not_error"
+    },
+    {
+      "what": "Connecting… shows for the whole loading state, not after 2 s; the wordmark is plain text; no Help & Support (RR-0503 3 A).",
+      "measured": "scripts/surfaces/_schema/static-page.json screens.mobile_parcel_opening holds no timed row, no accent role and no open_help action.",
+      "check_id": "parcelopening_stable_gate"
+    }
+  ],
+  "interpretation": "none",
+  "notes": "task-313 McApp card 1, the front door. One page, three states, phone only.",
+  "x-draft": {
+    "shard": "mobile-product",
+    "files": [
+      "mobile/src/components/parcel/MaxbldAppGate.tsx",
+      "mobile/src/components/surfaces/OpeningBinding.tsx"
+    ],
+    "loc": 0,
+    "call_idiom": "hook",
+    "stores": [],
+    "measured_states": [
+      "loading",
+      "offline",
+      "error"
+    ],
+    "measured_gate": {
+      "session": "required",
+      "entitlement": "none",
+      "flag": "none",
+      "permission": "none"
+    }
+  },
+  "programme": {
+    "scope": "parcel_product",
+    "phase": "B2",
+    "why": "The start-up screen of the MaxBLD phone app, in front of the parcel tool entry flow (McApp card 1).",
+    "feature": "F01",
+    "build_order": 1016,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

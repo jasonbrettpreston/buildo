@@ -141,6 +141,11 @@ describe('THE LOCK (D-6): no write path is reachable while the switch is off', (
 });
 
 describe('POST /api/parcels/lot-size with the switch on (test copy of the seed bound)', () => {
+  it('task-313 (PLAN-313-v1 S2, T2): the route asks for the trade-less context', async () => {
+    db({ parcelTool: 'active' });
+    await post(OK);
+    expect(vi.mocked(getCurrentUserContext)).toHaveBeenCalledWith(expect.anything(), expect.anything(), { needsTrade: false });
+  });
   it('no session -> 401 before the switch is read', async () => {
     vi.mocked(getCurrentUserContext).mockResolvedValue(null);
     const r = await post(OK);

@@ -28,6 +28,7 @@ import { trackRender, useDepsTracker, wireStoreLogging } from '@/lib/debug/state
 import { track } from '@/lib/analytics';
 import { logQueryInvalidate } from '@/lib/queryTelemetry';
 import { decideAuthGateRoute } from '@/lib/auth/decideAuthGateRoute';
+import { APP_PRODUCT } from '@/lib/appShell';
 import { SubscriptionLoadingGuard } from '@/components/paywall/SubscriptionLoadingGuard';
 
 // Spec 99 §7.1 + §9.5: wire Zustand subscribers once at module load. The
@@ -95,8 +96,10 @@ function AuthGate() {
 
   // Server-driven routing — Spec 95 §4 / Spec 93 §3.6.
   // Only enabled once Supabase auth has resolved and a user is present.
+  // task-313 (PLAN-313-v1 M3): the MaxBLD app (APP_PRODUCT 'parcel_tool') reads no profile, so it no longer creates a lead_gen trial row
+  // through GET /api/user-profile; the lead app (APP_PRODUCT 'lead_gen') reads it as before.
   const { data: profile, error: profileError, isLoading: profileLoading } = useUserProfile({
-    enabled: !!user,
+    enabled: !!user && APP_PRODUCT === 'lead_gen',
   });
 
   const [reactivationState, setReactivationState] = useState<ReactivationState | null>(null);
@@ -165,6 +168,7 @@ function AuthGate() {
       // deps array; subscribing to it would re-run the effect on every
       // setStep call (incident #1, fixed in 6c5d085).
       currentStep: useOnboardingStore.getState().currentStep,
+      product: APP_PRODUCT,
     });
 
     switch (decision.kind) {
@@ -186,7 +190,7 @@ function AuthGate() {
         if (__DEV__) {
           track('route_decision', {
             authority: 'AuthGate',
-            branch: 'navigate',
+            branch: decision.branch ?? 'navigate',
             from: segments.join('/') || '(root)',
             to: decision.to,
             reason: 'auth_gate_routing_effect',

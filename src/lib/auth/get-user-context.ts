@@ -31,12 +31,23 @@
 // lead_gen status only on its transitional path until MF-50), sourced via a LEFT JOIN. A zero-entitlement user
 // reads null — exactly what the legacy nullable column yielded, so both
 // consumers' gating semantics are unchanged (null → not trial / not active).
+//
+// task-313 (McApp card 1, the front door; plan PLAN-313-v1 S1; RR-0499 "1a", MORNING-DECISIONS.md:2598): the parcel routes
+// (lookup, entitlement, lot-size) serve the MaxBLD product, whose users have no lead-app trade and may have no
+// user_profiles row at all (a web buyer's row has no trade; entitlements, usage_events and parcel_user_inputs key on
+// auth.users). They pass `{ needsTrade: false }`: this path reads no user_profiles row and returns only
+// {uid, subscription_status}, the status read from the lead_gen entitlements row (getEntitlementStatus). A 'trial' status
+// runs the existing idempotent 14-day expiry (applyTrialExpirationIfNeeded, the update GET /api/user-profile runs), because
+// the MaxBLD phone no longer calls that route. Both reads sit inside the try, so a thrown read is logged and returns null
+// (401), as a thrown profile read does. Without the option nothing changes for the lead routes; the overloads stop a lead
+// route from taking the trade-less shape silently.
 
 import type { NextRequest } from 'next/server';
 import type { Pool } from 'pg';
 import { getClaimsUid } from '@/lib/auth/get-user';
 import { isDevMode } from '@/lib/auth/route-guard';
-import { LEAD_GEN_ENTITLEMENT_JOIN } from '@/lib/entitlements';
+import { LEAD_GEN_ENTITLEMENT_JOIN, getEntitlementStatus } from '@/lib/entitlements';
+import { applyTrialExpirationIfNeeded } from '@/lib/subscription/expiration';
 import { logError } from '@/lib/logger';
 
 interface UserContext {
@@ -57,10 +68,29 @@ interface UserContext {
   subscription_status: string | null;
 }
 
+/** The trade-less context of the parcel routes (task-313): the uid and the lead_gen entitlement status only. */
+export interface ParcelUserContext {
+  uid: string;
+  subscription_status: string | null;
+}
+
+/** The option the parcel routes pass: no user_profiles read, no trade required. */
+export interface ParcelContextOptions {
+  needsTrade: false;
+}
+
+// The parcel overload is first and the lead one last, so a mocked helper (vi.mocked) keeps the lead return type.
 export async function getCurrentUserContext(
   request: NextRequest,
   pool: Pool,
-): Promise<UserContext | null> {
+  options: ParcelContextOptions,
+): Promise<ParcelUserContext | null>;
+export async function getCurrentUserContext(request: NextRequest, pool: Pool): Promise<UserContext | null>;
+export async function getCurrentUserContext(
+  request: NextRequest,
+  pool: Pool,
+  options?: ParcelContextOptions,
+): Promise<UserContext | ParcelUserContext | null> {
   // Defense in depth: getClaimsUid is documented as never-throws,
   // but its contract isn't enforced at the type level. Wrap the call so
   // a future regression in the auth helper can't escape this function.
@@ -72,6 +102,21 @@ export async function getCurrentUserContext(
     return null;
   }
   if (!uid) return null;
+
+  if (options?.needsTrade === false) {
+    try {
+      const row = await getEntitlementStatus(pool, uid, 'lead_gen');
+      let status: string | null = row?.status ?? null;
+      if (status === 'trial') {
+        const expired = await applyTrialExpirationIfNeeded(uid, 'lead_gen');
+        if (expired) status = 'expired';
+      }
+      return { uid, subscription_status: status };
+    } catch (err) {
+      logError('[auth/get-user-context]', err, { uid, stage: 'entitlement-lookup' });
+      return null;
+    }
+  }
 
   try {
     // WF3 2026-04-11 dev-env symmetry: if the dev bypass returned

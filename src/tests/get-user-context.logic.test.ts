@@ -6,6 +6,9 @@
 //              via LEFT JOIN — null for a zero-entitlement user, same contract
 //              the legacy nullable column gave both consumers (R2 leads/view,
 //              R4 parcels/lookup)
+//              task-313 (McApp card 1; PLAN-313-v1 S1, T1; RR-0499 "1a", MORNING-DECISIONS.md:2598): the parcel routes'
+//              `{ needsTrade: false }` path reads no user_profiles row; the lead_gen status comes from
+//              getEntitlementStatus, a stale trial runs applyTrialExpirationIfNeeded, a thrown read is null.
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Pool, QueryResult, QueryResultRow } from 'pg';
 import type { NextRequest } from 'next/server';
@@ -13,9 +16,16 @@ import type { NextRequest } from 'next/server';
 vi.mock('@/lib/auth/get-user', () => ({
   getClaimsUid: vi.fn(),
 }));
+vi.mock('@/lib/subscription/expiration', () => ({
+  applyTrialExpirationIfNeeded: vi.fn(async () => null),
+}));
+vi.mock('@/lib/logger', () => ({ logError: vi.fn(), logInfo: vi.fn(), logWarn: vi.fn() }));
 
 import { getClaimsUid } from '@/lib/auth/get-user';
 import { getCurrentUserContext } from '@/lib/auth/get-user-context';
+import { applyTrialExpirationIfNeeded } from '@/lib/subscription/expiration';
+import { logError } from '@/lib/logger';
+import { createMockEntitlement } from './factories';
 
 interface MockPool {
   query: ReturnType<typeof vi.fn>;
@@ -170,5 +180,85 @@ describe('getCurrentUserContext', () => {
     const mock2 = createMockPool();
     mock2.query.mockResolvedValueOnce(qr([]));
     expect(await getCurrentUserContext(makeRequest(), mock2 as unknown as Pool)).toBeNull();
+  });
+});
+
+describe('getCurrentUserContext { needsTrade: false } (task-313, the parcel routes)', () => {
+  const UID = '00000000-0000-0000-0000-0000000313a1';
+  const entRow = (status: string, trialStartedAt: Date | null = null) => {
+    const e = createMockEntitlement({ user_id: UID, status: status as never, trial_started_at: trialStartedAt });
+    return { status: e.status, trial_started_at: e.trial_started_at };
+  };
+  const parcelCall = (mock: MockPool) => getCurrentUserContext(makeRequest(), mock as unknown as Pool, { needsTrade: false });
+
+  it('needsTrade:false, no profile row → {uid, subscription_status:null}', async () => {
+    vi.mocked(getClaimsUid).mockResolvedValueOnce(UID);
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(qr([]));
+    expect(await parcelCall(mock)).toEqual({ uid: UID, subscription_status: null });
+  });
+
+  it('needsTrade:false, trade-less row → context', async () => {
+    vi.mocked(getClaimsUid).mockResolvedValueOnce(UID);
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(qr([entRow('active')]));
+    expect(await parcelCall(mock)).toEqual({ uid: UID, subscription_status: 'active' });
+  });
+
+  it('needsTrade:false reads lead_gen via entitlements, not user_profiles', async () => {
+    vi.mocked(getClaimsUid).mockResolvedValueOnce(UID);
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(qr([entRow('active')]));
+    await parcelCall(mock);
+    expect(mock.query).toHaveBeenCalledTimes(1);
+    const [sql, params] = mock.query.mock.calls[0] as [string, unknown[]];
+    expect(sql).toMatch(/FROM entitlements WHERE user_id = \$1 AND product = \$2/);
+    expect(sql).not.toMatch(/user_profiles/);
+    expect(params).toEqual([UID, 'lead_gen']);
+  });
+
+  it('default call unchanged: no row → null', async () => {
+    vi.mocked(getClaimsUid).mockResolvedValueOnce(UID);
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(qr([]));
+    expect(await getCurrentUserContext(makeRequest(), mock as unknown as Pool)).toBeNull();
+    expect(String(mock.query.mock.calls[0]?.[0])).toMatch(/FROM user_profiles up/);
+  });
+
+  it('needsTrade:false, the lead_gen read throws → null, logged, no throw', async () => {
+    vi.mocked(getClaimsUid).mockResolvedValueOnce(UID);
+    const mock = createMockPool();
+    mock.query.mockRejectedValueOnce(new Error('db down'));
+    await expect(parcelCall(mock)).resolves.toBeNull();
+    expect(vi.mocked(logError)).toHaveBeenCalledWith('[auth/get-user-context]', expect.any(Error), expect.objectContaining({ uid: UID }));
+  });
+
+  it('needsTrade:false, lead_gen trial older than 14 days → expired through applyTrialExpirationIfNeeded', async () => {
+    vi.mocked(getClaimsUid).mockResolvedValueOnce(UID);
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(qr([entRow('trial', new Date('2026-01-01T00:00:00Z'))]));
+    vi.mocked(applyTrialExpirationIfNeeded).mockResolvedValueOnce({ status: 'expired' });
+    expect(await parcelCall(mock)).toEqual({ uid: UID, subscription_status: 'expired' });
+    expect(vi.mocked(applyTrialExpirationIfNeeded)).toHaveBeenCalledWith(UID, 'lead_gen');
+  });
+
+  it('needsTrade:false, a trial still inside 14 days stays trial; a non-trial status never runs the expiry', async () => {
+    vi.mocked(getClaimsUid).mockResolvedValueOnce(UID);
+    const mock = createMockPool();
+    mock.query.mockResolvedValueOnce(qr([entRow('trial', new Date())]));
+    expect(await parcelCall(mock)).toEqual({ uid: UID, subscription_status: 'trial' });
+    vi.mocked(getClaimsUid).mockResolvedValueOnce(UID);
+    const mock2 = createMockPool();
+    mock2.query.mockResolvedValueOnce(qr([entRow('active')]));
+    vi.mocked(applyTrialExpirationIfNeeded).mockClear();
+    await parcelCall(mock2);
+    expect(vi.mocked(applyTrialExpirationIfNeeded)).not.toHaveBeenCalled();
+  });
+
+  it('needsTrade:false, no session → null and no read', async () => {
+    vi.mocked(getClaimsUid).mockResolvedValueOnce(null);
+    const mock = createMockPool();
+    expect(await parcelCall(mock)).toBeNull();
+    expect(mock.query).not.toHaveBeenCalled();
   });
 });

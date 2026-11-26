@@ -12,6 +12,18 @@
       "item": "mobile/src/components/surfaces/WallBinding.tsx",
       "ruling": "MD:2026-11-20:1476",
       "quote": "Let the grounder resolve them all as long as the result is compliant"
+    },
+    {
+      "rule": "chk3-new-component",
+      "item": "mobile/src/components/surfaces/OpeningBinding.tsx",
+      "ruling": "MD:2026-11-26:2698",
+      "quote": "Approved - The approval sentence for McApp card 1's two new components (the start-up page and the front-door gate)"
+    },
+    {
+      "rule": "chk3-new-component",
+      "item": "mobile/src/components/parcel/MaxbldAppGate.tsx",
+      "ruling": "MD:2026-11-26:2698",
+      "quote": "Approved - The approval sentence for McApp card 1's two new components (the start-up page and the front-door gate)"
     }
   ]
 }

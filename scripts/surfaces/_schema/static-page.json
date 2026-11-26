@@ -1,5 +1,5 @@
 {
- "$comment": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2 and section 12 folds 16, 18, 22; v1 section 3.2 and folds 4, 8): THE page table of the STATIC web pages, one page per surface per declared state, sections in screen order. Contract: static-page.schema.json (closed kinds prose and footer). Every part names a content key of the surface's own content file beside its descriptor (scripts/surfaces/parcel_product/F06/surfaces/<id>.content.json); a link names a same-origin path on the host table (src/lib/auth/host-policy.ts). The footer is the same on every page (Terms, Privacy, Help & Support, the short legal line, ruling L-R3 \"This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.\"), pinned equal across the content files by src/tests/surfaces/static-page.logic.test.ts. Help & Support has no mail link yet: the support inbox is ONE admin setting (Spec 126 section 11b.7 dated note 2026-11-11 item 3) that does not exist on the tip; the link lands with it. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R5; prior sentence kept): the sentence before is stale: Help & Support has its mail links (the role mailto, one per topic, reading the one setting support_inbox through src/lib/surfaces/maxbld-support.ts, MF-46 follow-up 2026-11-12); a link is left out only while the setting is unset. Read by src/lib/surfaces/maxbld-static.ts and the golden builder src/tests/surfaces/surface-goldens.ts. Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a), D-2 (a), D-3 (a) \"3 y\", D-6 (a) and the all-scenarios ruling; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 sections 3.5, 12, 13a, 13b): web_landing, the MaxBLD landing on maxbld.ca /, in two states: static (the stored citywide row read) and degraded (it is missing, zero or its reader threw: the citywide figures and the processing demo are left out, never a 500). Value parts name the declared server reads of src/lib/surfaces/maxbld-landing.ts; a read that fails leaves its part out on the server. The plan prices, the trial length, the Pro allowance and the post-trial line are not in the page until their readers exist (MF-47 Stripe price reader and parcel_tool_trial_months, MF-45 Pro limit): no typed value. The footer is the plain pages' footer, the same section. Dated note 2026-11-20 (PAGE.TABLE, task-390): `screens` holds the INTERACTIVE pages as rows (contract: static-page.schema.json, `screens`); the first is the phone semi question page. Rows name content keys of the surface's own content file; the `when` flags are the closed list SEMI_QUESTION_FLAG_NAMES of its binding. Dated note 2026-11-24 (SEARCHFIX.3, task-451; H Q2 and H Q4, docs/reports/reviews/mcfixreborn-g3/GROUNDER-QUESTIONS.md:75, :77; small-pages-v8 help.html and terms-privacy.html:262 \"MaxBLD home -> /; Log in -> /login\"; plan ruling 8.5): every plain page (web_help, web_terms, web_privacy, and both states of web_maxbld_error) opens with a header section, kind hero with only the wordmark (nav.home, /) and one nav link (nav.sign_in \"Log in\", /login); the binding draws a hero with no title as the header alone and keeps the narrow column.",
+ "$comment": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2 and section 12 folds 16, 18, 22; v1 section 3.2 and folds 4, 8): THE page table of the STATIC web pages, one page per surface per declared state, sections in screen order. Contract: static-page.schema.json (closed kinds prose and footer). Every part names a content key of the surface's own content file beside its descriptor (scripts/surfaces/parcel_product/F06/surfaces/<id>.content.json); a link names a same-origin path on the host table (src/lib/auth/host-policy.ts). The footer is the same on every page (Terms, Privacy, Help & Support, the short legal line, ruling L-R3 \"This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.\"), pinned equal across the content files by src/tests/surfaces/static-page.logic.test.ts. Help & Support has no mail link yet: the support inbox is ONE admin setting (Spec 126 section 11b.7 dated note 2026-11-11 item 3) that does not exist on the tip; the link lands with it. Dated note 2026-11-24 (SEARCHFIX.3, task-451, R5; prior sentence kept): the sentence before is stale: Help & Support has its mail links (the role mailto, one per topic, reading the one setting support_inbox through src/lib/surfaces/maxbld-support.ts, MF-46 follow-up 2026-11-12); a link is left out only while the setting is unset. Read by src/lib/surfaces/maxbld-static.ts and the golden builder src/tests/surfaces/surface-goldens.ts. Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a), D-2 (a), D-3 (a) \"3 y\", D-6 (a) and the all-scenarios ruling; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 sections 3.5, 12, 13a, 13b): web_landing, the MaxBLD landing on maxbld.ca /, in two states: static (the stored citywide row read) and degraded (it is missing, zero or its reader threw: the citywide figures and the processing demo are left out, never a 500). Value parts name the declared server reads of src/lib/surfaces/maxbld-landing.ts; a read that fails leaves its part out on the server. The plan prices, the trial length, the Pro allowance and the post-trial line are not in the page until their readers exist (MF-47 Stripe price reader and parcel_tool_trial_months, MF-45 Pro limit): no typed value. The footer is the plain pages' footer, the same section. Dated note 2026-11-20 (PAGE.TABLE, task-390): `screens` holds the INTERACTIVE pages as rows (contract: static-page.schema.json, `screens`); the first is the phone semi question page. Rows name content keys of the surface's own content file; the `when` flags are the closed list SEMI_QUESTION_FLAG_NAMES of its binding. Dated note 2026-11-24 (SEARCHFIX.3, task-451; H Q2 and H Q4, docs/reports/reviews/mcfixreborn-g3/GROUNDER-QUESTIONS.md:75, :77; small-pages-v8 help.html and terms-privacy.html:262 \"MaxBLD home -> /; Log in -> /login\"; plan ruling 8.5): every plain page (web_help, web_terms, web_privacy, and both states of web_maxbld_error) opens with a header section, kind hero with only the wordmark (nav.home, /) and one nav link (nav.sign_in \"Log in\", /login); the binding draws a hero with no title as the header alone and keeps the narrow column. Dated note 2026-11-26 (task-313, McApp card 1; PLAN-313-v1 M6; RR-0499 \"1a\" own start-up screen, RR-0503 3 A): the third screens row is the phone Opening page mobile_parcel_opening, drawn by the MaxBLD front door (mobile/src/components/parcel/MaxbldAppGate.tsx) while the first entitlement read has no answer: two header lines (the plain wordmark and the tagline), Connecting… for the whole loading state, one notice and Try again for offline and for error; no Help & Support and no footer (no open_help action and no screens footer kind).",
  "pages": {
   "web_help": {
    "static": {
@@ -1484,6 +1484,86 @@
      "content": "wall.tracked",
      "action": "push",
      "target": "route"
+    }
+   ]
+  },
+  "mobile_parcel_opening": {
+   "prefix": "parcel-opening",
+   "contract": "contract_parcels_entitlement",
+   "binding": "mobile/src/components/surfaces/OpeningBinding.tsx",
+   "platforms": [
+    "mobile"
+   ],
+   "sections": [
+    {
+     "kind": "text",
+     "id": "wordmark",
+     "role": "header",
+     "content": "opening.wordmark"
+    },
+    {
+     "kind": "text",
+     "id": "tagline",
+     "role": "header",
+     "content": "opening.tagline"
+    },
+    {
+     "kind": "status",
+     "id": "loading",
+     "when": "loading",
+     "content": "opening.connecting"
+    },
+    {
+     "kind": "notice",
+     "id": "offline",
+     "when": "offline",
+     "tone": "neutral",
+     "icon": "Info",
+     "parts": [
+      {
+       "role": "title",
+       "content": "opening.offline.title"
+      },
+      {
+       "role": "text",
+       "content": "opening.offline.text"
+      }
+     ]
+    },
+    {
+     "kind": "notice",
+     "id": "error",
+     "when": "error",
+     "tone": "error",
+     "icon": "AlertTriangle",
+     "parts": [
+      {
+       "role": "title",
+       "content": "opening.error.title"
+      },
+      {
+       "role": "text",
+       "content": "opening.error.text"
+      }
+     ]
+    },
+    {
+     "kind": "button",
+     "id": "retry_offline",
+     "when": "offline",
+     "variant": "default",
+     "label": "opening.retry",
+     "content": "opening.retry",
+     "action": "retry"
+    },
+    {
+     "kind": "button",
+     "id": "retry_error",
+     "when": "error",
+     "variant": "default",
+     "label": "opening.retry",
+     "content": "opening.retry",
+     "action": "retry"
     }
    ]
   }

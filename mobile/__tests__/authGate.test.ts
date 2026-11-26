@@ -326,3 +326,56 @@ describe('decideAuthGateRoute — idempotency (Spec 99 §8.1)', () => {
     expect(a).toEqual(b);
   });
 });
+
+// task-313 McApp card 1, the front door (PLAN-313-v1 M2, T3; RR-0499 "1a", MORNING-DECISIONS.md:2598: sign-in straight to search, no lead-app
+// onboarding). With product 'parcel_tool' the profile is never read: every signed-in person outside (app) goes to the Lookup with no push-token
+// registration, whatever the profile says; inside (app) the front door (MaxbldAppGate) decides. The lead cases above are unchanged.
+describe('decideAuthGateRoute — MaxBLD front door (product parcel_tool)', () => {
+  const LOOKUP = { kind: 'navigate', to: '/(app)/parcel-tool', branch: 'maxbld-lookup' };
+  const maxbld = (o: Partial<AuthGateInput>): AuthGateDecision => decideAuthGateRoute({ ...baseInput, product: 'parcel_tool', ...o });
+  const SEGMENTS: ReadonlyArray<readonly string[]> = [['(auth)', 'sign-in'], ['(onboarding)', 'profession'], ['(onboarding)', 'address'], []];
+  const PROFILES: Array<[string, Partial<AuthGateInput>]> = [
+    ['profile 404', { profileError: new ApiError(404, 'not found') }],
+    ['incomplete', { profile: mkProfile({ onboarding_complete: false }) }],
+    ['complete', { profile: mkProfile({ onboarding_complete: true }) }],
+    ['none', {}],
+    ['account deleted', { profileError: new AccountDeletedError('2026-11-01T00:00:00Z', 20) }],
+    ['stale profile of another user', { profile: mkProfile({ user_id: UID_B }) }],
+  ];
+  for (const segments of SEGMENTS) {
+    for (const [name, p] of PROFILES) {
+      it(`signed in, segments [${segments.join(', ')}], ${name}: navigate to the Lookup, never registerPushToken`, () => {
+        const out = maxbld({ user: mkUser(), segments, ...p });
+        expect(out).toEqual(LOOKUP);
+        expect(out).not.toHaveProperty('sideEffect');
+      });
+    }
+  }
+  it('signed in, already in (app)/parcel-tool: wait (the front door owns what is drawn)', () => {
+    expect(maxbld({ user: mkUser(), segments: ['(app)', 'parcel-tool'] })).toEqual({ kind: 'wait' });
+  });
+  it('signed in, deep link into a lead screen of (app): wait (the front door redirects it)', () => {
+    expect(maxbld({ user: mkUser(), segments: ['(app)', 'settings'] })).toEqual({ kind: 'wait' });
+  });
+  it('no user: sign-in (arm 1), and wait when already in (auth)', () => {
+    expect(maxbld({ user: null, segments: ['(app)'] })).toEqual({ kind: 'navigate', to: '/(auth)/sign-in', branch: 'maxbld-sign-in' });
+    expect(maxbld({ user: null, segments: ['(auth)', 'sign-in'] })).toEqual({ kind: 'wait' });
+  });
+  it('a manufacturer account is sent to the Lookup too, with no hold (rg#6)', () => {
+    const p = mkProfile({ account_preset: 'manufacturer', onboarding_complete: false });
+    expect(maxbld({ user: mkUser(), segments: ['(auth)', 'sign-in'], profile: p })).toEqual(LOOKUP);
+    expect(maxbld({ user: mkUser(), segments: ['(onboarding)', 'manufacturer-hold'], profile: p })).toEqual(LOOKUP);
+  });
+  it('the readiness waits still come first', () => {
+    expect(maxbld({ user: mkUser(), isNavigationReady: false })).toEqual({ kind: 'wait' });
+    expect(maxbld({ user: mkUser(), hasHydrated: false })).toEqual({ kind: 'wait' });
+  });
+  it('no MaxBLD decision ever names onboarding or the lead root', () => {
+    const all = SEGMENTS.flatMap((segments) => PROFILES.map(([, p]) => maxbld({ user: mkUser(), segments, ...p })));
+    for (const d of all) expect(d.kind === 'navigate' ? d.to : '').not.toMatch(/onboarding|^\/\(app\)\/$/);
+  });
+  it('the default product is the lead app: the same input routes by the profile as before', () => {
+    const out = decideAuthGateRoute({ ...baseInput, user: mkUser(), segments: ['(auth)', 'sign-in'], profile: mkProfile({ onboarding_complete: true }) });
+    expect(out).toEqual({ kind: 'navigate', to: '/(app)/', sideEffect: 'registerPushToken' });
+  });
+});

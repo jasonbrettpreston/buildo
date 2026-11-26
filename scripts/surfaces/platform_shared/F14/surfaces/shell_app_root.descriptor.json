@@ -13,23 +13,24 @@
     ],
     "contracts": [
       "mobile/src/hooks/useUserProfile.ts:38",
-      "mobile/app/_layout.tsx:263"
+      "mobile/app/_layout.tsx:267"
     ],
     "tables": [
       "src/app/api/user-profile/route.ts:51",
       "src/app/api/user-profile/reactivate/route.ts:139-170"
     ],
     "gate": [
-      "mobile/app/_layout.tsx:141-231",
-      "mobile/src/lib/auth/decideAuthGateRoute.ts"
+      "mobile/app/_layout.tsx:144-235",
+      "mobile/src/lib/auth/decideAuthGateRoute.ts",
+      "mobile/src/lib/appShell.ts — APP_PRODUCT"
     ],
     "states": [
-      "mobile/app/_layout.tsx:242-332",
-      "mobile/app/_layout.tsx:453-479"
+      "mobile/app/_layout.tsx:246-336",
+      "mobile/app/_layout.tsx:457-483"
     ],
     "emits": [
-      "mobile/app/_layout.tsx:186-195",
-      "mobile/app/_layout.tsx:213-216"
+      "mobile/app/_layout.tsx:190-199",
+      "mobile/app/_layout.tsx:217-220"
     ]
   },
   "identity": {
@@ -60,7 +61,7 @@
       "why": "The routing matrix is a pure function with an exhaustiveness guard — adding an arm to AuthGateDecision without handling it is a compile error, and mobile/__tests__/authGate.test.ts covers every branch.",
       "evidence": [
         "mobile/src/lib/auth/decideAuthGateRoute.ts",
-        "mobile/app/_layout.tsx:217-226",
+        "mobile/app/_layout.tsx:221-230",
         "mobile/__tests__/authGate.test.ts"
       ]
     },
@@ -68,10 +69,10 @@
   },
   "inputs": {
     "answer": "contract",
-    "why": "Its routing decision is driven entirely by GET /api/user-profile (plus the Supabase session): onboarding_complete, account_preset and the 403 ACCOUNT_DELETED body are what select the arm.",
+    "why": "Its routing decision is driven entirely by GET /api/user-profile (plus the Supabase session): onboarding_complete, account_preset and the 403 ACCOUNT_DELETED body are what select the arm. Dated 2026-11-26 (task-313, McApp card 1; RR-0499 \"1a\"; prior text kept): in the lead build (APP_PRODUCT lead_gen) the routing decision is driven by GET /api/user-profile as above; in the MaxBLD build (APP_PRODUCT parcel_tool, mobile/src/lib/appShell.ts) AuthGate reads no profile (useUserProfile enabled only for lead_gen) and routes on the session and the segment alone: a signed-in person outside (app) goes to the Lookup (decideAuthGateRoute, the MaxBLD arm); the (app) front door MaxbldAppGate reads the entitlement read.",
     "evidence": [
-      "mobile/app/_layout.tsx:98-101",
-      "mobile/app/_layout.tsx:156-168"
+      "mobile/app/_layout.tsx:101-104",
+      "mobile/app/_layout.tsx:159-172"
     ],
     "contract_ref": [
       "/api/user-profile",
@@ -132,8 +133,8 @@
     "answer": "contract_only",
     "why": "Its one write is POST /api/user-profile/reactivate from the deletion-window modal, followed by an invalidate of [\"user-profile\"]; the push-token registration it triggers is delegated to registerPushToken.",
     "evidence": [
-      "mobile/app/_layout.tsx:259-275",
-      "mobile/app/_layout.tsx:197-202"
+      "mobile/app/_layout.tsx:263-279",
+      "mobile/app/_layout.tsx:201-206"
     ],
     "contract_ref": [
       "/api/user-profile/reactivate",
@@ -200,7 +201,7 @@
     "answer": "mmkv",
     "why": "It mounts the PersistQueryClientProvider that writes the whole TanStack cache to MMKV with a 24h maxAge — and the dehydrate predicate that EXCLUDES [\"user-profile\"], because that payload carries five PII fields and MMKV is unencrypted.",
     "evidence": [
-      "mobile/app/_layout.tsx:486-520",
+      "mobile/app/_layout.tsx:490-524",
       "mobile/src/lib/persistFilter.ts:27",
       "mobile/src/lib/mmkvPersister.ts:11"
     ],
@@ -251,7 +252,7 @@
     "why": "The profile that drives routing is the shared 5-minute [\"user-profile\"] entry; the buster string on the persister forces a one-time full cache flush at the deploy that introduced the PII exclusion.",
     "evidence": [
       "mobile/src/hooks/useUserProfile.ts:67",
-      "mobile/app/_layout.tsx:518"
+      "mobile/app/_layout.tsx:522"
     ],
     "offline": "cached_projection",
     "stale_time_ms": 300000,
@@ -262,7 +263,7 @@
       "answer": "anon",
       "why": "It is the only surface that runs before a session exists — it IS the session gate, routing an unauthenticated user to /(auth)/sign-in and an authenticated one onward.",
       "evidence": [
-        "mobile/app/_layout.tsx:141-231",
+        "mobile/app/_layout.tsx:144-235",
         "mobile/src/lib/auth/decideAuthGateRoute.ts"
       ]
     },
@@ -359,9 +360,9 @@
     "answer": "inline",
     "why": "A profile fetch failure renders a full-screen \"Could not load your profile.\" with a Retry instead of navigating; the 403 deletion case renders a modal; only an uncaught render error escapes to the ErrorBoundary it wraps everything in.",
     "evidence": [
-      "mobile/app/_layout.tsx:314-333",
-      "mobile/app/_layout.tsx:246-311",
-      "mobile/app/_layout.tsx:484-529"
+      "mobile/app/_layout.tsx:318-337",
+      "mobile/app/_layout.tsx:250-315",
+      "mobile/app/_layout.tsx:488-533"
     ],
     "classes": [
       {
@@ -391,8 +392,8 @@
     "answer": "events",
     "why": "route_decision is DEV-only (a user can cross gate boundaries many times per session), but reactivation_modal_shown fires in production because it is a PIPEDA-relevant record that the prompt was seen.",
     "evidence": [
-      "mobile/app/_layout.tsx:186-195",
-      "mobile/app/_layout.tsx:211-216",
+      "mobile/app/_layout.tsx:190-199",
+      "mobile/app/_layout.tsx:215-220",
       "mobile/src/lib/analytics.ts:121-132"
     ],
     "analytics": [
@@ -409,7 +410,7 @@
     "answer": "none",
     "why": "A navigation shell renders no sponsored content.",
     "evidence": [
-      "mobile/app/_layout.tsx:481-531"
+      "mobile/app/_layout.tsx:485-535"
     ]
   },
   "metering": {
@@ -436,7 +437,7 @@
     "answer": "shared",
     "why": "GET /api/user-profile is rendered by this shell, the tab shell, settings, the filter sheet and every onboarding step — one contract carrying the routing flag, the subscription status and the feed defaults.",
     "evidence": [
-      "mobile/app/(app)/_layout.tsx:118",
+      "mobile/app/(app)/_layout.tsx:123",
       "mobile/app/(app)/settings.tsx:80"
     ],
     "surfaces": [
@@ -461,12 +462,12 @@
   "limitations": [
     {
       "what": "The reactivation modal's two buttons carry no accessibility label or role.",
-      "measured": "mobile/app/_layout.tsx:288-302 — TouchableOpacity with className only; grep for accessibilityLabel in the file returns 0.",
+      "measured": "mobile/app/_layout.tsx:292-306 — TouchableOpacity with className only; grep for accessibilityLabel in the file returns 0.",
       "check_id": "root_reactivation_event"
     },
     {
       "what": "The deletion date shown to the user is computed on the device with a hardcoded en-CA locale and a client-side +30 days, not returned by the server.",
-      "measured": "_layout.tsx:247-253 — new Date(account_deleted_at), setDate(+30), toLocaleDateString('en-CA').",
+      "measured": "_layout.tsx:251-257 — new Date(account_deleted_at), setDate(+30), toLocaleDateString('en-CA').",
       "check_id": "root_routing_matrix"
     }
   ],

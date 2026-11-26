@@ -87,6 +87,11 @@
    "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row (task-452: the sibling of mobile_parcel_semi_question)"
   },
   {
+   "finding": "R-18 P-1 SURFACE mobile_parcel_opening: declares no auth_class_parity check",
+   "owner": "MF-77",
+   "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row (task-313: the sibling of mobile_parcel_wall)"
+  },
+  {
    "finding": "R-18 P-1 CONTRACT contract_parcels_lot_size_entry: declares no auth_class_parity check",
    "owner": "MF-77",
    "why": "declares no auth_class_parity check yet: the declaration (data only) lands with the R-18 declarations row"

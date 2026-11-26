@@ -2,6 +2,7 @@
 //             + §5.2 (stale-profile guard) + §9.6 (this extraction)
 //             docs/specs/03-mobile/93_mobile_auth.md §5 Step 6 (AuthGate routing matrix)
 //             docs/specs/03-mobile/94_mobile_onboarding.md §7 (manufacturer hold)
+//             task-313 (McApp card 1; PLAN-313-v1 M2; RR-0499 "1a", MORNING-DECISIONS.md:2598): the MaxBLD product arm
 //
 // Pure routing-decision function for AuthGate. Lifts the 9-arm routing matrix
 // out of the AuthGate component's useEffect into a side-effect-free function
@@ -20,6 +21,7 @@
 // adversarial review Gemini F4 + DeepSeek #7).
 import { AccountDeletedError, ApiError } from '@/lib/errors';
 import { getResumePath } from '@/lib/onboarding/getResumePath';
+import { MAXBLD_LOOKUP_ROUTE } from '@/lib/appShell';
 import type { UserProfileType } from '@/lib/userProfile.schema';
 import type { OnboardingStep } from '@/lib/onboarding/getResumePath';
 
@@ -34,6 +36,11 @@ export interface AuthGateInput {
   segments: readonly string[];
   /** Lazy-read at call time (Spec 99 §6.4). */
   currentStep: OnboardingStep;
+  /**
+   * task-313: which app routes. Default 'lead_gen' (the 9 lead arms, unchanged). 'parcel_tool' (the MaxBLD app, APP_PRODUCT in
+   * mobile/src/lib/appShell.ts): the profile is never read; a signed-in person outside (app) goes to the Lookup with no push-token registration.
+   */
+  product?: 'lead_gen' | 'parcel_tool';
 }
 
 /** Discriminated-union routing decision. AuthGate handles each kind. */
@@ -49,7 +56,7 @@ export type AuthGateDecision =
    */
   | { kind: 'wait-stale-profile' }
   /** Imperative navigation. `sideEffect` is invoked after `router.replace(to)`. */
-  | { kind: 'navigate'; to: string; sideEffect?: 'registerPushToken' }
+  | { kind: 'navigate'; to: string; sideEffect?: 'registerPushToken'; branch?: 'maxbld-sign-in' | 'maxbld-lookup' }
   /** Show the reactivation modal (account in 30-day deletion window per Spec 93 §3.6). */
   | { kind: 'reactivation-modal'; account_deleted_at: string; days_remaining: number };
 
@@ -66,6 +73,18 @@ export function decideAuthGateRoute(input: AuthGateInput): AuthGateDecision {
 
   const inAuthGroup = input.segments[0] === '(auth)';
   const inOnboardingGroup = input.segments[0] === '(onboarding)';
+
+  // task-313 the MaxBLD arm (Spec 99 §5.3 dated note 2026-11-26): no user -> sign-in (arm 1); a user in (auth), (onboarding) or the root
+  // -> the Lookup, no registerPushToken; a user in (app) -> wait (the (app) front door, MaxbldAppGate, owns what is drawn there). The
+  // lead arms it skips: 2 reactivation modal, 3 profile 404, 4 retry, 4.5 manufacturer hold, 5a-5d, and the stale-profile wait.
+  if (input.product === 'parcel_tool') {
+    if (!input.user) {
+      if (inAuthGroup) return { kind: 'wait' };
+      return { kind: 'navigate', to: '/(auth)/sign-in', branch: 'maxbld-sign-in' };
+    }
+    if (input.segments[0] === '(app)') return { kind: 'wait' };
+    return { kind: 'navigate', to: MAXBLD_LOOKUP_ROUTE, branch: 'maxbld-lookup' };
+  }
 
   // Branch 1: unauthenticated.
   if (!input.user) {

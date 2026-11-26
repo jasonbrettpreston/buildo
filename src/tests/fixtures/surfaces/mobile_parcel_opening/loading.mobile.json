@@ -1,0 +1,96 @@
+{
+  "surface": "mobile_parcel_opening",
+  "state": "loading",
+  "target": "mobile",
+  "covers": [
+    "loading"
+  ],
+  "situation": "loading",
+  "props": {
+    "component": "SafeAreaView",
+    "props": {
+      "className": "flex-1 bg-report-page",
+      "edges": {
+        "top": "additive"
+      },
+      "testID": "parcel-opening-screen"
+    },
+    "children": [
+      {
+        "component": "ScrollView",
+        "props": {
+          "key": "scroll",
+          "className": "flex-1",
+          "contentContainerStyle": {
+            "paddingBottom": 106,
+            "alignItems": "center"
+          },
+          "keyboardShouldPersistTaps": "handled"
+        },
+        "children": [
+          {
+            "component": "View",
+            "props": {
+              "key": "column",
+              "testID": "parcel-opening-column",
+              "className": "w-full px-4",
+              "style": {
+                "maxWidth": 448
+              }
+            },
+            "children": [
+              {
+                "component": "Text",
+                "props": {
+                  "key": "wordmark",
+                  "testID": "parcel-opening-wordmark",
+                  "className": "mt-6 w-full text-lg font-bold leading-6 text-report-ink",
+                  "role": "header"
+                },
+                "children": [
+                  {
+                    "content": "opening.wordmark"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "tagline",
+                  "testID": "parcel-opening-tagline",
+                  "className": "mt-6 w-full text-lg font-bold leading-6 text-report-ink",
+                  "role": "header"
+                },
+                "children": [
+                  {
+                    "content": "opening.tagline"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "loading-text",
+                  "testID": "parcel-opening-loading",
+                  "className": "mt-6 text-base font-normal text-report-muted",
+                  "role": "status"
+                },
+                "children": [
+                  {
+                    "content": "opening.connecting"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_opening.content.json": "12251d75e8d4360c",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_opening.descriptor.json": "1e2cfd08338eccae"
+    }
+  }
+}
