@@ -185,14 +185,19 @@ export const filesText = (body) => /(?:^|\s)Files:[ \t]*(.*)$/m.exec(String(body
  * The lens set a task type calls for (Spec 08 section 7 rule 4, 08_agents.md:334; task-358): the compliance lens is separate (once per rule list).
  * Plan and output lenses other than compliance, by task type and by the Files line. Shared by the launch brief and the close check.
  * task-460 (RR-0457, RR-0458, RR-0459 MORNING-DECISIONS.md:2377): the output set of a build or fix task is the code review (no ux, no error-paths; no security, RR-0464 :2402, the grounder reads the sensitive files instead); the plan set is unchanged.
+ * task-470 (RR-0511 MORNING-DECISIONS.md:2654): the generic plan review (plan-review-deepseek) is off (switch back: put the string back first in plan); security fires on sign-in, money and personal-data
+ * words in the Files entries outside docs/ and the test roots (switch back: the task-445 sec line).
  */
+// task-470: the test roots, one list (the close check's test-only skip reads it; a protected path, so a lane cannot widen it)
+export const TEST_ROOT = /^(?:src\/tests|mobile\/__tests__|scripts\/tests|tests|supabase\/tests)\//;
+const SEC_WORDS = /entitlement|auth(?!ored)|stripe|metered|admin|pii|subscri|paywall|checkout|login|signin|signup|password|session|jwt|profile|api\/notifications|api\/onboarding|lib\/supabase|tool-gate|leads\/(?:save|view|feed|detail|flight-board)|lib\/leads\/lead-(?:detail|inspect)-query|parcels\/(?:lookup|lot-size)|(?:api|lib)\/sync/i;
 export function lensSet({ type, files }) {
   const code = ['build', 'fix'].includes(String(type ?? '').toLowerCase());
   const surface = /\bmobile\/|src\/app\/|src\/components\/|surfaces\//.test(files);
-  const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files) || (filesEntries(`Files: ${files}`) ?? []).some((e) => /^src\/(?:app\/api|lib)(?:\/|$)/.test(e)); // task-445 (RR-0391, 08_agents.md section 5.7): an API route or library path (the api-lib row)
+  const sec = (filesEntries(`Files: ${files}`) ?? []).filter((e) => !/^docs\//.test(e) && !TEST_ROOT.test(e)).some((e) => SEC_WORDS.test(e)); // task-470 (RR-0511): security items only; was task-445 (RR-0391): the six words on the whole line or an entry under src/app/api or src/lib
   return {
     code,
-    plan: ['plan-review-deepseek', ...(code && surface ? ['ux'] : []), ...(code ? ['error-paths'] : []), ...(code && sec ? ['security'] : [])],
+    plan: [...(code && surface ? ['ux'] : []), ...(code ? ['error-paths'] : []), ...(code && sec ? ['security'] : [])],
     out: [...(code ? ['code-review'] : [])],
   };
 }

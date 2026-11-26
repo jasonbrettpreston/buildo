@@ -1,0 +1,100 @@
+LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:bcf0f15a9274b2fbc10a6ee38d5bda34624afa2a407efc8f7160328c7b9e271c part 1 of 1 chunk 2 of 2
+NO RULE LIST: the lens template alone judges the material under review. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/rule-lists.logic.test.ts"]
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
+index 8d5ac07fc08807ffedd3372756c8e3ce593624ab..f01089cc841f3ee458acadcd5aee5ea510ea1c82 100644
+--- a/src/tests/backlog/rule-lists.logic.test.ts
++++ b/src/tests/backlog/rule-lists.logic.test.ts
+@@ -743,17 +743,17 @@ describe('task-445: the security lens runs on an API route or library path (lens
+     const m = await import('../../../scripts/analysis/rule-lists.mjs');
+     return m.lensSet({ type, files }) as { plan: string[]; out: string[] };
+   };
+-  it('S1(a): a src/lib path adds security at the plan stage, for build and fix (exact sets); task-460 (RR-0459, RR-0464): the output set is the code review alone', async () => {
++  it('S1(a), flipped by task-470 (RR-0511): a src/lib path with no security word adds no security at the plan stage, for build and fix (exact sets); task-460 (RR-0459, RR-0464): the output set is the code review alone', async () => {
+     for (const type of ['build', 'fix']) for (const f of ['src/lib/massing/geometry.ts', './src/lib/x.ts', 'src/lib/**', 'src/a.ts, src/lib/b.ts']) {
+       const r = await lens(type, f);
+-      expect(r.plan, `${type} ${f}`).toEqual(['plan-review-deepseek', 'error-paths', 'security']);
++      expect(r.plan, `${type} ${f}`).toEqual(['error-paths']);
+       expect(r.out, `${type} ${f}`).toEqual(['code-review']); // task-460: no error-paths (RR-0459) and no security (RR-0464, plan Q7 option C) at output
+     }
+   });
+-  it('S1(b): an API route adds security at the plan stage, for build and fix (toContain: the route also gets ux there, not pinned here); task-460 (RR-0464): not at output', async () => {
++  it('S1(b), flipped by task-470 (RR-0511): an API route with no security word adds no security at the plan stage, for build and fix; task-460 (RR-0464): not at output', async () => {
+     for (const type of ['build', 'fix']) for (const f of ['src/app/api/parcels/search/route.ts', 'src/app/api/']) {
+       const r = await lens(type, f);
+-      expect(r.plan, `${type} ${f}`).toContain('security');
++      expect(r.plan, `${type} ${f}`).not.toContain('security');
+       expect(r.out, `${type} ${f}`).not.toContain('security');
+     }
+   });
+@@ -764,10 +764,10 @@ describe('task-445: the security lens runs on an API route or library path (lens
+       expect(r.out, f).not.toContain('security');
+     }
+   });
+-  it('S4 (survive-the-fix, green both ways): the type gate is unchanged; on an API route a record task and an empty type get no lens beyond the plan review', async () => {
++  it('S4: the type gate is unchanged; on an API route a record task and an empty type get no plan lens (task-470: the generic plan review is off, RR-0511)', async () => {
+     for (const type of ['record', '']) {
+       const r = await lens(type, 'src/app/api/parcels/search/route.ts');
+-      expect(r.plan, `type '${type}'`).toEqual(['plan-review-deepseek']);
++      expect(r.plan, `type '${type}'`).toEqual([]);
+       expect(r.out, `type '${type}'`).toEqual([]);
+     }
+   });
+@@ -1166,10 +1166,10 @@ describe('task-460: the output lens set is the code review (AC #2) and the plan
+     const m = await import('../../../scripts/analysis/rule-lists.mjs');
+     return m.lensSet({ type, files }) as { plan: string[]; out: string[] };
+   };
+-  const SEC = new Set(['src/components/report/, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json', 'src/lib/parcels/report-compute.ts', 'src/lib/stripe/x.ts', 'src/app/api/parcels/search/route.ts', 'src/app/admin/page.tsx']);
++  const SEC = new Set(['src/components/report/, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json', 'src/lib/stripe/x.ts', 'src/app/admin/page.tsx']); // task-470 (RR-0511): report-compute.ts and the parcels search route are no security items
+   const FILES = [...(real() as unknown as { kinds: { files: string }[] }).kinds.map((k) => k.files), 'src/components/x.tsx', 'src/lib/stripe/x.ts', 'src/app/api/parcels/search/route.ts', 'src/app/admin/page.tsx', 'mobile/app/(app)/x.tsx', 'scripts/analysis/x.mjs'];
+   it('T3: for build and fix, out is code-review alone on every Files line, security paths included (RR-0464)', async () => {
+-    expect(FILES.filter((f) => SEC.has(f))).toHaveLength(5);
++    expect(FILES.filter((f) => SEC.has(f))).toHaveLength(3);
+     expect(FILES).toHaveLength(12);
+     for (const type of ['build', 'fix']) for (const f of FILES) {
+       const r = await lens(type, f);
+@@ -1179,11 +1179,12 @@ describe('task-460: the output lens set is the code review (AC #2) and the plan
+       expect(r.out, `${type} ${f}`).not.toContain('error-paths');
+     }
+   });
+-  it('T3 lock: the plan set is unchanged (pinned old sets)', async () => {
+-    expect((await lens('build', 'src/lib/stripe/x.ts')).plan).toEqual(['plan-review-deepseek', 'error-paths', 'security']);
+-    expect((await lens('fix', 'mobile/app/(app)/x.tsx')).plan).toEqual(['plan-review-deepseek', 'ux', 'error-paths']);
+-    expect((await lens('build', 'scripts/analysis/x.mjs')).plan).toEqual(['plan-review-deepseek', 'error-paths']);
+-    for (const type of ['check', 'doc', 'record', '']) expect(await lens(type, 'src/app/api/parcels/search/route.ts'), type).toEqual({ code: false, plan: ['plan-review-deepseek'], out: [] });
++  it('T3 lock, task-470 T5 (RR-0511): the plan set holds no generic plan review; the fix plan set is still non-empty', async () => {
++    expect((await lens('build', 'src/lib/stripe/x.ts')).plan).toEqual(['error-paths', 'security']);
++    expect((await lens('fix', 'mobile/app/(app)/x.tsx')).plan).toEqual(['ux', 'error-paths']);
++    expect((await lens('build', 'scripts/analysis/x.mjs')).plan).toEqual(['error-paths']);
++    expect((await lens('fix', 'scripts/analysis/x.mjs')).plan.length).toBeGreaterThan(0);
++    for (const type of ['check', 'doc', 'record', '']) expect(await lens(type, 'src/app/api/parcels/search/route.ts'), type).toEqual({ code: false, plan: [], out: [] });
+   });
+   it('T4 (AC #6): the Spec 08 dated note sits in section 7 before rule 5, and the README names task-460 with an item 5 that asks no out-error-paths or out-ux', () => {
+     const s8 = fs.readFileSync(path.join(ROOT, 'docs/specs/00-architecture/08_agents.md'), 'utf8');
+@@ -1208,3 +1209,23 @@ describe('task-460: the output lens set is the code review (AC #2) and the plan
+     expect(item5).toContain('that output_off leaves on (a build or fix task: none today, task-460) when the range base holds');
+   });
+ });
++
++// task-470 T6 (RR-0511, MORNING-DECISIONS.md:2654 "just run security on security based items"; RR-0514 :2668 question 2 answered A): the security lens fires on sign-in, money
++// and personal-data words in the Files entries outside docs/ and the test roots; no api/lib arm. TEST_ROOT is the one list of test roots (the close check's test-only skip reads it too).
++describe('task-470 T6: security on sign-in, money and personal data (lensSet, TEST_ROOT)', () => {
++  const lens = async (files: string) => {
++    const m = await import('../../../scripts/analysis/rule-lists.mjs');
++    return m.lensSet({ type: 'build', files }) as { plan: string[]; out: string[] };
++  };
++  it('positives: each of these paths adds security at the plan stage', async () => {
++    for (const f of ['src/app/api/subscribe/session/route.ts', 'src/lib/subscription/x.ts', 'src/lib/supabase/server.ts', 'src/app/api/user-profile/route.ts', 'src/app/api/notifications/route.ts', 'mobile/src/components/paywall/PaywallScreen.tsx', 'src/lib/stripe/x.ts', 'src/app/login/page.tsx', 'src/app/(maxbld)/parcel-tool/signup/page.tsx', 'mobile/src/lib/jwtClaims.ts', 'src/app/api/leads/save/route.ts', 'src/app/api/leads/flight-board/route.ts', 'src/app/api/onboarding/suppliers/route.ts', 'src/app/api/parcels/lookup/route.ts', 'src/app/api/parcels/lot-size/route.ts', 'src/lib/parcels/tool-gate.ts']) expect((await lens(f)).plan, f).toContain('security');
++  });
++  it('negatives: none of these adds security (the seed folder, business data, builder contacts, and words only in docs/ or a test root)', async () => {
++    for (const f of ['scripts/seeds/bylaw/authored/x.json', 'src/lib/massing/x.ts', 'src/app/api/parcels/search/route.ts', 'src/lib/classification/account-preset.ts', 'src/lib/builders/extract-contacts.ts', 'docs/specs/02-web-admin/x.md', 'src/tests/x.admin.test.ts', 'mobile/__tests__/x.paywall.test.ts', 'docs/specs/02-web-admin/x.md, src/tests/x.admin.test.ts, mobile/__tests__/x.paywall.test.ts']) expect((await lens(f)).plan, f).not.toContain('security');
++  });
++  it('TEST_ROOT: the five test roots match; a test-named folder under src/app/api or src/lib does not', async () => {
++    const { TEST_ROOT } = (await import('../../../scripts/analysis/rule-lists.mjs')) as unknown as { TEST_ROOT: RegExp };
++    for (const p of ['src/tests/x.test.ts', 'mobile/__tests__/x.test.tsx', 'scripts/tests/x.mjs', 'tests/x.ts', 'supabase/tests/x.sql']) expect(TEST_ROOT.test(p), p).toBe(true);
++    for (const p of ['src/app/api/test/route.ts', 'src/lib/tests/x.ts', 'src/a.test.ts', 'mobile/maestro/x.yaml']) expect(TEST_ROOT.test(p), p).toBe(false);
++  });
++});
+

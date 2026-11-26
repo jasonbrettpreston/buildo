@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T15:17:18.803Z file_sha256=63ea463260d950ef1ea3baf1cb9870be10f52caa57e6d81b593ebb72b05213be prompt_sha256=d18e9a182e2e4afab2f8a090cb6bf5210e5d9df9f8598ae5a23eff271450f4d0
+🔍 Lens review of docs/reports/lanes/2026-11-26/BL-MCFIX470/in-out-code-review-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts "for (const p of ['src/tests/x.test.ts', 'mobile/__tests__/x.test.tsx', 'scripts/tests/x.mjs', 'tests/x.ts', 'supabase/tests/x.sql']) expect(TEST_ROOT.test(p), p).toBe(true);" — cannot see whether TEST_ROOT carries the /g flag; if it does, repeated RegExp.test() in these two loops is stateful (lastIndex advances) and results flip between iterations and leak into the close-check reader the comment names — confirm TEST_ROOT has no g flag, or use p.match(TEST_ROOT) / reset lastIndex per call.
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts "expect((await lens('fix', 'scripts/analysis/x.mjs')).plan.length).toBeGreaterThan(0);" — this replaces a pinned exact set with a length check, so a wrong fix lens set (an extra security or ux) still passes the lock — pin the exact expected set as the neighbouring lines do.
+
+DEFER severity=NIT — src/tests/backlog/rule-lists.logic.test.ts "const { TEST_ROOT } = (await import('../../../scripts/analysis/rule-lists.mjs')) as unknown as { TEST_ROOT: RegExp };" — the double cast removes all type checking; if TEST_ROOT is not exported the test throws an opaque "Cannot read properties of undefined (reading 'test')" — assert the export is a RegExp or cast once with a clear failure message.
+
+REJECT — src/tests/backlog/rule-lists.logic.test.ts "expect(r.plan, `type '${type}'`).toEqual([]);" — an empty plan for record and empty types looks like a dropped lens — it is correct here because task-470 turns plan-review-deepseek off, so the assertion matches the intended removal and out stays [].
+
+VERDICT: PASS on code correctness
+
+---
+⏱  39586ms (39.6s)
+📊 Tokens — total: 15191, input: 6573, output: 8618, reasoning: 8189

@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T15:17:18.764Z file_sha256=acb497d393193d2a3ce9206a45a9fd83c7cebe6efd54f65ab772a8737188c023 prompt_sha256=7ee4996f75f2dd46528739ab200d343df11ae5a34f32da097812798d2495529a
+🔍 Lens review of docs/reports/lanes/2026-11-26/BL-MCFIX470/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — scripts/analysis/rule-lists.mjs "const SEC_WORDS = /entitlement|auth(?!ored)|stripe|metered|admin|pii|subscri|paywall|checkout|login|signin|signup|password|session|jwt|..." — the lookahead excludes only the literal string "authored", so any path containing "author", "authoring" or "authority" still satisfies `auth` and fires the security lens, which is the false positive this change exists to remove — change it to `auth(?!or)` (or `\bauth`) and add a control entry such as `src/lib/authoring/x.ts` to the B2 test beside the existing `src/lib/massing/geometry.ts` control.
+
+DEFER severity=MED — src/tests/backlog/check-lane-close.logic.test.ts "const have = `the plan text\n${lines.join('\n')}\n`.split('\n').map((l) => l.trim());" — the haystack is built from the very lines being searched, so `expect(lines.every((l) => have.includes(l))).toBe(true)` can never fail and the claim in the test title (plan-prep post's trimmed-line comparison finds the block lines) is never exercised; the case would still pass if the required line rendered `plan-code-review#1 MED pile undefined` — assert the block lines against a literal expected array, or run the real plan-prep post over the plan field and assert its status.
+
+DEFER severity=MED — scripts/hooks/check-lane-close.mjs "return p.length === 6 && f.startsWith('docs/reports/lanes/') && /^out-.+\.txt$/.test(p[5]);" — `recordsFormErrors` takes every staged `out-*.txt` and derives a template from its name with no `isLensOutput` (already imported) or lens-name guard, so a staged file the close never validates (for example an `out-<something>.txt` seat or note file copied into the lane folder, which the close only reads for findings or ignores) is refused at the records commit with a template/prompt-hash error, breaking acceptance #4's "the same message the close gives" — filter the staged names through `isLensOutput` (and the `out-<lens>-<list id>[-pN]` grammar the close uses) before calling `reviewErrors`.
+
+REJECT — scripts/hooks/check-lane-close.mjs "const lensOut = (lens, ctx) => { const errors = [];" — the local `errors` shadows the `closeErrors` accumulator, so the inlined checks look like they push into a discarded array — every branch now ends in `return errors` and both call sites either spread `atHead` into the outer array or `continue`, so nothing is lost; the shadow is what makes the round-search reuse of the same checks possible.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  193184ms (193.2s)
+📊 Tokens — total: 74825, input: 34589, output: 40236, reasoning: 39588

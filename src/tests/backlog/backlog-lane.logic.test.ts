@@ -298,6 +298,13 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
       for (const frag of [LAYOUT_NAMES, '(lens-plan/, lens-out/, stage2/)', 'out-<lens>[-<list id>]-rN.txt', 'fix-*.txt', 'never stands in for a round-1 name']) expect(src(p), `${p} lacks: ${frag}`).toContain(frag); // task-448 (RR-0424): the brief and the refusal message say the same
     }
   });
+  it('task-470 T7 (RR-0511 piece 3): the brief states the test-only skip with STATION.pass and keeps the whole-range round 2 under the SAME names for a fix that touches non-test code', () => {
+    const e = lensBrief('build', 'scripts/analysis/x.mjs, src/tests/');
+    expect(e).toContain('STATION.pass');
+    expect(e).toContain('touches test files only');
+    expect(e).toContain('under the SAME names');
+    expect(e).toContain('task-414');
+  });
   it('every brief, build or record-only, states the one folder, the file names, the round-2 form and that the compliance lens reviews the whole change (split, never trimmed)', () => {
     for (const e of [lensBrief('build', 'scripts/analysis/x.mjs, src/tests/'), lensBrief('record', 'docs/specs/00-architecture/08_agents.md')]) {
       expect(e).toMatch(/REVIEW FILES GO IN ONE PLACE: docs\/reports\/lanes\/\d{4}-\d{2}-\d{2}\/\S+\/ directly \(no subfolders/);
@@ -709,7 +716,8 @@ describe('plan-prep review: the calls and what they leave', () => {
     expect(outs.length).toBeGreaterThan(3);
     expect(outs.some((n) => /compliance-rules/.test(n))).toBe(false); // RR-0374: plan-prep produces the per-document form
     expect(names(f, /^in-plan-compliance-.*\.txt$/)).toHaveLength(outs.length);
-    expect(names(f, /^plan-(plan-review-deepseek|error-paths)\.txt$/)).toHaveLength(2);
+    expect(names(f, /^plan-error-paths\.txt$/)).toHaveLength(1);
+    expect(names(f, /^plan-plan-review-deepseek\.txt$/)).toHaveLength(0); // task-470 (RR-0511): the generic plan review is off
     expect(names(f, /^FINDINGS-PLAN\.md$/)).toHaveLength(1);
   });
   it('6: an output with no REVIEW header in its first 15 lines, or no VERDICT line, is exit 1 naming the file; a banner then the header on line 2 and a VERDICT pass', () => {
@@ -758,14 +766,18 @@ describe('plan-prep review: the calls and what they leave', () => {
     const f = prepFixture({ type: 'fix' });
     const r = review(f);
     expect(r.status, r.stdout + r.stderr).toBe(0);
-    expect(names(f, /^plan-.*\.txt$/)).toEqual(['plan-error-paths.txt', 'plan-plan-review-deepseek.txt']);
+    expect(names(f, /^plan-.*\.txt$/)).toEqual(['plan-error-paths.txt']); // task-470 (RR-0511): no plan-plan-review-deepseek.txt
     expect(names(f, /^in-/)).toEqual([]);
   });
-  it('B2 (task-445): a fix task on a src/lib path also writes plan-security.txt', () => {
-    const f = prepFixture({ type: 'fix', files: 'src/lib/massing/geometry.ts' });
+  it('B2 (task-445, task-470 RR-0511): a fix task on a money path also writes plan-security.txt; control: a src/lib path with no security word writes none', () => {
+    const f = prepFixture({ type: 'fix', files: 'src/lib/stripe/x.ts' });
     const r = review(f);
     expect(r.status, r.stdout + r.stderr).toBe(0);
-    expect(names(f, /^plan-.*\.txt$/)).toEqual(['plan-error-paths.txt', 'plan-plan-review-deepseek.txt', 'plan-security.txt']);
+    expect(names(f, /^plan-.*\.txt$/)).toEqual(['plan-error-paths.txt', 'plan-security.txt']);
+    const g = prepFixture({ type: 'fix', files: 'src/lib/massing/geometry.ts' });
+    const rg = review(g);
+    expect(rg.status, rg.stdout + rg.stderr).toBe(0);
+    expect(names(g, /^plan-.*\.txt$/)).toEqual(['plan-error-paths.txt']);
   });
   it('git environment: a foreign GIT_DIR, GIT_INDEX_FILE and GIT_WORK_TREE (as in a commit hook) still gives a successful review', () => {
     const f = prepFixture();
@@ -789,7 +801,8 @@ describe('plan-prep review: the calls and what they leave', () => {
     expect(r.stdout.split('\n').filter((l) => /scripts\/deepseek-review\.js review \S*in-plan-engineering-eng-all\S* --template \.claude\/review-templates\/lens-engineering\.md/.test(l))).toHaveLength(1);
     expect(r.stdout).not.toMatch(/in-plan-compliance-eng-all/);
     expect(r.stdout.split('\n').filter((l) => /scripts\/deepseek-review\.js review .*lens-compliance\.md/.test(l))).toHaveLength(li - liEng);
-    expect(r.stdout).toMatch(/DOTENV_CONFIG_PATH=\S+ node -r \S*dotenv\/config scripts\/deepseek-review\.js review \S+ --template \.claude\/review-templates\/plan-review-deepseek\.md --context \S+ --section Task /);
+    expect(r.stdout).toMatch(/DOTENV_CONFIG_PATH=\S+ node -r \S*dotenv\/config scripts\/deepseek-review\.js review \S+ --template \.claude\/review-templates\/lens-error-paths\.md --context \S+ --section Task /);
+    expect(r.stdout).not.toMatch(/plan-review-deepseek\.md/); // task-470 (RR-0511): the generic plan review is off
     expect(status(f)).toBe(before);
     expect(fs.existsSync(dirOf(f))).toBe(false);
     const e = prepFixture({ evidence: true });

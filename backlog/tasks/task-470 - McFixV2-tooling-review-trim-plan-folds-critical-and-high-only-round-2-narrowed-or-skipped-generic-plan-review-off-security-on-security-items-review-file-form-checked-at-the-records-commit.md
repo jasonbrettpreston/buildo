@@ -4,11 +4,11 @@ title: >-
   McFixV2 tooling: review trim (plan folds critical and high only; round 2
   narrowed or skipped; generic plan review off; security on security items;
   review file form checked at the records commit)
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-MCFIX470'
 created_date: '2026-11-26T12:32:00Z'
-updated_date: '2026-11-26T14:34:00Z'
+updated_date: '2026-11-26T15:30:00Z'
 labels:
   - McFixV2
 milestone: m-1
@@ -28,6 +28,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-26/BL-MCFIX470/REPORT.md
+  - docs/reports/lanes/2026-11-26/BL-MCFIX470/GROUNDER.md
+  - docs/reports/lanes/2026-11-26/BL-MCFIX470/TRIAGE.md
 type: fix
 ordinal: 164210
 ---
@@ -41,23 +44,23 @@ Files: scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scri
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The plan fold check has one switch, PLAN_FOLD, whose shipped value keeps folding MED as today (RR-0514, :2668); with MED taken out of the switch, a plan round where every CRITICAL and HIGH is folded and MED and below are recorded is accepted
-- [ ] #2 The close check accepts no round 2 when the round 1 fix is test-only and a station pass exists for it (committed as STATION.pass after the fix commit); a fix that touches non-test code still needs today's whole-range round 2 (the narrowed round 2 is deferred to task-414, RR-0514, :2668)
-- [ ] #3 The plan lens set no longer holds the generic plan review, and security is called only for sign-in, money and personal data paths
-- [ ] #4 A records commit whose review files were not made in the brief's form is refused at that commit with the same message the close gives
-- [ ] #5 Each change can be turned off again by one small edit, and the rule text names Fable as planner, Opus as builder, Sonnet for seats and grounders
+- [x] #1 The plan fold check has one switch, PLAN_FOLD, whose shipped value keeps folding MED as today (RR-0514, :2668); with MED taken out of the switch, a plan round where every CRITICAL and HIGH is folded and MED and below are recorded is accepted
+- [x] #2 The close check accepts no round 2 when the round 1 fix is test-only and a station pass exists for it (committed as STATION.pass after the fix commit); a fix that touches non-test code still needs today's whole-range round 2 (the narrowed round 2 is deferred to task-414, RR-0514, :2668)
+- [x] #3 The plan lens set no longer holds the generic plan review, and security is called only for sign-in, money and personal data paths
+- [x] #4 A records commit whose review files were not made in the brief's form is refused at that commit with the same message the close gives
+- [x] #5 Each change can be turned off again by one small edit, and the rule text names Fable as planner, Opus as builder, Sonnet for seats and grounders
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
-- [ ] #2 The tests were written first and proven red, then green — "Every lock is proven in BOTH directions" (docs/specs/00-architecture/08_agents.md:462)
-- [ ] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
-- [ ] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
-- [ ] #5 Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — "A ruling enters a row as a verbatim dated note." (docs/specs/00-architecture/137_mcqueue.md:109)
-- [ ] #6 The task file and its queue row are updated in the same commit as the work — "The status line changes in the same commit as the work." (docs/specs/00-architecture/137_mcqueue.md:84)
-- [ ] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
-- [ ] #8 Nothing was added that the card or ruling did not name — "no change adds a tool, field or rule its card or ruling did not name" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)
+- [x] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
+- [x] #2 The tests were written first and proven red, then green — "Every lock is proven in BOTH directions" (docs/specs/00-architecture/08_agents.md:462)
+- [x] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
+- [x] #5 Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — "A ruling enters a row as a verbatim dated note." (docs/specs/00-architecture/137_mcqueue.md:109)
+- [x] #6 The task file and its queue row are updated in the same commit as the work — "The status line changes in the same commit as the work." (docs/specs/00-architecture/137_mcqueue.md:84)
+- [x] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
+- [x] #8 Nothing was added that the card or ruling did not name — "no change adds a tool, field or rule its card or ruling did not name" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
@@ -327,4 +330,22 @@ rc2#1 HIGH folded lead-(?:detail|inspe
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-26 taken on the board at lane launch (lane BL-MCFIX470, worktree /Users/brettpreston_macmini/Buildo-wt-mcfix470, branch wf2/mcfix470), RR-0240
+
+2026-11-26 lane BL-MCFIX470: tests first (T1, T1b, T1c, T2, T3, T3b, T4 in check-lane-close.logic.test.ts; T5, T6 in rule-lists.logic.test.ts; T7 and the plan-lens pins in backlog-lane.logic.test.ts), red through the pre-commit related run before the code.
+
+2026-11-26 work: PLAN_FOLD (shipped CRITICAL, HIGH, MED, RR-0514 1a) and the trimmed block lines; ROUND2.testOnlySkip with roundSkip and STATION.pass (piece 2 not built, task-414); recordsFormErrors at the records commit (piece A); TEST_ROOT and SEC_WORDS in rule-lists.mjs, plan-review-deepseek off; brief text (NO ROUND 2 form), README rows, three Spec 08 dated notes, page regenerated. task-313 dry run (plan step 13) UNVERIFIED: the board checkout is dirty outside backlog/ (src/lib/surfaces/maxbld-web.ts), so backlog-lane refuses before the gate.
+
+2026-11-26 green attempt 1 refused by one pin (backlog-lane.logic.test.ts:288, task-407: the brief never says TRIAGE.md): the NO ROUND 2 sentence says 'its outcome file' instead, the words the brief already uses.
+
+2026-11-26 output review round 1 on 3c16befd9 (station PASS, pass file 3c16befd96eb...pass): code-review lens split by lens-input into 2 chunks (out-code-review-p1.txt, -p2.txt) with context-r4.md; 6 findings (3 MED, 2 LOW, 1 NIT, all DEFER) listed in docs/reports/lanes/2026-11-26/BL-MCFIX470/FINDINGS.md; grounder owed.
+
+2026-11-26 grounder round 1 (Cairn-Ground-O470): 3 recorded (2 LOW, 1 NIT, pile), 3 rejected; no fix, no round 2; plan step 13 (task-313 dry run) owed to the orchestrator before the fold.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed in work commit 3c16befd9 (station PASS on it; records commit abec24a96): PLAN_FOLD in check-lane-close.mjs (shipped CRITICAL, HIGH, MED, RR-0514); ROUND2.testOnlySkip with STATION.pass (piece 2 deferred to task-414); generic plan review off and security on sign-in, money and personal-data words (rule-lists.mjs SEC_WORDS, TEST_ROOT); the REVIEW header form checked at a records commit (recordsFormErrors); brief, README and three Spec 08 dated notes; red 30 of 397, green 397 of 397.
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 3 pile; grounder docs/reports/lanes/2026-11-26/BL-MCFIX470/GROUNDER.md; triage docs/reports/lanes/2026-11-26/BL-MCFIX470/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->
