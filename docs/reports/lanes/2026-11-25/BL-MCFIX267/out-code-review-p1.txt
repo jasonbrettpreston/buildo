@@ -1,25 +1,24 @@
-◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
-REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-25T23:53:12.273Z file_sha256=e1674ecad6c1081b7e4f80f4ee1ecf9b3a136799f2435d4d70886d14e8430bee prompt_sha256=98db763f59f9326ef1439a960fcb9579961133a2e7281611d6fde8350f2ac869
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T00:36:49.342Z file_sha256=e1674ecad6c1081b7e4f80f4ee1ecf9b3a136799f2435d4d70886d14e8430bee prompt_sha256=98db763f59f9326ef1439a960fcb9579961133a2e7281611d6fde8350f2ac869
 🔍 Lens review of docs/reports/lanes/2026-11-25/BL-MCFIX267/in-out-code-review-p1.txt (model: deepseek-reasoner)
 
-[deepseek-review] deepseek-reasoner working… reasoning 11999 chars, answer 0 chars, 15s
-[deepseek-review] deepseek-reasoner working… reasoning 25069 chars, answer 0 chars, 30s
-[deepseek-review] deepseek-reasoner working… reasoning 37183 chars, answer 0 chars, 45s
-[deepseek-review] deepseek-reasoner working… reasoning 49777 chars, answer 0 chars, 60s
-DEFER severity=MED — docs/reports/generated/127-surface-registry.md:1131 "`src/app/api/parcels/lookup/route.ts:102-114 (the meter: openReport only when `page` is produced)`" — the same change's row 15 records that block as "moved from :102-114" to :116-128, so row 13 still points at the pre-move range for the same meter — update the emits cite to :116-128 so both rows name one range
+[deepseek-review] deepseek-reasoner working… reasoning 9726 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20747 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31700 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 42725 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 54335 chars, answer 0 chars, 75s
+DEFER severity=MED — docs/reports/panels/MF-99.json:28 "Operator, verbatim (RR-0497, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2588): \"We will not move the database to the cloud until the increments are complete.\" (the three plan questions answered A)." — the same RR-0497 at :2588 is quoted four times in this commit as "As per the 3 questions 2. A - whatever the existing animation does - I assume this is the checklines 3. a 1 a" (126, 128, 100, 127), so one of the two either misquotes the operator or pairs an unrelated sentence with the three answers — re-quote RR-0497 as the specs do, or move the cloud sentence to its own RR citation.
 
-DEFER severity=LOW — docs/reports/generated/127-surface-registry.md:1263 "`src/app/api/parcels/lookup/route.ts:69-88 (auth, the gate and the query parse with the fast flag)`" — the same table's unchanged errors row cites :76, inside that new range, as the 429 rate limit, and the gate row keeps :71-76 too, so the label covers three things plus a fourth cite — narrow the new range to the parse and fast-flag lines, or state that :54, :59, :68 and :76 moved with it
+DEFER severity=MED — docs/reports/generated/127-surface-registry.md "| 13 | `emits` | `ledger` | … `src/app/api/parcels/lookup/route.ts:102-114 (the meter: openReport only when `page` is produced)`" — row 15 of the same table now cites the meter at ":116-128" and records "[Dated 2026-11-25 … moved from :102-114]", so row 13 keeps a line cite this commit declares stale — update row 13 to :116-128 with the same dated note.
 
-DEFER severity=MED — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:162 "with a report the lines always run to completion and View report shows only when the lines are done and the report is in (RR-0176; no auto-open, no Skip)" — the same dated note later says "**The lines are skipped** ... for a lot whose page is in this phone's cache", which is exactly a case where the report is already in, and Spec 126's same-date note repeats "always runs to completion", so the condition is stated two ways — write the cache case as the single named exception to the completion rule in one sentence
+DEFER severity=LOW — docs/reports/generated/127-surface-registry.md "`gate` | `src/app/api/parcels/lookup/route.ts:47-60` · `src/app/api/parcels/lookup/route.ts:71-76` · `src/app/api/parcels/lookup/route.ts:69-88 (auth, the gate and the query parse with the fast flag)`" — the added 69-88 range subsumes the untouched 71-76 cite in the same cell, and it claims "auth" at 69-88 while row 12 of the same table puts the 401 at ":54" and the 403 at ":59" — cite 69-88 for the fast-flag parse only, or drop 71-76.
 
-DEFER severity=LOW — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:162 "the null arm (no checked view for an unknown lot or unusable pace) is a fallback, not a ruled skip" — the sentence before it skips the lines "for a page with no checked view (a stored lot)", so the same absent checked view both skips and does not skip — name the field that separates a stored lot from an unknown lot
+REJECT — docs/reports/generated/rule-lists-by-kind.md "| mobile-99 | docs/specs/03-mobile/99_mobile_state_architecture.md | whole file | 86,228 | 2 |" and "| total | 9 lists | | 218,325 | 10 |" — the +400 over 85,828 and 217,925 looks unchecked against the one added row — the added Spec 99 table row is 399 characters plus its newline, exactly 400, and the total moves by the same 400, so the generated arithmetic is correct.
 
-DEFER severity=LOW — mobile/__tests__/offline.test.ts:306 "expect(shouldDehydrateQueryFn({ queryKey: ['parcel-checking', 'PIN-777'] })).toBe(false);" — this only passes if src/lib/persistFilter.ts gained a parcel-checking entry in NOT_PERSISTED, and that file is not in this chunk (cannot see it) — grounder to confirm the entry matches on the first key element the way the user-profile assertions just above do
+REJECT — mobile/__tests__/offline.test.ts:306 "expect(shouldDehydrateQueryFn({ queryKey: ['parcel-lookup', 'PIN-777'] })).toBe(true);" — a positive persist assertion for parcel-lookup looks like it belongs with the other positives further down — it is the point of the added pair (the fast read is not persisted, the report it finds is), and the surrounding lines call the same helper the same way, so no typing or scoping problem is introduced.
 
 VERDICT: PASS on code correctness
-Top 3 defects (if FAIL):
-- none (no CRIT or HIGH; the five DEFERs are stale line cites in one generated registry and two conditions stated twice in the Spec 100 dated note)
 
 ---
-⏱  70328ms (70.3s)
-📊 Tokens — total: 43768, input: 27722, output: 16046, reasoning: 15394
+⏱  86038ms (86.0s)
+📊 Tokens — total: 47267, input: 27722, output: 19545, reasoning: 18807

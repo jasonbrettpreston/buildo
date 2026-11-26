@@ -46,3 +46,13 @@ npm run typecheck clean; mobile tsc clean; report-page-capture --check current; 
 
 ## Output review round 1
 Material cb69d7f50..251d41e7d over the Files line, launch excludes; 41 files, 4 chunks; code-review lens (DeepSeek). Findings: HIGH 1, MED 11, LOW 10, NIT 3 (25), untriaged in FINDINGS.md. Grounder owed (RR-0359); nothing fixed, folded or closed.
+
+## Round 1 grounder
+- Grounder Cairn-Ground-O267 ruled round 1 (25 ids): 15 CONFIRMED (3 MED, 9 LOW, 3 NIT), 10 REJECTED; the lens HIGH p4#1 stands at MED; no code defect. Its GROUNDER.md, TRIAGE.md and LANE-STEPS.md are kept outside the repo at ~/Buildo-scratch/lanes-20261125/BL-MCFIX267/grounder/r1/.
+- The three MED (out-code-review-p4#1, p4#2, p4#3, all src/tests/parcel-lookup-gate.infra.test.ts) fixed in ef05ba130 (test only, with the task file the commit hook requires): the raw-q assertion on the q call's log before the clear; the malformed-view test retitled and a rejected-read test added; the stray-key test replaced by the grounder's corrected 2c ("the checked view schema refuses a stray key (strict) and accepts the view the route sends", CheckedViewSchema over the view the route builds); one dated header line.
+- Red: fix-red.out (first attempt: the original 2c did not go red when .strict() was removed, because its stray object lacked every required field; reported, the grounder corrected 2c); fix-red2.out (4 failed of 83 under three temporary mutations: q in the route log line; the checked read above the try; the closing .strict() of CheckedViewSchema removed; the stray-key assertion red at line 636). Sources restored byte-identical (git diff --quiet HEAD -- src/app src/lib). Green: fix-green.out (83 of 83; GATE OK; POLICY CHECKS OK). Station PASS on ef05ba130 (phone 951 of 951, web 28437 passed).
+- Narrative note: part a's "hole" (the old test staying green under the q mutation) was not run; the steps dropped it.
+- The optional LOW and NIT tidies were left alone.
+
+## Output review round 2
+Material cb69d7f50..ef05ba130 over the Files line, launch excludes; 41 files, 4 chunks; code-review lens (DeepSeek); context-r4.md. Findings: CRITICAL 0, HIGH 0, MED 5, LOW 10, NIT 3 (18), untriaged in FINDINGS.md. Round-2 grounder owed (RR-0385: round 2 rules CRITICAL and HIGH; a confirmed MED takes the outcome ruling:RR-0385).

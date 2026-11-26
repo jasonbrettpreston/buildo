@@ -1,31 +1,32 @@
-◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
-REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-25T23:53:12.276Z file_sha256=72c30d2d33c141863ec73bd6419ab4e9d0a3bf38d6fce37b860c52ca7dc0f391 prompt_sha256=82badd727119d713518026ad26b4d5261f6201fc583f334e1a31bd2f5a4fd78d
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T00:36:49.343Z file_sha256=934886a780a323c707153b3000622ccc95b14e76e8d78cc3778165e216103d8b prompt_sha256=7694929c6907c72348532b141cb0b193c30961ed3e8a42305156ed4830c6820c
 🔍 Lens review of docs/reports/lanes/2026-11-25/BL-MCFIX267/in-out-code-review-p4.txt (model: deepseek-reasoner)
 
-[deepseek-review] deepseek-reasoner working… reasoning 10606 chars, answer 0 chars, 15s
-[deepseek-review] deepseek-reasoner working… reasoning 24222 chars, answer 0 chars, 30s
-[deepseek-review] deepseek-reasoner working… reasoning 38354 chars, answer 0 chars, 45s
-[deepseek-review] deepseek-reasoner working… reasoning 52490 chars, answer 13 chars, 60s
-BUG severity=HIGH — src/tests/parcel-lookup-gate.infra.test.ts:597 "vi.mocked(readWhatWeChecked).mockResolvedValue({ groups: 'not a list' } as never);" — the test titled "a thrown checked read gives whatWeChecked null, not a 500, and is logged" never throws or rejects, so a route that lets a rejected readWhatWeChecked escape as a 500 still passes it and the catch/log branch is unproven — make the mock reject (`mockRejectedValueOnce(new Error('boom'))`) and keep the same status 200, whatWeChecked null and logWarn assertions.
+[deepseek-review] deepseek-reasoner working… reasoning 6861 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 14732 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 22435 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 29852 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 37079 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 44239 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 52414 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 59778 chars, answer 0 chars, 120s
+[deepseek-review] deepseek-reasoner working… reasoning 66943 chars, answer 0 chars, 135s
+DEFER severity=MED — src/tests/surfaces/report-failure.logic.test.ts:80 "expect(failures(ignoresGaveUp)).toBeGreaterThan(0);" — the only gaveUp rows also carry elapsedMs 60000 and 61000, so a producer that also fails on elapsed >= 60000 (RR-0493 "60 s from the pick is the failure limit") gives the same screen with gaveUp forced false, and this planted defect cannot be detected — add a row such as at({ gaveUp: true, elapsedMs: 45000 }) expecting 'error' so ignoring gaveUp must change the output.
 
-BUG severity=MED — src/tests/parcel-lookup-gate.infra.test.ts:614 "it('the boundary parse refuses a stray key inside whatWeChecked (strict) as a 500 with nothing counted'" — the body only calls safeParse and asserts success/failure, never the route, so neither the 500 nor "nothing counted" is checked and the setup at line 615 is dead — either drive GET with a response carrying the stray key and assert status 500 plus meterCalls 0, or rename it to a pure schema test and drop the unused readCustomerPageResponse mock.
+DEFER severity=LOW — src/tests/surfaces/report-failure.logic.test.ts:81 "expect(ROWS.some(([, q]) => readsFetching({ ...q, isFetching: true } as Signals).screen !== readsFetching({ ...q, isFetching: false } as Signals).screen)).toBe(true);" — readsFetching returns the constant 'holding' when isFetching is set, so this compares the mutant with itself and is trivially true for every row whose screen is not 'holding'; it can never catch the real producer reading isFetching — drop it, the Spec 99 §8.3 test above already pins the real function.
 
-BUG severity=MED — src/tests/parcel-lookup-gate.infra.test.ts:327 "logInfo.mockClear();" — after the clear the closing "not.toContain(RAW_Q)" only inspects the parcelId call, so the q-path log line, the one the test is named for, is no longer checked for the raw q — assert on the captured qLog before clearing, e.g. "expect(JSON.stringify(qLog)).not.toContain(RAW_Q)".
+DEFER severity=LOW — src/tests/report-mobile.logic.test.ts:15 "import { buildTree, viewOf } from '../../lib/surfaces/report/core';" — this is a second import statement for the module already imported on the line above ("import { buildPage, pageViewOf } from '../../lib/surfaces/report/core';"), which import/no-duplicates rejects if lint runs with zero warnings — merge buildTree and viewOf into the existing import.
 
-DEFER severity=LOW — src/tests/parcel-lookup-gate.infra.test.ts:559 "vi.mocked(readWhatWeChecked).mockResolvedValue(CHECKED_FIXTURE as never);" — in the stored-page case the mock is set but never asserted uncalled, unlike the sibling held-lot test at line 572 which does check it — add "expect(vi.mocked(readWhatWeChecked)).not.toHaveBeenCalled();" so the stored-page branch is pinned.
+DEFER severity=LOW — src/tests/parcel-lookup-gate.infra.test.ts:502 "const CHECKED_FIXTURE = (JSON.parse(fs.readFileSync(path.resolve(__dirname, 'fixtures/surfaces/report/loading_checked.mobile.json'), 'utf8')) as { response_fixture: { what_we_checked: unknown } }).response_fixture.what_we_checked;" — the cast is unchecked, so a renamed or reshaped fixture yields undefined and the G5 tests die on "w!.href" (TypeError) instead of a named assertion — assert the parsed shape once at load (expect whatWeChecked to be truthy) so a fixture drift fails at the source.
 
-DEFER severity=LOW — src/tests/surfaces/report-mobile.logic.test.ts:48 "const checked = (viewOf(buildTree(rj(CHECKED_RESPONSE_GOLDEN).response_fixture, reportCtx), { target: 'mobile' }, reportCtx) as Json).checked;" — the unchecked cast means a viewOf output without "checked" throws a TypeError at "checked.href" instead of reporting the mismatch — assert the value is present first or type it as "{ checked?: { href: unknown } }" before dereferencing.
+DEFER severity=LOW — src/tests/report-checked-producer.logic.test.ts:91 "{ key: 'area', value: '2,652 sq ft · 246 m²' }" — 246 m² is 2,648 sq ft at 10.7639, so this expectation only holds if LOT's raw lot_size_sqm is around 246.4 rather than 246; cannot see the LOT literal, so verify the fixture value before merge.
 
-DEFER severity=NIT — src/tests/surfaces/report-mobile.logic.test.ts:16 "import { buildTree, viewOf } from '../../lib/surfaces/report/core';" — this is a second import statement from the same module (line 14 already imports buildPage, pageViewOf from it) — merge the four names into the existing import.
+DEFER severity=NIT — src/tests/parcel-lookup-gate.infra.test.ts:246 "it('a hit writes one row: parcel_tool / property_view / parcel_ref, keyed on the matched parcels.parcel_id," — after the change the insert comes from the parcelId call (P-45) and the address match (TYPED-ID) inserts nothing, so the title no longer describes what the test asserts — retitle to "keyed on the opened parcel's id".
 
-DEFER severity=LOW — src/tests/report-checked-producer.logic.test.ts:91 "{ key: 'area', value: '2,652 sq ft · 246 m²' }" — 246 m² converts to 2,647.9 sq ft at 10.7639, so 2,652 only follows if the fixture value is about 246.4 (the fixture is not in this chunk), which means the expectation is derived from the implementation and cannot catch a wrong conversion factor — state the source value in the test or assert the conversion independently.
+REJECT — src/tests/parcel-lookup-gate.infra.test.ts "expect(w!.href).toBeNull();" — the non-null assertions look unguarded — they are guarded and required by TS, since "expect(w).not.toBeNull()" does not narrow, and the previous line already asserts it.
 
-VERDICT: FAIL on code correctness
-Top 3 defects (if FAIL):
-- The "thrown checked read" test never rejects, so the fast-read catch-and-log path it advertises is untested.
-- The "boundary parse ... 500 with nothing counted" test asserts only the schema and leaves a dead mock; the route's strict 500 is never exercised.
-- Clearing logInfo before the parcelId call makes the raw-q log assertion vacuous for the q path, the exact call that carries the raw query.
+VERDICT: PASS on code correctness
 
 ---
-⏱  63398ms (63.4s)
-📊 Tokens — total: 25585, input: 10085, output: 15500, reasoning: 14596
+⏱  146250ms (146.3s)
+📊 Tokens — total: 30293, input: 10497, output: 19796, reasoning: 18975

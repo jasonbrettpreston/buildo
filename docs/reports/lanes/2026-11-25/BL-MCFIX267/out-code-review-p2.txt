@@ -1,36 +1,43 @@
 ◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
-REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-25T23:53:12.273Z file_sha256=1adebb380e27e7bd5a4fe4e0e5789170117e01ab9a6e0b6fe1ae7f39452169fe prompt_sha256=e4f9e301fc7c6122cb896f8c1088a267ec995a51c77b4c176c1c7996dfcc5030
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T00:36:49.343Z file_sha256=1adebb380e27e7bd5a4fe4e0e5789170117e01ab9a6e0b6fe1ae7f39452169fe prompt_sha256=e4f9e301fc7c6122cb896f8c1088a267ec995a51c77b4c176c1c7996dfcc5030
 🔍 Lens review of docs/reports/lanes/2026-11-25/BL-MCFIX267/in-out-code-review-p2.txt (model: deepseek-reasoner)
 
-[deepseek-review] deepseek-reasoner working… reasoning 12896 chars, answer 0 chars, 15s
-[deepseek-review] deepseek-reasoner working… reasoning 25236 chars, answer 0 chars, 30s
-[deepseek-review] deepseek-reasoner working… reasoning 37546 chars, answer 0 chars, 45s
-[deepseek-review] deepseek-reasoner working… reasoning 49797 chars, answer 0 chars, 60s
-[deepseek-review] deepseek-reasoner working… reasoning 61787 chars, answer 0 chars, 75s
-[deepseek-review] deepseek-reasoner working… reasoning 73863 chars, answer 0 chars, 90s
-[deepseek-review] deepseek-reasoner working… reasoning 86386 chars, answer 0 chars, 105s
-[deepseek-review] deepseek-reasoner working… reasoning 99703 chars, answer 0 chars, 120s
-[deepseek-review] deepseek-reasoner working… reasoning 112685 chars, answer 0 chars, 135s
-[deepseek-review] deepseek-reasoner working… reasoning 125821 chars, answer 0 chars, 150s
-[deepseek-review] deepseek-reasoner working… reasoning 139016 chars, answer 0 chars, 165s
-[deepseek-review] deepseek-reasoner working… reasoning 152046 chars, answer 0 chars, 180s
-[deepseek-review] deepseek-reasoner working… reasoning 163611 chars, answer 0 chars, 195s
-DEFER severity=MED — mobile/src/hooks/useParcelLookup.ts "const [gaveUp, setGaveUp] = useState(() => { REPORT_GAVE_UP.delete(id); return false; });" — a module-global is mutated inside a state initializer, so a render React discards (StrictMode, an aborted transition) still clears this lot's retry block for a screen that never mounted — move the delete into a useEffect keyed on id and leave the initial state a plain false.
+[deepseek-review] deepseek-reasoner working… reasoning 7004 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 14678 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 21942 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 29374 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 36482 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 43432 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 50428 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 57072 chars, answer 0 chars, 120s
+[deepseek-review] deepseek-reasoner working… reasoning 63961 chars, answer 0 chars, 135s
+[deepseek-review] deepseek-reasoner working… reasoning 71144 chars, answer 0 chars, 150s
+[deepseek-review] deepseek-reasoner working… reasoning 78064 chars, answer 0 chars, 165s
+[deepseek-review] deepseek-reasoner working… reasoning 84175 chars, answer 0 chars, 180s
+[deepseek-review] deepseek-reasoner working… reasoning 90665 chars, answer 0 chars, 195s
+[deepseek-review] deepseek-reasoner working… reasoning 97394 chars, answer 0 chars, 210s
+[deepseek-review] deepseek-reasoner working… reasoning 104287 chars, answer 0 chars, 225s
+[deepseek-review] deepseek-reasoner working… reasoning 110704 chars, answer 0 chars, 240s
+[deepseek-review] deepseek-reasoner working… reasoning 117623 chars, answer 0 chars, 255s
+[deepseek-review] deepseek-reasoner working… reasoning 124624 chars, answer 0 chars, 270s
+[deepseek-review] deepseek-reasoner working… reasoning 131794 chars, answer 0 chars, 285s
+[deepseek-review] deepseek-reasoner working… reasoning 138445 chars, answer 0 chars, 300s
+DEFER severity=LOW — mobile/src/hooks/useParcelLookup.ts "void AccessibilityInfo.isReduceMotionEnabled().then((v) => { if (live) setOn(v); });" — the promise has no .catch, so a rejection becomes an unhandled rejection and is never logged — append `.catch(() => undefined)` (or Sentry.captureException) so the failure is handled and logged.
 
-DEFER severity=MED — mobile/src/hooks/useParcelLookup.ts "retry: (failureCount, err) => !(parcelId !== undefined && REPORT_GAVE_UP.has(parcelId)) && shouldRetryParcelLookup(failureCount, err)," — the give-up flag lives outside the hook keyed only on parcelId, so every other useParcelLookup caller for the same lot silently stops retrying until the report screen mounts or retries again — pass the gate in per call or clear the entry on unmount.
+DEFER severity=LOW — mobile/src/hooks/useParcelLookup.ts "const [mark] = useState(() => reportClock.mark(id, mountAt));" — mark and mountAt are captured only on first mount; if parcelId changes without a remount (router.replace / setParams reusing the screen) the line clock and pick mark belong to the previous lot — recompute on id change (key the state by id or reset in an effect when id changes).
 
-DEFER severity=MED — mobile/src/components/surfaces/ReportBinding.tsx "export type Ref = { part: string } | { content: string } | { derived: string };" — the new derived kind (checked.* paths, address) needs a branch in SurfaceRenderer.resolveValue and an entry in bindings.json ref_kinds, neither file is in this chunk so I cannot see them, a missing one renders every line and the bar title blank while the as SurfaceTree casts hide it — verify both landed in the other chunks.
+DEFER severity=LOW — mobile/src/hooks/useParcelLookup.ts "if (running && !pageIn && now - giveUpFrom >= REPORT_GIVE_UP_MS) { REPORT_GAVE_UP.add(id); setGaveUp(true); }" — the 60 s give-up is a failure that is silently swallowed (no Sentry/log), so systematic upstream slowness is invisible to telemetry — log the give-up once (e.g., Sentry.captureMessage) with the lot id.
 
-DEFER severity=LOW — mobile/src/hooks/useParcelLookup.ts "void AccessibilityInfo.isReduceMotionEnabled().then((v) => { if (live) setOn(v); });" — the promise has no catch, so a rejection is an unhandled rejection with nothing logged — add .catch(() => setOn(false)) or report it via Sentry.
+DEFER severity=LOW — mobile/src/components/surfaces/ReportBinding.tsx "if (page && (q.checked === null || q.opened)) return { view: page, lifecycle: 'loading', screen: 'view' };" — the doc above claims "A page shows at once with no lines (a cached or stored page, or no checked view)", but a fast-read page that carries a checked view is gated on opened and plays the lines first; code and comment disagree — either widen the condition to treat the fast-read/stored page as immediate or narrow the comment.
 
-DEFER severity=LOW — mobile/src/hooks/useParcelLookup.ts "const fastRefusal = checking.error instanceof ApiError && checking.error.status === 403 ? checking.error : null;" — a fast read failure that is not a 403 (the 500 in C10) is dropped entirely, never logged and never shown, only a later report read error surfaces — capture it (Sentry.captureException) or fold it into the returned error signal.
+DEFER severity=NIT — mobile/src/lib/schemas.ts "export type CheckedView = z.infer<typeof CheckedViewSchema>;" and mobile/src/components/surfaces/ReportBinding.tsx "export type CheckedView = {" — the same shape is declared twice with no linkage, so an optional field added to only one side passes structural assignability silently — derive the ReportBinding type from the schema export to keep a single source.
 
-DEFER severity=NIT — mobile/src/components/surfaces/ReportPageHost.tsx "submit: () => onOpen?.(), // task-267: View report" — onOpen is optional, so a host handed screen 'ready' and checked without onOpen renders a View report button that silently does nothing (no throw, no log) — make onOpen required when checked/screen are passed, or skip the ready end area when it is absent.
-
-DEFER severity=LOW — mobile/src/components/surfaces/ReportBinding.tsx "export type CheckedView = {" — a hand-written mirror of mobile/src/lib/schemas.ts "export type CheckedView = z.infer<typeof CheckedViewSchema>;" gives two exported types with one name that drift if only the schema moves — re-export the inferred type or rename one of them.
+REJECT — mobile/src/components/surfaces/ReportBinding.tsx "if (q.gaveUp) return { view: null, lifecycle: 'error', screen: 'error' };" — looks wrong that a late page arriving after the give-up is ignored (page in cache, screen stays error) — it is correct: RR-0492/0497 keep the give-up screen until Try again, and the hook's retry() promotes the cached page without a new read.
 
 VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none blocking
 
 ---
-⏱  202953ms (203.0s)
-📊 Tokens — total: 73791, input: 27583, output: 46208, reasoning: 45509
+⏱  305880ms (305.9s)
+📊 Tokens — total: 64678, input: 27583, output: 37095, reasoning: 36465

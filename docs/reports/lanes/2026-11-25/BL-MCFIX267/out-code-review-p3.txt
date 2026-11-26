@@ -1,30 +1,38 @@
-◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
-REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-25T23:53:12.274Z file_sha256=b807ec90693c65fb4c9404372ba946db80baeb40132f97f347645d3dab5f4fec prompt_sha256=3970ccd0f3fe67b65cf4f0389b2c34152f4ab48b07ab8191a53933a93faeabed
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T00:36:49.344Z file_sha256=b807ec90693c65fb4c9404372ba946db80baeb40132f97f347645d3dab5f4fec prompt_sha256=3970ccd0f3fe67b65cf4f0389b2c34152f4ab48b07ab8191a53933a93faeabed
 🔍 Lens review of docs/reports/lanes/2026-11-25/BL-MCFIX267/in-out-code-review-p3.txt (model: deepseek-reasoner)
 
-[deepseek-review] deepseek-reasoner working… reasoning 10944 chars, answer 0 chars, 15s
-[deepseek-review] deepseek-reasoner working… reasoning 23293 chars, answer 0 chars, 30s
-[deepseek-review] deepseek-reasoner working… reasoning 35189 chars, answer 0 chars, 45s
-[deepseek-review] deepseek-reasoner working… reasoning 46590 chars, answer 0 chars, 60s
-[deepseek-review] deepseek-reasoner working… reasoning 58047 chars, answer 0 chars, 75s
-[deepseek-review] deepseek-reasoner working… reasoning 70645 chars, answer 0 chars, 90s
-[deepseek-review] deepseek-reasoner working… reasoning 84326 chars, answer 0 chars, 105s
-[deepseek-review] deepseek-reasoner working… reasoning 97227 chars, answer 0 chars, 120s
-[deepseek-review] deepseek-reasoner working… reasoning 110872 chars, answer 5 chars, 135s
-DEFER severity=MED — src/lib/parcels/lookup-flow.ts:48 "return { checked: null, problem: err instanceof Error ? err.name : 'unknown' };" — the catch keeps only the error class name, so the route's log cannot tell a DB failure from a core refusal from a ZodError, and a thrown non-Error collapses to 'unknown' with no detail — carry `err instanceof Error ? `${err.name}: ${err.message}` : String(err)` into checkedProblem (still content-free, still no 500).
+[deepseek-review] deepseek-reasoner working… reasoning 7462 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 15879 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 23771 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 31429 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 39040 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 45985 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 53274 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 61078 chars, answer 0 chars, 120s
+[deepseek-review] deepseek-reasoner working… reasoning 68460 chars, answer 0 chars, 135s
+[deepseek-review] deepseek-reasoner working… reasoning 75887 chars, answer 0 chars, 150s
+[deepseek-review] deepseek-reasoner working… reasoning 83181 chars, answer 0 chars, 165s
+[deepseek-review] deepseek-reasoner working… reasoning 91397 chars, answer 0 chars, 180s
+[deepseek-review] deepseek-reasoner working… reasoning 98471 chars, answer 0 chars, 195s
+[deepseek-review] deepseek-reasoner working… reasoning 105583 chars, answer 0 chars, 210s
+[deepseek-review] deepseek-reasoner working… reasoning 112688 chars, answer 0 chars, 225s
+[deepseek-review] deepseek-reasoner working… reasoning 119695 chars, answer 0 chars, 241s
+DEFER severity=MED — src/lib/parcels/lookup-flow.ts:49 "return { checked: null, problem: err instanceof Error ? err.name : 'unknown' };" — a failed checked read (DB error, core refusal, strict-schema drift) is reduced to a bare error name, so the route's log line "fast read: checked view unusable" cannot say what broke and every failure looks identical — carry err.message (structural, no lot content) into `problem`, or log the caught error here at error level.
 
-DEFER severity=MED — src/lib/parcels/what-we-checked.ts:58 "const fmtArea = (sqm: number): string => areaSqftM2Dot(sqm) ?? '';" — a null from the display rule now becomes an empty string with no log, where the replaced line always emitted text, so a What we checked line can render with a blank area and nothing records why — fall back to the rule's own null text (or the prior m² format) and log the null once.
+DEFER severity=MED — src/lib/parcels/what-we-checked.ts:59 "const fmtArea = (sqm: number): string => areaSqftM2Dot(sqm) ?? '';" — the `?? ''` is either dead (if the rule always returns a string) or silently blanks the lot line with no log, where the old formatter always emitted a value — check areaSqftM2Dot's return type and, if it can be null, keep a fallback or drop the empty fragment at the call site.
 
-DEFER severity=MED — scripts/surfaces/report-page-capture.ts:108 "const checked = (viewOf(buildTree(loading, reportCtx), { target: 'mobile' }, reportCtx) as Json).checked as Json;" — an absent `checked` is silently dropped by JSON.stringify (undefined keys vanish), and the capture never runs CheckedViewSchema, so a core/schema mismatch that would make every fast read return no lines is not exercised by the goldens — assert `checked !== undefined` (throw) and run `CheckedViewSchema.parse(checked)` in the capture.
+DEFER severity=LOW — src/lib/parcels/lookup-flow.ts:46 "const view = viewOf(buildTree({ lifecycle: 'loading', what_we_checked: w }, reportCtx), { target: MOBILE_TARGET }, reportCtx) as { checked?: unknown };" — the cast erases the core's type, and an absent `checked` makes CheckedViewSchema.parse throw a ZodError that is reported the same as a real shape drift — test `view.checked` for null first and return a distinct problem string.
 
-DEFER severity=MED — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "src/app/api/parcels/lookup/route.ts:116-128 (the meter: not_evaluated, semi_pending, not_produced, then openReport in withTransaction; limit_reached and not_entitled refusals)" — the note claims a move from :102-114, a +14 shift, but this diff adds only 4 comment lines and 1 parse line above the meter (old :101 is new :106, +5), so the meter is at :107-119 and the cite points 9 lines past it — re-cite :107-119 in both the descriptor and scripts/surfaces/_schema/census/contracts.json.
+DEFER severity=NIT — src/tests/fix-tune.logic.test.ts:82 "expect(whitelist.length).toBe(95); // 81 entries before FIX.TUNE, the one removed is semi (the last)" — the trailing comment still describes the pre-change assertion (81/80), so the line now documents a number that contradicts the value asserted — update the comment to the 80 to 95 move.
 
-DEFER severity=LOW — src/lib/parcels/lookup-flow.ts:45 "const view = viewOf(buildTree({ lifecycle: 'loading', what_we_checked: w }, reportCtx), { target: MOBILE_TARGET }, reportCtx) as { checked?: unknown };" — the cast erases the core's ViewChecked type, so a renamed or absent `checked` is caught only at run time, as a ZodError turned into 'no lines' by the catch — type the result against the core's exported view type and let `CheckedViewSchema.parse` be the only runtime check.
-
-DEFER severity=NIT — src/tests/fix-tune.logic.test.ts:81 "expect(whitelist.length).toBe(95); // 81 entries before FIX.TUNE, the one removed is semi (the last)" — the trailing comment (81 before) contradicts the new comment directly above it (80 before, 95 now), so the next reader cannot tell which count the assertion restates — delete the stale trailing comment or restate it as "95 after task-267".
+REJECT — src/tests/fix-tune.logic.test.ts:84 "expect(whitelist.slice(77, 81)).toEqual(['detected', 'basis', 'unsure', 'whatWeChecked']);" — a 4-wide slice on a 95-name list looks off by one against the old `slice(-3)` — the 80 pre-change names put detected/basis/unsure at 77-79 and whatWeChecked is appended at 80, so indices 77..80 are exactly right.
 
 VERDICT: PASS on code correctness
 
+Top 3 defects (if FAIL):
+- none at CRIT or HIGH; the two MEDs above (error detail dropped in readFastChecked, silent empty from fmtArea) are the ones to fix before merge if cheap.
+
 ---
-⏱  137725ms (137.7s)
-📊 Tokens — total: 56827, input: 25809, output: 31018, reasoning: 30255
+⏱  253827ms (253.8s)
+📊 Tokens — total: 58884, input: 25809, output: 33075, reasoning: 32472
