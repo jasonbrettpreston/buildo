@@ -1,0 +1,34 @@
+{
+  "task": "MF-49",
+  "item": "McApp card 1, the front door (task-313): sign-in straight to search, the MaxBLD bar the only bar, its own start-up screen, the server serves a MaxBLD user with no lead-app trade, the phone icon (RR-0499 1a, RR-0503, RR-0505, RR-0506, RR-0509).",
+  "class": "E",
+  "stage": 8,
+  "date": "2026-11-26",
+  "head": "prereg 1 (round 205); commits 0, work",
+  "cards": [
+    "Operator, verbatim (RR-0499, MD:2598): \"1a\".",
+    "Operator, verbatim (RR-0501, MD:2608): \"So we have four mega tasks for McApp - that looks good ... Let's do the McApp first\".",
+    "Operator, verbatim (RR-0503, MD:2618): \"1 a ... 3. a\".",
+    "Operator, verbatim (RR-0504, MD:2623): \"stay with A\".",
+    "Operator, verbatim (RR-0506, MD:2633): \"the only other missing piece on the McApp is the phone icon logo - this should be added as well to the existing task\".",
+    "Operator, verbatim (RR-0509, MD:2646): \"go back to just the icon with out the name.\"",
+    "Operator, verbatim (RR-0510, decision-292): \"yes, stale\"."
+  ],
+  "plan": "PLAN-313-v1 on the task-313 card (Implementation Plan), reviewed by the repo review tool on docs/reports/reviews/task-313/context-r1.md (plan lens set and three seats); every finding ruled by separate plan grounders in GROUNDER-PLAN.md and TRIAGE-PLAN.md; fold checked in FOLD-CHECK.md (Plan sha256:033a86f05613). Tests first: section 5 of the plan governs.",
+  "output": "OUTPUT review owed at the lane output stage, after the station suite on the work commit (RR-0467): the code-review lens on the whole task diff, filed in docs/reports/lanes/2026-11-26/BL-MCAPP313/ with FINDINGS.md untriaged; a separate grounder rules every finding in GROUNDER.md before the task is set BUILT (RR-0359).",
+  "seats": [
+    "DeepSeek plan lens set, round 1 (grounded)",
+    "integration, reality-check and regression seats (plan)",
+    "separate plan grounders Cairn-Ground-P313 and P313b",
+    "DeepSeek output lens set (owed at output)"
+  ],
+  "verdict": "PLAN RULED; OUTPUT owed",
+  "blockers": [],
+  "followups": [
+    "the three sign-in navigation exceptions (nav lock rows 15, 16, 22) are not built here: see the dated note and the operator question",
+    "no sign-out in MaxBLD until card 271",
+    "device proof of the Redirect, the keyboard fix and the icon: the phone walk"
+  ],
+  "evidence": "docs/reports/lanes/2026-11-26/BL-MCAPP313/",
+  "notes": []
+}
