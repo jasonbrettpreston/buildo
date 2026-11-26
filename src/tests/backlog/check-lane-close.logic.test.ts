@@ -80,6 +80,9 @@ type Opts = {
   // task-438: eng adds the engineering list; engAs names its output files by that seat (default engineering); engTpl is the template its REVIEW header names; noEngBase leaves lens-engineering.md out
   // of the range base; joinAll joins every list, eng included, into out-compliance-rules; engJoined files the engineering list as the joined out-engineering-rules
   eng?: boolean; engAs?: string; engTpl?: string; noEngBase?: boolean; joinAll?: boolean; engJoined?: boolean;
+  // task-470: fix is one commit after round 1 (null deletes a path); fixTask also commits a task file edit in it; station is the STATION.pass text (stationLater: its own commit after the fix);
+  // remake re-makes out-code-review.txt over the HEAD diff; crFinding puts a finding in out-code-review.txt; recordsDelete commits the records then stages the deletion of that lane file; afterStage runs after git add
+  fix?: Record<string, string | null>; fixTask?: boolean; station?: string | ((s: { fix: string; R: string }) => string); stationLater?: boolean; remake?: boolean; crFinding?: boolean; recordsDelete?: string; afterStage?: (d: string) => void;
   joined?: boolean | 'other'; planBoard?: string; ctx?: string | false; hashCtx?: string; refs?: false | string[]; mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
 };
 type TriageCtx = { ids: { id: string; word: string; sev: string }[]; sha: string; path: string; base: string; d: string };
@@ -145,7 +148,7 @@ function scenario(o: Opts = {}) {
     }
     if (r.status !== 0) { lane[`in-out-${seat}-${id}.txt`] = ''; lane[`out-${seat}-${id}.txt`] = hdr(tplName, '') + body(id === 'first' && o.lensFinding !== false, o.finding); }
   }
-  lane['out-code-review.txt'] = hdr('lens-code-review.md', material) + body(false);
+  lane['out-code-review.txt'] = hdr('lens-code-review.md', material) + body(o.crFinding === true);
   if (o.split?.lens) {
     // the non-compliance lenses split by the same tool: no --list, a lens template; the outputs are out-<lens>-pN.txt, each with its committed input
     const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--material', path.join(d, '.git/material.txt'), '--out', path.join(d, LD, 'in-out-code-review'), ...splitArgs], { cwd: d });
@@ -155,6 +158,21 @@ function scenario(o: Opts = {}) {
   }
   lane['out-error-paths.txt'] = hdr('lens-error-paths.md', material) + body(false);
   lane['plan-code-review.txt'] = body(false);
+  if (o.fix) {
+    // task-470: one fix commit after the round-1 material was made (the round-1 outputs bind at laneSha, not at the fix)
+    for (const [fp, ft] of Object.entries(o.fix)) { if (ft === null) fs.rmSync(path.join(d, fp)); else w(fp, ft); }
+    const keep = fs.existsSync(path.join(d, TASK)) ? fs.readFileSync(path.join(d, TASK), 'utf8') : null;
+    if (o.fixTask) w(TASK, `${taskText({ status: 'RUNNING', type: o.type, files: o.finalFiles ?? o.files, assignees: o.assignees })}fix note\n`);
+    g('add', '-A', '--', ...Object.keys(o.fix), ...(o.fixTask ? [TASK] : []));
+    g('commit', '-qm', 'fix after round 1');
+    if (o.fixTask && keep !== null) w(TASK, keep);
+    const fixSha = g('rev-parse', 'HEAD').stdout.trim();
+    if (o.station !== undefined) {
+      const st = typeof o.station === 'function' ? o.station({ fix: fixSha, R: laneSha }) : o.station;
+      if (o.stationLater) { w(`${LD}/STATION.pass`, st); g('add', '--', `${LD}/STATION.pass`); g('commit', '-qm', 'station pass'); } else lane['STATION.pass'] = st;
+    }
+    if (o.remake) lane['out-code-review.txt'] = hdr('lens-code-review.md', g(...dArgs, mb, 'HEAD', '--', '.', ':(exclude)docs/reports/lanes', ':(exclude,glob)src/golden/**/*.web.json').stdout) + body(o.crFinding === true);
+  }
   let l = o.mutate ? o.mutate(lane, d) : lane;
   if (!('GROUNDER.md' in l)) l['GROUNDER.md'] = grounder(l, o.g);
   if (o.after) l = o.after(l);
@@ -184,6 +202,8 @@ function scenario(o: Opts = {}) {
     fs.writeFileSync(tp, tt);
   }
   g('add', '-A');
+  if (o.recordsDelete) { g('commit', '-qm', 'records'); fs.rmSync(path.join(d, LD, o.recordsDelete)); g('add', '-A'); }
+  o.afterStage?.(d);
   if (o.mergeHead) fs.writeFileSync(path.join(d, '.git/MERGE_HEAD'), `${o.mergeHead === 'same' ? g('commit-tree', g('write-tree').stdout.trim(), '-p', 'HEAD', '-m', 'merged branch').stdout.trim() : baseSha}\n`);
   const msgFile = path.join(d, '.git/MSG');
   fs.writeFileSync(msgFile, o.msg ?? `feat(08_agents): close\n\n${o.trailer === false ? '' : (o.trailer ?? 'Task: task-7')}\n`);
@@ -836,8 +856,12 @@ describe('task-437 T2: the round outcome forms (outcomeErrors, pure; survive-the
     const { outcomeErrors } = await loadMod();
     return outcomeErrors({ verdicts: V('CONFIRMED'), triageText, lensKinds: K('BUG', sev), facts, mode }).errors.join('\n');
   };
-  it('a CONFIRMED MED with pile is refused in close mode and in plan mode', async () => {
-    for (const mode of ['close', 'plan'] as const) expect(await run2('MED', `id#1 pile:"${reason}"`, mode)).toMatch(/pile is not allowed for a MED BUG finding \(wontfix and pile are for LOW and NIT only\)/);
+  it('a CONFIRMED MED with pile is refused in close mode, and in plan mode when PLAN_FOLD holds MED (task-470: the switch is passed, so the test holds for any shipped value)', async () => {
+    expect(await run2('MED', `id#1 pile:"${reason}"`, 'close')).toMatch(/pile is not allowed for a MED BUG finding \(wontfix and pile are for LOW and NIT only\)/);
+    const { outcomeErrors } = await loadMod();
+    const plan = (planFold: string[]) => outcomeErrors({ verdicts: V('CONFIRMED'), triageText: `id#1 pile:"${reason}"`, lensKinds: K('BUG', 'MED'), facts: goodFacts, mode: 'plan', planFold }).errors.join('\n');
+    expect(plan(['CRITICAL', 'HIGH', 'MED'])).toMatch(/pile is not allowed for a MED BUG finding \(wontfix and pile are for LOW and NIT only\)/);
+    expect(plan(['CRITICAL', 'HIGH'])).toBe('');
   });
   it('control: ruling:RR-0385 passes for a MED when the decision record exists, in close mode and in plan mode', async () => {
     for (const mode of ['close', 'plan'] as const) expect(await run2('MED', 'id#1 ruling:RR-0385', mode)).toBe('');
@@ -897,6 +921,7 @@ type PO = {
   noRuled?: string; finding?: { file: string; sev: string }; triage?: string | false; round?: string | false; editBody?: (b: string) => string; stray?: boolean; throwRead?: boolean; planLens?: boolean; placeholder?: boolean; refs?: false; noPlanLine?: boolean;
   ctx?: string; badMaterial?: boolean; junkPlan?: boolean; fixCompliance?: 'valid' | 'junk';
   fold?: false | ((planLine: string) => string); assignees?: string[]; joinedPlan?: boolean | 'other' | 'both';
+  planFold?: string[]; // task-470 T1c: the PLAN_FOLD value passed to the gate
   eng?: boolean; engAs?: string; // task-438 T4: the engineering list on the src row, its plan files named by engAs (default engineering)
 };
 const goodFold = (planLine: string, name = 'Fold-G1') => `# Fold check\nChecked by: ${name}\nVerdict: PASS\n\nthe folded plan was read again against the findings\n\n${planLine}\n`;
@@ -979,6 +1004,7 @@ async function planScenario(o: PO = {}) {
   if (o.editBody) finalText = finalText.replace(/the plan text is long enough/, 'the plan text is wrong enough');
   const tracked = o.tracked ?? ['src/a.ts'];
   return m.planGateErrors({
+    ...(o.planFold ? { planFold: o.planFold } : {}),
     id, taskText: finalText, type, table, root: d, letter: 'F', laneName: 'BL-COMPLY2', assignees: o.assignees ?? [], folder: Object.entries(files).map(([name, text]) => ({ name, text })),
     readRepo: (p: string) => { if (o.throwRead) throw new Error('disk gone'); return mem[p] ?? null; }, tracked: (e: string) => tracked.includes(e),
     facts: { taskOf: () => ({ exists: false, status: '', text: '' }), decisionExists: () => false },
@@ -1357,5 +1383,171 @@ describe('task-460: a build or fix lane closes with the code review, its records
   });
   it('T9 (AC #4 lock): a check task with output_off naming every list is still asked every list', () => {
     refused(scenario({ type: 'check', tableEdit: ALL_OFF, mutate: (l) => ({ ...l, 'out-compliance-first.txt': null, 'in-out-compliance-first.txt': null }) }), /out-compliance-first/);
+  });
+});
+
+// ---- task-470 (McFixV2 review trim; RR-0511 MORNING-DECISIONS.md:2654, RR-0513 :2664, RR-0514 :2668 "3b 1a 2a") ----
+// SPEC LINK: Spec 08 section 7 rules 3 and 6 (08_agents.md, dated note task-470). Piece 1: PLAN_FOLD (the severities the plan folds; passed explicitly here, so no test pins the shipped value).
+// Piece 3: round 2 is skipped when the round-1 fix is test-only and a STATION.pass of the fix is committed (ROUND2.testOnlySkip). Piece A: the REVIEW header form is checked at the records commit.
+type Mod470 = {
+  outcomeErrors: (a: Record<string, unknown>) => { errors: string[]; ids: number }; PLAN_FOLD: string[];
+  roundSkip: (a: Record<string, unknown>) => { skip: boolean; R: string | null; fix: string[]; testOnly: boolean; why: string | null }; ROUND2: { testOnlySkip: boolean };
+};
+const load470 = () => import(path.join(ROOT, 'scripts/hooks/check-lane-close.mjs')) as Promise<Mod470>;
+describe('task-470 T1, T1b: plan mode records what PLAN_FOLD does not fold (outcomeErrors, pure)', () => {
+  const reason = 'recorded for later, the finding is a design point only';
+  const oe = async (o: { sev: string; triage: string; mode: 'close' | 'plan'; planFold?: string[]; lensSev?: string; word?: string; why?: string }) => {
+    const m = await load470();
+    return m.outcomeErrors({ verdicts: V(o.word ?? 'CONFIRMED', o.why ?? ''), triageText: o.triage, lensKinds: K('BUG', o.lensSev ?? o.sev), facts: goodFacts, mode: o.mode, ...(o.planFold ? { planFold: o.planFold } : {}) }).errors.join('\n');
+  };
+  const CH = ['CRITICAL', 'HIGH'];
+  it('T1: with MED out of PLAN_FOLD a plan-mode MED closes by pile, wontfix or task', async () => {
+    for (const t of [`id#1 pile:"${reason}"`, `id#1 wontfix:"${reason}"`, 'id#1 task:task-5']) expect(await oe({ sev: 'MED', triage: t, mode: 'plan', planFold: CH }), t).toBe('');
+  });
+  it('T1 second direction: a HIGH or CRITICAL pile is still refused in plan mode; a MED pile is still refused in close mode; a MED CONFLICT still takes ruling or folded only', async () => {
+    for (const sev of ['HIGH', 'CRITICAL']) expect(await oe({ sev, triage: `id#1 pile:"${reason}"`, mode: 'plan', planFold: CH }), sev).toMatch(/pile is not allowed/);
+    expect(await oe({ sev: 'MED', triage: `id#1 pile:"${reason}"`, mode: 'close', planFold: CH })).toMatch(/pile is not allowed for a MED BUG finding/);
+    expect(await oe({ sev: 'MED', triage: `id#1 pile:"${reason}"`, mode: 'plan', planFold: CH, word: 'CONFLICT', why: 'MED the operator must rule which of the two texts stands' })).toMatch(/a CONFLICT takes ruling or folded only, not pile/);
+  });
+  it('T1b: the switch decides: CRITICAL, HIGH, MED refuses a MED pile; CRITICAL, HIGH, DOWNGRADED refuses a MED pile whose lens severity was HIGH and records one whose lens severity was MED', async () => {
+    expect(await oe({ sev: 'MED', triage: `id#1 pile:"${reason}"`, mode: 'plan', planFold: ['CRITICAL', 'HIGH', 'MED'] })).toMatch(/pile is not allowed for a MED BUG finding/);
+    const dg = ['CRITICAL', 'HIGH', 'DOWNGRADED'];
+    expect(await oe({ sev: 'MED', lensSev: 'HIGH', why: 'MED the plan text is clear enough here', triage: `id#1 pile:"${reason}"`, mode: 'plan', planFold: dg })).toMatch(/pile is not allowed for a MED BUG finding/);
+    expect(await oe({ sev: 'MED', lensSev: 'MED', triage: `id#1 pile:"${reason}"`, mode: 'plan', planFold: dg })).toBe('');
+  });
+  it('T1b: a call with no planFold gives the result of a call passing PLAN_FOLD (the one switch is the default)', async () => {
+    const m = await load470();
+    expect(Array.isArray(m.PLAN_FOLD)).toBe(true);
+    for (const sev of ['CRITICAL', 'HIGH', 'MED', 'LOW']) for (const t of [`id#1 pile:"${reason}"`, 'id#1 folded:"the folded plan text holds this sentence whole"']) expect(await oe({ sev, triage: t, mode: 'plan' }), `${sev} ${t}`).toBe(await oe({ sev, triage: t, mode: 'plan', planFold: m.PLAN_FOLD }));
+  });
+});
+
+describe('task-470 T1c: a MED pile at the launch gate (planGateErrors)', () => {
+  const dir = 'docs/reports/reviews/task-7';
+  const tri = 'plan-code-review#1 pile:"recorded for later, a design point the plan need not change"\n';
+  const head = `Plan review round 1: 0 folded, 0 task, 0 ruling, 0 wontfix, 1 pile; grounder ${dir}/GROUNDER-PLAN.md; triage ${dir}/TRIAGE-PLAN.md`;
+  it('with MED out of PLAN_FOLD the block with the MED pile line passes; the same block without the line is refused', async () => {
+    const ok = await planScenario({ finding: { file: 'src/a.ts', sev: 'MED' }, triage: tri, round: `${head}\nplan-code-review#1 MED pile\n`, planFold: ['CRITICAL', 'HIGH'] });
+    expect(ok.errors).toEqual([]);
+    const bad = await planScenario({ finding: { file: 'src/a.ts', sev: 'MED' }, triage: tri, round: `${head}\n`, planFold: ['CRITICAL', 'HIGH'] });
+    gate(bad, /Implementation Plan field lacks 1 of 2 required line/);
+  });
+  it('no line of the block has a space at either end, and plan-prep post\'s trimmed-line comparison (rule-lists.mjs) finds every block line in a plan field that holds them', async () => {
+    const bad = await planScenario({ finding: { file: 'src/a.ts', sev: 'MED' }, triage: tri, round: `${head}\n`, planFold: ['CRITICAL', 'HIGH'] });
+    const block = /the block is:\n([\s\S]*?)\n\(one command/.exec(bad.errors.join('\n'))?.[1] ?? '';
+    const lines = block.split('\n');
+    expect(lines.length).toBe(2);
+    for (const l of lines) expect(l, JSON.stringify(l)).toBe(l.trim());
+    const have = `the plan text\n${lines.join('\n')}\n`.split('\n').map((l) => l.trim());
+    expect(lines.every((l) => have.includes(l))).toBe(true);
+  });
+});
+
+describe('task-470 T2, T3: round 2 after a round-1 fix (the close check)', () => {
+  const OFF = (t: Record<string, unknown>) => { t.output_off = ['first', 'inc-F', 'ev', 'msf']; };
+  const noLists = (l: Lane): Lane => Object.fromEntries(Object.entries(l).map(([n, t]) => [n, /^(in-)?out-compliance-/.test(n) ? null : t]));
+  const R1: Opts = { files: 'src/', tableEdit: OFF, mutate: noLists, crFinding: true };
+  const pass = (sha: string) => `RESULT: PASS\nsha: ${sha}\n`;
+  const TEST = { 'src/tests/x.test.ts': 'export const t = 1;\n' };
+  it('control: no fix commit, round 1 binds at HEAD and closes', () => {
+    const r = scenario(R1);
+    expect(r.status, r.stderr).toBe(0);
+  });
+  it('T3: a test-only fix with a STATION.pass of the fix commit and no round 2 closes', () => {
+    const r = scenario({ ...R1, fix: TEST, station: ({ fix }) => pass(fix) });
+    expect(r.status, r.stderr).toBe(0);
+  });
+  it('T3: also when the fix commit edits the task file, and when STATION.pass is committed after the fix', () => {
+    const a = scenario({ ...R1, fix: TEST, fixTask: true, station: ({ fix }) => pass(fix) });
+    expect(a.status, a.stderr).toBe(0);
+    const b = scenario({ ...R1, fix: TEST, station: ({ fix }) => pass(fix), stationLater: true });
+    expect(b.status, b.stderr).toBe(0);
+  });
+  it('T3 second direction: no STATION.pass, one naming the round-1 commit, RESULT: FAIL, or no sha line are refused, naming the commit the round-1 file reviewed', () => {
+    refused(scenario({ ...R1, fix: TEST }), /out-code-review: the round-1 output binds at [0-9a-f]{9}[^\n]*every one is a test[^\n]*STATION\.pass[^\n]*no STATION\.pass/);
+    refused(scenario({ ...R1, fix: TEST, station: ({ R }) => pass(R) }), /the sha [0-9a-f]{40} of STATION\.pass is not in [0-9a-f]{9}\.\.HEAD/);
+    refused(scenario({ ...R1, fix: TEST, station: ({ fix }) => `RESULT: FAIL\nsha: ${fix}\n` }), /STATION\.pass has no "RESULT: PASS" line/);
+    refused(scenario({ ...R1, fix: TEST, station: 'RESULT: PASS\n' }), /STATION\.pass has no "sha: <40 hex>" line/);
+  });
+  it('T3 second direction: a fix that also touches product code, a test-named folder outside the test roots, a product file renamed into src/tests or a covered generated doc needs the whole-range round 2', () => {
+    const WR = /the round-1 output binds at [0-9a-f]{9}[^\n]*a fix that touches non-test code needs the whole-range round 2 at HEAD/;
+    refused(scenario({ ...R1, fix: { ...TEST, 'src/a.ts': `${AFILE}// lane work\n// fix\n` }, station: ({ fix }) => pass(fix) }), WR);
+    for (const p of ['src/app/api/test/route.ts', 'src/lib/tests/x.ts']) refused(scenario({ ...R1, fix: { [p]: 'export const x = 1;\n' }, station: ({ fix }) => pass(fix) }), WR);
+    refused(scenario({ ...R1, fix: { 'src/long.ts': null, 'src/tests/long.ts': 'export const L0 = 0;\n' }, station: ({ fix }) => pass(fix) }), WR);
+    const gen = (t: Record<string, unknown>) => { OFF(t); (t.rows as unknown[]).push({ id: 'gen', globs: ['docs/reports/generated/**'], lists: ['first'], why: 'gen' }); };
+    refused(scenario({ ...R1, tableEdit: gen, files: 'src/, docs/reports/generated/x.md', fix: { 'docs/reports/generated/x.md': '# x\n' }, station: ({ fix }) => pass(fix) }), WR);
+  });
+  it('T3: a round-1 output that bound at R keeps its findings: one with no verdict is refused; ruled, it closes', () => {
+    refused(scenario({ ...R1, fix: TEST, station: ({ fix }) => pass(fix), g: { verdict: () => null } }), /out-code-review#1[^\n]*no complete verdict/);
+    const ok = scenario({ ...R1, fix: TEST, station: ({ fix }) => pass(fix) });
+    expect(ok.status, ok.stderr).toBe(0);
+  });
+  it('T2: a code fix after round 1 with no whole-range re-make is refused naming the commit R; re-made at HEAD it closes', () => {
+    const FIX = { 'src/b.ts': 'export const b = 1;\n' };
+    refused(scenario({ ...R1, fix: FIX }), /out-code-review: the round-1 output binds at [0-9a-f]{9} \(the commit it reviewed\); 1 covered path\(s\) changed after it \(src\/b\.ts\)/);
+    const ok = scenario({ ...R1, fix: FIX, remake: true });
+    expect(ok.status, ok.stderr).toBe(0);
+  });
+  it('T2 second direction: a fix that widens the Files line is refused with the whole-range form named; a commit that changes only lane records after R demands no round 2; a lone r2 never stands in for round 1', () => {
+    refused(scenario({ ...R1, files: 'src/a.ts', finalFiles: 'src/a.ts, src/b.ts', fix: { 'src/b.ts': 'export const b = 1;\n' } }), /needs the whole-range round 2 at HEAD/);
+    const rec = scenario({ ...R1, fix: { [`${LD}/NOTES.md`]: 'a lane note\n' } });
+    expect(rec.status, rec.stderr).toBe(0);
+    refused(scenario({ ...R1, fix: TEST, station: ({ fix }) => pass(fix), mutate: (l) => ({ ...noLists(l), 'out-code-review.txt': null, 'out-code-review-r2.txt': hdr('lens-code-review.md', null) + body(false) }) }), /needs out-code-review\.txt/);
+  });
+});
+
+describe('task-470 T3b: the ROUND2 switch (roundSkip, pure)', () => {
+  const F = 'f'.repeat(40);
+  const base = { lensErrorsAt: (c: string) => (c === 'r' ? [] : ['x']), commits: ['r'], between: (a: string) => (a === 'r' ? ['src/tests/x.test.ts'] : []), station: `RESULT: PASS\nsha: ${F}\n`, inRange: () => true };
+  it('testOnlySkip true skips; false refuses as today (no R search); no argument is the shipped ROUND2', async () => {
+    const m = await load470();
+    expect(m.roundSkip({ ...base, round2: { testOnlySkip: true } }).skip).toBe(true);
+    const off = m.roundSkip({ ...base, round2: { testOnlySkip: false } });
+    expect(off.skip).toBe(false);
+    expect(off.R).toBeNull();
+    expect(m.roundSkip(base)).toEqual(m.roundSkip({ ...base, round2: m.ROUND2 }));
+  });
+  it('a non-test fix path, a round-1 file that binds nowhere and a failing diff are no skip', async () => {
+    const m = await load470();
+    const on = { round2: { testOnlySkip: true } };
+    expect(m.roundSkip({ ...base, ...on, between: () => ['src/a.ts', 'src/tests/x.test.ts'] }).skip).toBe(false);
+    expect(m.roundSkip({ ...base, ...on, lensErrorsAt: () => ['x'] })).toMatchObject({ skip: false, R: null });
+    expect(m.roundSkip({ ...base, ...on, between: () => null }).skip).toBe(false);
+  });
+});
+
+describe('task-470 T4 (piece A, RR-0513 A): the review file form is checked at the records commit', () => {
+  const LENS: Opts = { ...SPLIT, split: { max: 4000, lens: true } };
+  const badP1 = (l: Lane): Lane => ({ ...l, 'out-code-review-p1.txt': String(l['out-code-review-p1.txt']).replace(/prompt_sha256=[0-9a-f]{64}/, `prompt_sha256=${'b'.repeat(64)}`) });
+  const RE = /out-code-review-p1\.txt: the REVIEW header prompt_sha256 is not the hash/;
+  it('a records commit (no status move) staging a split part with a wrong prompt hash is refused with the line the close prints', () => {
+    const rec = scenario({ ...LENS, status: 'RUNNING', mutate: badP1 });
+    refused(rec, RE);
+    const close = scenario({ ...LENS, mutate: badP1 });
+    refused(close, RE);
+    const line = close.stderr.split('\n').find((l) => RE.test(l)) ?? '(none)';
+    expect(rec.stderr.split('\n')).toContain(line);
+  });
+  it('a staged unsplit output with no REVIEW header is refused at the records commit', () => {
+    refused(scenario({ status: 'RUNNING', mutate: (l) => ({ ...l, 'out-code-review.txt': body(false) }) }), /out-code-review\.txt: no REVIEW header/);
+  });
+  it('controls: correct headers pass with no GROUNDER.md and with no board ref; a commit staging no out file, a merge, and a staged deletion pass', () => {
+    const a = scenario({ ...LENS, status: 'RUNNING', mutate: (l) => ({ ...l, 'GROUNDER.md': null }) });
+    expect(a.status, a.stderr).toBe(0);
+    const b = scenario({ ...LENS, status: 'RUNNING', noBoard: true });
+    expect(b.status, b.stderr).toBe(0);
+    const c = scenario({ status: 'RUNNING' });
+    expect(c.status, c.stderr).toBe(0);
+    expect(scenario({ status: 'RUNNING', mutate: () => ({}) }).status).toBe(0);
+    const mg = scenario({ ...LENS, status: 'RUNNING', mergeHead: 'other', mutate: badP1 });
+    expect(mg.status, mg.stderr).toBe(0);
+    const del = scenario({ ...LENS, status: 'RUNNING', mutate: badP1, recordsDelete: 'out-code-review-p1.txt' });
+    expect(del.status, del.stderr).toBe(0);
+  });
+  it('fail closed: staged out files whose TASK file or context cannot be read are refused naming the file; the index copy is read, not the working copy', () => {
+    refused(scenario({ status: 'RUNNING', mutate: (l) => ({ ...l, TASK: null }) }), /BL-COMPLY2\/TASK cannot be read/);
+    refused(scenario({ status: 'RUNNING', ctx: false }), /no committed review context file docs\/reports\/reviews\/task-7\/context-rN\.md/);
+    let good = '';
+    refused(scenario({ ...LENS, status: 'RUNNING', mutate: (l) => { good = String(l['out-code-review-p1.txt']); return badP1(l); }, afterStage: (d) => fs.writeFileSync(path.join(d, LD, 'out-code-review-p1.txt'), good) }), RE);
   });
 });

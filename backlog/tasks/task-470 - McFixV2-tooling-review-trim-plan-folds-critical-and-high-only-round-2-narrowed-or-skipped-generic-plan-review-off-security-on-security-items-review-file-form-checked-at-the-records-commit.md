@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MCFIX470'
 created_date: '2026-11-26T12:32:00Z'
-updated_date: '2026-11-26T14:34:00Z'
+updated_date: '2026-11-26T14:56:00Z'
 labels:
   - McFixV2
 milestone: m-1
@@ -327,4 +327,10 @@ rc2#1 HIGH folded lead-(?:detail|inspe
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-26 taken on the board at lane launch (lane BL-MCFIX470, worktree /Users/brettpreston_macmini/Buildo-wt-mcfix470, branch wf2/mcfix470), RR-0240
+
+2026-11-26 lane BL-MCFIX470: tests first (T1, T1b, T1c, T2, T3, T3b, T4 in check-lane-close.logic.test.ts; T5, T6 in rule-lists.logic.test.ts; T7 and the plan-lens pins in backlog-lane.logic.test.ts), red through the pre-commit related run before the code.
+
+2026-11-26 work: PLAN_FOLD (shipped CRITICAL, HIGH, MED, RR-0514 1a) and the trimmed block lines; ROUND2.testOnlySkip with roundSkip and STATION.pass (piece 2 not built, task-414); recordsFormErrors at the records commit (piece A); TEST_ROOT and SEC_WORDS in rule-lists.mjs, plan-review-deepseek off; brief text (NO ROUND 2 form), README rows, three Spec 08 dated notes, page regenerated. task-313 dry run (plan step 13) UNVERIFIED: the board checkout is dirty outside backlog/ (src/lib/surfaces/maxbld-web.ts), so backlog-lane refuses before the gate.
+
+2026-11-26 green attempt 1 refused by one pin (backlog-lane.logic.test.ts:288, task-407: the brief never says TRIAGE.md): the NO ROUND 2 sentence says 'its outcome file' instead, the words the brief already uses.
 <!-- SECTION:NOTES:END -->
