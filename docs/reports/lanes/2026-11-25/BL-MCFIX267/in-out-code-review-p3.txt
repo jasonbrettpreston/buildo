@@ -1,0 +1,731 @@
+LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:d6a675150cc26847c26ce11e75a49a4545614a781d5361b90819c619d850023f part 1 of 1 chunk 3 of 4
+NO RULE LIST: the lens template alone judges the material under review. The material is chunk 3 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/analysis/bylaw-validation/coa-expected/prereg-MF-99-1.json","scripts/surfaces/_schema/census/contracts.json","scripts/surfaces/_schema/census/mobile-product.json","scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json","scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json","scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json","scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.content.json","scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.descriptor.json","scripts/surfaces/report-page-capture.ts","src/app/api/parcels/lookup/route.ts","src/app/api/parcels/lookup/types.ts","src/lib/parcels/lookup-flow.ts","src/lib/parcels/what-we-checked.ts","src/tests/fix-tune.logic.test.ts"]
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/analysis/bylaw-validation/coa-expected/prereg-MF-99-1.json b/scripts/analysis/bylaw-validation/coa-expected/prereg-MF-99-1.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..551246e7be4523243d3e57f9ab33e90c5027d52c
+--- /dev/null
++++ b/scripts/analysis/bylaw-validation/coa-expected/prereg-MF-99-1.json
+@@ -0,0 +1,116 @@
++{
++ "$comment": "Pre-registration, task MF-99 (the MF-62 follow-up row: task-267 LOAD.2 loading screen with task-317 LOAD.4 load-failure endings, one lane BL-MCFIX267 by RR-0477 and RR-0488), prereg 1, committed alone and first, before the MF-99 work commit (.cursor/MCBYLAWS-QUEUE.md:109). Pre-registered by-law moves: none. No file under scripts/analysis/bylaw, scripts/seeds/bylaw or docs/reference/bylaw changes and no by-law, cost or engine path is touched, so every total below is the unchanged MF-98 prereg total (the newest prereg). rules[] holds RULED register rows only (the arm-C McFrontend judgement, cite-arms.mjs, reads RULED Spec 135 ids): FE-05 (the server formats every value; no maths on the phone), FE-18 (every displayed field binds to a source), FE-31 (existing components only), FE-35 (the What we checked loading state), FE-36 (navigation is a route). The operator rulings the plan rests on are listed in `rulings` (plan PLAN-267-v2 section 1); the expected test and golden names are listed in `expected_tests` (plan section 5). In-file round 204 (claimed in ~/Buildo-scratch/ids/round-204).",
++ "schema": "coa-round-prereg-v1",
++ "round": 204,
++ "task": "MF-99",
++ "rules": [
++  "FE-05",
++  "FE-18",
++  "FE-31",
++  "FE-35",
++  "FE-36"
++ ],
++ "rulings": [
++  "RR-0176 (MD:785 \"yes that is correct\")",
++  "RR-0278 (MD:1082)",
++  "RR-0477 (MD:2496)",
++  "RR-0482 (MD:2518)",
++  "RR-0485 (MD:2533)",
++  "RR-0486 (MD:2538)",
++  "RR-0490 (MD:2559)",
++  "RR-0491 (MD:2563)",
++  "RR-0492 (MD:2567)",
++  "RR-0493 (MD:2571)",
++  "RR-0494 (MD:2575)",
++  "RR-0497 (MD:2588)"
++ ],
++ "plan_ref": "backlog task-267 Implementation Plan (PLAN-267-v2 as folded after plan review round 1, sections 1, 4 and 5); docs/reports/reviews/task-267/GROUNDER-PLAN.md, TRIAGE-PLAN.md; MD = ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md",
++ "batch": "coa-2026-a,b,c (172 set); 4d set and cumulative set in the keys below",
++ "expected_tests": [
++  "src/tests/parcel-lookup-gate.infra.test.ts G1 a q hit never runs the stored read or the compute",
++  "src/tests/parcel-lookup-gate.infra.test.ts G2 compute once per opened lot",
++  "src/tests/parcel-lookup-gate.infra.test.ts G3 meter counts unchanged",
++  "src/tests/parcel-lookup-gate.infra.test.ts G4 683 Danforth (compute null)",
++  "src/tests/parcel-lookup-gate.infra.test.ts G5 the fast read",
++  "src/tests/surfaces/report-failure.logic.test.ts reportScreenState table (new)",
++  "src/tests/surfaces/report-mobile.logic.test.ts goldens checking, ready, holding, error_lines, miss_lines",
++  "mobile/__tests__/reportChecked.behaviour.test.tsx C1-C11 (new)",
++  "mobile/__tests__/reportScreen.mount.behaviour.test.tsx M1-M3",
++  "mobile/__tests__/reportScreens.golden.test.ts miss refs",
++  "mobile/__tests__/reportPage.behaviour.test.tsx slice keys"
++ ],
++ "expected_moves": [],
++ "expected_totals": {
++  "ANSWERED": 7,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 30,
++  "MATCH": 407,
++  "NO ANSWER": 40,
++  "NOT MODELLED": 94,
++  "NOT SCORABLE": 25,
++  "OWED": 67
++ },
++ "expected_before_totals": {
++  "ANSWERED": 7,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 30,
++  "MATCH": 407,
++  "NO ANSWER": 40,
++  "NOT MODELLED": 94,
++  "NOT SCORABLE": 25,
++  "OWED": 67
++ },
++ "expected_figure_changes": [],
++ "expected_moves_4d": [],
++ "expected_totals_4d": {
++  "ANSWERED": 2,
++  "BY-LAW CHANGED": 4,
++  "DATA": 22,
++  "DIFFER": 23,
++  "MATCH": 283,
++  "NO ANSWER": 28,
++  "NOT MODELLED": 73,
++  "NOT SCORABLE": 12,
++  "OWED": 49
++ },
++ "expected_before_totals_4d": {
++  "ANSWERED": 2,
++  "BY-LAW CHANGED": 4,
++  "DATA": 22,
++  "DIFFER": 23,
++  "MATCH": 283,
++  "NO ANSWER": 28,
++  "NOT MODELLED": 73,
++  "NOT SCORABLE": 12,
++  "OWED": 49
++ },
++ "expected_figure_changes_4d": [],
++ "expected_moves_cumulative": [],
++ "expected_totals_cumulative": {
++  "ANSWERED": 9,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 34,
++  "MATCH": 459,
++  "NO ANSWER": 56,
++  "NOT MODELLED": 129,
++  "NOT SCORABLE": 34,
++  "OWED": 72
++ },
++ "expected_before_totals_cumulative": {
++  "ANSWERED": 9,
++  "BY-LAW CHANGED": 4,
++  "DATA": 24,
++  "DIFFER": 34,
++  "MATCH": 459,
++  "NO ANSWER": 56,
++  "NOT MODELLED": 129,
++  "NOT SCORABLE": 34,
++  "OWED": 72
++ },
++ "expected_figure_changes_cumulative": [],
++ "expected_floors": "no floor line falls; the floors file is unchanged and the floors check stays OK",
++ "expected_unchanged": "every row of the 172, 4d and cumulative sets: class and City figure"
++}
+diff --git a/scripts/surfaces/_schema/census/contracts.json b/scripts/surfaces/_schema/census/contracts.json
+index e85a9285764b7b096777dd49f58cf6dbd7bc59e4..170db1a447e3282ba494ada316263860f6345e63 100644
+--- a/scripts/surfaces/_schema/census/contracts.json
++++ b/scripts/surfaces/_schema/census/contracts.json
+@@ -22031,7 +22031,7 @@
+     "status": "exists",
+     "docs": {
+       "purpose": "Lets a paying subscriber search for a property by address, or pick a specific close match, and see the estimated construction costs and nearby neighbourhood build activity for that property.",
+-      "data_story": "It reads 7 tables through inputs.tables — `parcels`, `address_points`, `parcel_address_points`, `coa_applications`, `user_profiles`, `entitlements` and `logic_variables` — and besides them `usage_events` (the meter) and (MB-44 W, task-123, only while the web live switch is on; it is off) the stored report rows `parcel_maxbld_scenarios` and the Layer 2 stamps `bylaw_resolution_lot_stamps` — and writes one: a `usage_events` row (`property_view`) for each new lot a `parcel_tool` holder opens in the billing month (MF-45). Its response is an explicit pick-by-name projection of the 80 names in inputs.field_whitelist, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `mobile/src/hooks/useParcelLookup.ts`. Dated 2026-11-11 (MF-53): every response also names its `resolution`; for multi_parcel and unlinked only, a `map` block (lot outlines from parcels.geom, area by the report rule area_sqft_m2_dot from lot_size_sqm, frontage by len1 from frontage_m, zoning_zn_string, centroid_lat/lng, the address pin from address_points.latitude/longitude, a start view, and on unlinked the neighbour outlines within the logic-variable radius). The map is not metered. Dated 2026-11-12 (MF-48 Stage B; operator \"Ball y\", B-3 a; Spec 100 §3.2 dated note): a hit also carries `page`, the mobile report page view built on the server by MF-57's core (pageViewOf(buildPage(response))) from the lot's producer response (src/lib/parcels/report-page.ts); it is null for every lot until MB-44 serves a producer, absent of meaning on candidates, a miss or a dangling id (null), and .strict() at every level (target, layout, sections, parts, ad). \"It reads no table today and changes no meter.\" Corrected 2026-11-20 (M-246, FIX.SPECS · task-376; the prior sentence is kept in quotation marks; operator, verbatim, 2026-11-19, RR-0278, decision-81, MORNING-DECISIONS.md:1082: \"it shouldn't count the report unless the report is produced. I should only be charged a report if I find the address and lot I'm looking for and a report is produced\"): the first half stopped being true with the dated notes of 2026-11-19 below (the stored reads of MB-44 W and the one-lot compute of LOAD.1, both behind the web live switch), and the second half with the report-produced meter: a parcel_tool hit counts one report only when its `page` is produced; a hit with no `page` (candidates, a miss, a map, a dangling id, an unsure lot held before its semi question, a lot with no stored or computed page) counts nothing (logged not_produced, semi_pending or not_evaluated). The held page and the `semi=answered` request key are the design of task-360 and task-319, not an operator ruling: RR-0278 does not rule the semi flag. See Spec 100 section 3.2 dated note 2026-11-20. Dated 2026-11-19 (LOAD.1, task-266, M-246): while the web live switch is on (it is off), a hit whose stored page is missing or stale is computed in memory by the Layer 3 step's own core (src/lib/parcels/report-compute.ts), which reads for that one lot, besides the stored tables above, the Layer 2 results `bylaw_resolution_results` and `bylaw_resolution_option_results`, the lookups `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`, the lot geometry and street columns of `parcels`, and the validated step settings of `logic_variables`; it writes nothing (the record write is ST.P1), adds no response key, and a lot with no Layer 2 stamp stays a miss. Dated 2026-11-24 (SEARCHFIX.1, task-449; operator, verbatim, RR-0442, MORNING-DECISIONS.md:2276: \"It should open on an exact match and we have a different process for address mistakes\"; RR-0443 c, :2284: \"What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close\"): exact match opens; a typeahead, a street type or direction conflict, a unit, letter or dash form, and a mistype list. A lot opens (`unique`) on the exact read, or on a one-row typeahead that is the typed address in full; every other one-row leftover is `text_candidates`. No `resolution` value is added and the meter is unchanged.",
++      "data_story": "It reads 7 tables through inputs.tables — `parcels`, `address_points`, `parcel_address_points`, `coa_applications`, `user_profiles`, `entitlements` and `logic_variables` — and besides them `usage_events` (the meter) and (MB-44 W, task-123, only while the web live switch is on; it is off) the stored report rows `parcel_maxbld_scenarios` and the Layer 2 stamps `bylaw_resolution_lot_stamps` — and writes one: a `usage_events` row (`property_view`) for each new lot a `parcel_tool` holder opens in the billing month (MF-45). Its response is an explicit pick-by-name projection of the 95 names in inputs.field_whitelist, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `mobile/src/hooks/useParcelLookup.ts`. Dated 2026-11-11 (MF-53): every response also names its `resolution`; for multi_parcel and unlinked only, a `map` block (lot outlines from parcels.geom, area by the report rule area_sqft_m2_dot from lot_size_sqm, frontage by len1 from frontage_m, zoning_zn_string, centroid_lat/lng, the address pin from address_points.latitude/longitude, a start view, and on unlinked the neighbour outlines within the logic-variable radius). The map is not metered. Dated 2026-11-12 (MF-48 Stage B; operator \"Ball y\", B-3 a; Spec 100 §3.2 dated note): a hit also carries `page`, the mobile report page view built on the server by MF-57's core (pageViewOf(buildPage(response))) from the lot's producer response (src/lib/parcels/report-page.ts); it is null for every lot until MB-44 serves a producer, absent of meaning on candidates, a miss or a dangling id (null), and .strict() at every level (target, layout, sections, parts, ad). \"It reads no table today and changes no meter.\" Corrected 2026-11-20 (M-246, FIX.SPECS · task-376; the prior sentence is kept in quotation marks; operator, verbatim, 2026-11-19, RR-0278, decision-81, MORNING-DECISIONS.md:1082: \"it shouldn't count the report unless the report is produced. I should only be charged a report if I find the address and lot I'm looking for and a report is produced\"): the first half stopped being true with the dated notes of 2026-11-19 below (the stored reads of MB-44 W and the one-lot compute of LOAD.1, both behind the web live switch), and the second half with the report-produced meter: a parcel_tool hit counts one report only when its `page` is produced; a hit with no `page` (candidates, a miss, a map, a dangling id, an unsure lot held before its semi question, a lot with no stored or computed page) counts nothing (logged not_produced, semi_pending or not_evaluated). The held page and the `semi=answered` request key are the design of task-360 and task-319, not an operator ruling: RR-0278 does not rule the semi flag. See Spec 100 section 3.2 dated note 2026-11-20. Dated 2026-11-19 (LOAD.1, task-266, M-246): while the web live switch is on (it is off), a hit whose stored page is missing or stale is computed in memory by the Layer 3 step's own core (src/lib/parcels/report-compute.ts), which reads for that one lot, besides the stored tables above, the Layer 2 results `bylaw_resolution_results` and `bylaw_resolution_option_results`, the lookups `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`, the lot geometry and street columns of `parcels`, and the validated step settings of `logic_variables`; it writes nothing (the record write is ST.P1), adds no response key, and a lot with no Layer 2 stamp stays a miss. Dated 2026-11-24 (SEARCHFIX.1, task-449; operator, verbatim, RR-0442, MORNING-DECISIONS.md:2276: \"It should open on an exact match and we have a different process for address mistakes\"; RR-0443 c, :2284: \"What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close\"): exact match opens; a typeahead, a street type or direction conflict, a unit, letter or dash form, and a mistype list. A lot opens (`unique`) on the exact read, or on a one-row typeahead that is the typed address in full; every other one-row leftover is `text_candidates`. No `resolution` value is added and the meter is unchanged. Dated 2026-11-25 (M-246, prior text kept; task-267 LOAD.2 with task-317 LOAD.4, MF-99, lane BL-MCFIX267; RR-0485 MD:2533, RR-0491 MD:2563, RR-0492 MD:2567, RR-0493 MD:2571, RR-0494 MD:2575, RR-0497 MD:2588): the q form only finds the lot: it sends page null and runs neither the stored read nor the compute; the report is read or computed once, on the parcelId read the pick opens. The fast read (the request flag fast=1, parcelId only, never with semi; the semi=answered precedent) sends the stored page if there is one, else whatWeChecked: the What we checked view of the lot (readWhatWeChecked, built by MF-57's core into ViewChecked, href null), else nothing; it never computes.",
+       "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+     },
+     "evidence": {
+@@ -22199,7 +22199,22 @@
+         "lotForm",
+         "detected",
+         "basis",
+-        "unsure"
++        "unsure",
++        "whatWeChecked",
++        "groups",
++        "lines",
++        "verb",
++        "delay_ms",
++        "done_ms",
++        "dates",
++        "skip",
++        "after_ms",
++        "ready",
++        "at_ms",
++        "open",
++        "min_ms",
++        "paced",
++        "href"
+       ],
+       "tables": [
+         {
+@@ -22650,7 +22665,7 @@
+         "severity": "FAIL",
+         "blocking": false,
+         "when": "post",
+-        "why": "The response is an explicit pick-by-name of 80 field(s) (the inputs.field_whitelist names, projected at src/app/api/parcels/lookup/route.ts:85-90, src/app/api/parcels/lookup/route.ts:101-106, src/app/api/parcels/lookup/types.ts:94-101, src/lib/parcels/consumer-lookup.ts:139-157), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
++        "why": "The response is an explicit pick-by-name of 95 field(s) (the inputs.field_whitelist names, projected at src/app/api/parcels/lookup/route.ts:85-90, src/app/api/parcels/lookup/route.ts:101-106, src/app/api/parcels/lookup/types.ts:94-101, src/lib/parcels/consumer-lookup.ts:139-157), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist. Dated 2026-11-25 (M-246, prior text kept; task-267 LOAD.2 with task-317 LOAD.4, MF-99, lane BL-MCFIX267; RR-0485 MD:2533, RR-0491 MD:2563, RR-0492 MD:2567, RR-0493 MD:2571, RR-0494 MD:2575, RR-0497 MD:2588): + whatWeChecked and the keys inside it (the fast read's checked view, CheckedViewSchema, src/app/api/parcels/lookup/types.ts), appended at the end of the list; 80 names before."
+       },
+       {
+         "id": "contract_parcels_lookup__schema_declared",
+@@ -22773,12 +22788,13 @@
+     },
+     "metering": {
+       "answer": "metered",
+-      "why": "A parcel_tool hit counts one report only when its `page` is produced (RR-0278, MORNING-DECISIONS.md:1082): openReport writes one usage_events row (property_view, parcel_ref = the matched parcels.parcel_id) inside a transaction holding the (user, parcel_tool) entitlement row lock; a re-open in the month is free; a new lot past the allowance is refused 403 REPORT_LIMIT_REACHED (MF-45). A hit with no `page` (candidates, a miss, a map, a dangling id, an unsure lot held before its semi question, a lot with no stored or computed page) counts nothing (logged not_produced, semi_pending or not_evaluated). The transitional lead_gen arm is unmetered (deviation below).",
++      "why": "A parcel_tool hit counts one report only when its `page` is produced (RR-0278, MORNING-DECISIONS.md:1082): openReport writes one usage_events row (property_view, parcel_ref = the matched parcels.parcel_id) inside a transaction holding the (user, parcel_tool) entitlement row lock; a re-open in the month is free; a new lot past the allowance is refused 403 REPORT_LIMIT_REACHED (MF-45). A hit with no `page` (candidates, a miss, a map, a dangling id, an unsure lot held before its semi question, a lot with no stored or computed page) counts nothing (logged not_produced, semi_pending or not_evaluated). The transitional lead_gen arm is unmetered (deviation below). Dated 2026-11-25 (M-246, prior text kept; task-267 LOAD.2 with task-317 LOAD.4, MF-99, lane BL-MCFIX267; RR-0485 MD:2533, RR-0491 MD:2563, RR-0492 MD:2567, RR-0493 MD:2571, RR-0494 MD:2575, RR-0497 MD:2588): a q hit sends no page, so it counts nothing (not_produced); the report is counted on the parcelId read the pick opens. The fast read counts only a stored page it serves, through the same unchanged meter code; its checked view has no page and counts nothing (not_produced).",
+       "evidence": [
+-        "src/app/api/parcels/lookup/route.ts:102-114 (the meter: not_evaluated, semi_pending, not_produced, then openReport in withTransaction; limit_reached and not_entitled refusals)",
++        "src/app/api/parcels/lookup/route.ts:116-128 (the meter: not_evaluated, semi_pending, not_produced, then openReport in withTransaction; limit_reached and not_entitled refusals) [Dated 2026-11-25 (M-246, prior text kept; task-267 LOAD.2 with task-317 LOAD.4, MF-99, lane BL-MCFIX267; RR-0485 MD:2533, RR-0491 MD:2563, RR-0492 MD:2567, RR-0493 MD:2571, RR-0494 MD:2575, RR-0497 MD:2588): moved from :102-114]",
+         "src/lib/entitlements/index.ts:590-609 (openReport: FOR UPDATE, readReportLimits, the window count, the INSERT)",
+         "migrations/303_parcel_tool_entitlement_usage.sql (usage_events, chk_usage_events_*; the two allowance variables)",
+-        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 (dated note 2026-11-11)"
++        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 (dated note 2026-11-11)",
++        "src/lib/parcels/lookup-flow.ts:79 (findOnly: the q form runs neither the stored read nor the compute) and :133 (the fast read's checked view)"
+       ],
+       "unit": "report",
+       "product": "parcel_tool",
+@@ -23273,11 +23289,11 @@
+       "answer": "sole",
+       "why": "Exactly one call site reads it today: the app search page line (SRCH.A6, task-320). Its web tree is inert until MAXBLD_WEB_LIVE flips (LS.12); MF-52 (Account) and MF-49 bind to it when they build.",
+       "evidence": [
+-        "mobile/src/hooks/useParcelLookup.ts:168",
++        "mobile/src/hooks/useParcelLookup.ts:300",
+         ".cursor/MCFRONTEND-QUEUE.md MF-45 row (dated note 2026-11-11)"
+       ],
+       "surfaces": [
+-        "mobile/src/hooks/useParcelLookup.ts:168"
++        "mobile/src/hooks/useParcelLookup.ts:300"
+       ]
+     },
+     "a11y": {
+@@ -23313,7 +23329,7 @@
+       ],
+       "writes_audit_row": false,
+       "consumers_verified": [
+-        "mobile/src/hooks/useParcelLookup.ts:168"
++        "mobile/src/hooks/useParcelLookup.ts:300"
+       ],
+       "auth_class_executed": "authenticated",
+       "locking_tests": [
+diff --git a/scripts/surfaces/_schema/census/mobile-product.json b/scripts/surfaces/_schema/census/mobile-product.json
+index fc33565352ef43da1491d6987eb19d435805090c..aa519d9c92949b229eb4bf53dbc138f17598ae70 100644
+--- a/scripts/surfaces/_schema/census/mobile-product.json
++++ b/scripts/surfaces/_schema/census/mobile-product.json
+@@ -6137,11 +6137,13 @@
+       ],
+       "gate": [
+         "src/app/api/parcels/lookup/route.ts:47-60",
+-        "src/app/api/parcels/lookup/route.ts:71-76"
++        "src/app/api/parcels/lookup/route.ts:71-76",
++        "src/app/api/parcels/lookup/route.ts:69-88 (auth, the gate and the query parse with the fast flag) [Dated 2026-11-25 (M-246, prior text kept; task-267 LOAD.2 with task-317 LOAD.4, MF-99, lane BL-MCFIX267; RR-0485 MD:2533, RR-0491 MD:2563, RR-0492 MD:2567, RR-0493 MD:2571, RR-0494 MD:2575, RR-0497 MD:2588)]"
+       ],
+       "states": [
+         "mobile/app/(app)/parcel-tool/[parcelId].tsx:88-110 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" and \"S1 a\": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]",
+-        "mobile/app/(app)/parcel-tool/[parcelId].tsx:147-160 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" and \"S1 a\": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]"
++        "mobile/app/(app)/parcel-tool/[parcelId].tsx:147-160 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" and \"S1 a\": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]",
++        "mobile/app/(app)/parcel-tool/[parcelId].tsx:37-48 (reportScreenState over useReportScreen; the host draws the loading screen) [Dated 2026-11-25 (M-246, prior text kept; task-267 LOAD.2 with task-317 LOAD.4, MF-99, lane BL-MCFIX267; RR-0485 MD:2533, RR-0491 MD:2563, RR-0492 MD:2567, RR-0493 MD:2571, RR-0494 MD:2575, RR-0497 MD:2588)]"
+       ],
+       "emits": [
+         "mobile/app/(app)/parcel-tool/[parcelId].tsx:1-231 — no track() call in the file [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" and \"S1 a\": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]"
+@@ -6564,7 +6566,7 @@
+       }
+     ],
+     "interpretation": "none",
+-    "notes": "inputs.tables[parcels].columns is \"all\" deliberately: the projection reads the whole row minus geometry/geom, which is itself the finding — the whitelist is enforced at serialisation, not at the query. This is the Spec 126 §11 pilot REPORT, so its plausibility[] entries are written as real SQL rather than \"none\". SponsorSlot is NOT claimed here — it is its own census row (overlay_sponsor_slot), so this surface owns no component files. [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" B-6: SponsorSlot.tsx is deleted with the old lot screen; no slot component remains in the Expo tree, and the report's ads are the v21 page ad sections (MF-20)] Dated note 2026-11-12 (M-246, prior text kept; MF-48 Stage B with MF-74; operator, verbatim: \"Ball y\" and \"S1 a\"): the route mobile/app/(app)/parcel-tool/[parcelId].tsx is now the mount of the REPORT binding (owner binding_mobile_report, S-085): the lookup query, Retry and Back, and ReportPageHost over the page view the server builds with MF-57's core and sends as the nullable `page` of contract_parcels_lookup (null for every lot until MB-44, so the approved miss text shows). The hand-built screen, SponsorSlot and the phone formatting it used on screen are retired (parcelCostFormat.ts stays: the report generators cite it); S-001 is retired from report-fields.decl.json (M-69 dated note). Line cites above that name the old screen carry their own dated note.",
++    "notes": "inputs.tables[parcels].columns is \"all\" deliberately: the projection reads the whole row minus geometry/geom, which is itself the finding — the whitelist is enforced at serialisation, not at the query. This is the Spec 126 §11 pilot REPORT, so its plausibility[] entries are written as real SQL rather than \"none\". SponsorSlot is NOT claimed here — it is its own census row (overlay_sponsor_slot), so this surface owns no component files. [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" B-6: SponsorSlot.tsx is deleted with the old lot screen; no slot component remains in the Expo tree, and the report's ads are the v21 page ad sections (MF-20)] Dated note 2026-11-12 (M-246, prior text kept; MF-48 Stage B with MF-74; operator, verbatim: \"Ball y\" and \"S1 a\"): the route mobile/app/(app)/parcel-tool/[parcelId].tsx is now the mount of the REPORT binding (owner binding_mobile_report, S-085): the lookup query, Retry and Back, and ReportPageHost over the page view the server builds with MF-57's core and sends as the nullable `page` of contract_parcels_lookup (null for every lot until MB-44, so the approved miss text shows). The hand-built screen, SponsorSlot and the phone formatting it used on screen are retired (parcelCostFormat.ts stays: the report generators cite it); S-001 is retired from report-fields.decl.json (M-69 dated note). Line cites above that name the old screen carry their own dated note. [Dated 2026-11-25 (M-246, prior text kept; task-267 LOAD.2 with task-317 LOAD.4, MF-99, lane BL-MCFIX267; RR-0485 MD:2533, RR-0491 MD:2563, RR-0492 MD:2567, RR-0493 MD:2571, RR-0494 MD:2575, RR-0497 MD:2588): the report screen's loading screen is the declared state loading (surface.schema.json closes the state names: loading is \"Waiting on the first response\"), drawn as three screens: checking (the What we checked lines playing), ready (the lines done and the report in: the ready line and View report; no auto-open, RR-0176), holding (the lines done and the report not in: the centred spinner and Loading the report…, RR-0491); error and miss show at once with the lines as far as they got (RR-0492 item 2 and 3, RR-0494); the give-up is 60 s from the pick (RR-0493), the shared maxbld_page_continue_wait_ms. reportScreenState (mobile/src/components/surfaces/ReportBinding.tsx:487) picks the state; checkedProps (:414) draws it; useReportScreen (mobile/src/hooks/useParcelLookup.ts:173) sends the fast read first and holds the clock. Two content keys: back_to_search.text and checks.label (RR-0493 replaces Spec 126:869 for this one label).]",
+     "x-draft": {
+       "shard": "mobile-product",
+       "files": [
+@@ -7395,7 +7397,7 @@
+     },
+     "config": {
+       "answer": "logic_variables",
+-      "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page reads the unsure flag and one declared tunable, config.continue_wait_ms (how long Continue waits for the answered lookup; 60 s, an open operator timeframe, moved here unchanged by FIX.TUNE task-378). FIX.CONFIG-BOUNDS (task-395; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", MORNING-DECISIONS.md:1494): continue_wait_ms is the registered logic variable maxbld_page_continue_wait_ms, declared in config.logic_variables and resolved from its seed row by the generator; only the phone applies its bounds at run time.",
++      "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page reads the unsure flag and one declared tunable, config.continue_wait_ms (how long Continue waits for the answered lookup; 60 s, an open operator timeframe, moved here unchanged by FIX.TUNE task-378). FIX.CONFIG-BOUNDS (task-395; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", MORNING-DECISIONS.md:1494): continue_wait_ms is the registered logic variable maxbld_page_continue_wait_ms, declared in config.logic_variables and resolved from its seed row by the generator; only the phone applies its bounds at run time. Dated 2026-11-25 (M-246, prior text kept; task-267 LOAD.2 with task-317 LOAD.4, MF-99, lane BL-MCFIX267; RR-0485 MD:2533, RR-0491 MD:2563, RR-0492 MD:2567, RR-0493 MD:2571, RR-0494 MD:2575, RR-0497 MD:2588): maxbld_page_continue_wait_ms has a second reader: the report screen's give-up (60 s from the pick, RR-0493), read as REPORT_GIVE_UP_MS = SEMI_CONTINUE_WAIT_MS (mobile/src/hooks/useParcelLookup.ts); the semi wait and the report give-up share one value until a later card gives the report its own row (RR-0477).",
+       "evidence": [
+         "migrations/320_parcel_lot_form_view.sql",
+         "migrations/323_semi_o4_zone_and_wall_asks.sql",
+diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json
+index b180aa7d50432306c3ccaffef595bd1eb4efd594..ccc3539eb9a5b3ad5dc324eaa218122b4d4b5cd0 100644
+--- a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json
++++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json
+@@ -277,7 +277,7 @@
+   },
+   "config": {
+     "answer": "logic_variables",
+-    "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page reads the unsure flag and one declared tunable, config.continue_wait_ms (how long Continue waits for the answered lookup; 60 s, an open operator timeframe, moved here unchanged by FIX.TUNE task-378). FIX.CONFIG-BOUNDS (task-395; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", MORNING-DECISIONS.md:1494): continue_wait_ms is the registered logic variable maxbld_page_continue_wait_ms, declared in config.logic_variables and resolved from its seed row by the generator; only the phone applies its bounds at run time.",
++    "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page reads the unsure flag and one declared tunable, config.continue_wait_ms (how long Continue waits for the answered lookup; 60 s, an open operator timeframe, moved here unchanged by FIX.TUNE task-378). FIX.CONFIG-BOUNDS (task-395; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", MORNING-DECISIONS.md:1494): continue_wait_ms is the registered logic variable maxbld_page_continue_wait_ms, declared in config.logic_variables and resolved from its seed row by the generator; only the phone applies its bounds at run time. Dated 2026-11-25 (M-246, prior text kept; task-267 LOAD.2 with task-317 LOAD.4, MF-99, lane BL-MCFIX267; RR-0485 MD:2533, RR-0491 MD:2563, RR-0492 MD:2567, RR-0493 MD:2571, RR-0494 MD:2575, RR-0497 MD:2588): maxbld_page_continue_wait_ms has a second reader: the report screen's give-up (60 s from the pick, RR-0493), read as REPORT_GIVE_UP_MS = SEMI_CONTINUE_WAIT_MS (mobile/src/hooks/useParcelLookup.ts); the semi wait and the report give-up share one value until a later card gives the report its own row (RR-0477).",
+     "evidence": [
+       "migrations/320_parcel_lot_form_view.sql",
+       "migrations/323_semi_o4_zone_and_wall_asks.sql",
+diff --git a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json
+index a81d83cb6cf7e282aa1b570bd4cf7cfdb1b4ba90..a18beadcf4cd021a51ccd1edbb1c560304235fac 100644
+--- a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json
++++ b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json
+@@ -334,11 +334,11 @@
+     "answer": "sole",
+     "why": "Exactly one call site reads it today: the app search page line (SRCH.A6, task-320). Its web tree is inert until MAXBLD_WEB_LIVE flips (LS.12); MF-52 (Account) and MF-49 bind to it when they build.",
+     "evidence": [
+-      "mobile/src/hooks/useParcelLookup.ts:168",
++      "mobile/src/hooks/useParcelLookup.ts:300",
+       ".cursor/MCFRONTEND-QUEUE.md MF-45 row (dated note 2026-11-11)"
+     ],
+     "surfaces": [
+-      "mobile/src/hooks/useParcelLookup.ts:168"
++      "mobile/src/hooks/useParcelLookup.ts:300"
+     ]
+   },
+   "a11y": {
+@@ -374,7 +374,7 @@
+     ],
+     "writes_audit_row": false,
+     "consumers_verified": [
+-      "mobile/src/hooks/useParcelLookup.ts:168"
++      "mobile/src/hooks/useParcelLookup.ts:300"
+     ],
+     "auth_class_executed": "authenticated",
+     "locking_tests": [
+diff --git a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
+index 7876135c23b5d7882212c6729069db3d75efa4eb..06dbef771320962f23dc614166385dc37e9873cd 100644
+--- a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
++++ b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
+@@ -3,7 +3,7 @@
+   "status": "exists",
+   "docs": {
+     "purpose": "Lets a paying subscriber search for a property by address, or pick a specific close match, and see the estimated construction costs and nearby neighbourhood build activity for that property.",
+-    "data_story": "It reads 7 tables through inputs.tables — `parcels`, `address_points`, `parcel_address_points`, `coa_applications`, `user_profiles`, `entitlements` and `logic_variables` — and besides them `usage_events` (the meter) and (MB-44 W, task-123, only while the web live switch is on; it is off) the stored report rows `parcel_maxbld_scenarios` and the Layer 2 stamps `bylaw_resolution_lot_stamps` — and writes one: a `usage_events` row (`property_view`) for each new lot a `parcel_tool` holder opens in the billing month (MF-45). Its response is an explicit pick-by-name projection of the 80 names in inputs.field_whitelist, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `mobile/src/hooks/useParcelLookup.ts`. Dated 2026-11-11 (MF-53): every response also names its `resolution`; for multi_parcel and unlinked only, a `map` block (lot outlines from parcels.geom, area by the report rule area_sqft_m2_dot from lot_size_sqm, frontage by len1 from frontage_m, zoning_zn_string, centroid_lat/lng, the address pin from address_points.latitude/longitude, a start view, and on unlinked the neighbour outlines within the logic-variable radius). The map is not metered. Dated 2026-11-12 (MF-48 Stage B; operator \"Ball y\", B-3 a; Spec 100 §3.2 dated note): a hit also carries `page`, the mobile report page view built on the server by MF-57's core (pageViewOf(buildPage(response))) from the lot's producer response (src/lib/parcels/report-page.ts); it is null for every lot until MB-44 serves a producer, absent of meaning on candidates, a miss or a dangling id (null), and .strict() at every level (target, layout, sections, parts, ad). \"It reads no table today and changes no meter.\" Corrected 2026-11-20 (M-246, FIX.SPECS · task-376; the prior sentence is kept in quotation marks; operator, verbatim, 2026-11-19, RR-0278, decision-81, MORNING-DECISIONS.md:1082: \"it shouldn't count the report unless the report is produced. I should only be charged a report if I find the address and lot I'm looking for and a report is produced\"): the first half stopped being true with the dated notes of 2026-11-19 below (the stored reads of MB-44 W and the one-lot compute of LOAD.1, both behind the web live switch), and the second half with the report-produced meter: a parcel_tool hit counts one report only when its `page` is produced; a hit with no `page` (candidates, a miss, a map, a dangling id, an unsure lot held before its semi question, a lot with no stored or computed page) counts nothing (logged not_produced, semi_pending or not_evaluated). The held page and the `semi=answered` request key are the design of task-360 and task-319, not an operator ruling: RR-0278 does not rule the semi flag. See Spec 100 section 3.2 dated note 2026-11-20. Dated 2026-11-19 (LOAD.1, task-266, M-246): while the web live switch is on (it is off), a hit whose stored page is missing or stale is computed in memory by the Layer 3 step's own core (src/lib/parcels/report-compute.ts), which reads for that one lot, besides the stored tables above, the Layer 2 results `bylaw_resolution_results` and `bylaw_resolution_option_results`, the lookups `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`, the lot geometry and street columns of `parcels`, and the validated step settings of `logic_variables`; it writes nothing (the record write is ST.P1), adds no response key, and a lot with no Layer 2 stamp stays a miss. Dated 2026-11-24 (SEARCHFIX.1, task-449; operator, verbatim, RR-0442, MORNING-DECISIONS.md:2276: \"It should open on an exact match and we have a different process for address mistakes\"; RR-0443 c, :2284: \"What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close\"): exact match opens; a typeahead, a street type or direction conflict, a unit, letter or dash form, and a mistype list. A lot opens (`unique`) on the exact read, or on a one-row typeahead that is the typed address in full; every other one-row leftover is `text_candidates`. No `resolution` value is added and the meter is unchanged.",
++    "data_story": "It reads 7 tables through inputs.tables — `parcels`, `address_points`, `parcel_address_points`, `coa_applications`, `user_profiles`, `entitlements` and `logic_variables` — and besides them `usage_events` (the meter) and (MB-44 W, task-123, only while the web live switch is on; it is off) the stored report rows `parcel_maxbld_scenarios` and the Layer 2 stamps `bylaw_resolution_lot_stamps` — and writes one: a `usage_events` row (`property_view`) for each new lot a `parcel_tool` holder opens in the billing month (MF-45). Its response is an explicit pick-by-name projection of the 95 names in inputs.field_whitelist, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `mobile/src/hooks/useParcelLookup.ts`. Dated 2026-11-11 (MF-53): every response also names its `resolution`; for multi_parcel and unlinked only, a `map` block (lot outlines from parcels.geom, area by the report rule area_sqft_m2_dot from lot_size_sqm, frontage by len1 from frontage_m, zoning_zn_string, centroid_lat/lng, the address pin from address_points.latitude/longitude, a start view, and on unlinked the neighbour outlines within the logic-variable radius). The map is not metered. Dated 2026-11-12 (MF-48 Stage B; operator \"Ball y\", B-3 a; Spec 100 §3.2 dated note): a hit also carries `page`, the mobile report page view built on the server by MF-57's core (pageViewOf(buildPage(response))) from the lot's producer response (src/lib/parcels/report-page.ts); it is null for every lot until MB-44 serves a producer, absent of meaning on candidates, a miss or a dangling id (null), and .strict() at every level (target, layout, sections, parts, ad). \"It reads no table today and changes no meter.\" Corrected 2026-11-20 (M-246, FIX.SPECS · task-376; the prior sentence is kept in quotation marks; operator, verbatim, 2026-11-19, RR-0278, decision-81, MORNING-DECISIONS.md:1082: \"it shouldn't count the report unless the report is produced. I should only be charged a report if I find the address and lot I'm looking for and a report is produced\"): the first half stopped being true with the dated notes of 2026-11-19 below (the stored reads of MB-44 W and the one-lot compute of LOAD.1, both behind the web live switch), and the second half with the report-produced meter: a parcel_tool hit counts one report only when its `page` is produced; a hit with no `page` (candidates, a miss, a map, a dangling id, an unsure lot held before its semi question, a lot with no stored or computed page) counts nothing (logged not_produced, semi_pending or not_evaluated). The held page and the `semi=answered` request key are the design of task-360 and task-319, not an operator ruling: RR-0278 does not rule the semi flag. See Spec 100 section 3.2 dated note 2026-11-20. Dated 2026-11-19 (LOAD.1, task-266, M-246): while the web live switch is on (it is off), a hit whose stored page is missing or stale is computed in memory by the Layer 3 step's own core (src/lib/parcels/report-compute.ts), which reads for that one lot, besides the stored tables above, the Layer 2 results `bylaw_resolution_results` and `bylaw_resolution_option_results`, the lookups `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`, the lot geometry and street columns of `parcels`, and the validated step settings of `logic_variables`; it writes nothing (the record write is ST.P1), adds no response key, and a lot with no Layer 2 stamp stays a miss. Dated 2026-11-24 (SEARCHFIX.1, task-449; operator, verbatim, RR-0442, MORNING-DECISIONS.md:2276: \"It should open on an exact match and we have a different process for address mistakes\"; RR-0443 c, :2284: \"What happens with a partial address? Similar to an address mistake they need to select from the available addresses that are close\"): exact match opens; a typeahead, a street type or direction conflict, a unit, letter or dash form, and a mistype list. A lot opens (`unique`) on the exact read, or on a one-row typeahead that is the typed address in full; every other one-row leftover is `text_candidates`. No `resolution` value is added and the meter is unchanged. Dated 2026-11-25 (M-246, prior text kept; task-267 LOAD.2 with task-317 LOAD.4, MF-99, lane BL-MCFIX267; RR-0485 MD:2533, RR-0491 MD:2563, RR-0492 MD:2567, RR-0493 MD:2571, RR-0494 MD:2575, RR-0497 MD:2588): the q form only finds the lot: it sends page null and runs neither the stored read nor the compute; the report is read or computed once, on the parcelId read the pick opens. The fast read (the request flag fast=1, parcelId only, never with semi; the semi=answered precedent) sends the stored page if there is one, else whatWeChecked: the What we checked view of the lot (readWhatWeChecked, built by MF-57's core into ViewChecked, href null), else nothing; it never computes.",
+     "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+   },
+   "evidence": {
+@@ -171,7 +171,22 @@
+       "lotForm",
+       "detected",
+       "basis",
+-      "unsure"
++      "unsure",
++      "whatWeChecked",
++      "groups",
++      "lines",
++      "verb",
++      "delay_ms",
++      "done_ms",
++      "dates",
++      "skip",
++      "after_ms",
++      "ready",
++      "at_ms",
++      "open",
++      "min_ms",
++      "paced",
++      "href"
+     ],
+     "tables": [
+       {
+@@ -622,7 +637,7 @@
+       "severity": "FAIL",
+       "blocking": false,
+       "when": "post",
+-      "why": "The response is an explicit pick-by-name of 80 field(s) (the inputs.field_whitelist names, projected at src/app/api/parcels/lookup/route.ts:85-90, src/app/api/parcels/lookup/route.ts:101-106, src/app/api/parcels/lookup/types.ts:94-101, src/lib/parcels/consumer-lookup.ts:139-157), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist."
++      "why": "The response is an explicit pick-by-name of 95 field(s) (the inputs.field_whitelist names, projected at src/app/api/parcels/lookup/route.ts:85-90, src/app/api/parcels/lookup/route.ts:101-106, src/app/api/parcels/lookup/types.ts:94-101, src/lib/parcels/consumer-lookup.ts:139-157), so a column added upstream cannot leak; this check set-equals the projection to inputs.field_whitelist. Dated 2026-11-25 (M-246, prior text kept; task-267 LOAD.2 with task-317 LOAD.4, MF-99, lane BL-MCFIX267; RR-0485 MD:2533, RR-0491 MD:2563, RR-0492 MD:2567, RR-0493 MD:2571, RR-0494 MD:2575, RR-0497 MD:2588): + whatWeChecked and the keys inside it (the fast read's checked view, CheckedViewSchema, src/app/api/parcels/lookup/types.ts), appended at the end of the list; 80 names before."
+     },
+     {
+       "id": "contract_parcels_lookup__schema_declared",
+@@ -745,12 +760,13 @@
+   },
+   "metering": {
+     "answer": "metered",
+-    "why": "A parcel_tool hit counts one report only when its `page` is produced (RR-0278, MORNING-DECISIONS.md:1082): openReport writes one usage_events row (property_view, parcel_ref = the matched parcels.parcel_id) inside a transaction holding the (user, parcel_tool) entitlement row lock; a re-open in the month is free; a new lot past the allowance is refused 403 REPORT_LIMIT_REACHED (MF-45). A hit with no `page` (candidates, a miss, a map, a dangling id, an unsure lot held before its semi question, a lot with no stored or computed page) counts nothing (logged not_produced, semi_pending or not_evaluated). The transitional lead_gen arm is unmetered (deviation below).",
++    "why": "A parcel_tool hit counts one report only when its `page` is produced (RR-0278, MORNING-DECISIONS.md:1082): openReport writes one usage_events row (property_view, parcel_ref = the matched parcels.parcel_id) inside a transaction holding the (user, parcel_tool) entitlement row lock; a re-open in the month is free; a new lot past the allowance is refused 403 REPORT_LIMIT_REACHED (MF-45). A hit with no `page` (candidates, a miss, a map, a dangling id, an unsure lot held before its semi question, a lot with no stored or computed page) counts nothing (logged not_produced, semi_pending or not_evaluated). The transitional lead_gen arm is unmetered (deviation below). Dated 2026-11-25 (M-246, prior text kept; task-267 LOAD.2 with task-317 LOAD.4, MF-99, lane BL-MCFIX267; RR-0485 MD:2533, RR-0491 MD:2563, RR-0492 MD:2567, RR-0493 MD:2571, RR-0494 MD:2575, RR-0497 MD:2588): a q hit sends no page, so it counts nothing (not_produced); the report is counted on the parcelId read the pick opens. The fast read counts only a stored page it serves, through the same unchanged meter code; its checked view has no page and counts nothing (not_produced).",
+     "evidence": [
+-      "src/app/api/parcels/lookup/route.ts:102-114 (the meter: not_evaluated, semi_pending, not_produced, then openReport in withTransaction; limit_reached and not_entitled refusals)",
++      "src/app/api/parcels/lookup/route.ts:116-128 (the meter: not_evaluated, semi_pending, not_produced, then openReport in withTransaction; limit_reached and not_entitled refusals) [Dated 2026-11-25 (M-246, prior text kept; task-267 LOAD.2 with task-317 LOAD.4, MF-99, lane BL-MCFIX267; RR-0485 MD:2533, RR-0491 MD:2563, RR-0492 MD:2567, RR-0493 MD:2571, RR-0494 MD:2575, RR-0497 MD:2588): moved from :102-114]",
+       "src/lib/entitlements/index.ts:590-609 (openReport: FOR UPDATE, readReportLimits, the window count, the INSERT)",
+       "migrations/303_parcel_tool_entitlement_usage.sql (usage_events, chk_usage_events_*; the two allowance variables)",
+-      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 (dated note 2026-11-11)"
++      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.7 (dated note 2026-11-11)",
++      "src/lib/parcels/lookup-flow.ts:79 (findOnly: the q form runs neither the stored read nor the compute) and :133 (the fast read's checked view)"
+     ],
+     "unit": "report",
+     "product": "parcel_tool",
+diff --git a/scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.content.json b/scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.content.json
+index 1d00f87d006b13010630ae9be2e05221e4f68a68..82559ed412c916eb6f7ffed17ded832ed38f2e94 100644
+--- a/scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.content.json
++++ b/scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.content.json
+@@ -1,4 +1,6 @@
+ {
+   "retry.text": "Try again",
+-  "back.text": "Back"
++  "back.text": "Back",
++  "back_to_search.text": "Back to search",
++  "checks.label": "Checks for this lot"
+ }
+diff --git a/scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.descriptor.json b/scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.descriptor.json
+index 4f6407166f26e8c63597f1593213d13db119def7..167f2b8467f075e98d593ec46aa16c41d96db360 100644
+--- a/scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.descriptor.json
++++ b/scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.descriptor.json
+@@ -21,11 +21,13 @@
+     ],
+     "gate": [
+       "src/app/api/parcels/lookup/route.ts:47-60",
+-      "src/app/api/parcels/lookup/route.ts:71-76"
++      "src/app/api/parcels/lookup/route.ts:71-76",
++      "src/app/api/parcels/lookup/route.ts:69-88 (auth, the gate and the query parse with the fast flag) [Dated 2026-11-25 (M-246, prior text kept; task-267 LOAD.2 with task-317 LOAD.4, MF-99, lane BL-MCFIX267; RR-0485 MD:2533, RR-0491 MD:2563, RR-0492 MD:2567, RR-0493 MD:2571, RR-0494 MD:2575, RR-0497 MD:2588)]"
+     ],
+     "states": [
+       "mobile/app/(app)/parcel-tool/[parcelId].tsx:88-110 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" and \"S1 a\": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]",
+-      "mobile/app/(app)/parcel-tool/[parcelId].tsx:147-160 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" and \"S1 a\": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]"
++      "mobile/app/(app)/parcel-tool/[parcelId].tsx:147-160 [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" and \"S1 a\": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]",
++      "mobile/app/(app)/parcel-tool/[parcelId].tsx:37-48 (reportScreenState over useReportScreen; the host draws the loading screen) [Dated 2026-11-25 (M-246, prior text kept; task-267 LOAD.2 with task-317 LOAD.4, MF-99, lane BL-MCFIX267; RR-0485 MD:2533, RR-0491 MD:2563, RR-0492 MD:2567, RR-0493 MD:2571, RR-0494 MD:2575, RR-0497 MD:2588)]"
+     ],
+     "emits": [
+       "mobile/app/(app)/parcel-tool/[parcelId].tsx:1-231 — no track() call in the file [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" and \"S1 a\": a line of the retired hand-built screen; the route is now the REPORT mount (ReportPageHost over the server page view, MF-57 core), S-001 retired from report-fields.decl.json]"
+@@ -448,7 +450,7 @@
+     }
+   ],
+   "interpretation": "none",
+-  "notes": "inputs.tables[parcels].columns is \"all\" deliberately: the projection reads the whole row minus geometry/geom, which is itself the finding — the whitelist is enforced at serialisation, not at the query. This is the Spec 126 §11 pilot REPORT, so its plausibility[] entries are written as real SQL rather than \"none\". SponsorSlot is NOT claimed here — it is its own census row (overlay_sponsor_slot), so this surface owns no component files. [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" B-6: SponsorSlot.tsx is deleted with the old lot screen; no slot component remains in the Expo tree, and the report's ads are the v21 page ad sections (MF-20)] Dated note 2026-11-12 (M-246, prior text kept; MF-48 Stage B with MF-74; operator, verbatim: \"Ball y\" and \"S1 a\"): the route mobile/app/(app)/parcel-tool/[parcelId].tsx is now the mount of the REPORT binding (owner binding_mobile_report, S-085): the lookup query, Retry and Back, and ReportPageHost over the page view the server builds with MF-57's core and sends as the nullable `page` of contract_parcels_lookup (null for every lot until MB-44, so the approved miss text shows). The hand-built screen, SponsorSlot and the phone formatting it used on screen are retired (parcelCostFormat.ts stays: the report generators cite it); S-001 is retired from report-fields.decl.json (M-69 dated note). Line cites above that name the old screen carry their own dated note.",
++  "notes": "inputs.tables[parcels].columns is \"all\" deliberately: the projection reads the whole row minus geometry/geom, which is itself the finding — the whitelist is enforced at serialisation, not at the query. This is the Spec 126 §11 pilot REPORT, so its plausibility[] entries are written as real SQL rather than \"none\". SponsorSlot is NOT claimed here — it is its own census row (overlay_sponsor_slot), so this surface owns no component files. [dated 2026-11-12, M-246, prior text kept; MF-48 Stage B with MF-74, operator \"Ball y\" B-6: SponsorSlot.tsx is deleted with the old lot screen; no slot component remains in the Expo tree, and the report's ads are the v21 page ad sections (MF-20)] Dated note 2026-11-12 (M-246, prior text kept; MF-48 Stage B with MF-74; operator, verbatim: \"Ball y\" and \"S1 a\"): the route mobile/app/(app)/parcel-tool/[parcelId].tsx is now the mount of the REPORT binding (owner binding_mobile_report, S-085): the lookup query, Retry and Back, and ReportPageHost over the page view the server builds with MF-57's core and sends as the nullable `page` of contract_parcels_lookup (null for every lot until MB-44, so the approved miss text shows). The hand-built screen, SponsorSlot and the phone formatting it used on screen are retired (parcelCostFormat.ts stays: the report generators cite it); S-001 is retired from report-fields.decl.json (M-69 dated note). Line cites above that name the old screen carry their own dated note. [Dated 2026-11-25 (M-246, prior text kept; task-267 LOAD.2 with task-317 LOAD.4, MF-99, lane BL-MCFIX267; RR-0485 MD:2533, RR-0491 MD:2563, RR-0492 MD:2567, RR-0493 MD:2571, RR-0494 MD:2575, RR-0497 MD:2588): the report screen's loading screen is the declared state loading (surface.schema.json closes the state names: loading is \"Waiting on the first response\"), drawn as three screens: checking (the What we checked lines playing), ready (the lines done and the report in: the ready line and View report; no auto-open, RR-0176), holding (the lines done and the report not in: the centred spinner and Loading the report…, RR-0491); error and miss show at once with the lines as far as they got (RR-0492 item 2 and 3, RR-0494); the give-up is 60 s from the pick (RR-0493), the shared maxbld_page_continue_wait_ms. reportScreenState (mobile/src/components/surfaces/ReportBinding.tsx:487) picks the state; checkedProps (:414) draws it; useReportScreen (mobile/src/hooks/useParcelLookup.ts:173) sends the fast read first and holds the clock. Two content keys: back_to_search.text and checks.label (RR-0493 replaces Spec 126:869 for this one label).]",
+   "x-draft": {
+     "shard": "mobile-product",
+     "files": [
+diff --git a/scripts/surfaces/report-page-capture.ts b/scripts/surfaces/report-page-capture.ts
+index 376f8728f338d95354cfc17593394d0f4fe18b65..7db46ed8c401422c483b2712284ed68ff775e7c8 100644
+--- a/scripts/surfaces/report-page-capture.ts
++++ b/scripts/surfaces/report-page-capture.ts
+@@ -16,7 +16,7 @@
+ import fs from 'node:fs';
+ import path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+-import { buildPage, pageViewOf } from '../../src/lib/surfaces/report/core';
++import { buildPage, buildTree, pageViewOf, viewOf } from '../../src/lib/surfaces/report/core';
+ import { reportCtx } from '../../src/lib/surfaces/report/data';
+ import { FP_FILES, TARGETS, readJson, sha16, sha16Text } from './report-checks.mjs';
+ 
+@@ -76,6 +76,18 @@ export const MOBILE_PAGE_STATES: Record<string, (r: Json) => Json> = {
+   page_all_null: (r) => ({ ...r, values: Object.fromEntries(Object.keys(r.values as Json).map((k) => [k, null])) }),
+ };
+ export const MOBILE_LIFECYCLE_STATES = ['loading', 'miss', 'error'];
++// task-267 LOAD.2 + task-317 LOAD.4 (PLAN-267-v2 step 11.5; approved mock MOCK-LOADING-ENDINGS-v3, RR-0491): the loading screen states. Each golden carries the
++// checked VIEW the phone is sent (viewOf(buildTree(the synthetic loading response of the MF-62 golden)).checked, through this core, a second source beside
++// buildPage), the elapsed time the lines are drawn at and the screen; its `props` member is the binding's output (checkedProps), asserted equal by
++// mobile/__tests__/reportScreens.golden.test.ts and carried over unchanged here. error_lines and miss_lines are the endings with the lines as far as they got.
++export const CHECKED_RESPONSE_GOLDEN = 'src/tests/fixtures/surfaces/report/loading_checked.mobile.json';
++export const MOBILE_CHECKED_STATES: Record<string, { screen: string; elapsed_ms: number }> = {
++  checking: { screen: 'checking', elapsed_ms: 12000 },
++  ready: { screen: 'ready', elapsed_ms: 23000 },
++  holding: { screen: 'holding', elapsed_ms: 23000 },
++  error_lines: { screen: 'error', elapsed_ms: 8000 },
++  miss_lines: { screen: 'miss', elapsed_ms: 2500 },
++};
+ 
+ export const captureMobileViews = (root: string): Map<string, string> => {
+   const base = (readJson(path.join(root, PAGE_GOLDEN_DIR, 'v21.mobile.json')) as Json).response_fixture as Json;
+@@ -92,6 +104,12 @@ export const captureMobileViews = (root: string): Map<string, string> => {
+     const name = `${state}.mobile.json`;
+     out.set(`props/${name}`, `${JSON.stringify({ ...head, state, target: 'mobile', lifecycle: state, props: old(name).props ?? null }, null, 2)}\n`);
+   }
++  const loading = (readJson(path.join(root, CHECKED_RESPONSE_GOLDEN)) as Json).response_fixture as Json;
++  const checked = (viewOf(buildTree(loading, reportCtx), { target: 'mobile' }, reportCtx) as Json).checked as Json;
++  for (const [state, s] of Object.entries(MOBILE_CHECKED_STATES)) {
++    const name = `${state}.mobile.json`;
++    out.set(`props/${name}`, `${JSON.stringify({ ...head, state, target: 'mobile', screen: s.screen, elapsed_ms: s.elapsed_ms, checked, props: old(name).props ?? null }, null, 2)}\n`);
++  }
+   return out;
+ };
+ 
+diff --git a/src/app/api/parcels/lookup/route.ts b/src/app/api/parcels/lookup/route.ts
+index a046be2794692584cab6aa7e548f75fb83f78e9c..3c7a9c0e28c2b5517ce61817c36c386ef4dece54 100644
+--- a/src/app/api/parcels/lookup/route.ts
++++ b/src/app/api/parcels/lookup/route.ts
+@@ -18,6 +18,10 @@
+ //   SRCH.METER-2 (task-360, 2026-11-19): that unsure lot's `page` is not sent either (null; neither the stored read nor the compute runs, meter semi_pending) until
+ //   the request carries semi=answered, so a page that is sent is a page that is counted. Prior text: the page was sent and only the meter said semi_pending.
+ //   A new lot past the allowance → 403 REPORT_LIMIT_REACHED, no payload. Fail closed: a meter error is a 500, never an unmetered payload.
++//   task-267 LOAD.2 (2026-11-25, PLAN-267-v2 step 2; RR-0485 MD:2533): the q form only finds the lot and sends page null (not_produced), so a q hit counts
++//   nothing; the report is produced and counted on the parcelId read the pick opens. The fast read (fast=1, parcelId only, never with semi) sends the stored
++//   page if there is one (counted like any page, through the same code) else the What we checked view (whatWeChecked, page null: not_produced). The meter
++//   code below is unchanged. Prior text: a q hit read the stored page and ran the compute, and was counted when the page was produced.
+ // Rate: `parcels-search:${uid}` on the q path and `parcels-lookup:${uid}` on parcelId, a 60 s window; the per-minute counts are the settings
+ //   parcel_lookup_search_per_min (default 60) and parcel_lookup_detail_per_min (default 30). task-454 SEARCHFIX.6 (operator, verbatim, 2026-11-20: "yes
+ //   follow the rules register them.", MORNING-DECISIONS.md:1494; Spec 128 Rule 3): they, the slow-query mark (parcel_lookup_slow_query_ms) and the
+@@ -79,9 +83,10 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+     q: sp.get('q') ?? undefined,
+     parcelId: sp.get('parcelId') ?? undefined,
+     semi: sp.get('semi') ?? undefined,
++    fast: sp.get('fast') ?? undefined, // task-267: the fast read flag (fast=1), the semi=answered precedent
+   });
+   if (!parsed.success) return badRequestZod(parsed.error);
+-  const { q, parcelId, semi } = parsed.data;
++  const { q, parcelId, semi, fast } = parsed.data;
+ 
+   // 4. The search settings (task-454): one read; the limiter's number comes from it. A bad row throws to the generic 500 (no data, no database text).
+   let settings: Awaited<ReturnType<typeof readSearchSettings>>;
+@@ -101,7 +106,7 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+   const t0 = Date.now();
+   try {
+     // The flow (resolve, map, lot row, page, response, boundary parse) lives in src/lib/parcels/lookup-flow.ts (Standard 10.3); the meter and the log stay here (RR-0331).
+-    const { response, body, parcelRef, pageSource, computeMs } = await runLookupFlow({ q, parcelId, semi, candidateCap: settings.candidate_cap });
++    const { response, body, parcelRef, pageSource, computeMs, checkedProblem } = await runLookupFlow({ q, parcelId, semi, candidateCap: settings.candidate_cap, fast: fast === '1' ? { db: pool } : undefined });
+ 
+     // Meter (MF-45; RR-0278 2026-11-19): only a hit whose report is produced (`page` sent) on the parcel_tool path counts. Candidates, a miss, a
+     // map or a dangling id show no report and count nothing; nor does an unsure lot before its semi question (SEMI-B, the app asks it before the
+@@ -142,7 +147,11 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+       page: response.page !== null, // MF-48 Stage B: whether a report page was sent (never its content)
+       page_source: pageSource, // LOAD.1: stored, computed or none
+       compute_ms: computeMs, // LOAD.1: the compute entry's time when it ran (about 0 while the switch is off), null when W served the page
++      fast: fast === '1', // task-267: the fast read (stored page or the checked view, never a compute)
++      checked: response.whatWeChecked !== null, // task-267: whether the checked view was sent (never its content)
+     });
++    // task-267: a checked view the fast read could not build is logged here (the flow imports no logger); the lookup still answers, with no lines.
++    if (checkedProblem !== null) logWarn(TAG, 'fast read: checked view unusable; no lines', { parcelId: parcelRef, error: checkedProblem });
+     if (duration_ms > settings.slow_query_ms) {
+       logWarn(TAG, 'slow_query', { duration_ms, outcome });
+     }
+diff --git a/src/app/api/parcels/lookup/types.ts b/src/app/api/parcels/lookup/types.ts
+index 7cd18ddf57004c7199cd14775b39507ab1d5c416..5fb03c88de6aec847549fdb40422baeb8d9e7a90 100644
+--- a/src/app/api/parcels/lookup/types.ts
++++ b/src/app/api/parcels/lookup/types.ts
+@@ -43,6 +43,9 @@ export const ConsumerParcelLookupQuerySchema = z
+     parcelId: z.string().trim().min(1).max(32).optional(),
+     // SRCH.SEMI stage 2 (task-319, MF-93; RR-0278): the semi question page sets this on its Continue fetch, so an unsure lot counts like any lot once it is answered.
+     semi: z.literal('answered').optional(),
++    // task-267 LOAD.2 (PLAN-267-v2 step 2, O1-A2; RR-0497 Q-e A; the semi=answered precedent): the fast read the report screen sends first, at the pick. It
++    // returns the stored page or the What we checked view (whatWeChecked) and runs no compute. It belongs to parcelId and is never sent with semi.
++    fast: z.literal('1').optional(),
+   })
+   .superRefine((v, ctx) => {
+     if (Boolean(v.q) === Boolean(v.parcelId)) {
+@@ -51,6 +54,9 @@ export const ConsumerParcelLookupQuerySchema = z
+     if (v.semi !== undefined && !v.parcelId) {
+       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'semi belongs to a known lot: send it with parcelId' });
+     }
++    if (v.fast !== undefined && (!v.parcelId || v.semi !== undefined)) {
++      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'fast belongs to a known lot: send it with parcelId and without semi' });
++    }
+   });
+ export type ConsumerParcelLookupQuery = z.infer<typeof ConsumerParcelLookupQuerySchema>;
+ 
+@@ -182,6 +188,29 @@ export const ReportPageViewSchema = z
+   .strict();
+ export type ReportPageView = z.infer<typeof ReportPageViewSchema>;
+ 
++// task-267 LOAD.2 (PLAN-267-v2 step 2; X-4 a, operator "x-4 a" 2026-11-11, .cursor/MCFRONTEND-QUEUE.md:367): the What we checked view of the fast read, the
++// core's ViewChecked (src/lib/surfaces/report/core.ts: CheckedTree plus paced and href) built on the server by buildTree and viewOf from readWhatWeChecked
++// (src/lib/parcels/what-we-checked.ts). Every text is a server-filled content template (FE-05); the pace is integer milliseconds. href is always null here
++// (no Skip is drawn: RR-0176 "always runs to completion"). Every level is .strict(), so a stray key fails the boundary parse.
++const Ms = z.number().int().nonnegative();
++export const CheckedViewSchema = z
++  .object({
++    summary: z.string(),
++    groups: z.array(z.object({
++      key: z.string(),
++      lines: z.array(z.object({ key: z.string(), text: z.string(), verb: z.string(), delay_ms: Ms, done_ms: Ms }).strict()),
++    }).strict()),
++    dates: z.object({ text: z.string(), delay_ms: Ms }).strict().optional(),
++    skip: z.object({ text: z.string(), after_ms: Ms }).strict(),
++    ready: z.object({ text: z.string(), at_ms: Ms }).strict(),
++    open: z.object({ text: z.string() }).strict(),
++    min_ms: Ms,
++    paced: z.boolean(),
++    href: z.null(),
++  })
++  .strict();
++export type CheckedView = z.infer<typeof CheckedViewSchema>;
++
+ export const ConsumerParcelLookupResponseSchema = z
+   .object({
+     match: ParcelMatchSchema.nullable(),
+@@ -192,10 +221,12 @@ export const ConsumerParcelLookupResponseSchema = z
+     map: ConsumerLotMapSchema.nullable(),
+     page: ReportPageViewSchema.nullable(), // MF-48 Stage B: a page only with a parcel (the refine below)
+     lotForm: ConsumerLotFormSchema.nullable().default(null), // SEMI-B: the lot form, only with a parcel (the refine below)
++    whatWeChecked: CheckedViewSchema.nullable().default(null), // task-267: the fast read's checked view, only with a parcel and no page (the refine below)
+   })
+   .strict()
+   .refine((r) => r.page === null || r.parcel !== null, { message: 'page is present only with a parcel (a hit)', path: ['page'] })
+   .refine((r) => r.lotForm === null || r.parcel !== null, { message: 'lotForm is present only with a parcel (a hit)', path: ['lotForm'] })
++  .refine((r) => r.whatWeChecked === null || (r.parcel !== null && r.page === null), { message: 'whatWeChecked is present only with a parcel and no page', path: ['whatWeChecked'] })
+   .refine((r) => (r.map !== null) === MAP_RESOLUTIONS.includes(r.resolution), {
+     message: 'map is present exactly when resolution is multi_parcel or unlinked',
+     path: ['map'],
+diff --git a/src/lib/parcels/lookup-flow.ts b/src/lib/parcels/lookup-flow.ts
+index ca68112eb77bcc5f347ae50adc0f9d4da6dd6e67..40f0393ee49636e1f82fe8d5c04d3d75c1cbcd7c 100644
+--- a/src/lib/parcels/lookup-flow.ts
++++ b/src/lib/parcels/lookup-flow.ts
+@@ -7,6 +7,12 @@
+ // WHAT STAYS IN THE ROUTE (RR-0331, operator 2026-11-20 "2. y", MORNING-DECISIONS.md:1432: the report meter stays in the lookup route): auth, the entitlement
+ // gate, the query parse, the two rate buckets, the meter decision and its openReport call, the log line, the refusal mapping and the error boundary.
+ // This module imports no meter, entitlement or usage code and writes nothing; a thrown read or compute error propagates to the route's catch (a 500: no page, no meter).
++// task-267 LOAD.2 (PLAN-267-v2 step 1; RR-0485 MD:2533; the 2026-11-25 phone walk, findings 22, 23, 30 and M1): the search only FINDS the lot. On the q form
++// (findOnly) neither the stored read nor the compute runs and page is null; the report is read or computed once, on the parcelId read the pick opens.
++// The fast read (fast=1, step 2) is the parcelId form that never computes: the stored page if there is one, else the What we checked view
++// (readFastChecked below, which takes the route's db handle), else nothing. A failed checked read or an unusable checked view is null, never a 500; its
++// problem is returned to the route, which logs it (this module still imports no logger).
++// Prior text: the q form read the stored page and ran the compute too (lookup-flow.ts:79-90 at 2fd2f6042).
+ // The raw q is never logged here or returned beyond the resolver's own fields (Spec 100 §2.8).
+ // task-454 SEARCHFIX.6 (MORNING-DECISIONS.md:1494; Spec 128 Rule 3): the route reads the search settings once (readSearchSettings, re-exported here so
+ // the route keeps importing no resolver module) and passes the candidate cap in; this module reads no setting.
+@@ -17,7 +23,30 @@ import { resolveLotMap } from '@/lib/parcels/lot-map';
+ import { readLotForm } from '@/lib/parcels/lot-form';
+ import { mobilePageView, readCustomerPageResponse } from '@/lib/parcels/report-page';
+ import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';
+-import { ConsumerParcelLookupResponseSchema, type ConsumerParcelLookupResponse } from '@/app/api/parcels/lookup/types';
++import { readWhatWeChecked } from '@/lib/parcels/what-we-checked';
++import type { Queryable } from '@/lib/parcels/report-check-pace';
++import { buildTree, viewOf } from '@/lib/surfaces/report/core';
++import { reportCtx } from '@/lib/surfaces/report/data';
++import { CheckedViewSchema, ConsumerParcelLookupResponseSchema, type CheckedView, type ConsumerParcelLookupResponse } from '@/app/api/parcels/lookup/types';
++
++const MOBILE_TARGET = 'mobile';
++
++/**
++ * task-267 LOAD.2 (PLAN-267-v2 step 2; X-4 a): the What we checked view of one lot for the fast read. readWhatWeChecked (MF-62) gives the paced lines or null;
++ * the core builds them into a loading tree and projects the mobile view with no skip href (no Skip is drawn, RR-0176), and only `checked` is sent. Any
++ * failure (a core refusal, a shape the strict schema refuses, a thrown read) is null with its problem named for the route's log: this screen never fails a
++ * lookup. A producer null (unknown lot, unusable pace) is null with no problem (readWhatWeChecked logs its own).
++ */
++export async function readFastChecked(db: Queryable, parcelRef: string): Promise<{ checked: CheckedView | null; problem: string | null }> {
++  try {
++    const w = await readWhatWeChecked(db, parcelRef);
++    if (w === null) return { checked: null, problem: null };
++    const view = viewOf(buildTree({ lifecycle: 'loading', what_we_checked: w }, reportCtx), { target: MOBILE_TARGET }, reportCtx) as { checked?: unknown };
++    return { checked: CheckedViewSchema.parse(view.checked), problem: null };
++  } catch (err) {
++    return { checked: null, problem: err instanceof Error ? err.name : 'unknown' };
++  }
++}
+ 
+ export interface LookupFlowResult {
+   /** The assembled response before the boundary parse (the route logs from it, as before). */
+@@ -30,6 +59,8 @@ export interface LookupFlowResult {
+   pageSource: 'stored' | 'computed' | 'none';
+   /** LOAD.1: the compute entry's time when it ran (a compute that ends in a miss is timed too), null when W served the page or the lot was held. */
+   computeMs: number | null;
++  /** task-267: the fast read's checked-view problem (an error name, never content), for the route's log; null when none. */
++  checkedProblem: string | null;
+ }
+ 
+ /** The query schema (ConsumerParcelLookupQuerySchema) guarantees exactly one of q | parcelId, so q is set whenever parcelId is not; this narrows the type without a non-null assertion. */
+@@ -38,8 +69,14 @@ function requireQ(q: string | undefined): string {
+   return q;
+ }
+ 
+-export async function runLookupFlow(input: { q?: string | undefined; parcelId?: string | undefined; semi?: string | undefined; candidateCap: number }): Promise<LookupFlowResult> {
+-  const { q, parcelId, semi, candidateCap } = input;
++export async function runLookupFlow(input: {
++  q?: string | undefined; parcelId?: string | undefined; semi?: string | undefined; candidateCap: number;
++  /** task-267: the fast read (fast=1) with the route's db handle for the checked read; absent on every other read. */
++  fast?: { db: Queryable } | undefined;
++}): Promise<LookupFlowResult> {
++  const { q, parcelId, semi, candidateCap, fast } = input;
++  // task-267 (PLAN-267-v2 step 1): the q form only finds the lot; the stored read and the compute run on the parcelId form only.
++  const findOnly = parcelId === undefined;
+   // Resolution: direct id (candidate click) bypasses address parsing.
+   const resolved = parcelId
+     ? { match: { parcelId, matchType: 'direct' as const, address: '' }, candidates: [], truncated: false, resolution: 'unique' as const, lotMap: null }
+@@ -57,16 +94,18 @@ export async function runLookupFlow(input: { q?: string | undefined; parcelId?:
+     map,
+     page: null,
+     lotForm: null,
++    whatWeChecked: null,
+   };
+ 
+   let parcelRef: string | null = null;
+   let pageSource: 'stored' | 'computed' | 'none' = 'none';
+   let computeMs: number | null = null;
++  let checkedProblem: string | null = null;
+   if (resolved.match) {
+     const row = await fetchParcelById(resolved.match.parcelId);
+     if (!row) {
+       // An unknown parcelId (dangling id / direct path) is a 200 miss, NOT a 404 (§2.6).
+-      response = { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match', map: null, page: null, lotForm: null };
++      response = { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match', map: null, page: null, lotForm: null, whatWeChecked: null };
+     } else {
+       const nbhdId = row.neighbourhood_id == null ? null : Number(row.neighbourhood_id);
+       const coaProjects = await fetchCoaProjects(nbhdId); // NULL-neighbourhood → []
+@@ -80,15 +119,20 @@ export async function runLookupFlow(input: { q?: string | undefined; parcelId?:
+       // SRCH.METER-2 (task-360, RR-0278): an unsure lot's page is HELD until the semi answer (semi=answered, the task-319 flag): neither the stored read nor
+       // the compute runs for a held lot (the compute can take many seconds) and `page` is null. `unsure` is the server's own read of the view, never request text.
+       const held = lotForm?.unsure === true && semi !== 'answered';
+-      let pageResponse = held ? null : await readCustomerPageResponse(parcelRef);
++      // task-267: findOnly (the q form) skips the stored read and the compute; the fast read skips the compute only.
++      let pageResponse = held || findOnly ? null : await readCustomerPageResponse(parcelRef);
+       if (pageResponse !== null) pageSource = 'stored';
+-      else if (!held) {
++      else if (!held && !findOnly && fast === undefined) {
+         const c0 = Date.now();
+         pageResponse = await computeCustomerPageResponse(parcelRef);
+         computeMs = Date.now() - c0; // the time of a compute that ends in a miss is logged too (the slow case is the one to see)
+         if (pageResponse !== null) pageSource = 'computed';
+       }
+       const page = pageResponse === null ? null : mobilePageView(pageResponse);
++      // task-267: the fast read sends the checked view only for a lot that is not held and has no stored page (the lines play while the report read computes).
++      const fastChecked = fast !== undefined && page === null && !held ? await readFastChecked(fast.db, parcelRef) : null;
++      const whatWeChecked = fastChecked?.checked ?? null;
++      checkedProblem = fastChecked?.problem ?? null;
+       response = {
+         match: { ...resolved.match, address: resolved.match.address || String(row.__display_address ?? '') },
+         candidates: [],
+@@ -98,6 +142,7 @@ export async function runLookupFlow(input: { q?: string | undefined; parcelId?:
+         map: null,
+         page,
+         lotForm,
++        whatWeChecked,
+       };
+     }
+   }
+@@ -105,5 +150,5 @@ export async function runLookupFlow(input: { q?: string | undefined; parcelId?:
+   // Boundary validation of OUR OWN assembled shape — the .strict() parse rejects any Tier-3 leak. It runs BEFORE the meter (the route's), so a response
+   // that fails it charges nothing (MF-45 fold 3).
+   const body = ConsumerParcelLookupResponseSchema.parse(response);
+-  return { response, body, parcelRef, pageSource, computeMs };
++  return { response, body, parcelRef, pageSource, computeMs, checkedProblem };
+ }
+diff --git a/src/lib/parcels/what-we-checked.ts b/src/lib/parcels/what-we-checked.ts
+index bbdc404b4c69788e5e91066a9921123716e99ff2..7f2ccadfe537b5c32d38317d145efd45b9e3ee30 100644
+--- a/src/lib/parcels/what-we-checked.ts
++++ b/src/lib/parcels/what-we-checked.ts
+@@ -25,6 +25,7 @@
+ // The GET /api/parcels/lookup wiring and the app render land with MF-48 (X-4 a); `showsWhatWeChecked` holds the re-opened-lot rule for it.
+ import universe from '../../../scripts/seeds/bylaw/universe.lock.json';
+ import { logError, logWarn } from '@/lib/logger';
++import { areaSqftM2Dot } from '@/lib/parcels/display-rules';
+ import { readReportCheckPace, type Queryable, type ReportCheckPace } from './report-check-pace';
+ 
+ export { REPORT_CHECK_BOUNDS, REPORT_CHECK_KEYS, readReportCheckPace } from './report-check-pace';
+@@ -52,7 +53,9 @@ export const showsWhatWeChecked = (meter: string): boolean => meter === 'counted
+ 
+ const fmtCount = (n: number): string => n.toLocaleString('en-CA');
+ const fmtDate = (d: Date | string): string => new Date(d).toLocaleDateString('en-CA', { timeZone: DATE_ZONE });
+-const fmtArea = (sqm: number): string => `${Math.round(sqm).toLocaleString('en-CA')} m²`;
++// task-267 (PLAN-267-v2 section 3, screen 1; operator 2026-11-14, MD:241, default imperial): the lot line uses the report's area rule (area_sqft_m2_dot,
++// sq ft first, then m², the rule of the report's lot.size and the map card). Prior text: `${Math.round(sqm).toLocaleString('en-CA')} m²`.
++const fmtArea = (sqm: number): string => areaSqftM2Dot(sqm) ?? '';
+ const positive = (v: unknown): number | null => {
+   const n = v === null || v === undefined ? Number.NaN : Number(v);
+   return Number.isInteger(n) && n > 0 ? n : null;
+diff --git a/src/tests/fix-tune.logic.test.ts b/src/tests/fix-tune.logic.test.ts
+index 95a431d0b9758aecb0d64dd79ee2da0b1b6ae007..f2787e825a75c8677f6a73e990387848cfad2b5e 100644
+--- a/src/tests/fix-tune.logic.test.ts
++++ b/src/tests/fix-tune.logic.test.ts
+@@ -77,9 +77,12 @@ describe('D15 the two descriptor entries are corrected', () => {
+     expect(src('src/app/api/parcels/lookup/types.ts')).toMatch(/ConsumerParcelLookupQuerySchema[\s\S]{0,900}semi: z\.literal\('answered'\)/);
+     const whitelist: string[] = json(LOOKUP_CONTRACT).inputs.field_whitelist;
+     expect(whitelist).not.toContain('semi');
+-    expect(whitelist.length).toBe(80); // 81 entries before FIX.TUNE, the one removed is semi (the last)
++    // task-267 (dated 2026-11-25, PLAN-267-v2 step 11.2): + whatWeChecked and the 14 keys inside it, appended after unsure; 80 before, the last three were detected, basis, unsure.
++    expect(whitelist.length).toBe(95); // 81 entries before FIX.TUNE, the one removed is semi (the last)
+     expect(whitelist.slice(0, 4)).toEqual(['match', 'candidates', 'warnings', 'parcel']);
+-    expect(whitelist.slice(-3)).toEqual(['detected', 'basis', 'unsure']);
++    expect(whitelist.slice(77, 81)).toEqual(['detected', 'basis', 'unsure', 'whatWeChecked']);
++    expect(whitelist.slice(-3)).toEqual(['min_ms', 'paced', 'href']);
++    expect(whitelist).not.toContain('fast'); // the fast flag is a request parameter, like semi
+   });
+   it('the entitlement contract names the line of useParcelEntitlement in the hook as its call site (found by reading the hook, not a typed number)', () => {
+     const line = src(HOOK).split('\n').findIndex((l) => l.startsWith('export function useParcelEntitlement(')) + 1;
+

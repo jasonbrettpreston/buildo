@@ -1,0 +1,395 @@
+LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:48262ecc963db00a8eaad62d1d5ec7f0626e8d8a7c398e8062985fce0e987973 part 1 of 1 chunk 4 of 4
+NO RULE LIST: the lens template alone judges the material under review. The material is chunk 4 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/parcel-lookup-gate.infra.test.ts","src/tests/report-checked-producer.logic.test.ts","src/tests/surfaces/report-failure.logic.test.ts","src/tests/surfaces/report-mobile.logic.test.ts"]
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/parcel-lookup-gate.infra.test.ts b/src/tests/parcel-lookup-gate.infra.test.ts
+index 9b9a27932428078232ea128197b8d6bc8aa54578..197eed0e24562348b0ebd5547d3aac1eec29dec3 100644
+--- a/src/tests/parcel-lookup-gate.infra.test.ts
++++ b/src/tests/parcel-lookup-gate.infra.test.ts
+@@ -14,6 +14,10 @@
+ //   task-454 SEARCHFIX.6 (MORNING-DECISIONS.md:1494 "register them"; Spec 128 Rule 3): the two rate limits, the slow-query mark and the candidate cap are
+ //   read from their settings rows (one read, readSearchSettings); a missing or out-of-bounds row is the generic 500 with no database text; a
+ //   non-default row moves the limiter, the cap and the warning. Every 500 body is checked for the raw error text (Std 2.1; g3 GROUNDER-E C1).
++//   task-267 LOAD.2 (PLAN-267-v2 section 5; RR-0485, MD:2533; the 2026-11-25 phone walk, findings 22, 23, 30 and M1): the search only finds the lot. A q hit
++//   runs neither the stored read nor the compute and sends page null (meter not_produced); the report is computed once, on the parcelId read the pick opens.
++//   Dated 2026-11-25 (prior text kept in the tests' history): the q-path counting tests below now count on a parcelId call; their q call asserts page null,
++//   no insert and meter not_produced, so no lock is dropped. G1-G5 pin the hand-off and the fast read (fast=1: the stored page or whatWeChecked, no compute).
+ 
+ import { describe, it, expect, beforeEach, vi } from 'vitest';
+ import type { NextRequest } from 'next/server';
+@@ -51,6 +55,8 @@ vi.mock('@/lib/parcels/report-page', async (orig) => {
+ });
+ // SRCH.METER-2 (task-360): the one-lot compute at the pick (LOAD.1, task-266) is mocked so a test can prove it is NOT run for a held (unsure, unanswered) lot.
+ vi.mock('@/lib/parcels/report-compute', () => ({ computeCustomerPageResponse: vi.fn(async () => null) }));
++// task-267 G5: the What we checked read of the fast read (its SQL is pinned in report-checked-producer.logic.test.ts); the default answers null.
++vi.mock('@/lib/parcels/what-we-checked', async (orig) => ({ ...(await orig<typeof import('@/lib/parcels/what-we-checked')>()), readWhatWeChecked: vi.fn(async () => null) }));
+ const logInfo = vi.fn();
+ const logWarn = vi.fn();
+ vi.mock('@/lib/logger', () => ({ logInfo: (...a: unknown[]) => logInfo(...a), logWarn: (...a: unknown[]) => logWarn(...a), logError: vi.fn() }));
+@@ -64,6 +70,7 @@ import { resolveLotMap } from '@/lib/parcels/lot-map';
+ import { readLotForm } from '@/lib/parcels/lot-form';
+ import { readCustomerPageResponse } from '@/lib/parcels/report-page';
+ import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';
++import { readWhatWeChecked } from '@/lib/parcels/what-we-checked';
+ import fs from 'node:fs';
+ import path from 'node:path';
+ import { GET } from '@/app/api/parcels/lookup/route';
+@@ -75,7 +82,7 @@ const PERIOD_END = new Date('2026-12-05T10:00:00.000Z');
+ const ROW = { parcel_id: 'P-45', lot_size_sqm: 400, neighbourhood_id: null, __display_address: '5 Elm St' };
+ const RAW_Q = '5 elm st secret-typed-text';
+ 
+-type Body = { data: { parcel: unknown; match: unknown; page?: unknown; lotForm?: unknown } | null; error: { code: string; details?: Record<string, unknown> } | null };
++type Body = { data: { parcel: unknown; match: unknown; page?: unknown; lotForm?: unknown; whatWeChecked?: unknown } | null; error: { code: string; details?: Record<string, unknown> } | null };
+ const req = (qs: string): NextRequest => ({ url: `https://x.test/api/parcels/lookup?${qs}`, nextUrl: { pathname: '/api/parcels/lookup' }, headers: { get: () => null } } as unknown as NextRequest);
+ const call = async (qs = 'parcelId=P-45'): Promise<{ status: number; body: Body }> => {
+   const res = await GET(req(qs));
+@@ -231,9 +238,14 @@ describe('T8 the gate: product x status (Spec 96 §10 status set; D-4 a)', () =>
+ 
+ describe('T9 the meter (D-2, D-3, D-5, D-6 a)', () => {
+   beforeEach(() => { ctx(null); parcelTool('active'); });
++  // task-267 (dated 2026-11-25): the q call finds the lot only (page null, no insert); the INSERT shape and the no-raw-q lock move to the parcelId call the pick opens.
+   it('a hit writes one row: parcel_tool / property_view / parcel_ref, keyed on the matched parcels.parcel_id, meta {"extra": false} (MF-47 C-5: the flag is decided at insert) and the transaction clock', async () => {
+     vi.mocked(resolveAddress).mockResolvedValue({ match: { parcelId: 'TYPED-ID', matchType: 'exact', address: '5 Elm St' }, candidates: [], truncated: false } as never);
+-    const r = await call(`q=${encodeURIComponent(RAW_Q)}`);
++    const q = await call(`q=${encodeURIComponent(RAW_Q)}`);
++    expect(q.status).toBe(200);
++    expect(q.body.data?.page).toBeNull();
++    expect(inserts()).toHaveLength(0);
++    const r = await call('parcelId=P-45');
+     expect(r.status).toBe(200);
+     const ins = inserts();
+     expect(ins).toHaveLength(1);
+@@ -242,8 +254,11 @@ describe('T9 the meter (D-2, D-3, D-5, D-6 a)', () => {
+     expect(ins[0]![1]).toEqual([UID, 'P-45', NOW]);
+     expect(JSON.stringify(txQuery.mock.calls)).not.toContain(RAW_Q);
+   });
+-  it('the same lot via q and via parcelId counts once (the second open is already_counted, no insert)', async () => {
+-    await call(`q=${encodeURIComponent(RAW_Q)}`);
++  it('the same lot via q and via parcelId counts once (the q hit counts nothing; the parcelId open counts; a second open is already_counted, no insert)', async () => {
++    const q = await call(`q=${encodeURIComponent(RAW_Q)}`);
++    expect(q.body.data?.page).toBeNull();
++    expect(inserts()).toHaveLength(0);
++    await call('parcelId=P-45');
+     expect(inserts()).toHaveLength(1);
+     txQuery.mockClear();
+     meter({ used: 1, already: true });
+@@ -307,6 +322,10 @@ describe('T9 the meter (D-2, D-3, D-5, D-6 a)', () => {
+   });
+   it('the log line carries access and meter and never the raw q (Spec 100 §2.8)', async () => {
+     await call(`q=${encodeURIComponent(RAW_Q)}`);
++    const qLog = logInfo.mock.calls.find((c) => c[1] === 'consumer parcel lookup');
++    expect(qLog?.[2]).toMatchObject({ access: 'parcel_tool', meter: 'not_produced', outcome: 'hit', page: false });
++    logInfo.mockClear();
++    await call('parcelId=P-45');
+     const log = logInfo.mock.calls.find((c) => c[1] === 'consumer parcel lookup');
+     expect(log?.[2]).toMatchObject({ access: 'parcel_tool', meter: 'counted', outcome: 'hit' });
+     expect(JSON.stringify(logInfo.mock.calls)).not.toContain(RAW_Q);
+@@ -367,7 +386,10 @@ describe(`SRCH.METER (task-334, RR-0278 "I should only be charged a report if I
+     expect(meterLog()).toMatchObject({ meter: 'counted', page_source: 'computed' });
+   });
+   it('a report produced for the found lot counts once: one row keyed on the lot, log meter counted', async () => {
+-    const r = await call(`q=${encodeURIComponent(RAW_Q)}`);
++    const q = await call(`q=${encodeURIComponent(RAW_Q)}`);
++    expect([q.status, q.body.data?.page, inserts().length, meterLog().meter]).toEqual([200, null, 0, 'not_produced']);
++    logInfo.mockClear();
++    const r = await call('parcelId=P-45');
+     expect(r.status).toBe(200);
+     expect(r.body.data?.page).not.toBeNull();
+     expect(inserts()).toHaveLength(1);
+@@ -468,6 +490,137 @@ describe(`SRCH.METER (task-334, RR-0278 "I should only be charged a report if I
+   });
+ });
+ 
++const CHECKED_FIXTURE = (JSON.parse(fs.readFileSync(path.resolve(__dirname, 'fixtures/surfaces/report/loading_checked.mobile.json'), 'utf8')) as { response_fixture: { what_we_checked: unknown } }).response_fixture.what_we_checked;
++
++describe('task-267 LOAD.2 the hand-off: the search finds the lot, the pick computes once (PLAN-267-v2 section 5, G1-G5)', () => {
++  const meterLog = () => (logInfo.mock.calls.find((c) => c[1] === 'consumer parcel lookup')?.[2] ?? {}) as Record<string, unknown>;
++  beforeEach(() => { ctx(null); parcelTool('active'); });
++  it('G1 a q hit never runs the stored read or the compute: page null, meter not_produced, no insert', async () => {
++    const r = await call(`q=${encodeURIComponent(RAW_Q)}`);
++    expect(r.status).toBe(200);
++    expect(r.body.data?.parcel).not.toBeNull();
++    expect(r.body.data?.page).toBeNull();
++    expect(r.body.data?.whatWeChecked).toBeNull();
++    expect(vi.mocked(readCustomerPageResponse)).not.toHaveBeenCalled();
++    expect(vi.mocked(computeCustomerPageResponse)).not.toHaveBeenCalled();
++    expect(inserts()).toHaveLength(0);
++    expect(meterLog()).toMatchObject({ meter: 'not_produced', page_source: 'none', compute_ms: null });
++  });
++  it('G2 compute once per opened lot: q then parcelId with a stored miss computes once and inserts once', async () => {
++    vi.mocked(readCustomerPageResponse).mockResolvedValue(null);
++    vi.mocked(computeCustomerPageResponse).mockResolvedValue(GOLDEN.response_fixture);
++    await call(`q=${encodeURIComponent(RAW_Q)}`);
++    const r = await call('parcelId=P-45');
++    expect(r.body.data?.page).not.toBeNull();
++    expect(vi.mocked(computeCustomerPageResponse)).toHaveBeenCalledTimes(1);
++    expect(inserts()).toHaveLength(1);
++  });
++  it.each<[string, Parameters<typeof meter>[0], number, number]>([
++    ['a new lot is counted once', { used: 0, already: false }, 200, 1],
++    ['an already counted lot counts nothing more', { used: 1, already: true }, 200, 0],
++    ['a new lot at the limit is refused (403) with nothing counted', { used: 3, already: false }, 403, 0],
++    ['a counted lot at the limit is served with nothing counted', { used: 3, already: true }, 200, 0],
++  ])('G3 meter counts unchanged: %s; the q call before it inserts nothing', async (_l, m, status, n) => {
++    meter(m);
++    await call(`q=${encodeURIComponent(RAW_Q)}`);
++    expect(inserts()).toHaveLength(0);
++    const r = await call('parcelId=P-45');
++    expect([r.status, inserts().length]).toEqual([status, n]);
++  });
++  it('G4 683 Danforth: the compute answers null in about 100 ms: 200, page null, meter not_produced (task-317, finding 31)', async () => {
++    vi.mocked(fetchParcelById).mockResolvedValue({ ...ROW, parcel_id: '5361889' });
++    vi.mocked(readCustomerPageResponse).mockResolvedValue(null);
++    vi.mocked(computeCustomerPageResponse).mockResolvedValue(null);
++    const r = await call('parcelId=5361889');
++    expect(r.status).toBe(200);
++    expect(r.body.data?.page).toBeNull();
++    expect(inserts()).toHaveLength(0);
++    expect(meterLog()).toMatchObject({ meter: 'not_produced', page_source: 'none' });
++  });
++  describe('G5 the fast read (fast=1, RR-0497 Q-e A)', () => {
++    it('returns whatWeChecked (the checked view, no href) and runs no compute; it counts nothing (not_produced) and logs fast', async () => {
++      vi.mocked(readCustomerPageResponse).mockResolvedValue(null);
++      vi.mocked(readWhatWeChecked).mockResolvedValue(CHECKED_FIXTURE as never);
++      const r = await call('parcelId=P-45&fast=1');
++      expect(r.status).toBe(200);
++      expect(r.body.data?.page).toBeNull();
++      const w = r.body.data?.whatWeChecked as { href: unknown; paced: unknown; min_ms: unknown; groups: unknown[]; ready: { text: string } } | null;
++      expect(w).not.toBeNull();
++      expect(w!.href).toBeNull();
++      expect(w!.paced).toBe(true);
++      expect(w!.min_ms).toBe(23000);
++      expect(w!.groups).toHaveLength(2);
++      expect(w!.ready.text).toBe('The Building Possibilities Report for 100 Example Ave is ready.');
++      expect(vi.mocked(computeCustomerPageResponse)).not.toHaveBeenCalled();
++      expect(inserts()).toHaveLength(0);
++      expect(meterLog()).toMatchObject({ meter: 'not_produced', fast: true, page: false });
++    });
++    it('a stored page is returned (no checked view) and counted like any page', async () => {
++      vi.mocked(readWhatWeChecked).mockResolvedValue(CHECKED_FIXTURE as never);
++      const r = await call('parcelId=P-45&fast=1');
++      expect(r.body.data?.page).not.toBeNull();
++      expect(r.body.data?.whatWeChecked).toBeNull();
++      expect(inserts()).toHaveLength(1);
++      expect(meterLog()).toMatchObject({ meter: 'counted', page_source: 'stored', fast: true });
++    });
++    it('a held (unsure, unanswered) lot gets no checked view and no page', async () => {
++      vi.mocked(readLotForm).mockResolvedValueOnce({ detected: 'semi_half', basis: 'o4_two_parcel_abut', unsure: true });
++      vi.mocked(readWhatWeChecked).mockResolvedValue(CHECKED_FIXTURE as never);
++      const r = await call('parcelId=P-45&fast=1');
++      expect(r.body.data?.page).toBeNull();
++      expect(r.body.data?.whatWeChecked).toBeNull();
++      expect(vi.mocked(readWhatWeChecked)).not.toHaveBeenCalled();
++      expect(meterCalls()).toBe(0);
++    });
++    it('the fast read then the report read for one lot computes once and inserts once', async () => {
++      vi.mocked(readCustomerPageResponse).mockResolvedValue(null);
++      vi.mocked(computeCustomerPageResponse).mockResolvedValue(GOLDEN.response_fixture);
++      vi.mocked(readWhatWeChecked).mockResolvedValue(CHECKED_FIXTURE as never);
++      await call('parcelId=P-45&fast=1');
++      expect(vi.mocked(computeCustomerPageResponse)).not.toHaveBeenCalled();
++      const r = await call('parcelId=P-45');
++      expect(r.body.data?.page).not.toBeNull();
++      expect(r.body.data?.whatWeChecked).toBeNull();
++      expect(vi.mocked(computeCustomerPageResponse)).toHaveBeenCalledTimes(1);
++      expect(inserts()).toHaveLength(1);
++    });
++    it('the flag is validated: fast with q, fast with semi, fast with no parcel and any value but 1 are 400 with nothing read or counted', async () => {
++      for (const qs of [`q=${encodeURIComponent('5 elm st')}&fast=1`, 'parcelId=P-45&fast=1&semi=answered', 'fast=1', 'parcelId=P-45&fast=yes']) {
++        const r = await call(qs);
++        expect([qs, r.status]).toEqual([qs, 400]);
++      }
++      expect(vi.mocked(fetchParcelById)).not.toHaveBeenCalled();
++      expect(meterCalls()).toBe(0);
++    });
++    it('a thrown checked read gives whatWeChecked null, not a 500, and is logged', async () => {
++      vi.mocked(readCustomerPageResponse).mockResolvedValue(null);
++      vi.mocked(readWhatWeChecked).mockResolvedValue({ groups: 'not a list' } as never);
++      const r = await call('parcelId=P-45&fast=1');
++      expect(r.status).toBe(200);
++      expect(r.body.data?.whatWeChecked).toBeNull();
++      expect(logWarn.mock.calls.some((c) => c[1] === 'fast read: checked view unusable; no lines')).toBe(true);
++    });
++    it('an at-limit stored lot gets the 403 wall from the fast read, with no insert', async () => {
++      meter({ used: 3, already: false });
++      const r = await call('parcelId=P-45&fast=1');
++      expect(r.status).toBe(403);
++      expect(r.body.error?.code).toBe('REPORT_LIMIT_REACHED');
++      expect(inserts()).toHaveLength(0);
++    });
++    it('the fast read uses the detail bucket (parcels-lookup), not the search bucket', async () => {
++      await call('parcelId=P-45&fast=1');
++      expect(vi.mocked(withRateLimit).mock.calls[0]?.[1]).toMatchObject({ key: `parcels-lookup:${UID}` });
++    });
++    it('the boundary parse refuses a stray key inside whatWeChecked (strict) as a 500 with nothing counted', async () => {
++      vi.mocked(readCustomerPageResponse).mockResolvedValue(null);
++      const { ConsumerParcelLookupResponseSchema } = await import('@/app/api/parcels/lookup/types');
++      const base = { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match', map: null, page: null, lotForm: null };
++      expect(ConsumerParcelLookupResponseSchema.safeParse({ ...base, whatWeChecked: { stray: 1 } }).success).toBe(false);
++      expect(ConsumerParcelLookupResponseSchema.safeParse(base).success).toBe(true);
++    });
++  });
++});
++
+ describe('T10 fail closed: the payload is never served unmetered', () => {
+   beforeEach(() => { ctx(null); parcelTool('active'); });
+   it.each([
+diff --git a/src/tests/report-checked-producer.logic.test.ts b/src/tests/report-checked-producer.logic.test.ts
+index 2c02ff262b13fe9bf2349ea89117325d59cbf48a..63d9ec65494a8c0ada89f61ac1d625e5326a482a 100644
+--- a/src/tests/report-checked-producer.logic.test.ts
++++ b/src/tests/report-checked-producer.logic.test.ts
+@@ -88,7 +88,7 @@ describe('P1 citywide: the stored row only (X-1 a)', () => {
+ describe('P2 per lot', () => {
+   it('a resolved lot: area, the evaluated limit count, ravine, heritage, decisions', () => {
+     expect(lotLines(LOT as never, 12)).toEqual([
+-      { key: 'area', value: '246 m²' }, { key: 'limits', value: '163', types: '5' }, { key: 'ravine_out' }, { key: 'heritage_out' }, { key: 'decisions', value: '12' },
++      { key: 'area', value: '2,652 sq ft · 246 m²' }, { key: 'limits', value: '163', types: '5' }, { key: 'ravine_out' }, { key: 'heritage_out' }, { key: 'decisions', value: '12' },
+     ]);
+   });
+   it('the limits line is the evaluated count, never the 270 rows: LOT_SQL excludes not_evaluated', () => {
+@@ -211,7 +211,7 @@ describe('P6 OUTPUT panel folds', () => {
+   });
+   it('N-2: an area that rounds below 1 m² is omitted', () => {
+     expect(lotLines({ ...LOT, lot_size_sqm: '0.4' } as never, 1).map((l) => l.key)).not.toContain('area');
+-    expect(lotLines({ ...LOT, lot_size_sqm: '0.6' } as never, 1)[0]).toEqual({ key: 'area', value: '1 m²' });
++    expect(lotLines({ ...LOT, lot_size_sqm: '0.6' } as never, 1)[0]).toEqual({ key: 'area', value: '6 sq ft · 1 m²' }); // task-267: the report area rule (sq ft first)
+   });
+   it('N-4: the by-law date is sent only with a counted limits line', async () => {
+     const counted = await readWhatWeChecked(fakeDb() as never, 'P1');
+diff --git a/src/tests/surfaces/report-failure.logic.test.ts b/src/tests/surfaces/report-failure.logic.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..72950d1310bbe6dbb57bc2cab8bf624723107135
+--- /dev/null
++++ b/src/tests/surfaces/report-failure.logic.test.ts
+@@ -0,0 +1,83 @@
++// SPEC LINK: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4 (dated note 2026-11-25, task-267 LOAD.2 and task-317 LOAD.4: the loading screen and its endings),
++//            docs/specs/03-mobile/99_mobile_state_architecture.md §6.5 (gate conditions are stable signals) and §8.3 (toggling isFetching never flips a gate),
++//            docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.56 (a lock has a planted defect).
++//
++// task-267 + task-317 (PLAN-267-v2 section 5; 317 R2): reportScreenState (mobile/src/components/surfaces/ReportBinding.tsx) is total over the report screen's
++// stable signals and picks one of view, checking, ready, holding, error, miss. Rulings: RR-0176 (MD:785: the lines always run to completion, the button only
++// when the report is in), RR-0492 item 3 (MD:2567: a failure shows right away), RR-0493 (MD:2571: 60 s from the pick is the failure limit), RR-0494
++// (MD:2575: no report shows at once), RR-0485 item 5 (MD:2533: no lines for an opened or stored lot). The table has a planted-defect test (fe.56).
++import { beforeAll, describe, expect, it, vi } from 'vitest';
++import fs from 'node:fs';
++import path from 'node:path';
++
++// The binding imports two mobile-alias modules (`@/` is the mobile tsconfig's); mocked for this file only, from the real files (the precedent:
++// admin-lead-schemas.contract.test.ts). The binding is loaded by a dynamic import so the web tsconfig never traces the mobile alias.
++vi.mock('@/constants/reportPage', async () => import('../../../mobile/src/constants/reportPage'));
++vi.mock('@/generated/surfaces/mobile_parcel_detail.json', () => ({
++  default: JSON.parse(fs.readFileSync(path.join(process.cwd(), 'mobile/src/generated/surfaces/mobile_parcel_detail.json'), 'utf8')),
++}));
++
++type Json = Record<string, unknown>;
++type Signals = {
++  data: { page?: Json | null } | undefined; checked: Json | null; isError: boolean; elapsedMs: number; gaveUp: boolean;
++  answeredThisVisit: boolean; opened: boolean; linesFull: boolean;
++};
++type State = (q: Signals) => { view: unknown; lifecycle: string; screen: string };
++let reportScreenState: State;
++const BINDING = '../../../mobile/src/components/surfaces/ReportBinding';
++beforeAll(async () => {
++  const m = (await import(/* @vite-ignore */ BINDING)) as { reportScreenState: State };
++  reportScreenState = m.reportScreenState;
++});
++
++const PAGE = { target: 'mobile', layout: { details: 'collapsed' }, sections: [] };
++const CHECKED = { summary: 's', groups: [], skip: { text: 'Skip', after_ms: 0 }, ready: { text: 'r', at_ms: 21494 }, open: { text: 'View report' }, min_ms: 23000, paced: true, href: null };
++const base: Signals = { data: undefined, checked: CHECKED, isError: false, elapsedMs: 0, gaveUp: false, answeredThisVisit: false, opened: false, linesFull: false };
++const at = (o: Partial<Signals>): Signals => ({ ...base, ...o });
++
++// [name, signals, expected screen, expected lifecycle]
++const ROWS: Array<[string, Signals, string, string]> = [
++  ['a cached page (opened on this phone): view at once, no lines', at({ data: { page: PAGE }, checked: null }), 'view', 'loading'],
++  ['a page with no checked view (a stored lot, or the fast read gave none): view at once', at({ data: { page: PAGE }, checked: null, answeredThisVisit: true }), 'view', 'loading'],
++  ['the lines playing with no page: checking', at({ elapsedMs: 5000 }), 'checking', 'loading'],
++  ['a page in at 5 s with the lines not done: checking (no ready sentence before the lines end)', at({ data: { page: PAGE }, elapsedMs: 5000, answeredThisVisit: true }), 'checking', 'loading'],
++  ['the lines done (23 s) and the page in: ready (View report; no auto-open)', at({ data: { page: PAGE }, elapsedMs: 23000, answeredThisVisit: true }), 'ready', 'loading'],
++  ['View report pressed: view', at({ data: { page: PAGE }, elapsedMs: 24000, answeredThisVisit: true, opened: true }), 'view', 'loading'],
++  ['the lines done with no page and under 60 s: holding', at({ elapsedMs: 30000 }), 'holding', 'loading'],
++  ['an error during the lines (after the retries): error at once, the lines as far as they got', at({ elapsedMs: 8000, isError: true }), 'error', 'error'],
++  ['60 s passed (the give-up): error', at({ elapsedMs: 60000, gaveUp: true }), 'error', 'error'],
++  ['a late page after the give-up stays an error until Try again', at({ data: { page: PAGE }, elapsedMs: 61000, gaveUp: true, answeredThisVisit: true }), 'error', 'error'],
++  ['Try again with the late page in the cache: view (no new compute)', at({ data: { page: PAGE }, elapsedMs: 61000, answeredThisVisit: true, opened: true }), 'view', 'loading'],
++  ['Try again with no page: holding, the lines in full', at({ elapsedMs: 100, linesFull: true }), 'holding', 'loading'],
++  ['a miss during the lines (this visit): miss at once, the lines as far as they got', at({ data: { page: null }, elapsedMs: 100, answeredThisVisit: true }), 'miss', 'miss'],
++  ['no checked view with a miss: miss at once', at({ data: { page: null }, checked: null, answeredThisVisit: true }), 'miss', 'miss'],
++  ['a cached miss from an earlier visit while the report read runs: checking, never the miss text', at({ data: { page: null }, elapsedMs: 3000, answeredThisVisit: false }), 'checking', 'loading'],
++  ['no checked view, nothing answered: holding (the spinner and Loading the report)', at({ checked: null }), 'holding', 'loading'],
++  ['an error with a cached page (offline): view', at({ data: { page: PAGE }, checked: null, isError: true }), 'view', 'loading'],
++];
++
++describe('task-267 / task-317: reportScreenState is total over the stable signals', () => {
++  it.each(ROWS)('%s', (_n, q, screen, lifecycle) => {
++    const r = reportScreenState(q);
++    expect([r.screen, r.lifecycle]).toEqual([screen, lifecycle]);
++    expect(r.view).toBe(screen === 'view' ? q.data?.page : null);
++  });
++  it('Spec 99 §8.3: an isFetching toggle gives the same output for every row (the signals carry no isFetching; a stray key is ignored)', () => {
++    for (const [n, q] of ROWS) {
++      const a = reportScreenState({ ...q, isFetching: true } as Signals);
++      const b = reportScreenState({ ...q, isFetching: false } as Signals);
++      expect([n, a]).toEqual([n, b]);
++    }
++  });
++  it('every screen is reached by some row (the table is total over the six outputs)', () => {
++    expect([...new Set(ROWS.map((r) => r[2]))].sort()).toEqual(['checking', 'error', 'holding', 'miss', 'ready', 'view']);
++  });
++  it('fe.56 planted defect: a reportScreenState that ignores gaveUp, or one that reads isFetching, is caught by the table', () => {
++    const ignoresGaveUp: State = (q) => reportScreenState({ ...q, gaveUp: false });
++    const readsFetching: State = (q) => ((q as Signals & { isFetching?: boolean }).isFetching ? { view: null, lifecycle: 'loading', screen: 'holding' } : reportScreenState(q));
++    const failures = (fn: State) => ROWS.filter(([, q, screen]) => fn(q).screen !== screen).length;
++    expect(failures(ignoresGaveUp)).toBeGreaterThan(0);
++    expect(ROWS.some(([, q]) => readsFetching({ ...q, isFetching: true } as Signals).screen !== readsFetching({ ...q, isFetching: false } as Signals).screen)).toBe(true);
++    expect(failures(reportScreenState)).toBe(0);
++  });
++});
+diff --git a/src/tests/surfaces/report-mobile.logic.test.ts b/src/tests/surfaces/report-mobile.logic.test.ts
+index 89c184d5e3ffffeb61be22db1e1bed07610ba564..4a478266f2552877e5a0721b424eff46f45d0ccb 100644
+--- a/src/tests/surfaces/report-mobile.logic.test.ts
++++ b/src/tests/surfaces/report-mobile.logic.test.ts
+@@ -12,7 +12,8 @@ import fs from 'node:fs';
+ import path from 'node:path';
+ import { buildPage, pageViewOf } from '../../lib/surfaces/report/core';
+ import { reportCtx } from '../../lib/surfaces/report/data';
+-import { captureMobileViews, MOBILE_LIFECYCLE_STATES, MOBILE_PAGE_STATES, MOBILE_PROPS_DIR, PAGE_GOLDEN_DIR } from '../../../scripts/surfaces/report-page-capture';
++import { buildTree, viewOf } from '../../lib/surfaces/report/core';
++import { captureMobileViews, CHECKED_RESPONSE_GOLDEN, MOBILE_CHECKED_STATES, MOBILE_LIFECYCLE_STATES, MOBILE_PAGE_STATES, MOBILE_PROPS_DIR, PAGE_GOLDEN_DIR } from '../../../scripts/surfaces/report-page-capture';
+ import { propsProblems } from '../../../scripts/surfaces/screen-checks.mjs';
+ 
+ type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- JSON under test
+@@ -22,14 +23,17 @@ const B = rj('scripts/surfaces/_schema/bindings.json');
+ const LIFE = rj('scripts/surfaces/_schema/report-presentation.json').states.lifecycle as Record<string, string>;
+ // MF-48 Stage B (dated 2026-11-12): + the screen's own content file (Retry, Back), the second input of the generated mobile slice.
+ const CONTENT = { ...Object.fromEntries(Object.entries(LIFE).map(([k, v]) => [`states.lifecycle.${k}`, v])), ...rj('scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.content.json') };
++// task-267 (PLAN-267-v2 section 5; 317 R1): the loading screen states (checking, ready, holding and the two endings with the lines) are goldens too.
++const CHECKED_NAMES = Object.keys(MOBILE_CHECKED_STATES);
+ const names = fs.readdirSync(path.join(ROOT, MOBILE_PROPS_DIR)).filter((f) => f.endsWith('.mobile.json')).sort();
+ const golden = (f: string): Json => rj(`${MOBILE_PROPS_DIR}/${f}`);
+ const sbind = (v: unknown, at: string): string[] => propsProblems(v, at, { kinds: B.ref_kinds, nonDisplay: B.non_display_keys, content: CONTENT, used: new Set(), contracts: new Map() });
+ const walkC = (o: Json): string[] => [o.component, ...((o.children ?? []) as Json[]).filter((c) => c && typeof c === 'object' && 'component' in c).flatMap(walkC)];
+ 
+ describe('MF-48 the mobile props goldens: the root half', () => {
+-  it('8 goldens, one per declared state; the capture writes each byte for byte (a stale view fails)', () => {
+-    expect(names).toEqual([...Object.keys(MOBILE_PAGE_STATES), ...MOBILE_LIFECYCLE_STATES].map((s) => `${s}.mobile.json`).sort());
++  it('13 goldens, one per declared state (5 page, 3 lifecycle, 5 loading screen); the capture writes each byte for byte (a stale view fails)', () => {
++    expect(CHECKED_NAMES).toEqual(['checking', 'ready', 'holding', 'error_lines', 'miss_lines']);
++    expect(names).toEqual([...Object.keys(MOBILE_PAGE_STATES), ...MOBILE_LIFECYCLE_STATES, ...CHECKED_NAMES].map((s) => `${s}.mobile.json`).sort());
+     const cap = captureMobileViews(ROOT);
+     for (const f of names) expect([f, cap.get(`props/${f}`)]).toEqual([f, fs.readFileSync(path.join(ROOT, MOBILE_PROPS_DIR, f), 'utf8')]);
+   });
+@@ -40,6 +44,11 @@ describe('MF-48 the mobile props goldens: the root half', () => {
+       expect([f, g.view]).toEqual([f, pageViewOf(buildPage(g.response_fixture, reportCtx), { target: 'mobile' }, reportCtx)]);
+     }
+   });
++  it('task-267: every loading screen golden carries the checked view the core builds from the MF-62 loading response (href null: no Skip), never a hand copy', () => {
++    const checked = (viewOf(buildTree(rj(CHECKED_RESPONSE_GOLDEN).response_fixture, reportCtx), { target: 'mobile' }, reportCtx) as Json).checked;
++    expect(checked.href).toBeNull();
++    for (const s of CHECKED_NAMES) expect([s, golden(`${s}.mobile.json`).checked]).toEqual([s, checked]);
++  });
+   it('RED (in memory): a view edited by hand no longer equals the core output', () => {
+     const g = golden('page_v21.mobile.json');
+     g.view.sections[1].parts[0].text = '26 Hurlingham Cres';
+

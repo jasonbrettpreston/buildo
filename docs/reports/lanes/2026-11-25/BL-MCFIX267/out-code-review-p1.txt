@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-25T23:53:12.273Z file_sha256=e1674ecad6c1081b7e4f80f4ee1ecf9b3a136799f2435d4d70886d14e8430bee prompt_sha256=98db763f59f9326ef1439a960fcb9579961133a2e7281611d6fde8350f2ac869
+🔍 Lens review of docs/reports/lanes/2026-11-25/BL-MCFIX267/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11999 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 25069 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 37183 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 49777 chars, answer 0 chars, 60s
+DEFER severity=MED — docs/reports/generated/127-surface-registry.md:1131 "`src/app/api/parcels/lookup/route.ts:102-114 (the meter: openReport only when `page` is produced)`" — the same change's row 15 records that block as "moved from :102-114" to :116-128, so row 13 still points at the pre-move range for the same meter — update the emits cite to :116-128 so both rows name one range
+
+DEFER severity=LOW — docs/reports/generated/127-surface-registry.md:1263 "`src/app/api/parcels/lookup/route.ts:69-88 (auth, the gate and the query parse with the fast flag)`" — the same table's unchanged errors row cites :76, inside that new range, as the 429 rate limit, and the gate row keeps :71-76 too, so the label covers three things plus a fourth cite — narrow the new range to the parse and fast-flag lines, or state that :54, :59, :68 and :76 moved with it
+
+DEFER severity=MED — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:162 "with a report the lines always run to completion and View report shows only when the lines are done and the report is in (RR-0176; no auto-open, no Skip)" — the same dated note later says "**The lines are skipped** ... for a lot whose page is in this phone's cache", which is exactly a case where the report is already in, and Spec 126's same-date note repeats "always runs to completion", so the condition is stated two ways — write the cache case as the single named exception to the completion rule in one sentence
+
+DEFER severity=LOW — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:162 "the null arm (no checked view for an unknown lot or unusable pace) is a fallback, not a ruled skip" — the sentence before it skips the lines "for a page with no checked view (a stored lot)", so the same absent checked view both skips and does not skip — name the field that separates a stored lot from an unknown lot
+
+DEFER severity=LOW — mobile/__tests__/offline.test.ts:306 "expect(shouldDehydrateQueryFn({ queryKey: ['parcel-checking', 'PIN-777'] })).toBe(false);" — this only passes if src/lib/persistFilter.ts gained a parcel-checking entry in NOT_PERSISTED, and that file is not in this chunk (cannot see it) — grounder to confirm the entry matches on the first key element the way the user-profile assertions just above do
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none (no CRIT or HIGH; the five DEFERs are stale line cites in one generated registry and two conditions stated twice in the Spec 100 dated note)
+
+---
+⏱  70328ms (70.3s)
+📊 Tokens — total: 43768, input: 27722, output: 16046, reasoning: 15394

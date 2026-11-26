@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MCFIX267'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-25T23:37:00Z'
+updated_date: '2026-11-26T00:04:00Z'
 due_date: '2026-11-26'
 labels:
   - McFixV2
@@ -541,4 +541,6 @@ McFixV2 addition 2026-11-25 (operator phone walk; rulings RR-0483, RR-0485, RR-0
 2026-11-25 (lane BL-MCFIX267, station fix): the station run on 41fe484d3 failed mobile/__tests__/reportChecked.behaviour.test.tsx (C1-C8, C10, C11: the screen stayed in the plain loading state). Cause: the test harness, not the code. Its tick advanced the fake clock in one synchronous step inside one act, so no promise settled and React did not render inside a tick: the fast read's answer (a promise, then the library's notify timer, then a render, then the report read's start) never reached the screen. C9 passed and drew the checked lines once the answer arrived, which shows the code path draws them. Fix: tick advances in steps of the screen's redraw tick (250 ms), each its own act with advanceTimersByTimeAsync, then three empty flush steps; the query client keeps no gc timer; C1 waits one redraw tick past done_ms, C5 reads the four attempts at 8 s, C6 reads the miss at 0.5 s (both still well inside 'at once'). No assertion of the plan's table was removed.
 
 2026-11-25 (lane BL-MCFIX267, station fix 2): the station on 969bcf3ef failed three web tests (surface-validate.logic.test.ts:71, surface-conformance.logic.test.ts:267, mcfront-proof.infra.test.ts:96/:174) on one cause: SV-SCREEN 'fingerprint stale: mobile_parcel_semi_question.descriptor.json' on the eight semi-question goldens, because the descriptor was re-emitted from the semi census row (the give-up second-reader note). Re-stamped by the repo's own tool (node_modules/.bin/tsx --tsconfig mobile/tsconfig.json scripts/surfaces/semi-question-golden-capture.ts --write, then emit-mobile-surfaces.mjs --write): only the descriptor fingerprint (386287c9836498eb to c6f7476b5ec3a6fa) moved in the eight goldens and the mobile copy (and its input_sha); no drawn content of the semi page changed. Files line gains src/tests/fixtures/surfaces/mobile_parcel_semi_question and mobile/__tests__/fixtures/surfaces/mobile_parcel_semi_question.goldens.json by the backlog CLI.
+
+2026-11-25 (lane BL-MCFIX267): station PASS on 251d41e7d (~/Buildo-scratch/push-station/pass/251d41e7d6209b4708bcbf2aa6a1c33cf59d5658.pass; phone 951 of 951, web 28436 passed). Output review round 1: material cb69d7f50..251d41e7d over the Files line with the launch excludes, 41 files, 4 chunks by lens-input, code-review lens (DeepSeek), context docs/reports/reviews/task-267/context-r3.md. Findings HIGH 1, MED 11, LOW 10, NIT 3 (25), untriaged in docs/reports/lanes/2026-11-25/BL-MCFIX267/FINDINGS.md. Status stays RUNNING: grounder owed (RR-0359).
 <!-- SECTION:NOTES:END -->
