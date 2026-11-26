@@ -18,6 +18,11 @@
 //   runs neither the stored read nor the compute and sends page null (meter not_produced); the report is computed once, on the parcelId read the pick opens.
 //   Dated 2026-11-25 (prior text kept in the tests' history): the q-path counting tests below now count on a parcelId call; their q call asserts page null,
 //   no insert and meter not_produced, so no lock is dropped. G1-G5 pin the hand-off and the fast read (fast=1: the stored page or whatWeChecked, no compute).
+//   Dated 2026-11-25 (task-267 output review round 1, grounder Cairn-Ground-O267: p4#1, p4#2, p4#3; prior titles kept here): the log-line test also checks the q
+//   call's log before the clear; "a thrown checked read gives whatWeChecked null, not a 500, and is logged" is retitled "a malformed checked view ..." and a
+//   rejected-read test is added beside it; "the boundary parse refuses a stray key inside whatWeChecked (strict) as a 500 with nothing counted" is retitled
+//   "the checked view schema refuses a stray key (strict) and accepts the view the route sends" (CheckedViewSchema over the view the route builds; the old body
+//   was vacuous: its stray object lacked every required field).
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { NextRequest } from 'next/server';
@@ -324,6 +329,7 @@ describe('T9 the meter (D-2, D-3, D-5, D-6 a)', () => {
     await call(`q=${encodeURIComponent(RAW_Q)}`);
     const qLog = logInfo.mock.calls.find((c) => c[1] === 'consumer parcel lookup');
     expect(qLog?.[2]).toMatchObject({ access: 'parcel_tool', meter: 'not_produced', outcome: 'hit', page: false });
+    expect(JSON.stringify(logInfo.mock.calls)).not.toContain(RAW_Q);
     logInfo.mockClear();
     await call('parcelId=P-45');
     const log = logInfo.mock.calls.find((c) => c[1] === 'consumer parcel lookup');
@@ -592,13 +598,23 @@ describe('task-267 LOAD.2 the hand-off: the search finds the lot, the pick compu
       expect(vi.mocked(fetchParcelById)).not.toHaveBeenCalled();
       expect(meterCalls()).toBe(0);
     });
-    it('a thrown checked read gives whatWeChecked null, not a 500, and is logged', async () => {
+    it('a malformed checked view gives whatWeChecked null, not a 500, and is logged', async () => {
       vi.mocked(readCustomerPageResponse).mockResolvedValue(null);
       vi.mocked(readWhatWeChecked).mockResolvedValue({ groups: 'not a list' } as never);
       const r = await call('parcelId=P-45&fast=1');
       expect(r.status).toBe(200);
       expect(r.body.data?.whatWeChecked).toBeNull();
       expect(logWarn.mock.calls.some((c) => c[1] === 'fast read: checked view unusable; no lines')).toBe(true);
+    });
+    it('a rejected checked read gives whatWeChecked null, not a 500, nothing counted, and only the error name is logged', async () => {
+      vi.mocked(readCustomerPageResponse).mockResolvedValue(null);
+      vi.mocked(readWhatWeChecked).mockRejectedValueOnce(new Error('boom: secret row text'));
+      const r = await call('parcelId=P-45&fast=1');
+      expect(r.status).toBe(200);
+      expect(r.body.data?.whatWeChecked).toBeNull();
+      expect(inserts()).toHaveLength(0);
+      expect(logWarn.mock.calls.find((c) => c[1] === 'fast read: checked view unusable; no lines')?.[2]).toMatchObject({ error: 'Error' });
+      expect(JSON.stringify(logWarn.mock.calls)).not.toContain('secret row text');
     });
     it('an at-limit stored lot gets the 403 wall from the fast read, with no insert', async () => {
       meter({ used: 3, already: false });
@@ -611,12 +627,13 @@ describe('task-267 LOAD.2 the hand-off: the search finds the lot, the pick compu
       await call('parcelId=P-45&fast=1');
       expect(vi.mocked(withRateLimit).mock.calls[0]?.[1]).toMatchObject({ key: `parcels-lookup:${UID}` });
     });
-    it('the boundary parse refuses a stray key inside whatWeChecked (strict) as a 500 with nothing counted', async () => {
+    it('the checked view schema refuses a stray key (strict) and accepts the view the route sends', async () => {
       vi.mocked(readCustomerPageResponse).mockResolvedValue(null);
-      const { ConsumerParcelLookupResponseSchema } = await import('@/app/api/parcels/lookup/types');
-      const base = { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match', map: null, page: null, lotForm: null };
-      expect(ConsumerParcelLookupResponseSchema.safeParse({ ...base, whatWeChecked: { stray: 1 } }).success).toBe(false);
-      expect(ConsumerParcelLookupResponseSchema.safeParse(base).success).toBe(true);
+      vi.mocked(readWhatWeChecked).mockResolvedValue(CHECKED_FIXTURE as never);
+      const view = (await call('parcelId=P-45&fast=1')).body.data?.whatWeChecked;
+      const { CheckedViewSchema } = await import('@/app/api/parcels/lookup/types');
+      expect(CheckedViewSchema.safeParse(view).success).toBe(true);
+      expect(CheckedViewSchema.safeParse({ ...(view as object), stray: 1 }).success).toBe(false);
     });
   });
 });
