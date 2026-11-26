@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane-BL-LOOSE'
 created_date: '2026-11-19T20:30:00Z'
-updated_date: '2026-11-25T21:33:00Z'
+updated_date: '2026-11-26T01:07:00Z'
 labels:
   - McFixV2
 milestone: m-1
@@ -163,4 +163,6 @@ McFixV2 addition 2026-11-25 (operator phone walk; rulings RR-0483, RR-0485, RR-0
 2026-11-25 (RR-0498 item 8, MORNING-DECISIONS.md:2593, operator 'y'): add as a line of this card: the 8 database test failures seen on the test stack on 2026-11-25 that are unrelated to the search cards (cause not yet known); find the cause and fix or record each.
 
 2026-11-25 hook defect found on the task-465 board merge: scripts/hooks/check-partial-staging.sh:23-30 lists staged paths with git's default quoting, so a path with a non-ASCII character (this card's own name) prints 'size unreadable' and the commit is blocked unless git runs with -c core.quotepath=false (the form scripts/board/board-commit.zsh:13 already uses). Fix: read the list with -z or quotepath=false.
+
+2026-11-25 (task-267 round 2 grounder Cairn-Ground-O267b, p1#3 and p1#4, both LOW, corrections owed outside the task-267 lane range): (1) docs/reports/panels/MF-99.json RR-0497 entry should read: Operator, verbatim (RR-0497, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2588): "Saving the lot is the same functionality (Mcapp) (2) We will not move the database to the cloud until the increments are complete. As per the 3 questions 2. A - whatever the existing animation does - I assume this is the checklines 3. a 1 a" (the three plan questions answered A). (2) .cursor/MCFRONTEND-QUEUE.md MF-99 row next text is stale (work and station are done); move it after the push.
 <!-- SECTION:NOTES:END -->

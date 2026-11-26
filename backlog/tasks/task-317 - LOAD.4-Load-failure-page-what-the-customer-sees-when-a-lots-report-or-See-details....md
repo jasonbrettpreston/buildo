@@ -3,13 +3,13 @@ id: TASK-317
 title: >-
   LOAD.4 Load-failure page: what the customer sees when a lot's report or See
   details...
-status: WAITS
-assignee:
-  - '@lane-BL-LOAD4'
+status: LATER
+assignee: []
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-25T18:58:00Z'
+updated_date: '2026-11-26T01:07:00Z'
 labels:
   - McFixV2
+  - dead
 milestone: m-1
 dependencies:
   - TASK-267
@@ -122,4 +122,6 @@ McFixV2 addition 2026-11-25 (operator phone walk; rulings RR-0483, RR-0485, RR-0
 2026-11-25 (RR-0493, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2571, operator verbatim: "approved" to the three points put to him): 60 seconds from the pick is the failure limit; the label Checks for this lot is shown as the mock draws it (replaces Spec 126:869 for that one label); a no-report lot shows the no-report screen at once (approved as read; one A/B put back to him).
 
 2026-11-25 (RR-0494, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2575, operator verbatim "A"): a lot with no report shows the no-report screen at once, not after the lines. Confirms RR-0493.
+
+2026-11-25 (RR-0488, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2547, operator verbatim: "Are the tasks now belong in a larger task? Is that correct?, if so they will be completed in the larger task.  The original task is dead.  But tasks that finish and are pushed then move through as normal as done."): built and completed inside task-267 (lane BL-MCFIX267, work 41fe484d3, round 1 fix ef05ba130, closed BUILT with task-267); dead as a separate card, its close is task-267's.
 <!-- SECTION:NOTES:END -->
