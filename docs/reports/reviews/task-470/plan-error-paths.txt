@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-26T12:48:04.165Z file_sha256=ad869f0c69e682b27b1a0ffaaaa9fb7ac5bf94afa4c96f67c22f8e81f2f86389 prompt_sha256=72405a7928f7edc5931a673a47296f04b0d6261a6b6c1f83e5945f93864ebe6b
+🔍 Lens review of docs/reports/reviews/task-470/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan §3 step 6 "collect the lane dirs (depth 6, as :829) that have a staged `out-*.txt`" — the plan pins only the TASK file to "the index copy", so the out file itself is read from the working tree; stage a malformed out file, edit it on disk (or let a formatter rewrite it) and commit without re-adding, and the check reads the fixed bytes while the malformed index copy is what lands, which is the exact failure AC #4 exists to stop — read every out file through `git show :<path>` for the move being checked, and add a test where the index copy and the worktree copy differ — <quote: plan §3 step 6 above> — fix: `git show :<path>` for each staged out file, plus one test with a mismatched worktree copy.
+
+DEFER severity=MED — plan §3 step 6 "If there are none, or no board table, return 0" — when a records commit does have staged out files but the board table, the task row or the lane TASK file cannot be read, the hook exits 0 with no line, so the gate is fail-open precisely in the broken-repo case, and the missing-row and missing-TASK-file cases are not specified at all — return 0 only when no out file is staged, and exit 1 naming the file when staged files exist but no lane row resolves.
+
+DEFER severity=MED — plan §10 UNVERIFIED "The cost of the R search on a lane with many commits." — R is found by trying each commit with `diffOf(at(c).expected)` per lens, and piece A now runs that at every commit as well as every close, with no cap and no time-out, so the longest lane makes each commit and each close stall — bound the search (stop after N commits back from HEAD and refuse with "no round-1 binding found in the last N commits") and measure it on the longest existing lane before lock.
+
+DEFER severity=MED — plan §2 "A `pile` or `wontfix` outcome has an empty ref, so the block line at :280 ends in a trailing space" — piece 1 newly admits MED pile, wontfix and task at the plan, yet the plan says plan-prep post (:749, :753) refuses that line and then relies on a :280 trimEnd those comparison sites do not use, so one of the two is wrong and no test carries a MED pile from the block into plan-prep post — settle one shared string for the rendered block line and pin it with a test that runs a MED `pile` through plan-prep post.
+
+DEFER severity=MED — plan §3 step 5 "`fix` is empty: pass." — `between(a,b)` counts only "covered, non-exempt paths", so a fix commit that adds a file outside the Files coverage, or touches only an exempt path, reports an empty fix and skips both round 2 and the station branch with no line and no record — split "no commits after R" from "commits after R with no covered path" and refuse the second, naming the uncovered paths.
+
+DEFER severity=MED — plan §3 step 5 "that sha is in the R..HEAD range, and `between(sha, HEAD)` is empty" — committing the STATION.pass copy is itself a commit after the fix sha, so unless every lane-folder path (STATION.pass, TASK, GROUNDER.md) is exempt in `between()`, a test-only fix can never satisfy the skip and the close refuses every time — exempt the lane folder in `between()` and add a test whose fix commit is followed by the records commit that carries STATION.pass.
+
+REJECT — plan §3 step 5 "It is valid when it has a `RESULT: PASS` line and a `sha: <40 hex>` line, that sha is in the R..HEAD range, and `between(sha, HEAD)` is empty" — looks like a stale pass file left in the lane folder could unlock a later test-only fix — the range test plus the empty tail binds the file to the current fix, so a pass from an earlier fix is refused, and re-committing the same file is a no-op keyed on the sha.
+
+REJECT — plan §3 step 5 "No c binds: the errors of today, at HEAD." — looks like the R search could quietly accept a stale round-1 review file — the no-bind path falls back to the stricter whole-range check at HEAD, so a missing binding refuses rather than passes.
+
+VERDICT: FAIL on error-path safety
+Paths walked: plan MED outcome with empty ref, plan-prep post compare, round-1 binding search R, fix range between R and HEAD, round-2 file binding, station pass validation and reuse, records commit with no board table or task row, staged out file versus worktree copy
+Unguarded: 6
+
+---
+⏱  76521ms (76.5s)
+📊 Tokens — total: 38928, input: 23783, output: 15145, reasoning: 14086

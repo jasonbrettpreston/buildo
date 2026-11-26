@@ -1,0 +1,47 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-26T12:48:04.165Z file_sha256=ad869f0c69e682b27b1a0ffaaaa9fb7ac5bf94afa4c96f67c22f8e81f2f86389 prompt_sha256=c457cf1f643ae3ce49309bd34ddc068964b7dae2a844f8c608b529573af1c2d0
+🔍 Lens review of docs/reports/reviews/task-470/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — §3 step 3 (rule-lists.mjs:192) / AC #3 — the new `sec` pattern deliberately stops matching `src/app/api/onboarding/**`, but onboarding is the classic personal‑data surface (signup name/email/address), so a sensitive route ships unreviewed — contradicts "security on personal data" — verify the route's writes and keep a trigger (`onboard`) if it touches PII.
+
+BUG severity=HIGH — §4 T1b ("PLAN_FOLD equals ['CRITICAL','HIGH']") and T3b ("value is pinned"), plus T5/T6 lens pins — the switch values are asserted as literals in the tests, so flipping `PLAN_FOLD`, `ROUND2`, or re‑adding `plan-review-deepseek` turns the suite red; the promised "turn off by one small edit" (AC #5) needs two edits and blocks the rollback commit at the pre‑commit hook — assert behaviour vs the live constant, not the literal value.
+
+BUG severity=HIGH — §3 step 3 (rule-lists.mjs:192) / AC #3 — the word list omits sign‑in tokens (`login`, `signin`, `sign-in`, `password`, `session`, `otp`), so a `src/app/api/login/route.ts`‑style route that lacks an `auth`/listed substring will not fire the lens, though sign‑in is one of the three stated triggers — add those tokens (or confirm every sign‑in route lives under `auth/`).
+
+DEFER severity=MED — §3 step 3 (rule-lists.mjs:192) — `auth(?!ored)` excludes only the literal "authored"; sibling `author`/`authoring`/`authorities` paths still fire the lens, so the "stop matching seed authored files" goal is only met for the exact token — use `auth(?!or)` or enumerate.
+
+DEFER severity=MED — §3 step 6 (piece A) — the records‑commit check prints only lines matching three hard‑coded substrings (`: no REVIEW header`, `: the REVIEW header`, `: no VERDICT line`), so any future review check silently won't surface at the records commit and AC #4's "same message" holds only by string coincidence — key on an error code/field or reuse `reviewErrors` output directly.
+
+DEFER severity=MED — §3 step 6 / :740 — piece A returns 0 when there is no board table, so a records commit staged in a worktree without the board path silently skips the form check (AC #4 not guaranteed) — when staged `out-*.txt` exist with no board, still run `reviewErrors` in isolation.
+
+DEFER severity=MED — §3 step 5 (`at(c) = {expected, optional, diffOf}` "for L..c") — the plan never states whether `expected`/`optional` are derived per‑commit or from HEAD; if HEAD‑derived, a fix commit that adds a file to the Files line makes the round‑1 sha mismatch at R, R is not found, and a legitimate close is refused — state that `expected` is read from the task file at commit c, and add a T2 case where the fix adds a file.
+
+DEFER severity=MED — §3 step 5 (`between(a,b)` = "covered, non‑exempt paths") — the exempt set is load‑bearing (a TRIAGE.md/GROUNDER.md/out‑*.txt commit landing between R and HEAD must not be counted as fix) but is never enumerated or tested — add a T2 case: a TRIAGE.md‑only commit between R and HEAD does not trigger a round‑2 demand.
+
+DEFER severity=MED — §3 step 5 (STATION.pass) — the pass is machine‑checked for form only, so a hand‑written `RESULT: PASS` + `sha:<40hex>` file never produced by the station lets a test‑only fix skip round 2; "the station ran" is unverifiable from repo data — log it as trust‑not‑verify and consider a station‑written nonce.
+
+DEFER severity=MED — §3 step 3 ("measured on tracked paths") — the security‑coverage claim is sampled (positives kept) and never diffs the *entire* old→new match set, so a dropped route with real data exposure is invisible — run `git ls-files | grep -E <old pattern>` vs `<new pattern>`, diff, and justify every path the new regex loses.
+
+DEFER severity=LOW — §3 step 5 / §10 UNVERIFIED ("cost of the R search") — the R search is O(commits × parts) git diffs at every close and again inside piece A's `oneClose`, with no memoization or cap — bound or memoize per‑commit sha to avoid a slow lockup on long lanes.
+
+DEFER severity=LOW — §3 step 5 ("no round 3") — when an r2 exists but stops binding (a further code fix), the refusal message still points at R (the round‑1 base), misdirecting the orchestrator to a diff base that omits the r2 change — name the r2 commit in the message.
+
+DEFER severity=LOW — §3 step 3 / §4 T6 — over‑broad new words are untested as negatives (`account` also matches `accounting‑summary.ts`, `notification` matches data‑pipeline files, `subscri` matches non‑money paths) — add explicit negative cases so over‑firing is caught.
+
+NIT — §3 step 5 — `out-<lens>-r2.txt` and `out-<lens>-r2-p1.txt` coexisting is unspecified — prefer unsplit or refuse both.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- The security lens loses a defined personal‑data surface (`src/app/api/onboarding`) and sign‑in tokens (`login/session/otp` absent), so AC #3's "security on sign‑in, money, personal data" is not guaranteed by the new word list.
+- `PLAN_FOLD`, `ROUND2`, and the lens‑set values are pinned as literals in tests, so every "one small edit" rollback (AC #5) also requires a red test edit and blocks the rollback commit.
+- The R‑search semantics (`expected` per‑commit vs HEAD‑derived) and the `between()` exempt set are unspecified, so a legitimate close can be refused or a records commit can spuriously demand round 2.
+
+Top 3 unverified data premises (if any, regardless of verdict):
+- Every path the old security regex fired on that the new one drops is genuinely non‑sensitive. Verify: `git ls-files > /tmp/f; for p in "$OLD" "$NEW"; do echo "== $p"; done; grep -E "<old pattern>" /tmp/f > /tmp/o; grep -E "<new pattern>" /tmp/f > /tmp/n; comm -23 /tmp/o /tmp/n` and justify each line of the diff.
+- `scripts/seeds/bylaw/authored/**` count (~1,200) and that no *other* dropped `author*` variant exists. Verify: `git ls-files | grep -i 'author' | grep -v authored | wc -l`.
+- task‑313's launch is unaffected by removing `plan-review-deepseek`. Verify: `node scripts/analysis/backlog-lane.mjs --task task-313 --lane <its lane> --board ~/Buildo-wt-board --dry-run` and quote "plan gate ok." Also confirm onboarding PII: `git grep -nE 'insert|update|email|name|address' -- 'src/app/api/onboarding/**'`.
+
+---
+⏱  77178ms (77.2s)
+📊 Tokens — total: 40376, input: 24669, output: 15707, reasoning: 14003
