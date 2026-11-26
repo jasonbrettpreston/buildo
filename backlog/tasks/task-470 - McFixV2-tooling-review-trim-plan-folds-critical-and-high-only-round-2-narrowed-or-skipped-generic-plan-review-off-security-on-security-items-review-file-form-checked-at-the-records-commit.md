@@ -4,10 +4,11 @@ title: >-
   McFixV2 tooling: review trim (plan folds critical and high only; round 2
   narrowed or skipped; generic plan review off; security on security items;
   review file form checked at the records commit)
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-MCFIX470'
 created_date: '2026-11-26T12:32:00Z'
-updated_date: '2026-11-26T14:33:00Z'
+updated_date: '2026-11-26T14:34:00Z'
 labels:
   - McFixV2
 milestone: m-1
@@ -21,6 +22,12 @@ references:
   - docs/reports/reviews/task-470/seat-regression-2.md
   - docs/reports/reviews/task-470/seat-reality-check-2.md
   - docs/reports/reviews/task-470/r2-plan-error-paths.txt
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: fix
 ordinal: 164210
 ---
@@ -315,3 +322,9 @@ rg2#1 HIGH folded rename shows both na
 rg2#2 HIGH folded round-1 findings can
 rc2#1 HIGH folded lead-(?:detail|inspe
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-26 taken on the board at lane launch (lane BL-MCFIX470, worktree /Users/brettpreston_macmini/Buildo-wt-mcfix470, branch wf2/mcfix470), RR-0240
+<!-- SECTION:NOTES:END -->
