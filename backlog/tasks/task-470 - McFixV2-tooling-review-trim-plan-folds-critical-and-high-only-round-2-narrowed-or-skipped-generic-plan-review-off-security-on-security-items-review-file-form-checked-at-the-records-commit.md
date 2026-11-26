@@ -7,11 +7,17 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-26T12:32:00Z'
-updated_date: '2026-11-26T12:48:00Z'
+updated_date: '2026-11-26T13:25:00Z'
 labels:
   - McFixV2
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/reviews/task-470/GROUNDER-PLAN.md
+  - docs/reports/reviews/task-470/TRIAGE-PLAN.md
+  - docs/reports/reviews/task-470/seat-integration-1.md
+  - docs/reports/reviews/task-470/seat-reality-check-1.md
+  - docs/reports/reviews/task-470/seat-regression-1.md
 type: fix
 ordinal: 164210
 ---
@@ -19,7 +25,7 @@ ordinal: 164210
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Opened by the operator's rulings RR-0511 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2654, verbatim "Let's do this as you recommended and then turn off the generic plan and if its easy just run security on security based items.  We need more data.  The other thing would it help if fable ran the plan and sonnet wrote. Thoughts or Fable plan and opus writes?"), RR-0512 (:2660, verbatim "Let's add fable as the planner and opus stays as the writer.  Any other suggestions here?") and RR-0513 (:2664, verbatim "Let's add A, B  and C.  Plan approved"). Amends RR-0385 (:1915-1926). Pieces: (1) the plan review folds CRITICAL and HIGH only; MED and below are recorded. (2) Output round 2 reviews only the files the round 1 fix changed. (3) Round 2 is skipped when the round 1 fix is test-only and the station passed on it. (4) The generic DeepSeek plan review (plan-review-deepseek) is off. (5) The security lens runs on security items only (sign-in, money, personal data), not on every API route or library path. (6) The rule text says the planner runs on Fable, the builder on Opus, seats and grounders on Sonnet (the lane guard file is outside the repo and is the operator's own change). (A) The form of the review files (the REVIEW header prompt hash the close check tests) is checked when they are committed, not only at the close. Everything must be easy to turn off again; no other reviewer is turned off ("We need more data"). Data behind the rulings: four cards (task-469, task-465, task-267, task-313): 348 plan findings, 47 critical or high; two of two round 2s fixed nothing; the generic plan review gave 1 high in 57 findings with 22 rejected.
+Opened by the operator's rulings RR-0511 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2654, verbatim "Let's do this as you recommended and then turn off the generic plan and if its easy just run security on security based items.  We need more data.  The other thing would it help if fable ran the plan and sonnet wrote. Thoughts or Fable plan and opus writes?"), RR-0512 (:2660, verbatim "Let's add fable as the planner and opus stays as the writer.  Any other suggestions here?") and RR-0513 (:2664, verbatim "Let's add A, B  and C.  Plan approved"). Amends RR-0385 (:1915-1926). Pieces: (1) the plan review folds CRITICAL and HIGH only; MED and below are recorded. (2) Output round 2 reviews only the files the round 1 fix changed. (3) Round 2 is skipped when the round 1 fix is test-only and the station passed on it. (4) The generic DeepSeek plan review (plan-review-deepseek) is off. (5) The security lens runs on security items only (sign-in, money, personal data), not on every API route or library path. (6) The rule text says the planner runs on Fable, the builder on Opus, seats and grounders on Sonnet (the lane guard file is outside the repo and is the operator's own change). (A) The form of the review files (the REVIEW header prompt hash the close check tests) is checked when they are committed, not only at the close. Everything must be easy to turn off again; no other reviewer is turned off ("We need more data"). Data behind the rulings: four cards (task-469, task-465, task-267, task-313): 364 plan findings ruled (CONFIRMED: 1 critical, 53 high, 168 med, 59 low, 9 nit; 74 rejected), 54 critical or high; two of two round 2s fixed nothing; the generic plan review gave 1 high in 57 findings with 22 rejected.
 Files: scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, docs/specs/00-architecture/08_agents.md, .claude/review-templates/README.md, docs/reports/generated/rule-lists-by-kind.md, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts
 <!-- SECTION:DESCRIPTION:END -->
 
@@ -64,13 +70,14 @@ Files: scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scri
   - **RR-0513** (:2664): "Let's add A, B and C. Plan approved". This card does A only.
   - **RR-0467** (:2425): the station runs on the lane's fix commit before the output review.
   - **RR-0359** (:1687): nothing is folded before the grounder has ruled. This plan leaves it unchanged.
+  - **RR-0367 item 2** (:1759-1760, operator verbatim "2 med gets fixed in the plan if verified"): amended by RR-0511 for the plan stage, as far as the PLAN_FOLD answer of Section 7 question 1 says (option A changes nothing). The same answer (:1760) held "4. hold" on re-reviewing only the fix; task-414 (LATER, label dead) carries that item and is left as it is: this card does it. A MED that the plan records is listed only as a pile line in TRIAGE-PLAN.md (no review_followups row exists for it).
   - **RR-0392** (:1975): no other infrastructure.
   - **RR-0452** (:2336): `output_off` is the precedent for a one-line switch.
   - **RR-0429** (:2203): notes are kept short.
   - **Lock rule.** 08_agents.md:497 "Every lock is proven in BOTH directions". The card cites :462, which is now :497; its :490 is now :525.
   
   ### 2. What the code does today (evidence)
-  - **Piece 1, plan folds.** The plan fold check is `planGateInner` (check-lane-close.mjs:684), which calls `outcomeErrors` with mode plan.
+  - **Piece 1, plan folds.** The plan fold check is `planGateInner` (check-lane-close.mjs:618; its `outcomeErrors` call is at :684), which calls `outcomeErrors` with mode plan.
     - At :200 a non-LOW BUG may only take `[fixWord, 'ruling']`, and a DEFER also takes `task`.
     - `wontfix` and `pile` are allowed only when `low` (LOW or NIT, :197).
     - So a MED plan finding must today be `folded:` or `ruling:`. This is locked by the test at check-lane-close.logic.test.ts:839, "a CONFIRMED MED with pile is refused in close mode and in plan mode".
@@ -82,7 +89,7 @@ Files: scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scri
     - Split parts go through `chunkErrors` against the same L..HEAD diff (:550, :83-127).
     - So any fix commit makes the round-1 outputs invalid. The brief says the same at backlog-lane.mjs:193 ("round 2 re-makes ALL of them under the SAME names").
     - Today `out-<lens>-rN.txt` is read for findings only and "never stands in for a round-1 name" (:505). The test at :354 locks this.
-    - **Test paths:** `isTest` already exists at scripts/analysis/policy-checks/lib.mjs:18: `/(^|\/)(tests?|__tests__)\/|\.(test|spec)\.[cm]?[jt]sx?$/` (95aa88604). It is reused.
+    - **Test paths:** `isTest` already exists at scripts/analysis/policy-checks/lib.mjs:18: `/(^|\/)(tests?|__tests__)\/|\.(test|spec)\.[cm]?[jt]sx?$/` (95aa88604). It is NOT imported: that file is not a protected path (scripts/analysis/rule-lists.json:24 lists only check-lane-close.mjs, rule-lists.mjs, rule-lists.json, backlog-lib.mjs, deepseek-review.js and .husky/*), so a lane could widen its regex and make any fix test-only. The test roots are one exported constant in rule-lists.mjs (step 3).
     - **Station pass:** no repo file reads `~/Buildo-scratch/push-station/pass/<sha>.pass`. Only station.sh:48 writes it, with lines `RESULT: PASS` and `sha: <40 hex>`. The close hook must not start reading outside the repo.
   - **Piece 4, generic plan review.** `plan-review-deepseek` is only in `lensSet().plan` (rule-lists.mjs:195). That list is read only by plan-prep review (:662).
     - The launch gate does not read the plan lens set. For a build task, `planGateInner` (:638-657) checks the compliance and engineering proofs, GROUNDER-PLAN.md, seats, outcomes, the Plan line and FOLD-CHECK. A fix task needs ≥1 `plan-*.txt` (:660-662).
@@ -93,7 +100,7 @@ Files: scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scri
     - The template mapping at :662 (check-lane-close, fix gate) stays. So do plan-prep :662 and backlog-lane.mjs:180.
   - **Piece 5, security trigger.** rule-lists.mjs:192: `/entitlement|auth|stripe|metered|admin|pii/i` OR an entry under `src/app/api` or `src/lib`.
     - The api/lib arm came from 39ccaad3c (task-445, RR-0391 "Teh missing one is security"). Its reason, Spec 08 §5.7: the six words missed API routes; the IDOR example is `/api/notifications`.
-    - Today "auth" also matches `scripts/seeds/bylaw/authored/**`, about 1,200 seed files.
+    - Today "auth" also matches `scripts/seeds/bylaw/authored/**`, 1,686 tracked seed files (git ls-files).
   - **Piece A, commit form.** check-lane-close.mjs already runs in .husky/commit-msg (line 7). `check()` returns 0 when no task moves (:761), so the REVIEW header check (`reviewErrors` :62-77) only runs at the close.
   
   ### 3. The change (build order; every path is on the Files line)
@@ -103,58 +110,58 @@ Files: scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scri
      - The switch back is putting the string back.
      - Add one line to the :187 comment (task-470, RR-0511).
   3. **rule-lists.mjs:192**, replace the line with:
-     `const sec = /entitlement|auth(?!ored)|stripe|metered|admin|pii|subscri|paywall|checkout|supabase|profile|account|notification/i.test(files);`
-     - The api/lib arm is gone. The new words keep the money, sign-in and personal-data routes that only that arm caught (measured on tracked paths): src/app/api/subscribe/**, src/lib/subscription, src/lib/supabase, src/app/api/user-profile/**, src/app/api/notifications/**, and mobile paywall, profile and account files.
-     - **Stops matching:** src/app/api/{parcels, permits, leads, builders, coa, entities, onboarding, products, quality, sync, trades}; src/lib/{classification, db, media, massing, leads, builders, market-metrics, export, ...}; scripts/seeds/bylaw/authored/**.
-     - The switch back is restoring this one line.
+     `const SEC_WORDS = /entitlement|auth(?!ored)|stripe|metered|admin|pii|subscri|paywall|checkout|login|signin|signup|password|session|jwt|profile|api\/notifications|api\/onboarding|lib\/supabase|tool-gate|leads\/(?:save|view|feed|detail)|parcels\/(?:lookup|lot-size)|(?:api|lib)\/sync/i; export const TEST_ROOT = /^(?:src\/tests|mobile\/__tests__|scripts\/tests|tests|supabase\/tests)\//; const sec = (filesEntries(`Files: ${files}`) ?? []).filter((e) => !/^docs\//.test(e) && !TEST_ROOT.test(e)).some((e) => SEC_WORDS.test(e));`
+     - The api/lib arm is gone, and the words are tested on the Files entries outside docs/ and the test roots, not on the whole Files line (the old test matched `admin` in docs/specs/02-web-admin/* and in admin golden tests: with the entry test task-465 no longer fires security, tasks 267 and 313 still do through src/app/api/parcels/lookup/route.ts, the entitlement descriptor and src/lib/auth/get-user-context.ts). Measured with `git ls-files src/app/api src/lib mobile/src src/app` (437 paths): the old rule matched 296, the new matches 196; 24 paths start to match (mobile paywall, profile and subscribe files, src/app/login, the parcel-tool login, signup and password pages, the subscribe pages, mobile/src/lib/jwtClaims.ts, mobile/src/hooks/usePortalSession.ts); 124 stop matching.
+     - **The 124 that stop matching** are business-data routes and libraries with no user identity: src/app/api/{builders, coa, entities, leads search and flight-board, permits, products, quality, trades}; src/lib/{classification, coa, db, export, inspections, leads, market-metrics, massing, parcels (the files other than tool-gate, lookup and lot-size), permits, placements, quality, report-projection, surfaces}. Three of them touch identity and are NOT matched, and are left to the output grounder's read of every API route and library file (RR-0464): src/lib/observability/capture.ts, src/lib/media/storage.ts, src/lib/db/client.ts. scripts/seeds/bylaw/authored/** (1,686 files) no longer matches. Per-user routes that read the session user id (leads save, view, feed, detail; onboarding suppliers; sync; parcels lookup and lot-size; tool-gate.ts) ARE matched: Spec 08 5.7 (08_agents.md:258, identity from session, never a client-supplied id) and :311 (auth) make them security items.
+     - The switch back is restoring the old `sec` line (the `TEST_ROOT` export can stay: the close check uses it).
   4. **check-lane-close.mjs**, piece 1 (next to `SEVS` :141):
-     - `export const PLAN_FOLD = ['CRITICAL', 'HIGH']; // task-470 RR-0511: plan folds these; add 'MED' to switch back`.
+     - `export const PLAN_FOLD = [...]; // task-470 RR-0511: the severities the plan folds` is the ONE switch of piece 1. Its shipped value is the operator's answer to Section 7 question 1: A `['CRITICAL', 'HIGH', 'MED']` (the switch exists, nothing changes today), B `['CRITICAL', 'HIGH', 'DOWNGRADED']` (also folds a finding whose lens or seat severity was CRITICAL or HIGH and that the grounder wrote down to MED or lower), C `['CRITICAL', 'HIGH']` (as approved). Changing it is that one line; no test pins its value.
      - `outcomeErrors` takes an optional `planFold = PLAN_FOLD`.
-     - At :197 add `const recorded = low || (mode === 'plan' && !planFold.includes(sev));` and use `recorded` instead of `low` in `allowed` (:200), in the rule text (:202, which adds "RR-0511 (MORNING-DECISIONS.md:2654): at the plan CRITICAL and HIGH are folded, MED and below are recorded") and in the :211 message.
-     - At :280 add `.map((l) => l.trimEnd())`. This only makes the check more permissive.
+     - At :197 add `const folds = planFold.includes(sev) || (planFold.includes('DOWNGRADED') && ['CRITICAL', 'HIGH'].includes(normSev(k.sev))); const recorded = low || (mode === 'plan' && !folds);` (k.sev is the lens or seat severity already in scope at :195) and use `recorded` instead of `low` in `allowed` (:200), in the rule text (:202, which adds "RR-0511 (MORNING-DECISIONS.md:2654): at the plan CRITICAL and HIGH are folded, MED and below are recorded") and in the :211 message.
+     - At :280 add `.map((l) => l.trimEnd())`. Every block line then equals its own trim, so plan-prep post (rule-lists.mjs:748-753, which compares trimmed lines) and the launch gate accept a MED pile line; it only makes the check more permissive.
      - Close mode is unchanged.
   5. **check-lane-close.mjs**, pieces 2 and 3:
-     - Add `export const ROUND2 = { narrow: true, testOnlySkip: true }; // task-470 RR-0511; false = whole range at HEAD only, as before`.
-     - `check()` passes to `closeErrors`, all computed the way :836-844 already does:
-       - `commits` (HEAD first, then `git rev-list L..HEAD`);
-       - `at(c)` = {expected, optional, diffOf} for L..c;
-       - `between(a,b)` = covered, non-exempt paths of `git diff --name-only a b`;
+     - Add `export const ROUND2 = { narrow: true, testOnlySkip: true }; // task-470 RR-0511`. `narrow: false` = whole range at HEAD only, as before (the skip then never applies); `testOnlySkip: false` = a test-only fix needs r2 like any other. `closeErrors` takes the object as an argument, default `ROUND2`.
+     - `check()` passes to `closeErrors`, four new closures; only `expectedPaths` and `diffOf` (L..HEAD, :836-844) exist today, the commit walk is new code, written once as `diffBetween(base, tip, paths)` and used by all four:
+       - `commits`: HEAD first, then at most 30 commits of `git rev-list L..HEAD -- <expected paths>` (only a commit that changes a covered path can change the covered diff, so the search is bounded and cheap; when none of them binds, the refusal is today's, at HEAD, and says so);
+       - `at(c)` = {expected, optional, diffOf} for L..c, built with the same Files entries as today (the launch line and the current one together), so a fix that widens the Files line stops the round-1 file binding at R and the lane uses today's whole-range form (T2 case);
+       - `between(a,b)` = the covered paths of `git diff --name-only a b` that are outside the table's `exempt` list (docs/reports/lanes/**, docs/reports/reviews/**, the goldens: scripts/analysis/rule-lists.json:232) and outside `backlog/`, so the task file, TRIAGE.md, GROUNDER.md and STATION.pass are never fix paths; a covered doc such as docs/reports/generated/*.md IS a fix path and needs r2;
        - `diffFrom(a)(paths)` = `git diff DIFF_ARGS a HEAD -- paths`.
      - In the lens loop (:531-562), for each lens:
        - **R** = the newest commit c (HEAD first; only HEAD when `!ROUND2.narrow`) at which the round-1 file binds. Unsplit: the header `file_sha256` equals the sha of `at(c).diffOf(at(c).expected)`. Split: `chunkErrors` with `at(c)` is empty.
-       - No c binds: the errors of today, at HEAD.
+       - No c binds: the errors of today, at HEAD (so a lone r2 never stands in for a round 1: :354, second half, stays green; T2 adds a case where r1 binds nowhere and r2 binds at HEAD).
        - R is HEAD: as today. The :354 test stays green.
        - Otherwise let `fix = between(R, HEAD)`.
-         - `fix` is empty: pass.
-         - `ROUND2.testOnlySkip`, every fix path `isTest`, and a valid `STATION.pass`: pass with no round 2.
-         - Else require `out-<lens>-r2.txt` (`reviewErrors` on `diffFrom(R)(fix)`) or `out-<lens>-r2-pN.txt` (`chunkErrors` with `expected = fix` and `diffOf = diffFrom(R)`). Round 2 must bind at HEAD exactly; there is no round 3.
+         - (`fix` is never empty here: with no covered change after R the file binds at HEAD, which is searched first. An uncovered path in a fix commit is refused by the Files-line check at :497, and an exempt path is unreviewed by design.)
+         - `ROUND2.testOnlySkip`, every fix path matching `TEST_ROOT`, and a valid `STATION.pass`: pass with no round 2.
+         - Else require ONE file `out-<lens>-r2.txt` (`reviewErrors` on `diffBetween(R, HEAD, fix)`, no input file, like an unsplit round 1). A split round 2 (`-r2-pN`) is NOT built: when that diff is over the review tool's bound the lane uses today's form (every output re-made at HEAD under the same names). Round 2 must bind at HEAD exactly; there is no round 3, and a second fix after r2 is refused with a line that names the commit r2 reviewed and says to use today's whole-range form.
          - When it is missing, refuse with: `out-<lens>.txt reviews the change up to <R9>; the fix after it changed N file(s) (...): round 2 reviews only them: write out-<lens>-r2.txt from git diff <DIFF_ARGS> <R9> HEAD -- <paths>`, adding `, or commit the station pass file of the fix commit as STATION.pass (the fix is test-only)` when every fix path is a test.
-     - **STATION.pass:** a verbatim copy of the station pass file in the lane folder, committed by the orchestrator. It is valid when it has a `RESULT: PASS` line and a `sha: <40 hex>` line, that sha is in the R..HEAD range, and `between(sha, HEAD)` is empty.
+     - **STATION.pass:** a verbatim copy of the station pass file in the lane folder. It needs one manual step that the orchestrator owns: when the station has passed on the fix commit, copy ~/Buildo-scratch/push-station/pass/<sha>.pass into the lane folder as STATION.pass and commit it in a commit AFTER the fix commit (the lane folder is exempt, so that commit is no fix path). Both real round 2s (task-267, fix ef05ba130; task-465, fix ab8c2911e) were test-only and would have been skipped on that step, and both found only LOW and NIT. It is valid when it has a `RESULT: PASS` line and a `sha: <40 hex>` line, that sha is in the R..HEAD range, and `between(sha, HEAD)` is empty.
        - Checked by the machine: the form and where the sha sits.
-       - Not checked by the machine: that the station really ran (the source file is outside the repo).
-     - Import `isTest` from scripts/analysis/policy-checks/lib.mjs.
-     - Update the :505 layout text and add one line to the header comment.
+       - Not checked by the machine: that the station really ran (the source file is outside the repo). The lane can write the file by hand; no further field of it is read, because a file the lane writes is no more honest with more of its fields checked (a tip or at check would be forged the same way). The backstops that are not in this check: station.sh push refuses a push with no pass file for the pushed HEAD or when origin moved (station.sh:60-65), and the operator gives his own y at the push; the 08_agents.md note says so.
+     - Test paths: `TEST_ROOT` (step 3, exported from rule-lists.mjs, a protected path), imported by check-lane-close.mjs. Over `git ls-files` all 1,898 paths that the policy-checks `isTest` matches sit under its five roots; src/app/api/test/route.ts and src/lib/tests/x.ts do not match (T3 negatives). A mobile/maestro flow is not a test here, so a fix to one needs r2.
+     - Update the :505 layout text by adding to it, not rewriting it (backlog-lane.logic.test.ts:298 pins the fragments 'out-<lens>[-<list id>]-rN.txt', 'fix-*.txt' and 'never stands in for a round-1 name' in both check-lane-close.mjs and backlog-lane.mjs), and add one line to the header comment. Grounder side: a round-1 output that bound at R and not at HEAD is left out of `lensFiles` (:569), so no Ruled line is asked for it (it was ruled in round 1, and its grounder and outcome files stay outside the folder, as the brief says today); GROUNDER.md holds round 2 only, or in the skip case a header, the validation section and no verdict.
   6. **check-lane-close.mjs**, piece A:
-     - Move the per-move body (:793-863) into `oneClose(mv)` returning lines. This keeps behaviour, as the task-375 D5 extraction did.
-     - When there is no real move, collect the lane dirs (depth 6, as :829) that have a staged `out-*.txt`. Read their TASK file and build a review-only move from the index copy of that task file.
-     - If there are none, or no board table, return 0 (keeps "a commit that moves no task never needs the board", :740).
-     - Otherwise run `oneClose`. Print only the lines that name a staged out file with `: no REVIEW header`, `: the REVIEW header` or `: no VERDICT line`. That is the same text the close prints.
+     - Do NOT move the per-move body (:792-864): it has seven `continue`s and uses thirteen locals set at :742-791. Add one small function `recordsFormErrors` beside `check()`, called once after `if (moves.length === 0)` (:761), and not at all when inMerge (:727): a merge of the board into the lane, or the fold onto the board, stages other lanes' out files that were checked on their own branches (T4 merge case).
+     - Staged names come from `git diff --cached --name-only --diff-filter=AM` (a staged deletion is never read); keep depth-6 paths under docs/reports/lanes/ named `out-*.txt` (as :829). Every file read (the out file, its `in-<same name>`, TASK, the contexts docs/reports/reviews/<id>/context-rN.md) is read through the index first, then HEAD, as `readRepo` does at :789, never from the working tree; contexts are listed with `git ls-files --cached`, as at :862, so a context staged in the same commit as the outputs counts (the real first records commits add it with the outputs). The context values are tried with and without the Implementation Notes heading (the task's notes are not read here).
+     - If no `out-*.txt` is staged, return 0 (keeps "a commit that moves no task never needs the board", :740). The board is not needed for this check: the lens template is read at `git merge-base HEAD <board ref>` when a board ref exists, else at HEAD. If out files are staged but the TASK file, the task id or the context cannot be read, exit 1 naming the file (fail closed); never 0.
+     - For each staged out file call `reviewErrors` (the close's own function: the refusal text is the close's text and no line is filtered by its wording). When a committed `in-<same name>` exists (a split part or a compliance output) the prompt hash is recomputed from the template, that input and the contexts, exactly as at the close. An unsplit lens output has no input file: its header form, template name, timestamp and VERDICT line are checked, and its `file_sha256` against the whole-range diff stays a close-time check (the range needs the launch commit). Real cases: task-267 bdbda5811 and 0648dbace (parts that carry the no-context prompt hash) would be refused at their records commit; 07de05313 and task-465 20c686665 pass.
      - The protected-path rule (:765) and the H10 check (:866) run for real moves only.
      - The switch off is the one call line.
   7. **backlog-lane.mjs:193**: keep "under the SAME names" as one accepted form and add the narrowed form.
      - Keep the round-1 files.
-     - Round 2 is `out-<lens>-r2[-pN].txt` from `git diff <DIFF_ARGS> <reviewed commit> HEAD -- <fix paths>`.
-     - The round-2 grounder appends its Ruled and verdict lines to GROUNDER.md, and TRIAGE.md gets the new outcome lines.
-     - No round 2 when the fix touches test files only and STATION.pass is committed.
+     - Round 2 is ONE file `out-<lens>-r2.txt` (no -pN, no input file) from `git diff <DIFF_ARGS> <reviewed commit> HEAD -- <fix paths>`. When that diff is over the review tool's bound the lane uses the whole-range form above.
+     - The task-446 protocol is kept: the round-1 grounder and outcome files stay outside the lane folder (one "Review round 1: <counts>; grounder <path>; triage <path>" line in its own commit before the closing commit); the round-2 grounder writes a NEW GROUNDER.md and TRIAGE.md for the round-2 ids only. Nothing is appended to a file that holds round-1 verdicts, so no round-1 quote is checked against a line the fix moved, and the round line counts round 2 alone.
+     - No round 2 when the fix touches test files only and STATION.pass is committed after the fix commit (the brief names this step for the orchestrator). Keep the pinned fragments of backlog-lane.logic.test.ts (:177 'two output rounds at most', :298, :307 'under the SAME names', :310 'Every output lens reviews the WHOLE change').
   8. **backlog-lane.mjs:194** (ROUNDS): one clause pointing at the forms above.
-  9. **backlog-lane.mjs:196**: delete only the parenthetical "(the paths that fire the security lens at the plan stage)". The grounder's RR-0464 read list is unchanged.
+  9. **backlog-lane.mjs:196**: delete only the parenthetical "(the paths that fire the security lens at the plan stage)". The grounder's RR-0464 read list is unchanged and is the deliberate backstop for the paths the narrower plan-stage trigger no longer matches; no test pins the parenthetical.
   10. **README.md** (.claude/review-templates):
-      - :98, plan-review-deepseek row, "When it fires": "on request only (task-470, RR-0511)".
-      - :104, lens-security row: sign-in, money and personal-data words, with no api/lib arm.
+      - :98, plan-review-deepseek row, "When it fires" cell only: "on request only (task-470, RR-0511); its three axes rest on the reality-check and integration seats alone".
+      - :104, lens-security row, "When it fires" cell only (rule-lists.logic.test.ts:1201 pins the rest of the row, ending "plan (task-460: not at output, RR-0464) |"): sign-in, money and personal-data words, no api/lib arm, tested on Files entries outside docs/ and the test roots.
       - The lens-*.md templates are NOT edited, because their text feeds the prompt hashes.
   11. **08_agents.md**: three short dated notes, each 450 characters or less, prior text kept.
-      - After :359 (rule 4): pieces 4 and 5. It supersedes the §5.7 task-445 note.
-      - After :364 (rule 6): pieces 1, 2, 3 and A, and names the `PLAN_FOLD` and `ROUND2` switches.
+      - After :359 (rule 4): pieces 4 and 5. It supersedes the §5.7 task-445 note and says that deploy and rollback failure modes, data reality and sibling bugs now rest on the reality-check and integration seats alone.
+      - After :364 (rule 6): pieces 1, 2, 3 and A; names the `PLAN_FOLD` and `ROUND2` switches; says what the machine checks of STATION.pass (form and place) and that the real second gate is the push station; says where a recorded plan MED is listed (TRIAGE-PLAN.md pile lines); says the residual, that the lane chooses when round 1 runs; and names what it amends: RR-0367 item 2, the clause of the task-399 note at :363 (a fix round re-makes every file at HEAD; task-414), the "under the same names" clause of the task-448 note at :357, and task-414 (left as it is, LATER, label dead).
       - After :369 (rule 9): planner Fable, builder Opus, seats and grounders Sonnet (RR-0512). It notes that §B :40 ("solely ... the orchestrator session") now also covers the planner, and that the lane guard is outside the repo and unchanged.
   12. **Regenerate the page:** `node scripts/analysis/rule-lists.mjs page --write`. The agents-s7-s11 character count at docs/reports/generated/rule-lists-by-kind.md:73 changes, and the pre-commit hook (:44) runs `page --check`.
   13. **Prove the task-313 launch is not affected.** Run `node scripts/analysis/backlog-lane.mjs --task task-313 --lane <its planned lane> --board ~/Buildo-wt-board --dry-run` before and after the change, and quote "plan gate ok" both times.
@@ -166,37 +173,37 @@ Files: scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scri
     - Red: plan-mode MED with `pile:`, `wontfix:` or `task:` is refused.
     - Green: all three pass.
     - Second direction: a HIGH or CRITICAL `pile:` is still refused in plan mode, and a MED `pile:` is still refused in close mode.
-    - Edit :839 to close mode only. That is the lock flipping.
-  - **T1b** "PLAN_FOLD switch": `PLAN_FOLD` equals `['CRITICAL','HIGH']`. With `planFold` including MED, a MED pile is refused again.
+    - Change :839: close mode stays refused as it is; its plan-mode half passes `planFold` explicitly (MED in it: refused; MED not in it: recorded), so the test holds whatever value ships. A MED CONFLICT still takes only ruling or folded in plan mode (a conflict waits for the operator, 08_agents.md:225); the 08_agents.md note says so.
+  - **T1b** "PLAN_FOLD switch": `planFold` is passed explicitly: `['CRITICAL','HIGH']` records a MED pile, `['CRITICAL','HIGH','MED']` refuses it, `['CRITICAL','HIGH','DOWNGRADED']` refuses a MED pile whose lens severity was HIGH and records one whose lens severity was MED; a call with no argument gives the same result as a call passing `PLAN_FOLD`. No test pins the literal value of `PLAN_FOLD`, so switching it is one line.
   - **T1c** "a MED pile at the launch gate".
     - Red: `planGateErrors` with a MED pile outcome and the block in the plan field is refused.
     - Green: it passes.
-    - Second direction: the block line has no trailing space, and the same block without the line is refused.
+    - Second direction: no line of the block has a space at either end (`planFold` passed explicitly, so the test holds for any shipped value) and the same block without the line is refused; the same test runs the block lines through the comparison of plan-prep post (rule-lists.mjs:749-753) with the lines set as the plan field.
   - **T2** "narrowed round 2". Add a `fixAfterReview` option to `scenario()`: build the round-1 material, then add one fix commit.
     - Red: a code fix plus `out-code-review-r2.txt` over R..HEAD of the fix paths is refused (file_sha256).
     - Green: it closes.
-    - Second direction: refused with no r2 (the message names the fix path); refused when r2 is made over L..HEAD; refused when split r2 is missing a fix path or carries a path outside the fix.
+    - Second direction: refused with no r2 (the message names the fix path); refused when r2 is made over L..HEAD; refused when a second fix follows r2 (the line names the commit r2 reviewed and the whole-range form); a lone r2 with a round-1 file that binds nowhere is refused (:354, needs out-code-review.txt); a fix that widens the Files line is refused with the whole-range form named; a commit that changes only TRIAGE.md or STATION.pass after R demands no r2; a fix commit that also edits the task file still needs only r2 over its covered paths; the round-1 outputs bound at R carry no Ruled line and r2 does; a split r2 (out-<lens>-r2-pN.txt) is not accepted.
   - **T3** "test-only skip".
     - Red: a fix touching only `src/tests/x.test.ts` plus `STATION.pass` with the fix sha, and no r2, is refused.
     - Green: it closes.
-    - Second direction: refused with no STATION.pass, with STATION.pass naming R's sha, with `RESULT: FAIL`, and when the fix touches `src/a.ts` as well as a test (AC #2, clause 3).
-  - **T3b** "ROUND2 switch": the value is pinned.
+    - Second direction: refused with no STATION.pass, with STATION.pass naming R's sha, with `RESULT: FAIL`, and when the fix touches `src/a.ts` as well as a test (AC #2, clause 3); refused when the fix touches src/app/api/test/route.ts or src/lib/tests/x.ts (not test roots) or a covered docs/reports/generated/x.md; passes when the fix commit also edits the task file; passes when STATION.pass is committed in a later commit than the fix.
+  - **T3b** "ROUND2 switch": the close takes `round2` as an argument; with `narrow: false` a fix after round 1 is refused as today; with `testOnlySkip: false` a test-only fix with a valid STATION.pass is refused; no test pins the literal value of ROUND2.
   - **Survive-the-fix:** the default scenario, F8 (:512) and :354 stay green.
   - **T4** "piece A".
-    - Red: a records commit (no status move) staging `out-code-review.txt` with a wrong `prompt_sha256` exits 0.
+    - Red: a records commit (no status move) staging a split part `out-code-review-p1.txt` (with its `in-` input) with a wrong `prompt_sha256` exits 0; a staged unsplit `out-code-review.txt` with no REVIEW header is also refused.
     - Green: it exits 1, with the same line text the close prints for that lane (the test takes the line from a close run and compares).
-    - Second direction: a correct header exits 0 even with no GROUNDER.md; a commit that stages no `out-*.txt` exits 0; with no board ref it exits 0.
+    - Second direction: a correct header exits 0 even with no GROUNDER.md and with no board ref (the template is then read at HEAD); a commit that stages no `out-*.txt` exits 0; a merge commit that stages another lane's out file exits 0; a staged deletion of an out file exits 0; staged out files whose TASK file or context cannot be read exit 1 naming the file; a context staged in the same commit as its outputs is found; a malformed index copy beside a correct working copy exits 1.
   
   **src/tests/backlog/rule-lists.logic.test.ts**
   - **T5** "the plan set has no generic review".
-    - Red/green: the pins at :749, :770 and :1183-1186 change. Build on scripts goes from [plan-review-deepseek, error-paths] to [error-paths]; record or '' goes to plan [].
+    - Red/green: the pins at :749, :767-772 (S4: record or '' on an API route gets plan []), :770 and :1183-1186, and backlog-lane.logic.test.ts:386-392 (B1), change with it. Build on scripts goes from [plan-review-deepseek, error-paths] to [error-paths]; record or '' goes to plan [].
     - Second direction: the fix plan set is still non-empty.
   - **T6** "security on sign-in, money and personal data".
     - Flip S1(a) at :746 and S1(b) at :753: src/lib/massing and src/app/api/parcels give no security.
-    - Positives: src/app/api/subscribe/session/route.ts, src/lib/subscription/x.ts, src/lib/supabase/server.ts, src/app/api/user-profile/route.ts, src/app/api/notifications/route.ts, mobile/src/components/paywall/PaywallScreen.tsx and src/lib/stripe/x.ts give security.
-    - Negative: scripts/seeds/bylaw/authored/x.json gives none.
+    - Positives: src/app/api/subscribe/session/route.ts, src/lib/subscription/x.ts, src/lib/supabase/server.ts, src/app/api/user-profile/route.ts, src/app/api/notifications/route.ts, mobile/src/components/paywall/PaywallScreen.tsx, src/lib/stripe/x.ts, src/app/login/page.tsx, src/app/(maxbld)/parcel-tool/signup/page.tsx, mobile/src/lib/jwtClaims.ts, src/app/api/leads/save/route.ts, src/app/api/onboarding/suppliers/route.ts, src/app/api/parcels/lookup/route.ts, src/app/api/parcels/lot-size/route.ts and src/lib/parcels/tool-gate.ts give security.
+    - Negatives (each gives none): scripts/seeds/bylaw/authored/x.json, src/lib/massing/x.ts, src/app/api/parcels/search/route.ts, src/lib/classification/account-preset.ts, src/lib/builders/extract-contacts.ts (question 2, default A), and a Files line whose only matches are docs/specs/02-web-admin/x.md, src/tests/x.admin.test.ts or mobile/__tests__/x.paywall.test.ts (the entry test).
     - The D11b test (:717) stays green.
-    - Change the SEC set and count at :1165-1167 (5 to 3).
+    - Change the SEC set and count at :1165-1167 (5 to 3; measured in memory with the new rule: src/lib/parcels/report-compute.ts and src/app/api/parcels/search/route.ts leave the set).
   
   **src/tests/backlog/backlog-lane.logic.test.ts**
   - Expected names at :712, :761, :768 and :792 change.
@@ -206,10 +213,10 @@ Files: scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scri
     - Second direction: it still contains "under the SAME names" (:307).
   
   ### 5. Fences (why each changed line was there, and what still covers it)
-  - **rule-lists.mjs:195.** add788e33 / task-358 put the generic plan pass in the lens set. RR-0511 retires it. Still covered by error-paths (every code task), ux, security, compliance and engineering at the plan, and the integration, reality-check and regression seats. The template is kept.
+  - **rule-lists.mjs:195.** add788e33 / task-358 put the generic plan pass in the lens set. RR-0511 retires it. NOT covered by another lens for three axes: every other lens template says deploy and rollback failure modes, data reality and sibling bugs are not its job and points at plan-review-deepseek (lens-error-paths.md:21, lens-code-review.md:21, lens-engineering.md:19, lens-compliance.md:21, lens-ux.md:21, lens-security.md:21). After RR-0511 those three rest on the reality-check and integration seats alone, and sibling-bug review has no named owner. This is the operator's own ruling (turn off the generic plan) and is put to him as a note, not a blocker; the lens templates are not edited (their text feeds the prompt hashes). The template is kept.
   - **rule-lists.mjs:192 api/lib arm.** 39ccaad3c / RR-0391 added it for the API IDOR class. Still covered by the new words on money, sign-in and personal-data routes, and the output grounder still reads every API route and library file for exploit paths (backlog-lane.mjs:196, RR-0464, 585733c10).
-  - **check-lane-close.mjs:200.** d86373d7a / task-399 and RR-0385 item 3 required MED folded. Retired at the plan only. Every MED still needs a grounder verdict and a recorded outcome shown on the card. Output is unchanged.
-  - **check-lane-close.mjs:556-560 whole-range binding.** 0b1c432d5 / V2.WHOLE F3. Round 1 (L..R) together with round 2 or the station (R..HEAD) still covers every changed path. R must be an exact diff match at a real commit, and r2 must bind at HEAD.
+  - **check-lane-close.mjs:200.** d86373d7a / task-399 and RR-0385 item 3 required MED folded. Relaxed at the plan only, and only as far as the operator's PLAN_FOLD answer says (Section 7, question 1). Every MED still needs a grounder verdict and a recorded outcome shown on the card. Output is unchanged.
+  - **check-lane-close.mjs:556-560 whole-range binding.** 0b1c432d5 / V2.WHOLE F3. Round 1 (L..R) together with round 2 or the station (R..HEAD) still covers every changed path. R must be an exact diff match at a real commit, and r2 must bind at HEAD; the relaxation is sound only because of those two exact bindings. Origin of the fence: task-410 V2.WHOLE (713959765, ba26e1b81), where lanes had committed part of the diff as the material (DIFF-core.patch), not only the fix round 0b1c432d5. It also changes the clause at 08_agents.md:363 (a fix round re-makes every file at HEAD) and the "under the same names" clause of the task-448 note at :357; the 08_agents.md note names both and task-414.
   - **backlog-lane.mjs:193.** b2591b815 / task-448 RR-0422. Kept as one accepted form.
   - **check-lane-close.mjs:761 early return.** Kept for every commit that stages no lane `out-*.txt`.
   
@@ -219,14 +226,16 @@ Files: scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scri
   - Output round 1 is unchanged.
   - Compliance at output (all lists are off by `output_off`) is not narrowed. If `output_off` is emptied again, its lists bind at HEAD as today.
   - No table field.
+  - Residual, named: the lane chooses when round 1 runs, so a lane that reviews early and puts real work after R moves its MEDs from round 1 (folded) to round 2 (the grounder's ruling:RR-0385). The check cannot tell a fix from new work. The output grounder still reads the whole diff against the plan (task-460), and the 08_agents.md note says so.
   - No change to lens-*.md, MODEL_LINE (backlog-lane.mjs:175) or plan-prep rounds.
   - RR-0513 B and C are not in this card.
   - **The lane guard** (~/.claude/hooks/lane-guard.mjs) is outside the repo and not in this card. Per RR-0385 it allows "sonnet" or "opus" only, so the Fable planner needs the operator's own edit there.
   
-  ### 7. Operator question (one; the rulings do not settle it)
-  Are lead and builder contact files (src/app/api/leads, src/lib/builders/extract-contacts.ts) "personal data" for the security lens?
+  ### 7. Operator questions (two; the rulings do not settle them)
+  1. PLAN_FOLD, the shipped value of piece 1. Evidence: of the 137 CONFIRMED plan MEDs of task-267 and task-313, 122 were design corrections that no hook checks (about 97 distinct defects), and 21 MEDs over the four cards were lens or seat HIGHs that the grounder wrote down to MED. A: keep folding MED (`['CRITICAL','HIGH','MED']`; the switch exists, nothing changes today; recommended). B: fold CRITICAL, HIGH and any finding the grounder wrote down from a lens or seat CRITICAL or HIGH (`['CRITICAL','HIGH','DOWNGRADED']`; the check compares the lens severity on the finding line with the first word of the grounder's reason); a MED on a sign-in, meter or entitlement path stays a grounder-brief rule (keep the severity HIGH), because the cited file of a verdict does not name that class (task-267 plan-security#1 cited src/app/api/parcels/lookup/route.ts:74). C: as approved in RR-0511 (`['CRITICAL','HIGH']`). The rest of the plan does not depend on the answer.
+  2. Are the builder contact files (src/lib/builders/extract-contacts.ts, enrichment.ts) "personal data" for the security lens? The per-user routes (leads save, view, feed, detail; onboarding; sync; parcels lookup) are not asked: Spec 08 5.7 (08_agents.md:258) and :311 settle them as security items.
   - A: no; they are business contacts (default).
-  - B: yes; add `leads|contact` to the pattern.
+  - B: yes; add `lib\/builders` to the words.
   
   ### 8. Files line, final
   `Files: scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, docs/specs/00-architecture/08_agents.md, .claude/review-templates/README.md, docs/reports/generated/rule-lists-by-kind.md, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts`
@@ -238,9 +247,9 @@ Files: scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scri
   
   ### 10. UNVERIFIED
   - Whether the backlog CLI trims trailing spaces in the plan field. The :280 trim makes it irrelevant.
-  - I found no test that caps the length of a dated note. The RR-0429 "room" appears to be the lens-input part count of the agents-s7-s11 list. I did not check that the page still shows 1 part after the notes are added.
+  - Settled by the plan grounder: no test caps a dated note. Run in memory, agents-s7-s11 stays one part for any material up to 67,217 characters (nominal 30,000), and the joined compliance set stays at 3 parts or fewer up to 74,803 characters of material (2 parts at 30,000), so three notes of 450 characters or less change no part count; `page --check` still runs at the commit.
   - I did not run the task-313 launch dry run (step 13).
-  - The cost of the R search on a lane with many commits.
+  - The cost of the R search: bounded by step 5 (at most 30 commits, only commits that change a covered path); measure it on the longest existing lane before the lock.
   - Whether `isTest` should also count mobile/maestro flows. Today it does not, so a fix to a flow needs round 2.
   - How the lane guard treats a Fable agent.
   - The exact milestone letter of m-1.
@@ -251,4 +260,47 @@ Files: scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scri
   - /Users/brettpreston_macmini/Buildo-wt-board/scripts/analysis/backlog-lane.mjs
   - /Users/brettpreston_macmini/Buildo-wt-board/src/tests/backlog/check-lane-close.logic.test.ts
   - /Users/brettpreston_macmini/Buildo-wt-board/docs/specs/00-architecture/08_agents.md
+
+Plan review round 1: 55 folded, 0 task, 0 ruling, 0 wontfix, 5 pile; grounder docs/reports/reviews/task-470/GROUNDER-PLAN.md; triage docs/reports/reviews/task-470/TRIAGE-PLAN.md
+plan-error-paths#1 HIGH folded never from the worki
+plan-error-paths#2 MED folded exit 1 naming the fi
+plan-error-paths#3 MED folded at most 30 commits o
+plan-error-paths#4 MED folded no line of the block
+plan-plan-review-deepseek#1 MED folded onboarding suppliers
+plan-plan-review-deepseek#2 MED folded so the test holds wh
+plan-plan-review-deepseek#3 HIGH folded login|signin|signup|
+plan-plan-review-deepseek#5 MED folded the close's own func
+plan-plan-review-deepseek#6 MED folded the lens template is
+plan-plan-review-deepseek#7 MED folded the same Files entri
+plan-plan-review-deepseek#8 MED folded a commit that change
+plan-plan-review-deepseek#9 MED folded a file the lane writ
+plan-plan-review-deepseek#10 MED folded the old rule matched
+in#1 HIGH folded the round-2 grounder
+in#2 HIGH folded not at all when inMe
+in#3 HIGH folded that file is not a p
+in#4 MED folded the round line count
+in#5 MED folded the commit walk is n
+in#6 MED folded Do NOT move the per-
+in#7 MED folded Per-user routes that
+in#8 MED folded a file the lane writ
+in#10 MED folded backlog-lane.logic.t
+in#11 MED folded pins the rest of the
+rc#1 MED folded needs one manual ste
+rc#2 MED folded the task file, TRIAG
+rc#5 MED folded context staged in th
+rc#6 HIGH folded the ONE switch of pi
+rc#7 HIGH folded The rest of the plan
+rc#8 MED folded 364 plan findings ru
+rc#9 HIGH folded src/lib/observabilit
+rc#10 MED folded per-user routes (lea
+rc#11 MED folded the Files entries ou
+rg#1 HIGH folded not at all when inMe
+rg#2 MED folded sibling-bug review h
+rg#3 HIGH folded all 1,898 paths that
+rg#4 MED folded a file the lane writ
+rg#5 MED folded the relaxation is so
+rg#7 MED folded GROUNDER.md holds ro
+rg#8 MED folded (1,686 files) no lon
+rg#9 MED folded the lane chooses whe
+rg#10 MED folded (:1759-1760, operato
 <!-- SECTION:PLAN:END -->
