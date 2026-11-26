@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MCFIX470'
 created_date: '2026-11-26T12:32:00Z'
-updated_date: '2026-11-26T14:56:00Z'
+updated_date: '2026-11-26T15:20:00Z'
 labels:
   - McFixV2
 milestone: m-1
@@ -333,4 +333,6 @@ rc2#1 HIGH folded lead-(?:detail|inspe
 2026-11-26 work: PLAN_FOLD (shipped CRITICAL, HIGH, MED, RR-0514 1a) and the trimmed block lines; ROUND2.testOnlySkip with roundSkip and STATION.pass (piece 2 not built, task-414); recordsFormErrors at the records commit (piece A); TEST_ROOT and SEC_WORDS in rule-lists.mjs, plan-review-deepseek off; brief text (NO ROUND 2 form), README rows, three Spec 08 dated notes, page regenerated. task-313 dry run (plan step 13) UNVERIFIED: the board checkout is dirty outside backlog/ (src/lib/surfaces/maxbld-web.ts), so backlog-lane refuses before the gate.
 
 2026-11-26 green attempt 1 refused by one pin (backlog-lane.logic.test.ts:288, task-407: the brief never says TRIAGE.md): the NO ROUND 2 sentence says 'its outcome file' instead, the words the brief already uses.
+
+2026-11-26 output review round 1 on 3c16befd9 (station PASS, pass file 3c16befd96eb...pass): code-review lens split by lens-input into 2 chunks (out-code-review-p1.txt, -p2.txt) with context-r4.md; 6 findings (3 MED, 2 LOW, 1 NIT, all DEFER) listed in docs/reports/lanes/2026-11-26/BL-MCFIX470/FINDINGS.md; grounder owed.
 <!-- SECTION:NOTES:END -->
