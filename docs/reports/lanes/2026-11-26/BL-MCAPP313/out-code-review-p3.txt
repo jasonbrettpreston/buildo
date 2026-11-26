@@ -1,23 +1,22 @@
-◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
-REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T17:09:36.359Z file_sha256=18a66bd1c880b71a2a0edac24af26e14e445f1e9576c0b18a352b99be14de784 prompt_sha256=ca526924e679269dadc250b52cd455611adcb7ea8775ea78cd3708c88915ccba
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T17:37:44.508Z file_sha256=18a66bd1c880b71a2a0edac24af26e14e445f1e9576c0b18a352b99be14de784 prompt_sha256=b1529720fe63c45cc8d33f3a4cfcdb2d4174b9c6f03569ad0eb37a8233230a90
 🔍 Lens review of docs/reports/lanes/2026-11-26/BL-MCAPP313/in-out-code-review-p3.txt (model: deepseek-reasoner)
 
-DEFER severity=LOW — mobile/app/(app)/_layout.tsx:303 "return APP_PRODUCT === 'parcel_tool' ? <MaxbldAppGate /> : <LeadAppLayout />;" — APP_PRODUCT is a build-pinned constant (appShell.test.ts: "expect(APP_PRODUCT).toBe('parcel_tool')"), so in this build the false arm is statically unreachable and LeadAppLayout is dead code that is not even exported, which contradicts the comment "kept whole as LeadAppLayout for the other app" — either type APP_PRODUCT as the AppProduct union (so the branch stays live) or drop the claim in the comment and treat LeadAppLayout as kept-for-a-later-project. — reachability, not behaviour, so bounded.
+BUG-free walk of chunk 3, findings below.
 
-DEFER severity=LOW — mobile/app/_layout.tsx:193 "branch: decision.branch ?? 'navigate'," — the DEV route_decision event's branch value now comes from each navigate decision instead of always being 'navigate'; only the MaxBLD arms are shown to carry a branch (authGate.test.ts: "expect(out).toEqual({ kind: 'navigate', to: '/(app)/', sideEffect: 'registerPushToken' })"), so any lead arm that also sets one silently renames an existing telemetry value — check decideAuthGateRoute that no lead_gen navigate arm sets branch, or keep 'navigate' for lead_gen. — DEV-only, but it changes an event other code may grep.
-
-DEFER severity=LOW — mobile/__tests__/openingScreens.golden.test.ts:44 "const allowed = bindings.mapping.mobile.LIST!;" — the non-null assertion hides a real null: if _schema/bindings.json drops or renames LIST, allowed is undefined and allowed.includes throws a TypeError inside walk, so the failure reads as a crash rather than "not in mapping.mobile.LIST" — assert LIST is an array first (expect(Array.isArray(...)).toBe(true)) before walking.
-
-DEFER severity=LOW — mobile/__tests__/openingScreens.golden.test.ts:73 "expect([n, g.surface, g.target, g.state, g.situation]).toEqual([n, 'mobile_parcel_opening', 'mobile', fixture.goldens[n]!.state, fixture.goldens[n]!.situation]);" — n comes from the surfaces goldens file, not from the situations fixture, so the "!" asserts a match that is not checked; a golden added to one file only makes this throw "cannot read properties of undefined" instead of naming the drift — check fixture.goldens[n] is defined and fail with that key first.
-
-DEFER severity=LOW — mobile/__tests__/appIcon.test.ts:21 "const ihdr = (b: Buffer) => ({ png: b.subarray(1, 4).toString('latin1') === 'PNG', width: b.readUInt32BE(16), height: b.readUInt32BE(20), colourType: b[25] });" — readUInt32BE throws RangeError for a buffer under 26 bytes, so a truncated or non-PNG icon makes iconProblems throw before it can report "not a PNG" — return the png flag first and only read the header fields when the length is at least 26.
-
-DEFER severity=NIT — mobile/__tests__/signIn.behaviour.test.tsx:53 "dismiss.mockRestore();" — the restore sits at the end of the test body, so a failing assertion skips it and the Keyboard.dismiss spy leaks into the next test — move it to an afterEach with jest.restoreAllMocks().
-
-DEFER severity=LOW — mobile/__tests__/openingScreens.golden.test.ts:21 "const goldens = (rj(path.join(__dirname, 'fixtures/surfaces/mobile_parcel_opening.goldens.json')).goldens ?? {}) as Record<string, Json>;" — the fixture it is keyed on says the writer emits a different file ("scripts/surfaces/opening-golden-capture.ts writes src/tests/fixtures/surfaces/mobile_parcel_opening/<golden>.mobile.json"), so one of the two paths is stale and a future capture can write where this test never reads — correct the fixture comment or the read path to the current one.
+DEFER severity=MED — mobile/app/_layout.tsx "enabled: !!user && APP_PRODUCT === 'lead_gen'," — disabling the profile query for parcel_tool leaves profileLoading/profile governed by disabled-query semantics; if the routing effect still guards on profileLoading before decideAuthGateRoute (that guard is not in this chunk, cannot see it), the MaxBLD arm can stall, since React Query v4 reports isLoading true for a disabled query (v5 reports false) — confirm the guard, or derive readiness from product, not profileLoading.
+DEFER severity=LOW — mobile/__tests__/appIcon.test.ts "if (!ihdr(b).png) out.push(`${k}: not a PNG`);" — ihdr eagerly reads width (readUInt32BE(16)), height and colourType before the png flag is used, so a short or non-PNG buffer throws RangeError instead of reporting "not a PNG" — check length >= 26 and the signature inside ihdr, or guard the reads.
+DEFER severity=LOW — mobile/__tests__/signIn.behaviour.test.tsx "dismiss.mockRestore();" — the Keyboard.dismiss spy is restored only at the happy-path end of each test, not in a finally (unlike the timer test in the same file), so a failing assertion leaks the spy into later tests — wrap the body in try/finally.
+DEFER severity=NIT — mobile/__tests__/openingScreens.golden.test.ts "const keys = n.children.filter(isNode).map((c) => String(c.props.key));" — a child with no key maps to the literal string "undefined", so two keyless siblings would be reported as "key undefined repeats" rather than as a missing key — drop undefined keys here and let openingProblems own the missing-key message.
+DEFER severity=NIT — mobile/__tests__/appShell.test.ts "fs.readdirSync(APP_DIR).filter((f) => f !== '_layout.tsx' && f !== 'parcel-tool').map((f) => f.replace(/\.tsx$/, ''))" — any non-.tsx file or subdirectory under (app) keeps its raw name or extension and is then asserted to redirect, so a helper file would yield a bogus case — filter to route files (or .tsx directories) only.
+REJECT — mobile/__tests__/appIcon.test.ts "png: b.subarray(1, 4).toString('latin1') === 'PNG'" — reads as an off-by-one on the PNG magic — correct: the signature is 0x89 at byte 0, then bytes 1..3 are 'P','N','G'.
+REJECT — mobile/app/_layout.tsx "branch: decision.branch ?? 'navigate'," — reads as if it drops the prior 'navigate' label for lead decisions — correct: lead navigate decisions carry no branch, so the fallback keeps the previous telemetry, while MaxBLD decisions emit maxbld-lookup/maxbld-sign-in.
+REJECT — mobile/app/(auth)/sign-in.tsx "Keyboard.dismiss();" placed above "if (isAuthenticating) return;" — reads as if it dismisses during an in-flight sign-in — correct: it is placed first so the empty-field and already-authenticating paths also close the keyboard, which the empty-form test pins.
 
 VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- n/a, no CRIT or HIGH found in this chunk; the produced code changes (APP_PRODUCT ternary, Keyboard.dismiss, enabled guard, branch fallback) are typed and error-free as pasted
 
 ---
-⏱  104512ms (104.5s)
-📊 Tokens — total: 43109, input: 23149, output: 19960, reasoning: 19003
+⏱  96965ms (97.0s)
+📊 Tokens — total: 50392, input: 23576, output: 26816, reasoning: 26021

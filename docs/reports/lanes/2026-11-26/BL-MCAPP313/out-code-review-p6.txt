@@ -1,21 +1,20 @@
-◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
-REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T17:09:36.357Z file_sha256=c12960d70d83baddb1c0eed29fca984c7739831311be10b1719d3333f049c439 prompt_sha256=da3af9c8be0b676eb6e981119a0e8dd01c442d71df0c55434b7389404f28f91b
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T17:37:44.507Z file_sha256=c12960d70d83baddb1c0eed29fca984c7739831311be10b1719d3333f049c439 prompt_sha256=a842d40a24fdc5fb820719612b1ff6b64e3851a9bb0f76afc1b3b0a946dcc494
 🔍 Lens review of docs/reports/lanes/2026-11-26/BL-MCAPP313/in-out-code-review-p6.txt (model: deepseek-reasoner)
 
-REJECT — scripts/surfaces/opening-golden-capture.ts:29 "const g = fixture.goldens[name]!;" — the non-null assertion looks like a hidden null — name comes from Object.keys(fixture.goldens) at line 46, so the lookup is total and the assertion masks nothing.
-
-DEFER severity=LOW — scripts/surfaces/opening-golden-capture.ts:56 "if (fs.existsSync(DIR)) for (const f of fs.readdirSync(DIR)) if (!names.includes(f.replace(/\.mobile\.json$/, ''))) problems.push(`STRAY ${f}`);" — every directory entry is tested as a golden, so a non-golden name (a .DS_Store, a subdirectory, a re-named file) fails the check permanently, and --write never deletes it while line 58 still prints "wrote N goldens" and line 59 exits 1 — filter entries to /\.mobile\.json$/ and report strays only in check mode.
-
-DEFER severity=LOW — scripts/surfaces/opening-golden-capture.ts:23 "const fixture = JSON.parse(fs.readFileSync(path.join(REPO, 'mobile/__tests__/fixtures/opening.situations.json'), 'utf8')) as {" — an unchecked cast declares inputs as Record<string, OpeningSituation> with no validation, so a situation missing a required key flows into openingProps and JSON.stringify at line 42 silently drops the undefined key instead of erroring — validate the situation shape (or throw on a missing key) before openingProps(s).
-
-DEFER severity=LOW — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_opening.descriptor.json "loc": 0," (same field in scripts/surfaces/_schema/census/mobile-product.json) — a measured field states 0 lines for a surface whose two files are listed right above it in x-draft.files — fill the measured count or drop the field so the measurement is not a false zero.
-
-DEFER severity=NIT — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_opening.descriptor.json "field_whitelist": ["status"]," — the same descriptor's why says "the page reads its status and fetchStatus, never a field", so listing a contract field in the whitelist contradicts it (and a checker reading the whitelist would permit drawing the plan status, which RR-0503 Q1 A denies) — empty the list, or name the query state explicitly if that is what "status" means here.
-
-DEFER severity=NIT — scripts/surfaces/_schema/converted-surfaces.json "expected_count": 35" — the count moves 34 -> 35 with no dated note in $comment, while every prior move carries one, e.g. the neighbouring note "expected_count moves 25 -> 29 (the four new parcel_product SURFACE rows)" — add the dated task-313 note naming mobile_parcel_opening, as static-page.json and the census both did.
+DEFER severity=LOW — scripts/surfaces/opening-golden-capture.ts:40 "fingerprint: { files: Object.fromEntries(files.map((f) => [f, sha16(path.join(REPO, f)) as string])) }" — sha16 arrives through @ts-expect-error so neither its argument shape (path or contents) nor its return is type-checked, and the `as string` cast hides any mismatch — cannot see report-checks.mjs, so a wrong argument form would fingerprint the wrong bytes and still print ok on --check; confirm the wall capture passes the same path form.
+DEFER severity=NIT — scripts/surfaces/opening-golden-capture.ts:58 "console.log(argv.includes('--write') ? `wrote ${names.length} goldens`" — the STRAY sweep at :56 still pushes problems and sets process.exitCode 1 in --write mode, so a run can print "wrote N goldens" and exit non-zero — skip the stray sweep under --write, or print the stray lines before the success line.
+DEFER severity=LOW — scripts/surfaces/platform_shared/F14/surfaces/shell_app_tabs.descriptor.json:43 "+        "mobile/src/components/parcel/MaxbldAppGate.tsx"" — the newly owned component is not added to evidence.files, where the only other owned component appears as "mobile/src/components/onboarding/IncompleteBanner.tsx:1" (line 12) — add the gate path to evidence.files so owns.components and evidence.files agree.
+DEFER severity=LOW — scripts/surfaces/platform_shared/F14/surfaces/shell_app_root.descriptor.json:24 "+\"mobile/src/lib/appShell.ts — APP_PRODUCT\"" — every other entry in this gate array is a bare resolvable path, "mobile/src/lib/auth/decideAuthGateRoute.ts" (:23), while the new entry carries a trailing annotation — drop the annotation so a path-resolving check can resolve it.
+DEFER severity=LOW — src/app/api/parcels/lookup/route.ts:69 "const ctx = await getCurrentUserContext(request, pool, { needsTrade: false });" — the same behavioural change landed in three routes but only the entitlement route carries a dated header note explaining why the trade-less context is not a 401 ("Dated 2026-11-26 (task-313, McApp card 1; prior text kept) ... is not a 401 for that.") — add the dated note to lookup/route.ts:69 and lot-size/route.ts:41.
+DEFER severity=LOW — scripts/surfaces/_schema/converted-surfaces.json:5 "+    "expected_count": 35" — the count moves 34 to 35 and mobile_parcel_opening joins converted but the $comment gains no dated note, though every earlier move is recorded there ("Dated note 2026-11-11 (MF-19 ... expected_count moves 25 -> 27") — add the dated task-313 note naming the new surface.
+DEFER severity=LOW — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_opening.descriptor.json "field_whitelist": ["status"] — the whitelist names one payload field while the same object says "the page reads its status and fetchStatus, never a field." — make the whitelist empty, or reword the why so the two agree.
+REJECT — scripts/surfaces/opening-golden-capture.ts:29 "const g = fixture.goldens[name]!;" — a non-null assertion on a Record index that looks able to be undefined — it is correct because every name is taken from Object.keys(fixture.goldens).sort() at :46, so the entry always exists.
 
 VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none
 
 ---
-⏱  58877ms (58.9s)
-📊 Tokens — total: 46520, input: 35081, output: 11439, reasoning: 10770
+⏱  77978ms (78.0s)
+📊 Tokens — total: 56679, input: 35508, output: 21171, reasoning: 20327

@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MCAPP313'
 created_date: '2026-11-19T13:07:00Z'
-updated_date: '2026-11-26T17:22:00Z'
+updated_date: '2026-11-26T17:39:00Z'
 labels:
   - queue-row
   - McApp
@@ -356,4 +356,6 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0233 · task-313 · Backlog; o
 2026-11-26 (lane BL-MCAPP313): output review round 1 after the station pass on b31fc6bc3: context-r3.md written by backlog-brief.mjs; the whole-task diff (launch 36d27a43c .. HEAD, the Files line with the two commit 0 paths, exempt paths out) split by rule-lists.mjs lens-input into in-out-code-review-p1..p7; the code-review lens (the only output lens for this build task: rule-lists.mjs lensSet) run on each in the brief's form; 31 findings (HIGH 1, MED 4, LOW 21, NIT 5) listed untriaged in docs/reports/lanes/2026-11-26/BL-MCAPP313/FINDINGS.md. Grounder owed; nothing is triaged, ruled or fixed by the lane (RR-0359).
 
 2026-11-26 (lane BL-MCAPP313): round-1 fix of p2#1 (HIGH, CONFIRMED by the output grounder Cairn-Ground-O313; LANE-STEPS step 1): docs/specs/00-architecture/116_multi_product_architecture.md keeps its dated note (line 70) and gets back its section 4 heading after one blank line: '## 4. Normative implications for the migration's auth + entitlement work (BINDING)' (line 72). Red: grep -n '^## 4\. Normative implications' returned nothing before the fix; green: it returns line 72. The LOW and NIT ids are recorded, not fixed.
+
+2026-11-26 (lane BL-MCAPP313): output review round 2 after the station pass on the fix 2f95dc250: context-r4.md (backlog-brief.mjs); lens-input re-made in-out-code-review-p1..p7 over launch 36d27a43c .. HEAD; the code-review lens re-run on all seven in the brief's form under the same names; 28 findings (HIGH 1, MED 4, LOW 15, NIT 8) untriaged in FINDINGS.md. Round-2 grounder owed; nothing triaged, ruled or fixed by the lane.
 <!-- SECTION:NOTES:END -->

@@ -1,4 +1,4 @@
-LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:aba9751438c52dcb8ae38dcb3a3eb7ddd8a97518630f05b11ffbcf0f4b1a9ec7 part 1 of 1 chunk 2 of 7
+LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:ee798e2564cf87373a41c1ba47632ab9ee3e952027a45b5d1e4ee27dc334c53f part 1 of 1 chunk 2 of 7
 NO RULE LIST: the lens template alone judges the material under review. The material is chunk 2 of 7 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/reports/generated/127-surface-review-queue.md","docs/reports/generated/rule-lists-by-kind.md","docs/reports/panels/MF-49.json","docs/reports/policy/policy-ledger.json","docs/specs/00-architecture/116_multi_product_architecture.md","docs/specs/00-architecture/117_maxbld_brand.md","docs/specs/03-mobile/100_mobile_parcel_cost_tool.md"]
 
 
@@ -1558,19 +1558,18 @@ index fb32cee6ecaa4c71aabc175b5da65a52dac5c83d..0278fc7e5454bce739b36aa3b69f7fdf
    ]
  }
 diff --git a/docs/specs/00-architecture/116_multi_product_architecture.md b/docs/specs/00-architecture/116_multi_product_architecture.md
-index 7bb1bf43622398ded4a13f2a9661855f95d13375..ae738c0aea86660a980876e949df2d785b6f41ea 100644
+index 7bb1bf43622398ded4a13f2a9661855f95d13375..cb863fa0271122c754345212d27cc03044874edf 100644
 --- a/docs/specs/00-architecture/116_multi_product_architecture.md
 +++ b/docs/specs/00-architecture/116_multi_product_architecture.md
-@@ -67,7 +67,8 @@ The decisive fact for App B: lot-optimization is a **different product for a dif
+@@ -67,6 +67,8 @@ The decisive fact for App B: lot-optimization is a **different product for a dif
  </architecture>
  
  <behavior>
--## 4. Normative implications for the migration's auth + entitlement work (BINDING)
 +> Dated note 2026-11-25 (task-313, McApp card 1; M-246, prior text kept; operator, verbatim: "1a" (RR-0499, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2598), the put text at :2599 "A inside the one project (sign-in straight to search, the MaxBLD bar the only bar, the gate checks the MaxBLD plan, own start-up screen, lead-app screens kept in the code unreachable for the other app; departs from Spec 116 section 3...)"; kept by RR-0504 "stay with A", :2623): the MaxBLD app lives INSIDE the one Expo project for now. The Codebase / shell row above and the 2026-11-09 note are departed from; the separate project is decided later, when the lead app is ready. The switch is `APP_PRODUCT` (`mobile/src/lib/appShell.ts`, `parcel_tool` in this build): AuthGate reads no profile and sends a signed-in person to the Lookup; the `(app)` layout draws the MaxBLD front door (`mobile/src/components/parcel/MaxbldAppGate.tsx`) and never the lead five-tab bar; the lead screens stay in the code, unreachable (the front door redirects them). The fence of ruling 2026-09-16 (c) holds: `parcel-tool` stays in `(app)`, whose data routes the server gates at 403 on the `parcel_tool` plan (`src/lib/parcels/tool-gate.ts`). In card 1 the front-door gate does NOT check the plan (RR-0503 Q1 A, :2618; kept by RR-0504): a named narrowing of the put text "the gate checks the MaxBLD plan"; the plan check is the server 403, and a person with no plan reaches the Lookup and sees the refusal notice on a search until card 2 (task-271, task-357).
-+ for the migration's auth + entitlement work (BINDING)
++
+ ## 4. Normative implications for the migration's auth + entitlement work (BINDING)
  
  Each item is a constraint on the Supabase-migration Phase 1 (web auth + schema) and Phase 2 (mobile auth + gate) work in `.cursor/active_task.md`.
- 
 diff --git a/docs/specs/00-architecture/117_maxbld_brand.md b/docs/specs/00-architecture/117_maxbld_brand.md
 index e0884a12dcf36614a071ce0a019e4669e7d261b0..eb2cba885bee62260f275ab13b6531b6640c8149 100644
 --- a/docs/specs/00-architecture/117_maxbld_brand.md
