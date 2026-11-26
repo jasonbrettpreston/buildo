@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-25T19:49:00Z'
+updated_date: '2026-11-26T16:46:00Z'
 due_date: '2026-11-26'
 labels:
   - 1-2
@@ -85,4 +85,6 @@ who (plan text): lane
 2026-11-25 (RR-0498 item 3, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2593, operator '3. y'): Account first version = sign-out, plan and reports used, delete account, support links; notification settings and the plan-change link come later (with alerts and checkout). McApp.
 
 2026-11-25 (RR-0501, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2608): McApp card 2 of 4 (Account and no-plan); it absorbs task-357 (the no-plan page), which is dead as a separate card (RR-0488).
+
+2026-11-26 (RR-0521, MORNING-DECISIONS.md:2702, operator "yes"): the three sign-in navigation fixes (nav lock rows 15, 16, 22) move here from task-313; the Back behaviour on sign-in is decided in this card's plan.
 <!-- SECTION:NOTES:END -->
