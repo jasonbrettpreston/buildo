@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MCAPP313'
 created_date: '2026-11-19T13:07:00Z'
-updated_date: '2026-11-26T17:12:00Z'
+updated_date: '2026-11-26T17:22:00Z'
 labels:
   - queue-row
   - McApp
@@ -354,4 +354,6 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0233 · task-313 · Backlog; o
 2026-11-26 (lane BL-MCAPP313): merged the origin tip origin/wf1/mb-rulings 02367cda8 (task-470 review-trim fold and the board records) into wf2/mcapp313 as a merge commit, no conflict (the one file both sides changed, docs/reports/generated/rule-lists-by-kind.md, auto-merged and is current). Re-read after the merge: the plan cites no line of the task-470 files except rule-lists-by-kind.md (regenerated content current: rule-lists page --check). The Definition of Done items #2, #3 and #10 cite 08_agents.md:462, :490 and :505; those quotes were already at :497, :525 and :542 before the merge and are at :500, :528 and :545 after it (task-470 added three lines at :360-372); the DoD is the config's text and is left as is. Current checks after the merge: emit-mobile-surfaces --check ok (6 surfaces, 37 goldens); generate-surface-registry --check clean (174 rows); rule-lists page --check current.
 
 2026-11-26 (lane BL-MCAPP313): output review round 1 after the station pass on b31fc6bc3: context-r3.md written by backlog-brief.mjs; the whole-task diff (launch 36d27a43c .. HEAD, the Files line with the two commit 0 paths, exempt paths out) split by rule-lists.mjs lens-input into in-out-code-review-p1..p7; the code-review lens (the only output lens for this build task: rule-lists.mjs lensSet) run on each in the brief's form; 31 findings (HIGH 1, MED 4, LOW 21, NIT 5) listed untriaged in docs/reports/lanes/2026-11-26/BL-MCAPP313/FINDINGS.md. Grounder owed; nothing is triaged, ruled or fixed by the lane (RR-0359).
+
+2026-11-26 (lane BL-MCAPP313): round-1 fix of p2#1 (HIGH, CONFIRMED by the output grounder Cairn-Ground-O313; LANE-STEPS step 1): docs/specs/00-architecture/116_multi_product_architecture.md keeps its dated note (line 70) and gets back its section 4 heading after one blank line: '## 4. Normative implications for the migration's auth + entitlement work (BINDING)' (line 72). Red: grep -n '^## 4\. Normative implications' returned nothing before the fix; green: it returns line 72. The LOW and NIT ids are recorded, not fixed.
 <!-- SECTION:NOTES:END -->
