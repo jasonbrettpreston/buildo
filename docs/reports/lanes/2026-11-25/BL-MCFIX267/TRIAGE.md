@@ -1,0 +1,13 @@
+# TRIAGE BL-MCFIX267 (task-267 with task-317), ROUND 2 (final; grounder Cairn-Ground-O267b): 12 CONFIRMED (7 LOW, 5 NIT), 11 REJECTED; no CRITICAL, HIGH or MED stands, so nothing is fixed in round 2 and the 12 are recorded (RR-0385: round 2 resolves CRITICAL and HIGH only; no third round).
+out-code-review-p1#1 pile:"doc cite of the emits row was already stale at the launch; row 15 has the exact range, LOW is recorded (RR-0385 round 2)"
+out-code-review-p1#2 pile:"errors row cites of route.ts are stale doc cites in a generated page, no runtime path, LOW is recorded (RR-0385 round 2)"
+out-code-review-p1#3 pile:"quote in the MF-99 panel is exact but omits the loading answers; records only, correction owed on task-343, LOW is recorded (RR-0385 round 2)"
+out-code-review-p1#4 pile:"queue row next text is stale; the orchestrator moves the row with the card, an in-lane edit would void the chunk, LOW is recorded (RR-0385 round 2)"
+out-code-review-p2#1 pile:"initializer write to the module set is a smell, harmless without StrictMode, LOW is recorded (RR-0385 round 2)"
+out-code-review-p2#2 pile:"pick mark kept per mount; the report route is never re-targeted to another lot in the app, LOW is recorded (RR-0385 round 2)"
+out-code-review-p2#3 pile:"cachedPage cast could be the typed generic form, style only, NIT is recorded (RR-0385 round 2)"
+out-code-review-p2#4 pile:"reduce motion promise has no catch; it does not reject in practice and off is the safe default, LOW is recorded (RR-0385 round 2)"
+out-code-review-p2#7 pile:"reportClock gaveUp accessor has no caller, a dead export, NIT is recorded (RR-0385 round 2)"
+out-code-review-p3#6 pile:"log key checked beside the whatWeChecked field, naming looseness read by tests, NIT is recorded (RR-0385 round 2)"
+out-code-review-p4#1 pile:"second import from the same module, NIT is recorded (RR-0385 round 2)"
+out-code-review-p4#4 pile:"stored-page test rides on the beforeEach default and has no not-called pin, NIT is recorded (RR-0385 round 2)"
