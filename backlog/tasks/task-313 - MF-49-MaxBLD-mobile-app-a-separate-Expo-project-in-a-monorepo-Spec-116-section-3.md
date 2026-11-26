@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MCAPP313'
 created_date: '2026-11-19T13:07:00Z'
-updated_date: '2026-11-26T17:39:00Z'
+updated_date: '2026-11-26T17:49:00Z'
 labels:
   - queue-row
   - McApp
@@ -358,4 +358,18 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0233 · task-313 · Backlog; o
 2026-11-26 (lane BL-MCAPP313): round-1 fix of p2#1 (HIGH, CONFIRMED by the output grounder Cairn-Ground-O313; LANE-STEPS step 1): docs/specs/00-architecture/116_multi_product_architecture.md keeps its dated note (line 70) and gets back its section 4 heading after one blank line: '## 4. Normative implications for the migration's auth + entitlement work (BINDING)' (line 72). Red: grep -n '^## 4\. Normative implications' returned nothing before the fix; green: it returns line 72. The LOW and NIT ids are recorded, not fixed.
 
 2026-11-26 (lane BL-MCAPP313): output review round 2 after the station pass on the fix 2f95dc250: context-r4.md (backlog-brief.mjs); lens-input re-made in-out-code-review-p1..p7 over launch 36d27a43c .. HEAD; the code-review lens re-run on all seven in the brief's form under the same names; 28 findings (HIGH 1, MED 4, LOW 15, NIT 8) untriaged in FINDINGS.md. Round-2 grounder owed; nothing triaged, ruled or fixed by the lane.
+
+2026-11-26 Dated note (task-313, McApp card 1; RR-0520, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2698; prior text kept): the two new components are approved, OpeningBinding.tsx (the start-up page) and MaxbldAppGate.tsx (the front-door gate). Operator, verbatim: "Still pushing. Approved - The approval sentence for McApp card 1's two new components (the start-up page and the front-door gate). The lane is stopped on it. Wahts your recommendaiton for this?  Sign-in navigation fixes in McApp card 2, yes or no."
+
+2026-11-26 Dated note (task-313, McApp card 1; RR-0521, MORNING-DECISIONS.md:2702; prior text kept): the three sign-in navigation fixes (Continue with email, its Back button, the link from sign-up back to sign-in; nav lock rows 15, 16, 22) move from this card to McApp card 2 (task-271) and are not built here. Operator, verbatim: "yes"
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+task-313 McApp card 1 landed: work e904d8d3e (S1 and S2 the trade-less parcel context, M1 to M3 the MaxBLD front door and AuthGate arm, M5 and M6 the Opening surface S-097 with MaxbldAppGate and OpeningBinding, M7 imageless splash, M8 Keyboard.dismiss, M9 House Mark icons), origin merge b31fc6bc3, round-1 fix 2f95dc250 (STATION PASS). The three sign-in navigation fixes moved to card 2 (RR-0521).
+
+Review round 1: 1 fixed, 0 task, 0 ruling, 0 wontfix, 9 pile; grounder /Users/brettpreston_macmini/Buildo-scratch/lanes-20261126/BL-MCAPP313/grounder/r1/GROUNDER.md (round 1 as ruled, outputs at a76b3cca6); triage /Users/brettpreston_macmini/Buildo-scratch/lanes-20261126/BL-MCAPP313/grounder/r1/TRIAGE.md
+
+out-code-review-p2#1 HIGH fixed 2f95dc250 (round 1)
+<!-- SECTION:FINAL_SUMMARY:END -->
