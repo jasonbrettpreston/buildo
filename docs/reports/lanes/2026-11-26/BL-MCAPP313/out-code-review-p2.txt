@@ -1,0 +1,15 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T17:37:44.506Z file_sha256=cb90362deda382dc4ec42e86e30e3b6a21713ed3d5bc837fca75e43abd30bfdf prompt_sha256=d5ea11f773220cef908de10b78ca8a2f0584d538450c2620bd725b2857a6a540
+🔍 Lens review of docs/reports/lanes/2026-11-26/BL-MCAPP313/in-out-code-review-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — docs/reports/panels/MF-49.json "Operator, verbatim (RR-0509, MD:2646): \"go back to just the icon with out the name.\"" — the same ruling is cited at two different MORNING-DECISIONS lines in this one change, docs/specs/00-architecture/117_maxbld_brand.md says "RR-0509, :2645 "just the icon with out the name"", so at most one of the two is right — one citation (line and quoted text) for RR-0509 in both files.
+
+DEFER severity=NIT — docs/specs/00-architecture/116_multi_product_architecture.md "The switch is `APP_PRODUCT` (`mobile/src/lib/appShell.ts`, `parcel_tool` in this build): AuthGate reads no profile" — the parenthesis opened after APP_PRODUCT is never closed, so the binding note reads as though the rest of the sentence sits inside it — close it after "build)" or drop the opening paren.
+
+REJECT — docs/reports/generated/127-surface-review-queue.md "It is 1 of 7 entr(ies) in feature `F01`. It owns no component." against "Removing it deletes 5 owned component(s): ... · `mobile/src/components/surfaces/OpeningBinding.tsx`" — looks like the surface that draws the Opening denies owning a component while another card claims that very renderer — correct as built: surface-conformance C-4 forbids a converted surface owning a component, so the renderer is owned by the binding surface S-083, and the two statements agree.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  79950ms (80.0s)
+📊 Tokens — total: 63436, input: 41273, output: 22163, reasoning: 21797

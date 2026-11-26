@@ -225,6 +225,17 @@ describe('Spec 99 §7.3 — AppLayout (mobile/app/(app)/_layout.tsx) telemetry',
   });
 });
 
+// task-313 McApp card 1 (PLAN-313-v1 M5, T5): the MaxBLD front door redirects a lead route to the Lookup and emits route_decision for it, DEV only.
+describe('Spec 99 §7.3 — MaxbldAppGate (mobile/src/components/parcel/MaxbldAppGate.tsx) telemetry', () => {
+  it("emits track('route_decision', ...) for the redirect answer (DEV-only)", () => {
+    const gateSrc = fs.readFileSync(path.join(__dirname, '../src/components/parcel/MaxbldAppGate.tsx'), 'utf8');
+    const effect = gateSrc.match(/if \(gate !== 'redirect'\) return;[\s\S]*?\}, \[gate, segments\]\);/);
+    expect(effect).not.toBeNull();
+    expect(effect![0]).toMatch(/track\(['"]route_decision['"]/);
+    assertDevGuardedTrack(effect![0], 'route_decision');
+  });
+});
+
 describe('Spec 99 §7.3 — existing telemetry regression guards', () => {
   it("authStore.ts still emits track('signout_initiated') (production event #1, unchanged)", () => {
     // Audit line 135: production event #1 is "partially covered by

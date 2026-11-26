@@ -12,22 +12,22 @@
       "mobile/src/components/onboarding/IncompleteBanner.tsx:1"
     ],
     "contracts": [
-      "mobile/app/(app)/_layout.tsx:118"
+      "mobile/app/(app)/_layout.tsx:123"
     ],
     "tables": [
       "src/app/api/user-profile/route.ts:51",
       "migrations/228_entitlements.sql:21-35"
     ],
     "gate": [
-      "mobile/app/(app)/_layout.tsx:236-265"
+      "mobile/app/(app)/_layout.tsx:241-270"
     ],
     "states": [
-      "mobile/app/(app)/_layout.tsx:236-265",
-      "mobile/app/(app)/_layout.tsx:267-290"
+      "mobile/app/(app)/_layout.tsx:241-270",
+      "mobile/app/(app)/_layout.tsx:272-295"
     ],
     "emits": [
-      "mobile/app/(app)/_layout.tsx:165-176",
-      "mobile/app/(app)/_layout.tsx:200-203"
+      "mobile/app/(app)/_layout.tsx:170-181",
+      "mobile/app/(app)/_layout.tsx:205-208"
     ]
   },
   "identity": {
@@ -39,7 +39,8 @@
     ],
     "owns": {
       "components": [
-        "mobile/src/components/onboarding/IncompleteBanner.tsx"
+        "mobile/src/components/onboarding/IncompleteBanner.tsx",
+        "mobile/src/components/parcel/MaxbldAppGate.tsx"
       ]
     },
     "owner": "unassigned (no CODEOWNERS file and no owner registry exists in the repo — measured 2026-09-15)",
@@ -67,7 +68,7 @@
     "answer": "contract",
     "why": "One contract decides whether five tabs exist at all: GET /api/user-profile supplies subscription_status (LEFT JOINed from the lead_gen entitlement row) and lead_views_count for the paywall copy.",
     "evidence": [
-      "mobile/app/(app)/_layout.tsx:118",
+      "mobile/app/(app)/_layout.tsx:123",
       "src/lib/entitlements/index.ts:68"
     ],
     "contract_ref": [
@@ -122,7 +123,7 @@
     "answer": "none",
     "why": "A gate writes nothing. Its side effects are local — clearing the paywall store, invalidating caches, and calling authStore.signOut() on the pending-deletion branch.",
     "evidence": [
-      "mobile/app/(app)/_layout.tsx:155-206"
+      "mobile/app/(app)/_layout.tsx:160-211"
     ],
     "contract_ref": [],
     "tables": [],
@@ -136,8 +137,8 @@
     "answer": "zustand",
     "why": "It reads notificationStore.unreadFlightBoard for the tab badge, paywallStore.dismissed for the inline-blur branch, and drives the tab bar off-screen through the tabBarVisible shared value.",
     "evidence": [
-      "mobile/app/(app)/_layout.tsx:120-122",
-      "mobile/app/(app)/_layout.tsx:60-66"
+      "mobile/app/(app)/_layout.tsx:125-127",
+      "mobile/app/(app)/_layout.tsx:65-71"
     ],
     "fields": [
       {
@@ -181,7 +182,7 @@
     "answer": "query_cache",
     "why": "It gates on the shared 5-minute [\"user-profile\"] entry and re-invalidates it on every AppState foreground, which is the primary post-payment access-restoration path.",
     "evidence": [
-      "mobile/app/(app)/_layout.tsx:137-146",
+      "mobile/app/(app)/_layout.tsx:142-151",
       "mobile/src/hooks/useUserProfile.ts:67"
     ],
     "offline": "cached_projection",
@@ -193,7 +194,7 @@
       "answer": "entitled",
       "why": "It is the entitlement gate for the whole app: trial/active/past_due/admin_managed render the tabs, expired renders the paywall or the inline blur, cancelled_pending_deletion signs the user out, and a null status renders the loading guard.",
       "evidence": [
-        "mobile/app/(app)/_layout.tsx:236-265",
+        "mobile/app/(app)/_layout.tsx:241-270",
         "src/lib/entitlements/index.ts:47-54"
       ]
     },
@@ -299,8 +300,8 @@
     "answer": "redirect",
     "why": "A gate does not render errors: an unresolved status renders the loading guard, and the terminal case (cancelled_pending_deletion) signs the user out and replaces the route to sign-in.",
     "evidence": [
-      "mobile/app/(app)/_layout.tsx:236-258",
-      "mobile/app/(app)/_layout.tsx:155-180"
+      "mobile/app/(app)/_layout.tsx:241-263",
+      "mobile/app/(app)/_layout.tsx:160-185"
     ],
     "classes": [
       {
@@ -318,8 +319,8 @@
     "answer": "events",
     "why": "Two production events sit here — the forced sign-out on deletion and the expired→active conversion — plus a DEV-only route_decision; the conversion event is the closest thing the estate has to a revenue signal.",
     "evidence": [
-      "mobile/app/(app)/_layout.tsx:165",
-      "mobile/app/(app)/_layout.tsx:200-203",
+      "mobile/app/(app)/_layout.tsx:170",
+      "mobile/app/(app)/_layout.tsx:205-208",
       "mobile/src/lib/analytics.ts:121-132"
     ],
     "analytics": [
@@ -336,7 +337,7 @@
     "answer": "none",
     "why": "A navigation shell renders no sponsored content.",
     "evidence": [
-      "mobile/app/(app)/_layout.tsx:267-290"
+      "mobile/app/(app)/_layout.tsx:272-295"
     ]
   },
   "metering": {
@@ -363,7 +364,7 @@
     "answer": "shared",
     "why": "It renders the same [\"user-profile\"] entry the root shell, settings, the feed and the filter sheet read — which is why an invalidate here changes what every one of them sees.",
     "evidence": [
-      "mobile/app/(app)/_layout.tsx:137-146"
+      "mobile/app/(app)/_layout.tsx:142-151"
     ],
     "surfaces": [
       "shell_app_root",
@@ -390,12 +391,12 @@
     },
     {
       "what": "The tab bar slides off-screen on scroll with a 200ms timing animation regardless of the OS reduce-motion setting.",
-      "measured": "mobile/app/(app)/_layout.tsx:61-66 — useDerivedValue + withTiming, no AccessibilityInfo check exists in mobile/.",
+      "measured": "mobile/app/(app)/_layout.tsx:66-71 — useDerivedValue + withTiming, no AccessibilityInfo check exists in mobile/.",
       "check_id": "none — checks[].kind has no reduced-motion value; raised as a vocabulary escalation per Spec 128 §4"
     }
   ],
   "interpretation": "none",
-  "notes": "This shell is the single most load-bearing gate in the mobile estate — five tabs, six subscription statuses, one contract. guards.entitlement.product is lead_gen rather than the schema's parcel_tool because migration 228's CHECK permits only lead_gen and flight_center.\n\nSELF-HIDING FOR THE MaxBLD PRODUCT (operator ruling 2026-09-16 (c)). This five-tab bar belongs to the LEAD-GEN app. It is NOT rendered while a `parcel-tool` route is focused, because that group is the MaxBLD product and has its own three-tab shelf (S-004 `shell_parcel_tool_stack`: Lookup, Tracked Lots, Account). The decision is a pure function of the focused route — `shouldHideAppTabBar` (mobile/src/lib/appShell.ts:29), consumed in the custom tabBar wrapper at mobile/app/(app)/_layout.tsx:69. The parcel-tool group deliberately STAYS inside `(app)` so it remains behind the subscription gate at mobile/app/(app)/_layout.tsx:236-265; hiding the bar was chosen over moving the group for that reason.",
+  "notes": "This shell is the single most load-bearing gate in the mobile estate — five tabs, six subscription statuses, one contract. guards.entitlement.product is lead_gen rather than the schema's parcel_tool because migration 228's CHECK permits only lead_gen and flight_center.\n\nSELF-HIDING FOR THE MaxBLD PRODUCT (operator ruling 2026-09-16 (c)). This five-tab bar belongs to the LEAD-GEN app. It is NOT rendered while a `parcel-tool` route is focused, because that group is the MaxBLD product and has its own three-tab shelf (S-004 `shell_parcel_tool_stack`: Lookup, Tracked Lots, Account). The decision is a pure function of the focused route — `shouldHideAppTabBar` (mobile/src/lib/appShell.ts:29), consumed in the custom tabBar wrapper at mobile/app/(app)/_layout.tsx:74. The parcel-tool group deliberately STAYS inside `(app)` so it remains behind the subscription gate at mobile/app/(app)/_layout.tsx:241-270; hiding the bar was chosen over moving the group for that reason. Dated 2026-11-26 (task-313, McApp card 1; RR-0499 \"1a\", the MaxBLD bar the only bar; prior text kept): the body of this shell is now LeadAppLayout in mobile/app/(app)/_layout.tsx, kept whole for the lead app; the default export routes on APP_PRODUCT (mobile/src/lib/appShell.ts), and in the MaxBLD build (parcel_tool) it draws MaxbldAppGate (S-097 mobile_parcel_opening, then the parcel-tool Stack) and never these five tabs.",
   "x-draft": {
     "shard": "mobile-product",
     "files": [

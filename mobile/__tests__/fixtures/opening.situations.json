@@ -1,0 +1,29 @@
+{
+  "$comment": "task-313 McApp card 1: the situations of mobile_parcel_opening (the Opening page of the MaxBLD front door). Each committed golden names its state and its situation; scripts/surfaces/opening-golden-capture.ts writes src/tests/fixtures/surfaces/mobile_parcel_opening/<golden>.mobile.json from them and mobile/__tests__/openingScreens.golden.test.ts asserts the same equality.",
+  "goldens": {
+    "loading": {
+      "state": "loading",
+      "situation": "loading"
+    },
+    "offline": {
+      "state": "offline",
+      "situation": "offline"
+    },
+    "error": {
+      "state": "error",
+      "situation": "error"
+    }
+  },
+  "inputs": {
+    "loading": {
+      "kind": "loading"
+    },
+    "offline": {
+      "kind": "offline"
+    },
+    "error": {
+      "kind": "error"
+    }
+  },
+  "named": []
+}

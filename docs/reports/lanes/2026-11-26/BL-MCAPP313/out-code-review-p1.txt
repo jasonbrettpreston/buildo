@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T17:37:44.508Z file_sha256=77d7be767c3ee9298de88a922f6d8d508da72594c302a15c8c7e307cee522277 prompt_sha256=b153accaf8ca458c3a71ca8c0ce458d5151fa0a1a0005f227f29e97e0fa54c76
+🔍 Lens review of docs/reports/lanes/2026-11-26/BL-MCAPP313/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — docs/reports/generated/127-surface-registry.md (new `S-097` block) "| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |" — eight of this row's twenty-one answers (1, 6, 7, 8, 11, 18, 19, 20) are the literal string the report itself defines as an open field ("Every open field is the literal string `UNRESEARCHED` in the census"), yet the same block claims "**researched** ✅ every field" and 100% in the §1 index while the diff raises mobile-product to "| `mobile-product.json` | 43 | 13 | 30 | 63 |" and leaves "443 unresearched fields in total" unchanged, so the file contradicts itself on whether this row is researched — fix: fill the eight answers in scripts/surfaces/_schema/surface-census.json and regenerate, or recount correctly (mobile-product 13→12 fully researched, 30→31 open rows, 443→451 fields, "34 of 174 ... 140 still open" to "33 of 174 ... 141 still open").
+
+REJECT — docs/reports/generated/127-surface-registry.md `S-097` "**Researched** every field, 100%" vs the file's boilerplate "21 category answers — 21 answered, 0 unresearched" — the "21 answered, 0 unresearched" summary looks like the lie on its own — no, that summary line is unchanged boilerplate on every entry (the shell_app_root and shell_app_tabs blocks above carry the same summary over UNRESEARCHED rows), so the defect is the newly written aggregate count, not that pre-existing line.
+
+REJECT — docs/reports/generated/127-surface-registry.md "`mobile/app/_layout.tsx:144-235`" (and "`:246-336`", "`:457-483`", "`:490-524`") — the +3 start / +4 end shift on the same range reads like an inconsistent hand edit — every shifted citation in that file is arithmetically consistent with three lines inserted before line 98 and one more before line 186, and every (app)/_layout.tsx citation shifts by a uniform +5, so the renumbering is coherent.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- The new S-097 entry claims "researched, every field" and is counted as fully researched (mobile-product 12→13, 30 open rows and 443 fields unchanged) while eight of its twenty-one category answers are the literal `UNRESEARCHED`; the census data and the aggregate counts cannot both be right.
+
+---
+⏱  67506ms (67.5s)
+📊 Tokens — total: 40422, input: 22852, output: 17570, reasoning: 16975

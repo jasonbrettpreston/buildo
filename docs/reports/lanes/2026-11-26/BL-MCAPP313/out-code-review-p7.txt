@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T17:37:44.510Z file_sha256=676c5c965aae658385cae2f32cb09762ec515832456b2a602c36375107f6ae59 prompt_sha256=5d42a6950d32bb095ea67acc149c55d61ed3b32631997328aa598b2d3b45a4e2
+🔍 Lens review of docs/reports/lanes/2026-11-26/BL-MCAPP313/in-out-code-review-p7.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/lib/auth/get-user-context.ts:112 "        if (expired) status = 'expired';" — the helper's return is coerced to a boolean and the status is hardcoded, so if applyTrialExpirationIfNeeded returns the (unchanged) row on a live trial the user is reported 'expired'; the test only mocks null versus a truthy object, so the contract is never asserted — take the status from the helper (or re-read the row) instead of hardcoding, and add a case where the helper returns a truthy non-expired row.
+
+DEFER severity=MED — src/lib/auth/get-user-context.ts:111 "        const expired = await applyTrialExpirationIfNeeded(uid, 'lead_gen');" — a failure of the expiry write is caught by the outer catch and the whole context becomes null (401), turning an authenticated trial user into "not signed in", the outcome acceptance #4 forbids — wrap the expiry call in its own try that logs and keeps status 'trial'. 
+
+DEFER severity=LOW — src/tests/parcel-lookup-gate.infra.test.ts:788 "    vi.mocked(getCurrentUserContext).mockImplementation((await real()) as never);" — the `as never` cast defeats the overload return type the diff adds, so a parcel return leaking into a two-argument lead call would not be caught — type the implementation against the lead overload instead of casting to never.
+
+DEFER severity=LOW — src/tests/get-user-context.logic.test.ts:189 "    const e = createMockEntitlement({ user_id: UID, status: status as never, trial_started_at: trialStartedAt });" — casting the status string to never hides an invalid status from the checker, the helper can produce a status the entitlement type does not allow — type the helper parameter as the entitlement status union instead of string plus `as never`.
+
+DEFER severity=LOW — src/tests/parcel-lookup-gate.infra.test.ts:807 "    const inner = poolQuery.getMockImplementation()!;" — the non-null assertion assumes an implementation exists; if it does not, `inner(text, params)` in the fallback throws TypeError rather than returning the profile row, masking the regression the test is meant to catch — assert the implementation is defined, or fall back to an explicit resolved value.
+
+DEFER severity=NIT — src/tests/surfaces/parcel-tool-fence.infra.test.ts:207 "    const none = mutate(GATE_SRC, new RegExp(OPENING_RETURN.replace(/[<]/g, '\\$&'), 'g'), 'void <SurfaceRenderer');" — `<` is not a regex metacharacter, so the escape is a no-op that suggests a protection it does not give — drop the replace, or escape the metacharacters that could appear (`.*+?^${}()|[]\\`).
+
+VERDICT: PASS on code correctness
+
+---
+⏱  70291ms (70.3s)
+📊 Tokens — total: 41829, input: 23175, output: 18654, reasoning: 18016

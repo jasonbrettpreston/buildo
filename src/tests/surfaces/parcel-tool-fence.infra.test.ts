@@ -7,6 +7,9 @@
 // It is the pre-MF-49 form: the ruling forbids moving the group out WITHOUT a per-product gate, and MF-45/MF-49 will legitimately change the gate, so the
 // failure names the MF-49 exit. Reads `(app)/_layout.tsx` with `//` and `/* */` comments stripped (newlines kept): its header comments mention `<Tabs`
 // and the guard, so a raw-text order check would be false. The `(app)` root is one constant; extending it per app is MF-49's.
+// task-313 (McApp card 1, the MF-49 extension the lines above name; PLAN-313-v1 T7; RR-0499 "1a", MORNING-DECISIONS.md:2598): the (app) layout routes on
+// APP_PRODUCT to MaxbldAppGate (the MaxBLD front door), which returns the Opening before the route is drawn (<Slot); APP_PRODUCT defaults to
+// 'parcel_tool'. The lead layout (LeadAppLayout) keeps its own gate order above, checked as before.
 import { describe, expect, it } from 'vitest';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -125,7 +128,8 @@ describe('spec-review lock 2: every parcel-tool route stays inside the (app) gat
 
   it('planted: the parcel-tool screen removed, or placed before <Tabs', () => {
     expect(fenceProblems(FILES, mutate(L, /^.*name="parcel-tool".*\n/m, ''), GL).join('\n')).toMatch(/no name="parcel-tool" screen/);
-    const early = mutate(L, 'export default', 'const early = <Tabs.Screen name="parcel-tool" />;\nexport default');
+    // task-313 (dated 2026-11-26; prior anchor 'export default', which now opens the product router at the end of the file): the plant goes before the lead layout.
+    const early = mutate(L, 'function LeadAppLayout()', 'const early = <Tabs.Screen name="parcel-tool" />;\nfunction LeadAppLayout()');
     expect(fenceProblems(FILES, early, GL).join('\n')).toMatch(/name="parcel-tool" comes before <Tabs/);
   });
 
@@ -155,3 +159,53 @@ describe('spec-review lock 2: every parcel-tool route stays inside the (app) gat
     expect(out.split('\n').length).toBe(src.split('\n').length);
   });
 });
+
+const SHELL = 'mobile/src/lib/appShell.ts';
+const GATE = 'mobile/src/components/parcel/MaxbldAppGate.tsx';
+const ROUTES_ON_PRODUCT_RE = /APP_PRODUCT\s*===\s*'parcel_tool'\s*\?\s*<MaxbldAppGate\b/;
+const DEFAULT_RE = /export const APP_PRODUCT\s*:[^=]*=\s*'parcel_tool'\s*;/;
+const OPENING_RETURN = 'return <SurfaceRenderer';
+const SLOT_RETURN = 'return <Slot';
+
+/** The MF-49 extension: the per-product gate the ruling asks for before the lead layout can be left. */
+function maxbldFenceProblems(layout: string, gate: string, shell: string): string[] {
+  const problems: string[] = [];
+  const code = stripComments(layout);
+  if (!ROUTES_ON_PRODUCT_RE.test(code)) problems.push(`${LAYOUT}: does not route on APP_PRODUCT to <MaxbldAppGate outside comments`);
+  const g = stripComments(gate);
+  const opening = g.indexOf(OPENING_RETURN);
+  const slot = g.indexOf(SLOT_RETURN);
+  if (opening < 0) problems.push(`${GATE}: "${OPENING_RETURN}" (the Opening) missing outside comments`);
+  if (slot < 0) problems.push(`${GATE}: "${SLOT_RETURN}" missing outside comments (dead-man)`);
+  if (opening >= 0 && slot >= 0 && slot < opening) problems.push(`${GATE}: "${SLOT_RETURN}" comes before the Opening`);
+  if (!DEFAULT_RE.test(stripComments(shell))) problems.push(`${SHELL}: APP_PRODUCT does not default to 'parcel_tool'`);
+  return problems;
+}
+
+const GATE_SRC = readIfExists(GATE);
+const SHELL_SRC = readIfExists(SHELL);
+
+describe('task-313 the MF-49 extension: the MaxBLD front door is the per-product gate', () => {
+  it('the real tree has no problem', () => {
+    expect(maxbldFenceProblems(L, GATE_SRC, SHELL_SRC)).toEqual([]);
+  });
+  it('planted: APP_PRODUCT flipped to lead_gen', () => {
+    const flipped = mutate(SHELL_SRC, /(export const APP_PRODUCT\s*:[^=]*=\s*)'parcel_tool'/, "$1'lead_gen'");
+    expect(maxbldFenceProblems(L, GATE_SRC, flipped).join('\n')).toMatch(/APP_PRODUCT does not default to 'parcel_tool'/);
+  });
+  it('planted: MaxbldAppGate returning <Slot/> before the Opening', () => {
+    const early = mutate(GATE_SRC, /export function MaxbldAppGate\(\) \{/, 'export function MaxbldAppGate() {\n  if (Date.now() < 0) return <Slot />;');
+    expect(maxbldFenceProblems(L, early, SHELL_SRC).join('\n')).toMatch(/"return <Slot" comes before the Opening/);
+  });
+  it('planted: the layout no longer routes on APP_PRODUCT, or only in a comment', () => {
+    const gone = mutate(L, ROUTES_ON_PRODUCT_RE, 'true ? <MaxbldAppGate');
+    expect(maxbldFenceProblems(gone, GATE_SRC, SHELL_SRC).join('\n')).toMatch(/does not route on APP_PRODUCT/);
+    const commented = `// APP_PRODUCT === 'parcel_tool' ? <MaxbldAppGate />\n${gone}`;
+    expect(maxbldFenceProblems(commented, GATE_SRC, SHELL_SRC).join('\n')).toMatch(/does not route on APP_PRODUCT/);
+  });
+  it('planted: the Opening removed from the gate', () => {
+    const none = mutate(GATE_SRC, new RegExp(OPENING_RETURN.replace(/[<]/g, '\\$&'), 'g'), 'void <SurfaceRenderer');
+    expect(maxbldFenceProblems(L, none, SHELL_SRC).join('\n')).toMatch(/the Opening\) missing outside comments/);
+  });
+});
+

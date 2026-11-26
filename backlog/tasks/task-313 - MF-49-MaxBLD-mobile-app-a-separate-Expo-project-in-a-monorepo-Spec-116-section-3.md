@@ -3,11 +3,11 @@ id: TASK-313
 title: >-
   MF-49 MaxBLD mobile app: the front door, inside the one Expo project (McApp
   card 1)
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-MCAPP313'
 created_date: '2026-11-19T13:07:00Z'
-updated_date: '2026-11-26T16:24:00Z'
+updated_date: '2026-11-26T17:50:00Z'
 labels:
   - queue-row
   - McApp
@@ -33,6 +33,9 @@ references:
   - >-
     compliance:ms-1-2 backlog/milestones/m-2 -
     increment-1·c-launch-shared-parts-[1-2].md
+  - docs/reports/lanes/2026-11-26/BL-MCAPP313/REPORT.md
+  - docs/reports/lanes/2026-11-26/BL-MCAPP313/GROUNDER.md
+  - docs/reports/lanes/2026-11-26/BL-MCAPP313/TRIAGE.md
 type: build
 project: McFrontend
 ordinal: 22012
@@ -51,22 +54,22 @@ Recommendation: renew with a named event, `expires when MF-47 is DONE` (Spec 137
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 After sign-in the app goes straight to Lookup: no lead-app onboarding, no profile read, no push token (mobile/__tests__/authGate.test.ts, MaxBLD front door)
-- [ ] #2 The MaxBLD bar (ParcelShelf) is the only bar and every other route under mobile/app/(app) redirects to Lookup (appShell.test.ts, maxbldAppGate.behaviour.test.tsx, parcel-tool-fence.infra.test.ts)
-- [ ] #3 The Opening shows Connecting..., Can't reach MaxBLD with Try again, or Something went wrong with Try again, and never the lead-app spinner (openingScreens.golden.test.ts)
-- [ ] #4 A MaxBLD user with no user_profiles row or no trade gets 403 or 200 and never 401 from lookup, entitlement and lot-size (get-user-context.logic.test.ts, the three route tests)
-- [ ] #5 A wrong email or password shows Incorrect email or password. with the keyboard closed (signIn.behaviour.test.tsx; phone walk with the keyboard up)
-- [ ] #6 The home-screen icon, adaptive icon and favicon are the House Mark and the splash has no template grid (appIcon.test.ts; prebuild proof)
+- [x] #1 After sign-in the app goes straight to Lookup: no lead-app onboarding, no profile read, no push token (mobile/__tests__/authGate.test.ts, MaxBLD front door)
+- [x] #2 The MaxBLD bar (ParcelShelf) is the only bar and every other route under mobile/app/(app) redirects to Lookup (appShell.test.ts, maxbldAppGate.behaviour.test.tsx, parcel-tool-fence.infra.test.ts)
+- [x] #3 The Opening shows Connecting..., Can't reach MaxBLD with Try again, or Something went wrong with Try again, and never the lead-app spinner (openingScreens.golden.test.ts)
+- [x] #4 A MaxBLD user with no user_profiles row or no trade gets 403 or 200 and never 401 from lookup, entitlement and lot-size (get-user-context.logic.test.ts, the three route tests)
+- [x] #5 A wrong email or password shows Incorrect email or password. with the keyboard closed (signIn.behaviour.test.tsx; phone walk with the keyboard up)
+- [x] #6 The home-screen icon, adaptive icon and favicon are the House Mark and the splash has no template grid (appIcon.test.ts; prebuild proof)
 <!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
-- [ ] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
-- [ ] #2 The tests were written first and proven red, then green — "Every lock is proven in BOTH directions" (docs/specs/00-architecture/08_agents.md:462)
-- [ ] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
-- [ ] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
-- [ ] #5 Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — "A ruling enters a row as a verbatim dated note." (docs/specs/00-architecture/137_mcqueue.md:109)
-- [ ] #6 The task file and its queue row are updated in the same commit as the work — "The status line changes in the same commit as the work." (docs/specs/00-architecture/137_mcqueue.md:84)
+- [x] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
+- [x] #2 The tests were written first and proven red, then green — "Every lock is proven in BOTH directions" (docs/specs/00-architecture/08_agents.md:462)
+- [x] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
+- [x] #5 Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — "A ruling enters a row as a verbatim dated note." (docs/specs/00-architecture/137_mcqueue.md:109)
+- [x] #6 The task file and its queue row are updated in the same commit as the work — "The status line changes in the same commit as the work." (docs/specs/00-architecture/137_mcqueue.md:84)
 - [ ] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
 - [ ] #8 Nothing was added that the card or ruling did not name — "no change adds a tool, field or rule its card or ruling did not name" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
@@ -346,4 +349,32 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0233 · task-313 · Backlog; o
 2026-11-26 (grounder Cairn-Ground-P313b, hb.txt section C): MaxbldAppGate.tsx is owned by shell_app_tabs, the (app) shell that mounts it, not by the Opening: C-4 (src/tests/surfaces/surface-conformance.logic.test.ts:431-434) forbids a converted surface to own a component. The plan's M5 sentence is wrong on the owner and right on the effect: the 11 unowned files do not grow.
 
 2026-11-26 (grounder Cairn-Ground-P313b, hb.txt section D): four smaller choices ruled acceptable as built: (1) the Opening's Try again is two button rows, retry_offline and retry_error, one when-flag each; (2) the Opening descriptor's guards are session authenticated and entitlement none (it reads only the state of the entitlement read, no field); (3) the parcel-tool fence plant 'placed before <Tabs' is anchored on function LeadAppLayout() (plan M4 text); (4) the parcel overload of getCurrentUserContext is declared first, so a 2-argument call falls through to the lead overload and a mocked helper keeps the lead return type.
+
+2026-11-26 (lane BL-MCAPP313): commit 0 landed as d64c6aacd (prereg-MF-49-1.json round 205, docs/reports/panels/MF-49.json, this task file); the work commit is its child.
+
+2026-11-26 (lane BL-MCAPP313): phone run before the work commit (grounder F): run 1 failed one case, maxbldAppGate.behaviour 'still pending at REPORT_GIVE_UP_MS ... Try again restarts the clock' (phone-tests-run1.out): after the give-up timer had set the clock to the same instant, Try again changed only a ref and set the same state value, so nothing re-rendered and the Opening stayed in error. Fix in MaxbldAppGate.tsx: the clock start is state (setSince on Try again), so a restart re-renders. Run 2: npm --prefix mobile run typecheck clean; 11 suites (authGate, appShell, maxbldAppGate.behaviour, openingScreens.golden, routerTelemetry, signIn.behaviour, appIcon, subscriptionGate, wallScreens.golden, semiQuestionPage.behaviour, spec99.mandates.lint) 178 of 178 passed (phone-tests.out).
+
+2026-11-26 (lane BL-MCAPP313): merged the origin tip origin/wf1/mb-rulings 02367cda8 (task-470 review-trim fold and the board records) into wf2/mcapp313 as a merge commit, no conflict (the one file both sides changed, docs/reports/generated/rule-lists-by-kind.md, auto-merged and is current). Re-read after the merge: the plan cites no line of the task-470 files except rule-lists-by-kind.md (regenerated content current: rule-lists page --check). The Definition of Done items #2, #3 and #10 cite 08_agents.md:462, :490 and :505; those quotes were already at :497, :525 and :542 before the merge and are at :500, :528 and :545 after it (task-470 added three lines at :360-372); the DoD is the config's text and is left as is. Current checks after the merge: emit-mobile-surfaces --check ok (6 surfaces, 37 goldens); generate-surface-registry --check clean (174 rows); rule-lists page --check current.
+
+2026-11-26 (lane BL-MCAPP313): output review round 1 after the station pass on b31fc6bc3: context-r3.md written by backlog-brief.mjs; the whole-task diff (launch 36d27a43c .. HEAD, the Files line with the two commit 0 paths, exempt paths out) split by rule-lists.mjs lens-input into in-out-code-review-p1..p7; the code-review lens (the only output lens for this build task: rule-lists.mjs lensSet) run on each in the brief's form; 31 findings (HIGH 1, MED 4, LOW 21, NIT 5) listed untriaged in docs/reports/lanes/2026-11-26/BL-MCAPP313/FINDINGS.md. Grounder owed; nothing is triaged, ruled or fixed by the lane (RR-0359).
+
+2026-11-26 (lane BL-MCAPP313): round-1 fix of p2#1 (HIGH, CONFIRMED by the output grounder Cairn-Ground-O313; LANE-STEPS step 1): docs/specs/00-architecture/116_multi_product_architecture.md keeps its dated note (line 70) and gets back its section 4 heading after one blank line: '## 4. Normative implications for the migration's auth + entitlement work (BINDING)' (line 72). Red: grep -n '^## 4\. Normative implications' returned nothing before the fix; green: it returns line 72. The LOW and NIT ids are recorded, not fixed.
+
+2026-11-26 (lane BL-MCAPP313): output review round 2 after the station pass on the fix 2f95dc250: context-r4.md (backlog-brief.mjs); lens-input re-made in-out-code-review-p1..p7 over launch 36d27a43c .. HEAD; the code-review lens re-run on all seven in the brief's form under the same names; 28 findings (HIGH 1, MED 4, LOW 15, NIT 8) untriaged in FINDINGS.md. Round-2 grounder owed; nothing triaged, ruled or fixed by the lane.
+
+2026-11-26 Dated note (task-313, McApp card 1; RR-0520, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2698; prior text kept): the two new components are approved, OpeningBinding.tsx (the start-up page) and MaxbldAppGate.tsx (the front-door gate). Operator, verbatim: "Still pushing. Approved - The approval sentence for McApp card 1's two new components (the start-up page and the front-door gate). The lane is stopped on it. Wahts your recommendaiton for this?  Sign-in navigation fixes in McApp card 2, yes or no."
+
+2026-11-26 Dated note (task-313, McApp card 1; RR-0521, MORNING-DECISIONS.md:2702; prior text kept): the three sign-in navigation fixes (Continue with email, its Back button, the link from sign-up back to sign-in; nav lock rows 15, 16, 22) move from this card to McApp card 2 (task-271) and are not built here. Operator, verbatim: "yes"
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+task-313 McApp card 1 landed: work e904d8d3e (S1 and S2 the trade-less parcel context, M1 to M3 the MaxBLD front door and AuthGate arm, M5 and M6 the Opening surface S-097 with MaxbldAppGate and OpeningBinding, M7 imageless splash, M8 Keyboard.dismiss, M9 House Mark icons), origin merge b31fc6bc3, round-1 fix 2f95dc250 (STATION PASS). The three sign-in navigation fixes moved to card 2 (RR-0521).
+
+Review round 1: 1 fixed, 0 task, 0 ruling, 0 wontfix, 9 pile; grounder /Users/brettpreston_macmini/Buildo-scratch/lanes-20261126/BL-MCAPP313/grounder/r1/GROUNDER.md (round 1 as ruled, outputs at a76b3cca6); triage /Users/brettpreston_macmini/Buildo-scratch/lanes-20261126/BL-MCAPP313/grounder/r1/TRIAGE.md
+
+out-code-review-p2#1 HIGH fixed 2f95dc250 (round 1)
+
+Review round 2: 0 fixed, 0 task, 0 ruling, 0 wontfix, 11 pile; grounder docs/reports/lanes/2026-11-26/BL-MCAPP313/GROUNDER.md; triage docs/reports/lanes/2026-11-26/BL-MCAPP313/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->

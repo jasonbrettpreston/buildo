@@ -1,0 +1,148 @@
+{
+  "surface": "mobile_parcel_opening",
+  "state": "offline",
+  "target": "mobile",
+  "covers": [
+    "offline"
+  ],
+  "situation": "offline",
+  "props": {
+    "component": "SafeAreaView",
+    "props": {
+      "className": "flex-1 bg-report-page",
+      "edges": {
+        "top": "additive"
+      },
+      "testID": "parcel-opening-screen"
+    },
+    "children": [
+      {
+        "component": "ScrollView",
+        "props": {
+          "key": "scroll",
+          "className": "flex-1",
+          "contentContainerStyle": {
+            "paddingBottom": 106,
+            "alignItems": "center"
+          },
+          "keyboardShouldPersistTaps": "handled"
+        },
+        "children": [
+          {
+            "component": "View",
+            "props": {
+              "key": "column",
+              "testID": "parcel-opening-column",
+              "className": "w-full px-4",
+              "style": {
+                "maxWidth": 448
+              }
+            },
+            "children": [
+              {
+                "component": "Text",
+                "props": {
+                  "key": "wordmark",
+                  "testID": "parcel-opening-wordmark",
+                  "className": "mt-6 w-full text-lg font-bold leading-6 text-report-ink",
+                  "role": "header"
+                },
+                "children": [
+                  {
+                    "content": "opening.wordmark"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "tagline",
+                  "testID": "parcel-opening-tagline",
+                  "className": "mt-6 w-full text-lg font-bold leading-6 text-report-ink",
+                  "role": "header"
+                },
+                "children": [
+                  {
+                    "content": "opening.tagline"
+                  }
+                ]
+              },
+              {
+                "component": "Alert",
+                "props": {
+                  "key": "offline",
+                  "testID": "parcel-opening-offline",
+                  "icon": "Info",
+                  "iconClassName": "text-report-muted",
+                  "className": "mt-3 rounded-xl bg-report-card border-report-button-border"
+                },
+                "children": [
+                  {
+                    "component": "AlertDescription",
+                    "props": {
+                      "key": "offline-text",
+                      "className": "text-base font-semibold text-report-ink"
+                    },
+                    "children": [
+                      {
+                        "content": "opening.offline.title"
+                      }
+                    ]
+                  },
+                  {
+                    "component": "AlertDescription",
+                    "props": {
+                      "key": "offline-text-1",
+                      "className": "text-sm font-normal text-report-muted"
+                    },
+                    "children": [
+                      {
+                        "content": "opening.offline.text"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "component": "Button",
+                "props": {
+                  "key": "retry_offline",
+                  "testID": "parcel-opening-retry_offline",
+                  "variant": "default",
+                  "className": "mt-6 min-h-[48px] w-full rounded-xl",
+                  "accessibilityRole": "button",
+                  "accessibilityLabel": {
+                    "content": "opening.retry"
+                  },
+                  "onPress": {
+                    "action": "retry"
+                  }
+                },
+                "children": [
+                  {
+                    "component": "Text",
+                    "props": {
+                      "key": "retry_offline-text",
+                      "className": "text-base font-bold text-report-ink"
+                    },
+                    "children": [
+                      {
+                        "content": "opening.retry"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "fingerprint": {
+    "files": {
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_opening.content.json": "12251d75e8d4360c",
+      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_opening.descriptor.json": "1e2cfd08338eccae"
+    }
+  }
+}

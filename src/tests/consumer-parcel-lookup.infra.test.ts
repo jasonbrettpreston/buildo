@@ -46,7 +46,8 @@ describe('route source-shape locks (Spec 100 §3)', () => {
   it('getCurrentUserContext is the first await in the handler', () => {
     const src = route();
     const handlerIdx = src.indexOf('withApiEnvelope(async function GET');
-    const authIdx = src.indexOf('await getCurrentUserContext(request, pool)');
+    // task-313 (PLAN-313-v1 S2, T2; prior pin text 'await getCurrentUserContext(request, pool)'): the parcel routes take the trade-less context.
+    const authIdx = src.indexOf('await getCurrentUserContext(request, pool, { needsTrade: false })');
     expect(handlerIdx).toBeGreaterThan(-1);
     expect(authIdx).toBeGreaterThan(handlerIdx);
     const firstOtherAwait = src.slice(handlerIdx).search(/await\s+(?!getCurrentUserContext)/);

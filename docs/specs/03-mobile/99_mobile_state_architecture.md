@@ -238,7 +238,7 @@ const query = useQuery({
 | `['parcel-search', q]` | `useParcelSearch` (Spec 100) | debounced typeahead; public cadastral data; persists normally |
 | `['parcel-lookup', parcelId]` | `useParcelLookup` (Spec 100) | the parcel detail; depends ONLY on `parcelId` (query-key hygiene — never on the search string) |
 | `['parcel-checking', parcelId]` | `useParcelChecking` via `useReportScreen` (Spec 100; task-267 LOAD.2, dated 2026-11-25) | the report screen's fast read (`fast=1`): the stored page or the What we checked view; sent first at the pick, no retry; a page it finds is stored under `['parcel-lookup', parcelId]`; for this visit only, so not persisted (`mobile/src/lib/persistFilter.ts` NOT_PERSISTED) |
-| `['parcel-entitlement']` | `useParcelEntitlement` (Spec 100; SRCH.A6, task-320) | the caller's plan and this month's report count ("N of M reports left until <date>"); a display, never a gate; the caller's own, so no parameter; not persisted across a restart (`mobile/src/lib/persistFilter.ts` NOT_PERSISTED) |
+| `['parcel-entitlement']` | `useParcelEntitlement` (Spec 100; SRCH.A6, task-320) | the caller's plan and this month's report count ("N of M reports left until <date>"); a display, never a gate; the caller's own, so no parameter; not persisted across a restart (`mobile/src/lib/persistFilter.ts` NOT_PERSISTED). Dated 2026-11-26 (task-313, M-246, prior text kept): also read by the MaxBLD front door (`MaxbldAppGate`) for offline and error only, the one gate use of the read; the plan is still the server 403 |
 
 ### B2 — TanStack → Zustand (server-to-local hydration)
 
@@ -463,6 +463,8 @@ This subsection is the canonical AuthGate matrix. Any change to AuthGate's branc
 5c.  profile && inOnboardingGroup && complete        → /(app)/
 5d.  profile && !auth && !onboarding && !complete    → getResumePath(profile, currentStep)
 ```
+
+> Dated note 2026-11-26 (task-313, McApp card 1; M-246, prior text kept; operator RR-0499 "1a", ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2598; RR-0503 Q1 A, :2618): **the MaxBLD arm.** `decideAuthGateRoute` takes an optional `product` (default `lead_gen`: the 9 arms above, unchanged). With `product: 'parcel_tool'` (`APP_PRODUCT` in `mobile/src/lib/appShell.ts`) the profile is never read (§5.2: the MaxBLD app reads no Spec 95 profile; AuthGate calls `useUserProfile` only for `lead_gen`): no user → `/(auth)/sign-in` (arm 1, branch `maxbld-sign-in`); a user in `(auth)`, `(onboarding)` or the root → `/(app)/parcel-tool` with no `registerPushToken` (branch `maxbld-lookup`, named in the DEV `route_decision`); a user in `(app)` → wait. The lead arms the MaxBLD product skips: 2 reactivation modal, 3 profile 404, 4 retry, 4.5 manufacturer hold, 5a-5d, and the stale-profile wait. Inside `(app)` the front door `MaxbldAppGate` reads the `['parcel-entitlement']` answer for offline and error only (`decideMaxbldGate`: loading, offline, error, redirect, enter; status and fetchStatus, never isFetching, §6.5); the `parcel_tool` plan is checked by the server gate (RR-0503 Q1 A). Spec 96 §10 step 2 (the forced sign-out of a deleted account) waits for card 2 (task-271; RR-0505). Counting convention for §8.2: 9 lead arms plus 3 MaxBLD arms (sign-in, Lookup, wait in `(app)`), each with its Jest case (`mobile/__tests__/authGate.test.ts`, "MaxBLD front door"). The Spec 99 §10 amendment rule (a WF1 amendment with adversarial review) is met by card 313's plan review (lenses, seats, grounder: `docs/reports/reviews/task-313/GROUNDER-PLAN.md`).
 
 ### 5.4 Lint rule: router useEffect dependency hygiene
 

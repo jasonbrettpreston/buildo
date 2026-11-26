@@ -352,6 +352,8 @@ export default function SignInScreen() {
   }, [handleAuthError, linkPendingIdentity, isAuthenticating]);
 
   const handleEmailSignIn = useCallback(async () => {
+    // task-313 (PLAN-313-v1 M8; phone walk finding 7): close the keyboard first, so the error line under the form is not covered by it.
+    Keyboard.dismiss();
     if (isAuthenticating) return;
     if (!email || !password) {
       setErrorMessage('Enter your email and password.');

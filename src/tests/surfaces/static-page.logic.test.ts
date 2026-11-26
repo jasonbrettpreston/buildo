@@ -113,6 +113,8 @@ describe('T9 the interactive screens (PAGE.TABLE, task-390)', () => {
   const BINDINGS: Record<string, string> = {
     mobile_parcel_semi_question: 'mobile/src/components/surfaces/SemiQuestionBinding.tsx',
     mobile_parcel_wall: 'mobile/src/components/surfaces/WallBinding.tsx',
+    // task-313 McApp card 1 (dated 2026-11-26): the Opening S-097 is the third screens row.
+    mobile_parcel_opening: 'mobile/src/components/surfaces/OpeningBinding.tsx',
   };
   const IDS = Object.keys(BINDINGS);
   const SCREENS = TABLE.screens as Json;

@@ -9,6 +9,10 @@
 //   expired                                   → <PaywallScreen> (or inline-blur if dismissed)
 //   cancelled_pending_deletion                → sign-out + redirect to /(auth)/sign-in
 //   null/undefined                            → <SubscriptionLoadingGuard>
+//
+// task-313 (McApp card 1; PLAN-313-v1 M4; RR-0499 "1a", MORNING-DECISIONS.md:2598): the body above is the LEAD app's layout, kept whole as
+// LeadAppLayout for the other app. The default export routes on APP_PRODUCT (mobile/src/lib/appShell.ts): the MaxBLD app draws its own front door,
+// MaxbldAppGate (the Opening page, then the parcel-tool Stack with its one shelf), and never the five-tab bar.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Tabs, useRouter } from 'expo-router';
 import { AppState, type AppStateStatus, Platform } from 'react-native';
@@ -32,7 +36,8 @@ import { lightImpact } from '@/lib/haptics';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { SubscriptionLoadingGuard } from '@/components/paywall/SubscriptionLoadingGuard';
 import { PaywallScreen } from '@/components/paywall/PaywallScreen';
-import { shouldHideAppTabBar } from '@/lib/appShell';
+import { APP_PRODUCT, shouldHideAppTabBar } from '@/lib/appShell';
+import { MaxbldAppGate } from '@/components/parcel/MaxbldAppGate';
 import { trackRender, useDepsTracker } from '@/lib/debug/stateDebug';
 import { track } from '@/lib/analytics';
 import { logQueryInvalidate } from '@/lib/queryTelemetry';
@@ -114,7 +119,7 @@ function PaywallMount({ leadViewsCount }: { leadViewsCount: number }) {
   );
 }
 
-export default function AppLayout() {
+function LeadAppLayout() {
   trackRender('AppLayout');
   // Hydrates filterStore + userProfileStore from server profile on every authenticated launch.
   // Must live here so it runs for all authenticated app screens (feed, map, settings, etc.)
@@ -291,4 +296,9 @@ export default function AppLayout() {
       </Tabs>
     </ErrorBoundary>
   );
+}
+
+/** The (app) group's layout: the MaxBLD front door in this build (APP_PRODUCT 'parcel_tool'), the lead app's layout otherwise. */
+export default function AppLayout() {
+  return APP_PRODUCT === 'parcel_tool' ? <MaxbldAppGate /> : <LeadAppLayout />;
 }

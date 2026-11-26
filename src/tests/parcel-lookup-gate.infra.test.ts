@@ -34,6 +34,8 @@ vi.mock('@/lib/db/client', () => ({
   withTransaction: vi.fn(async (fn: (client: unknown) => Promise<unknown>) => fn({ query: txQuery })),
 }));
 vi.mock('@/lib/auth/get-user-context', () => ({ getCurrentUserContext: vi.fn() }));
+vi.mock('@/lib/auth/get-user', () => ({ getClaimsUid: vi.fn() }));
+vi.mock('@/lib/subscription/expiration', () => ({ applyTrialExpirationIfNeeded: vi.fn(async () => null) }));
 vi.mock('@/lib/auth/rate-limit', () => ({ withRateLimit: vi.fn(async () => ({ allowed: true, remaining: 10 })) }));
 vi.mock('@/lib/admin/parcel-lookup', async (orig) => ({
   ...(await orig<typeof import('@/lib/admin/parcel-lookup')>()),
@@ -67,6 +69,7 @@ const logWarn = vi.fn();
 vi.mock('@/lib/logger', () => ({ logInfo: (...a: unknown[]) => logInfo(...a), logWarn: (...a: unknown[]) => logWarn(...a), logError: vi.fn() }));
 
 import { getCurrentUserContext } from '@/lib/auth/get-user-context';
+import { getClaimsUid } from '@/lib/auth/get-user';
 import { withRateLimit } from '@/lib/auth/rate-limit';
 import { resolveAddress, fetchParcelById } from '@/lib/admin/parcel-lookup';
 import { REPORT_LIMIT_KEYS } from '@/lib/entitlements';
@@ -776,5 +779,47 @@ describe('MF-53 the map block on the route', () => {
     expect(r.status).toBe(500);
     expect(r.body.data).toBeNull();
     expect(JSON.stringify(r.body)).not.toContain('logic_variables missing');
+  });
+});
+
+describe('task-313 the trade-less context (PLAN-313-v1 S2, T2): the 403 gate, not a 401, for a MaxBLD account with no profile row or no trade', () => {
+  const real = async () => (await vi.importActual<typeof import('@/lib/auth/get-user-context')>('@/lib/auth/get-user-context')).getCurrentUserContext;
+  const useReal = async (uid: string | null) => {
+    vi.mocked(getCurrentUserContext).mockImplementation((await real()) as never);
+    vi.mocked(getClaimsUid).mockResolvedValue(uid);
+  };
+  it('the route asks for the trade-less context', async () => {
+    ctx(null);
+    parcelTool('active');
+    await call();
+    expect(vi.mocked(getCurrentUserContext)).toHaveBeenCalledWith(expect.anything(), expect.anything(), { needsTrade: false });
+  });
+  it('(a) signed in, no user_profiles row, no parcel_tool row -> 403 SUBSCRIPTION_REQUIRED, no user_profiles read', async () => {
+    await useReal(UID);
+    parcelTool(null);
+    const r = await call();
+    expect([r.status, r.body.error?.code]).toEqual([403, 'SUBSCRIPTION_REQUIRED']);
+    expect(poolQuery.mock.calls.some((c) => /user_profiles/.test(String(c[0])))).toBe(false);
+  });
+  it('(b) signed in, a profile row with no trade, no parcel_tool row -> 403 SUBSCRIPTION_REQUIRED', async () => {
+    await useReal(UID);
+    parcelTool(null);
+    const inner = poolQuery.getMockImplementation()!;
+    poolQuery.mockImplementation(async (text: string, params?: unknown) =>
+      /FROM user_profiles/.test(text) ? { rows: [{ trade_slug: null, trade_slugs_override: null, display_name: null, subscription_status: null }], rowCount: 1 } : inner(text, params));
+    const r = await call();
+    expect([r.status, r.body.error?.code]).toEqual([403, 'SUBSCRIPTION_REQUIRED']);
+  });
+  it('(a2) signed in, no user_profiles row, an active parcel_tool plan -> 200 (the paying MaxBLD customer is served)', async () => {
+    await useReal(UID);
+    parcelTool('active');
+    const r = await call();
+    expect(r.status).toBe(200);
+  });
+  it('(c) no session -> still 401', async () => {
+    await useReal(null);
+    parcelTool('active');
+    const r = await call();
+    expect([r.status, r.body.error?.code]).toEqual([401, 'UNAUTHORIZED']);
   });
 });

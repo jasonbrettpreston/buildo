@@ -66,7 +66,7 @@ const RATE_WINDOW_SEC = 60; // the window of both buckets ("a minute"); the coun
 
 export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   // 1. Auth — Firebase uid + profile (Bearer for mobile). The first call (Spec 90 §11).
-  const ctx = await getCurrentUserContext(request, pool);
+  const ctx = await getCurrentUserContext(request, pool, { needsTrade: false });
   if (!ctx) return unauthorized();
 
   // 2. Entitlement gate (Spec 100 §5) — the proprietary cost model is not served to a lapsed

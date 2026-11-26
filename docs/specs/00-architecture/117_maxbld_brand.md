@@ -185,6 +185,8 @@ Both real surfaces (mobile, Spec 74 web tokens) are dark-mode-only today — the
 <constraints>
 ## 5. Logo / mark
 
+> Dated note 2026-11-26 (task-313, McApp card 1; M-246, prior text kept; operator RR-0506, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2633 "the only other missing piece on the McApp is the phone icon logo - this should be added as well to the existing task"; RR-0509, :2645 "just the icon with out the name", replacing RR-0507 and RR-0508): the phone icon art lands with card 1 as renders of the approved House Mark alone (`~/Buildo-scratch/mcfrontend/brand/house-mark.svg`, operator option C on 2026-11-11), the rename having executed (`app.json` name MaxBLD, bundle `ca.maxbld.app`): `mobile/assets/icon.png` 1024 opaque on the paper colour #f4f1eb, the tile 683 px; `adaptive-icon.png` 1024 transparent, the tile 443 px inside the Android safe circle, background #f4f1eb; `favicon.png` 48 px. The placeholder lines below are prior text. The splash keeps #09090b and drops the template image (no splash PNG); no monochrome variant is made here.
+
 **Not designed yet.** `mobile/assets/{icon,adaptive-icon,splash-icon,favicon}.png` exist today under the Buildo name/scheme and were not evaluated for reuse (art review, not text grounding — out of scope for this pass).
 
 ### Requirements for the eventual mark

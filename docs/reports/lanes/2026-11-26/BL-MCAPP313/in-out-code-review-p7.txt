@@ -1,0 +1,614 @@
+LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:b7dfeac356a91795a7b02ebe0f4748cf4efa30ee8d4e37ee8042ee58e6492f10 part 1 of 1 chunk 7 of 7
+NO RULE LIST: the lens template alone judges the material under review. The material is chunk 7 of 7 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/lib/auth/get-user-context.ts","src/tests/consumer-parcel-lookup.infra.test.ts","src/tests/get-user-context.logic.test.ts","src/tests/parcel-lookup-gate.infra.test.ts","src/tests/parcels-entitlement.infra.test.ts","src/tests/parcels-lot-size-route.infra.test.ts","src/tests/surfaces/admin-media.golden.test.ts","src/tests/surfaces/page-arm.logic.test.ts","src/tests/surfaces/parcel-tool-fence.infra.test.ts","src/tests/surfaces/static-page.logic.test.ts","src/tests/surfaces/surface-conformance.logic.test.ts","src/tests/surfaces/surface-goldens.ts","src/tests/surfaces/surface-validate.logic.test.ts"]
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/lib/auth/get-user-context.ts b/src/lib/auth/get-user-context.ts
+index 60d852fcd2ee493829b0a172bec51dec4d9f8410..7f5cc35932f0b244a6e6a0937a12f1083310d456 100644
+--- a/src/lib/auth/get-user-context.ts
++++ b/src/lib/auth/get-user-context.ts
+@@ -31,12 +31,23 @@
+ // lead_gen status only on its transitional path until MF-50), sourced via a LEFT JOIN. A zero-entitlement user
+ // reads null — exactly what the legacy nullable column yielded, so both
+ // consumers' gating semantics are unchanged (null → not trial / not active).
++//
++// task-313 (McApp card 1, the front door; plan PLAN-313-v1 S1; RR-0499 "1a", MORNING-DECISIONS.md:2598): the parcel routes
++// (lookup, entitlement, lot-size) serve the MaxBLD product, whose users have no lead-app trade and may have no
++// user_profiles row at all (a web buyer's row has no trade; entitlements, usage_events and parcel_user_inputs key on
++// auth.users). They pass `{ needsTrade: false }`: this path reads no user_profiles row and returns only
++// {uid, subscription_status}, the status read from the lead_gen entitlements row (getEntitlementStatus). A 'trial' status
++// runs the existing idempotent 14-day expiry (applyTrialExpirationIfNeeded, the update GET /api/user-profile runs), because
++// the MaxBLD phone no longer calls that route. Both reads sit inside the try, so a thrown read is logged and returns null
++// (401), as a thrown profile read does. Without the option nothing changes for the lead routes; the overloads stop a lead
++// route from taking the trade-less shape silently.
+ 
+ import type { NextRequest } from 'next/server';
+ import type { Pool } from 'pg';
+ import { getClaimsUid } from '@/lib/auth/get-user';
+ import { isDevMode } from '@/lib/auth/route-guard';
+-import { LEAD_GEN_ENTITLEMENT_JOIN } from '@/lib/entitlements';
++import { LEAD_GEN_ENTITLEMENT_JOIN, getEntitlementStatus } from '@/lib/entitlements';
++import { applyTrialExpirationIfNeeded } from '@/lib/subscription/expiration';
+ import { logError } from '@/lib/logger';
+ 
+ interface UserContext {
+@@ -57,10 +68,29 @@ interface UserContext {
+   subscription_status: string | null;
+ }
+ 
++/** The trade-less context of the parcel routes (task-313): the uid and the lead_gen entitlement status only. */
++export interface ParcelUserContext {
++  uid: string;
++  subscription_status: string | null;
++}
++
++/** The option the parcel routes pass: no user_profiles read, no trade required. */
++export interface ParcelContextOptions {
++  needsTrade: false;
++}
++
++// The parcel overload is first and the lead one last, so a mocked helper (vi.mocked) keeps the lead return type.
+ export async function getCurrentUserContext(
+   request: NextRequest,
+   pool: Pool,
+-): Promise<UserContext | null> {
++  options: ParcelContextOptions,
++): Promise<ParcelUserContext | null>;
++export async function getCurrentUserContext(request: NextRequest, pool: Pool): Promise<UserContext | null>;
++export async function getCurrentUserContext(
++  request: NextRequest,
++  pool: Pool,
++  options?: ParcelContextOptions,
++): Promise<UserContext | ParcelUserContext | null> {
+   // Defense in depth: getClaimsUid is documented as never-throws,
+   // but its contract isn't enforced at the type level. Wrap the call so
+   // a future regression in the auth helper can't escape this function.
+@@ -73,6 +103,21 @@ export async function getCurrentUserContext(
+   }
+   if (!uid) return null;
+ 
++  if (options?.needsTrade === false) {
++    try {
++      const row = await getEntitlementStatus(pool, uid, 'lead_gen');
++      let status: string | null = row?.status ?? null;
++      if (status === 'trial') {
++        const expired = await applyTrialExpirationIfNeeded(uid, 'lead_gen');
++        if (expired) status = 'expired';
++      }
++      return { uid, subscription_status: status };
++    } catch (err) {
++      logError('[auth/get-user-context]', err, { uid, stage: 'entitlement-lookup' });
++      return null;
++    }
++  }
++
+   try {
+     // WF3 2026-04-11 dev-env symmetry: if the dev bypass returned
+     // 'dev-user' but user_profiles is empty (fresh local DB and the
+diff --git a/src/tests/consumer-parcel-lookup.infra.test.ts b/src/tests/consumer-parcel-lookup.infra.test.ts
+index 832f5794beba2f953919d8b0b7428403a4ae7594..aa6aa70b7c9de8cf010c117b46a4b88861fa245e 100644
+--- a/src/tests/consumer-parcel-lookup.infra.test.ts
++++ b/src/tests/consumer-parcel-lookup.infra.test.ts
+@@ -46,7 +46,8 @@ describe('route source-shape locks (Spec 100 §3)', () => {
+   it('getCurrentUserContext is the first await in the handler', () => {
+     const src = route();
+     const handlerIdx = src.indexOf('withApiEnvelope(async function GET');
+-    const authIdx = src.indexOf('await getCurrentUserContext(request, pool)');
++    // task-313 (PLAN-313-v1 S2, T2; prior pin text 'await getCurrentUserContext(request, pool)'): the parcel routes take the trade-less context.
++    const authIdx = src.indexOf('await getCurrentUserContext(request, pool, { needsTrade: false })');
+     expect(handlerIdx).toBeGreaterThan(-1);
+     expect(authIdx).toBeGreaterThan(handlerIdx);
+     const firstOtherAwait = src.slice(handlerIdx).search(/await\s+(?!getCurrentUserContext)/);
+diff --git a/src/tests/get-user-context.logic.test.ts b/src/tests/get-user-context.logic.test.ts
+index 3cdf85f571b91ac712263ff354d7986b5d175891..7a0c00880c9c3ea986527e04975896a776436283 100644
+--- a/src/tests/get-user-context.logic.test.ts
++++ b/src/tests/get-user-context.logic.test.ts
+@@ -6,6 +6,9 @@
+ //              via LEFT JOIN — null for a zero-entitlement user, same contract
+ //              the legacy nullable column gave both consumers (R2 leads/view,
+ //              R4 parcels/lookup)
++//              task-313 (McApp card 1; PLAN-313-v1 S1, T1; RR-0499 "1a", MORNING-DECISIONS.md:2598): the parcel routes'
++//              `{ needsTrade: false }` path reads no user_profiles row; the lead_gen status comes from
++//              getEntitlementStatus, a stale trial runs applyTrialExpirationIfNeeded, a thrown read is null.
+ import { describe, it, expect, beforeEach, vi } from 'vitest';
+ import type { Pool, QueryResult, QueryResultRow } from 'pg';
+ import type { NextRequest } from 'next/server';
+@@ -13,9 +16,16 @@ import type { NextRequest } from 'next/server';
+ vi.mock('@/lib/auth/get-user', () => ({
+   getClaimsUid: vi.fn(),
+ }));
++vi.mock('@/lib/subscription/expiration', () => ({
++  applyTrialExpirationIfNeeded: vi.fn(async () => null),
++}));
++vi.mock('@/lib/logger', () => ({ logError: vi.fn(), logInfo: vi.fn(), logWarn: vi.fn() }));
+ 
+ import { getClaimsUid } from '@/lib/auth/get-user';
+ import { getCurrentUserContext } from '@/lib/auth/get-user-context';
++import { applyTrialExpirationIfNeeded } from '@/lib/subscription/expiration';
++import { logError } from '@/lib/logger';
++import { createMockEntitlement } from './factories';
+ 
+ interface MockPool {
+   query: ReturnType<typeof vi.fn>;
+@@ -172,3 +182,83 @@ describe('getCurrentUserContext', () => {
+     expect(await getCurrentUserContext(makeRequest(), mock2 as unknown as Pool)).toBeNull();
+   });
+ });
++
++describe('getCurrentUserContext { needsTrade: false } (task-313, the parcel routes)', () => {
++  const UID = '00000000-0000-0000-0000-0000000313a1';
++  const entRow = (status: string, trialStartedAt: Date | null = null) => {
++    const e = createMockEntitlement({ user_id: UID, status: status as never, trial_started_at: trialStartedAt });
++    return { status: e.status, trial_started_at: e.trial_started_at };
++  };
++  const parcelCall = (mock: MockPool) => getCurrentUserContext(makeRequest(), mock as unknown as Pool, { needsTrade: false });
++
++  it('needsTrade:false, no profile row → {uid, subscription_status:null}', async () => {
++    vi.mocked(getClaimsUid).mockResolvedValueOnce(UID);
++    const mock = createMockPool();
++    mock.query.mockResolvedValueOnce(qr([]));
++    expect(await parcelCall(mock)).toEqual({ uid: UID, subscription_status: null });
++  });
++
++  it('needsTrade:false, trade-less row → context', async () => {
++    vi.mocked(getClaimsUid).mockResolvedValueOnce(UID);
++    const mock = createMockPool();
++    mock.query.mockResolvedValueOnce(qr([entRow('active')]));
++    expect(await parcelCall(mock)).toEqual({ uid: UID, subscription_status: 'active' });
++  });
++
++  it('needsTrade:false reads lead_gen via entitlements, not user_profiles', async () => {
++    vi.mocked(getClaimsUid).mockResolvedValueOnce(UID);
++    const mock = createMockPool();
++    mock.query.mockResolvedValueOnce(qr([entRow('active')]));
++    await parcelCall(mock);
++    expect(mock.query).toHaveBeenCalledTimes(1);
++    const [sql, params] = mock.query.mock.calls[0] as [string, unknown[]];
++    expect(sql).toMatch(/FROM entitlements WHERE user_id = \$1 AND product = \$2/);
++    expect(sql).not.toMatch(/user_profiles/);
++    expect(params).toEqual([UID, 'lead_gen']);
++  });
++
++  it('default call unchanged: no row → null', async () => {
++    vi.mocked(getClaimsUid).mockResolvedValueOnce(UID);
++    const mock = createMockPool();
++    mock.query.mockResolvedValueOnce(qr([]));
++    expect(await getCurrentUserContext(makeRequest(), mock as unknown as Pool)).toBeNull();
++    expect(String(mock.query.mock.calls[0]?.[0])).toMatch(/FROM user_profiles up/);
++  });
++
++  it('needsTrade:false, the lead_gen read throws → null, logged, no throw', async () => {
++    vi.mocked(getClaimsUid).mockResolvedValueOnce(UID);
++    const mock = createMockPool();
++    mock.query.mockRejectedValueOnce(new Error('db down'));
++    await expect(parcelCall(mock)).resolves.toBeNull();
++    expect(vi.mocked(logError)).toHaveBeenCalledWith('[auth/get-user-context]', expect.any(Error), expect.objectContaining({ uid: UID }));
++  });
++
++  it('needsTrade:false, lead_gen trial older than 14 days → expired through applyTrialExpirationIfNeeded', async () => {
++    vi.mocked(getClaimsUid).mockResolvedValueOnce(UID);
++    const mock = createMockPool();
++    mock.query.mockResolvedValueOnce(qr([entRow('trial', new Date('2026-01-01T00:00:00Z'))]));
++    vi.mocked(applyTrialExpirationIfNeeded).mockResolvedValueOnce({ status: 'expired' });
++    expect(await parcelCall(mock)).toEqual({ uid: UID, subscription_status: 'expired' });
++    expect(vi.mocked(applyTrialExpirationIfNeeded)).toHaveBeenCalledWith(UID, 'lead_gen');
++  });
++
++  it('needsTrade:false, a trial still inside 14 days stays trial; a non-trial status never runs the expiry', async () => {
++    vi.mocked(getClaimsUid).mockResolvedValueOnce(UID);
++    const mock = createMockPool();
++    mock.query.mockResolvedValueOnce(qr([entRow('trial', new Date())]));
++    expect(await parcelCall(mock)).toEqual({ uid: UID, subscription_status: 'trial' });
++    vi.mocked(getClaimsUid).mockResolvedValueOnce(UID);
++    const mock2 = createMockPool();
++    mock2.query.mockResolvedValueOnce(qr([entRow('active')]));
++    vi.mocked(applyTrialExpirationIfNeeded).mockClear();
++    await parcelCall(mock2);
++    expect(vi.mocked(applyTrialExpirationIfNeeded)).not.toHaveBeenCalled();
++  });
++
++  it('needsTrade:false, no session → null and no read', async () => {
++    vi.mocked(getClaimsUid).mockResolvedValueOnce(null);
++    const mock = createMockPool();
++    expect(await parcelCall(mock)).toBeNull();
++    expect(mock.query).not.toHaveBeenCalled();
++  });
++});
+diff --git a/src/tests/parcel-lookup-gate.infra.test.ts b/src/tests/parcel-lookup-gate.infra.test.ts
+index 27494f8a3c4847a3b22345ec66455951a05f0a28..17168e2815aab167d7533ed6fbb5301672fad66a 100644
+--- a/src/tests/parcel-lookup-gate.infra.test.ts
++++ b/src/tests/parcel-lookup-gate.infra.test.ts
+@@ -34,6 +34,8 @@ vi.mock('@/lib/db/client', () => ({
+   withTransaction: vi.fn(async (fn: (client: unknown) => Promise<unknown>) => fn({ query: txQuery })),
+ }));
+ vi.mock('@/lib/auth/get-user-context', () => ({ getCurrentUserContext: vi.fn() }));
++vi.mock('@/lib/auth/get-user', () => ({ getClaimsUid: vi.fn() }));
++vi.mock('@/lib/subscription/expiration', () => ({ applyTrialExpirationIfNeeded: vi.fn(async () => null) }));
+ vi.mock('@/lib/auth/rate-limit', () => ({ withRateLimit: vi.fn(async () => ({ allowed: true, remaining: 10 })) }));
+ vi.mock('@/lib/admin/parcel-lookup', async (orig) => ({
+   ...(await orig<typeof import('@/lib/admin/parcel-lookup')>()),
+@@ -67,6 +69,7 @@ const logWarn = vi.fn();
+ vi.mock('@/lib/logger', () => ({ logInfo: (...a: unknown[]) => logInfo(...a), logWarn: (...a: unknown[]) => logWarn(...a), logError: vi.fn() }));
+ 
+ import { getCurrentUserContext } from '@/lib/auth/get-user-context';
++import { getClaimsUid } from '@/lib/auth/get-user';
+ import { withRateLimit } from '@/lib/auth/rate-limit';
+ import { resolveAddress, fetchParcelById } from '@/lib/admin/parcel-lookup';
+ import { REPORT_LIMIT_KEYS } from '@/lib/entitlements';
+@@ -778,3 +781,45 @@ describe('MF-53 the map block on the route', () => {
+     expect(JSON.stringify(r.body)).not.toContain('logic_variables missing');
+   });
+ });
++
++describe('task-313 the trade-less context (PLAN-313-v1 S2, T2): the 403 gate, not a 401, for a MaxBLD account with no profile row or no trade', () => {
++  const real = async () => (await vi.importActual<typeof import('@/lib/auth/get-user-context')>('@/lib/auth/get-user-context')).getCurrentUserContext;
++  const useReal = async (uid: string | null) => {
++    vi.mocked(getCurrentUserContext).mockImplementation((await real()) as never);
++    vi.mocked(getClaimsUid).mockResolvedValue(uid);
++  };
++  it('the route asks for the trade-less context', async () => {
++    ctx(null);
++    parcelTool('active');
++    await call();
++    expect(vi.mocked(getCurrentUserContext)).toHaveBeenCalledWith(expect.anything(), expect.anything(), { needsTrade: false });
++  });
++  it('(a) signed in, no user_profiles row, no parcel_tool row -> 403 SUBSCRIPTION_REQUIRED, no user_profiles read', async () => {
++    await useReal(UID);
++    parcelTool(null);
++    const r = await call();
++    expect([r.status, r.body.error?.code]).toEqual([403, 'SUBSCRIPTION_REQUIRED']);
++    expect(poolQuery.mock.calls.some((c) => /user_profiles/.test(String(c[0])))).toBe(false);
++  });
++  it('(b) signed in, a profile row with no trade, no parcel_tool row -> 403 SUBSCRIPTION_REQUIRED', async () => {
++    await useReal(UID);
++    parcelTool(null);
++    const inner = poolQuery.getMockImplementation()!;
++    poolQuery.mockImplementation(async (text: string, params?: unknown) =>
++      /FROM user_profiles/.test(text) ? { rows: [{ trade_slug: null, trade_slugs_override: null, display_name: null, subscription_status: null }], rowCount: 1 } : inner(text, params));
++    const r = await call();
++    expect([r.status, r.body.error?.code]).toEqual([403, 'SUBSCRIPTION_REQUIRED']);
++  });
++  it('(a2) signed in, no user_profiles row, an active parcel_tool plan -> 200 (the paying MaxBLD customer is served)', async () => {
++    await useReal(UID);
++    parcelTool('active');
++    const r = await call();
++    expect(r.status).toBe(200);
++  });
++  it('(c) no session -> still 401', async () => {
++    await useReal(null);
++    parcelTool('active');
++    const r = await call();
++    expect([r.status, r.body.error?.code]).toEqual([401, 'UNAUTHORIZED']);
++  });
++});
+diff --git a/src/tests/parcels-entitlement.infra.test.ts b/src/tests/parcels-entitlement.infra.test.ts
+index 2c5e258b05928532e24b46f6cf0f313a2c938da9..fa6d75101f9b9e47b82b5bbdb06c5b91f254a129 100644
+--- a/src/tests/parcels-entitlement.infra.test.ts
++++ b/src/tests/parcels-entitlement.infra.test.ts
+@@ -21,11 +21,14 @@ import type { NextRequest } from 'next/server';
+ const poolQuery = vi.fn();
+ vi.mock('@/lib/db/client', () => ({ pool: { query: (...a: unknown[]) => poolQuery(...a) }, withTransaction: vi.fn() }));
+ vi.mock('@/lib/auth/get-user-context', () => ({ getCurrentUserContext: vi.fn() }));
++vi.mock('@/lib/auth/get-user', () => ({ getClaimsUid: vi.fn() }));
++vi.mock('@/lib/subscription/expiration', () => ({ applyTrialExpirationIfNeeded: vi.fn(async () => null) }));
+ vi.mock('@/lib/auth/rate-limit', () => ({ withRateLimit: vi.fn(async () => ({ allowed: true, remaining: 10 })) }));
+ const logInfo = vi.fn();
+ vi.mock('@/lib/logger', () => ({ logInfo: (...a: unknown[]) => logInfo(...a), logWarn: vi.fn(), logError: vi.fn() }));
+ 
+ import { getCurrentUserContext } from '@/lib/auth/get-user-context';
++import { getClaimsUid } from '@/lib/auth/get-user';
+ import { withRateLimit } from '@/lib/auth/rate-limit';
+ import { REPORT_LIMIT_KEYS } from '@/lib/entitlements';
+ import { GET } from '@/app/api/parcels/entitlement/route';
+@@ -149,10 +152,45 @@ describe('T11 GET /api/parcels/entitlement (the entitlement read contract)', ()
+   it('getCurrentUserContext is the first await in the handler (Spec 90 §11)', () => {
+     const src = fs.readFileSync(path.resolve(__dirname, '../app/api/parcels/entitlement/route.ts'), 'utf8');
+     const h = src.indexOf('withApiEnvelope(async function GET');
+-    const auth = src.indexOf('await getCurrentUserContext(request, pool)');
++    // task-313 (PLAN-313-v1 S2, T2; prior pin text 'await getCurrentUserContext(request, pool)'): the trade-less context.
++    const auth = src.indexOf('await getCurrentUserContext(request, pool, { needsTrade: false })');
+     expect(h).toBeGreaterThan(-1);
+     expect(auth).toBeGreaterThan(h);
+     const other = src.slice(h).search(/await\s+(?!getCurrentUserContext)/);
+     expect(other === -1 || h + other > auth).toBe(true);
+   });
+ });
++
++describe('task-313 the trade-less context (PLAN-313-v1 S2, T2): a MaxBLD account with no profile row or no trade is not a 401', () => {
++  const real = async () => (await vi.importActual<typeof import('@/lib/auth/get-user-context')>('@/lib/auth/get-user-context')).getCurrentUserContext;
++  /** The pool also answers a trade-less user_profiles row, so the old (trade) path would read it and 401. */
++  const tradeLessProfile = () => {
++    const inner = poolQuery.getMockImplementation()!;
++    poolQuery.mockImplementation(async (text: string, params?: unknown) =>
++      /FROM user_profiles/.test(text) ? { rows: [{ trade_slug: null, trade_slugs_override: null, display_name: null, subscription_status: null }], rowCount: 1 } : inner(text, params));
++  };
++  it('the route asks for the trade-less context', async () => {
++    await call();
++    expect(vi.mocked(getCurrentUserContext)).toHaveBeenCalledWith(expect.anything(), expect.anything(), { needsTrade: false });
++  });
++  it('(a) signed in, no user_profiles row, no parcel_tool row -> 200 with every field null', async () => {
++    vi.mocked(getCurrentUserContext).mockImplementation((await real()) as never);
++    vi.mocked(getClaimsUid).mockResolvedValue(UID);
++    const r = await call();
++    expect([r.status, r.body.data]).toEqual([200, NULLS]);
++    expect(poolQuery.mock.calls.some((c) => /user_profiles/.test(String(c[0])))).toBe(false);
++  });
++  it('(b) signed in, a profile row with no trade -> 200 with every field null', async () => {
++    vi.mocked(getCurrentUserContext).mockImplementation((await real()) as never);
++    vi.mocked(getClaimsUid).mockResolvedValue(UID);
++    tradeLessProfile();
++    const r = await call();
++    expect([r.status, r.body.data]).toEqual([200, NULLS]);
++  });
++  it('(c) no session -> still 401', async () => {
++    vi.mocked(getCurrentUserContext).mockImplementation((await real()) as never);
++    vi.mocked(getClaimsUid).mockResolvedValue(null);
++    const r = await call();
++    expect([r.status, r.body.error?.code]).toEqual([401, 'UNAUTHORIZED']);
++  });
++});
+diff --git a/src/tests/parcels-lot-size-route.infra.test.ts b/src/tests/parcels-lot-size-route.infra.test.ts
+index b01fa81f2f610aa21d755707d66174381d049067..f2804dac552df7be8d6c8a7cd0ecb37b0a55d592 100644
+--- a/src/tests/parcels-lot-size-route.infra.test.ts
++++ b/src/tests/parcels-lot-size-route.infra.test.ts
+@@ -141,6 +141,11 @@ describe('THE LOCK (D-6): no write path is reachable while the switch is off', (
+ });
+ 
+ describe('POST /api/parcels/lot-size with the switch on (test copy of the seed bound)', () => {
++  it('task-313 (PLAN-313-v1 S2, T2): the route asks for the trade-less context', async () => {
++    db({ parcelTool: 'active' });
++    await post(OK);
++    expect(vi.mocked(getCurrentUserContext)).toHaveBeenCalledWith(expect.anything(), expect.anything(), { needsTrade: false });
++  });
+   it('no session -> 401 before the switch is read', async () => {
+     vi.mocked(getCurrentUserContext).mockResolvedValue(null);
+     const r = await post(OK);
+diff --git a/src/tests/surfaces/admin-media.golden.test.ts b/src/tests/surfaces/admin-media.golden.test.ts
+index 34c923c53161533c807d27195e922c34641f6f9c..636371ffca251d991c0f77cf72e417a7c498b29d 100644
+--- a/src/tests/surfaces/admin-media.golden.test.ts
++++ b/src/tests/surfaces/admin-media.golden.test.ts
+@@ -69,7 +69,8 @@ describe('T7 (b) coverage', () => {
+       // MF-46 stage C (dated 2026-11-11): the MaxBLD plain pages and their error page, the first web STATIC surfaces.
+       // MF-76 (dated 2026-11-11): the MaxBLD landing.
+       // task-452 SEARCHFIX.4 (dated 2026-11-24): + the wall (mobile only).
+-      'web_help', 'web_terms', 'web_privacy', 'web_maxbld_error', 'web_landing', 'mobile_parcel_wall']); // MF-53: + the map page (mobile only); MF-19: +2 FORM surfaces
++      // task-313 McApp card 1 (dated 2026-11-26): + the Opening (mobile only).
++      'web_help', 'web_terms', 'web_privacy', 'web_maxbld_error', 'web_landing', 'mobile_parcel_wall', 'mobile_parcel_opening']); // MF-53: + the map page (mobile only); MF-19: +2 FORM surfaces
+     for (const id of convertedIds(ROOT).filter((x) => JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, x)), 'utf8')).identity.platforms.includes('web'))) {
+       const d: Json = JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, id)), 'utf8'));
+       for (const s of d.states) {
+@@ -97,7 +98,7 @@ describe('T7 (c) the page passes plain data only', () => {
+ describe('T7 (d) non-web targets fail closed', () => {
+   it('every converted surface with a mobile target names its mobile golden test, and that file exists', () => {
+     const mobile = convertedIds(ROOT).filter((id) => JSON.parse(fs.readFileSync(path.join(ROOT, descriptorFile(ROOT, id)), 'utf8')).identity.platforms.includes('mobile'));
+-    expect(mobile).toEqual(['mobile_parcel_search', 'mobile_parcel_disambiguation_map', 'mobile_parcel_semi_question', 'mobile_parcel_wall']); // MF-53: + the map page; SEMI-B: + the one-question page; task-452 (dated 2026-11-24): + the wall
++    expect(mobile).toEqual(['mobile_parcel_search', 'mobile_parcel_disambiguation_map', 'mobile_parcel_semi_question', 'mobile_parcel_wall', 'mobile_parcel_opening']); // task-313 (dated 2026-11-26): + the Opening // MF-53: + the map page; SEMI-B: + the one-question page; task-452 (dated 2026-11-24): + the wall
+     for (const id of mobile) expect([id, fs.existsSync(path.join(ROOT, MOBILE_GOLDEN_TESTS[id] ?? 'none'))]).toEqual([id, true]);
+   });
+   it('RED: a mobile target with no declared test, and a pdf target, throw', () => {
+diff --git a/src/tests/surfaces/page-arm.logic.test.ts b/src/tests/surfaces/page-arm.logic.test.ts
+index 18d932408762f060af03dfceb78919664ceccc8e..80fbd50c2c181479b7ca85d90f2fd962ce8cf829 100644
+--- a/src/tests/surfaces/page-arm.logic.test.ts
++++ b/src/tests/surfaces/page-arm.logic.test.ts
+@@ -89,8 +89,13 @@ describe('P4 the arm fails on an unreadable or empty table', () => {
+   const WALL = 'mobile_parcel_wall';
+   const WALL_SCREEN = TABLE.screens[WALL] as Json;
+   const WALL_DESC = `scripts/surfaces/parcel_product/F01/surfaces/${WALL}.descriptor.json`;
++  // task-313 McApp card 1 (dated 2026-11-26; prior text kept: two screens): the Opening S-097 is the third screens row; the context carries it too (2 -> 3).
++  const OPENING = 'mobile_parcel_opening';
++  const OPENING_SCREEN = TABLE.screens[OPENING] as Json;
++  const OPENING_DESC = `scripts/surfaces/parcel_product/F01/surfaces/${OPENING}.descriptor.json`;
+   const files = [TABLE_PATH, SCREEN.binding, BUILDER, DESC, `scripts/surfaces/parcel_product/F01/surfaces/${ID}.content.json`,
+-    WALL_SCREEN.binding, WALL_DESC, `scripts/surfaces/parcel_product/F01/surfaces/${WALL}.content.json`];
++    WALL_SCREEN.binding, WALL_DESC, `scripts/surfaces/parcel_product/F01/surfaces/${WALL}.content.json`,
++    OPENING_SCREEN.binding, OPENING_DESC, `scripts/surfaces/parcel_product/F01/surfaces/${OPENING}.content.json`];
+   const rootWith = (table: string | null): string => {
+     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'page-arm-'));
+     for (const f of files) { fs.mkdirSync(path.dirname(path.join(root, f)), { recursive: true }); fs.copyFileSync(path.join(ROOT, f), path.join(root, f)); }
+@@ -98,16 +103,16 @@ describe('P4 the arm fails on an unreadable or empty table', () => {
+     return root;
+   };
+   const ctxOf = (root: string, ok = true) => ({
+-    root, ok, manifest: { converted: [ID, WALL] }, inScope: new Map([[ID, { d: rj(DESC), file: DESC }], [WALL, { d: rj(WALL_DESC), file: WALL_DESC }]]),
++    root, ok, manifest: { converted: [ID, WALL, OPENING] }, inScope: new Map([[ID, { d: rj(DESC), file: DESC }], [WALL, { d: rj(WALL_DESC), file: WALL_DESC }], [OPENING, { d: rj(OPENING_DESC), file: OPENING_DESC }]]),
+     contracts: new Map([['contract_parcels_lookup', {}], ['contract_parcels_entitlement', {}]]),
+-    bindings: { modules: [{ path: SCREEN.binding, platform: 'mobile' }, { path: WALL_SCREEN.binding, platform: 'mobile' }, { path: BUILDER, platform: 'mobile' }] },
++    bindings: { modules: [{ path: SCREEN.binding, platform: 'mobile' }, { path: WALL_SCREEN.binding, platform: 'mobile' }, { path: OPENING_SCREEN.binding, platform: 'mobile' }, { path: BUILDER, platform: 'mobile' }] },
+   });
+-  it('the real table is the passing control: two screens expected, two found, no finding', () => {
+-    expect(pageArm(ctxOf(rootWith(read(TABLE_PATH))))).toEqual({ findings: [], note: 'S-page ok (2 of 2 screens)' });
++  it('the real table is the passing control: three screens expected, three found, no finding', () => {
++    expect(pageArm(ctxOf(rootWith(read(TABLE_PATH))))).toEqual({ findings: [], note: 'S-page ok (3 of 3 screens)' }); // task-313 (dated 2026-11-26): + the Opening, the third screens row (2 -> 3)
+   });
+   it('RED: a missing table, an empty screens map and a failed context are each a finding', () => {
+     const missing = pageArm(ctxOf(rootWith(null))).findings;
+-    expect(missing).toEqual([`SV-PAGE ${TABLE_PATH}: no readable screens (expected 2 screen(s) from the binding modules that call the page builder, found 0)`]);
++    expect(missing).toEqual([`SV-PAGE ${TABLE_PATH}: no readable screens (expected 3 screen(s) from the binding modules that call the page builder, found 0)`]);
+     expect(pageArm(ctxOf(rootWith(JSON.stringify({ pages: {}, screens: {} })))).findings).toEqual(missing);
+     expect(pageArm(ctxOf(rootWith(read(TABLE_PATH)), false)).findings).toEqual(missing);
+   });
+@@ -127,6 +132,6 @@ describe('P4 the arm fails on an unreadable or empty table', () => {
+     const other = 'mobile/src/components/surfaces/OtherBinding.tsx';
+     fs.writeFileSync(path.join(root, other), 'export const x = pageProps(a, b, c, d);\n');
+     const c = ctxOf(root); c.bindings.modules.push({ path: other, platform: 'mobile' });
+-    expect(pageArm(c).findings).toEqual([`SV-PAGE ${TABLE_PATH}: 2 screen(s) read, 3 expected (the binding modules that call the page builder)`]);
++    expect(pageArm(c).findings).toEqual([`SV-PAGE ${TABLE_PATH}: 3 screen(s) read, 4 expected (the binding modules that call the page builder)`]);
+   });
+ });
+diff --git a/src/tests/surfaces/parcel-tool-fence.infra.test.ts b/src/tests/surfaces/parcel-tool-fence.infra.test.ts
+index d1dac960bdc9d7affd4e008cfd05068f3979d491..0f0cfe0c4f40233c65d391f4e7e809d89c29721c 100644
+--- a/src/tests/surfaces/parcel-tool-fence.infra.test.ts
++++ b/src/tests/surfaces/parcel-tool-fence.infra.test.ts
+@@ -7,6 +7,9 @@
+ // It is the pre-MF-49 form: the ruling forbids moving the group out WITHOUT a per-product gate, and MF-45/MF-49 will legitimately change the gate, so the
+ // failure names the MF-49 exit. Reads `(app)/_layout.tsx` with `//` and `/* */` comments stripped (newlines kept): its header comments mention `<Tabs`
+ // and the guard, so a raw-text order check would be false. The `(app)` root is one constant; extending it per app is MF-49's.
++// task-313 (McApp card 1, the MF-49 extension the lines above name; PLAN-313-v1 T7; RR-0499 "1a", MORNING-DECISIONS.md:2598): the (app) layout routes on
++// APP_PRODUCT to MaxbldAppGate (the MaxBLD front door), which returns the Opening before the route is drawn (<Slot); APP_PRODUCT defaults to
++// 'parcel_tool'. The lead layout (LeadAppLayout) keeps its own gate order above, checked as before.
+ import { describe, expect, it } from 'vitest';
+ import { spawnSync } from 'node:child_process';
+ import fs from 'node:fs';
+@@ -125,7 +128,8 @@ describe('spec-review lock 2: every parcel-tool route stays inside the (app) gat
+ 
+   it('planted: the parcel-tool screen removed, or placed before <Tabs', () => {
+     expect(fenceProblems(FILES, mutate(L, /^.*name="parcel-tool".*\n/m, ''), GL).join('\n')).toMatch(/no name="parcel-tool" screen/);
+-    const early = mutate(L, 'export default', 'const early = <Tabs.Screen name="parcel-tool" />;\nexport default');
++    // task-313 (dated 2026-11-26; prior anchor 'export default', which now opens the product router at the end of the file): the plant goes before the lead layout.
++    const early = mutate(L, 'function LeadAppLayout()', 'const early = <Tabs.Screen name="parcel-tool" />;\nfunction LeadAppLayout()');
+     expect(fenceProblems(FILES, early, GL).join('\n')).toMatch(/name="parcel-tool" comes before <Tabs/);
+   });
+ 
+@@ -155,3 +159,53 @@ describe('spec-review lock 2: every parcel-tool route stays inside the (app) gat
+     expect(out.split('\n').length).toBe(src.split('\n').length);
+   });
+ });
++
++const SHELL = 'mobile/src/lib/appShell.ts';
++const GATE = 'mobile/src/components/parcel/MaxbldAppGate.tsx';
++const ROUTES_ON_PRODUCT_RE = /APP_PRODUCT\s*===\s*'parcel_tool'\s*\?\s*<MaxbldAppGate\b/;
++const DEFAULT_RE = /export const APP_PRODUCT\s*:[^=]*=\s*'parcel_tool'\s*;/;
++const OPENING_RETURN = 'return <SurfaceRenderer';
++const SLOT_RETURN = 'return <Slot';
++
++/** The MF-49 extension: the per-product gate the ruling asks for before the lead layout can be left. */
++function maxbldFenceProblems(layout: string, gate: string, shell: string): string[] {
++  const problems: string[] = [];
++  const code = stripComments(layout);
++  if (!ROUTES_ON_PRODUCT_RE.test(code)) problems.push(`${LAYOUT}: does not route on APP_PRODUCT to <MaxbldAppGate outside comments`);
++  const g = stripComments(gate);
++  const opening = g.indexOf(OPENING_RETURN);
++  const slot = g.indexOf(SLOT_RETURN);
++  if (opening < 0) problems.push(`${GATE}: "${OPENING_RETURN}" (the Opening) missing outside comments`);
++  if (slot < 0) problems.push(`${GATE}: "${SLOT_RETURN}" missing outside comments (dead-man)`);
++  if (opening >= 0 && slot >= 0 && slot < opening) problems.push(`${GATE}: "${SLOT_RETURN}" comes before the Opening`);
++  if (!DEFAULT_RE.test(stripComments(shell))) problems.push(`${SHELL}: APP_PRODUCT does not default to 'parcel_tool'`);
++  return problems;
++}
++
++const GATE_SRC = readIfExists(GATE);
++const SHELL_SRC = readIfExists(SHELL);
++
++describe('task-313 the MF-49 extension: the MaxBLD front door is the per-product gate', () => {
++  it('the real tree has no problem', () => {
++    expect(maxbldFenceProblems(L, GATE_SRC, SHELL_SRC)).toEqual([]);
++  });
++  it('planted: APP_PRODUCT flipped to lead_gen', () => {
++    const flipped = mutate(SHELL_SRC, /(export const APP_PRODUCT\s*:[^=]*=\s*)'parcel_tool'/, "$1'lead_gen'");
++    expect(maxbldFenceProblems(L, GATE_SRC, flipped).join('\n')).toMatch(/APP_PRODUCT does not default to 'parcel_tool'/);
++  });
++  it('planted: MaxbldAppGate returning <Slot/> before the Opening', () => {
++    const early = mutate(GATE_SRC, /export function MaxbldAppGate\(\) \{/, 'export function MaxbldAppGate() {\n  if (Date.now() < 0) return <Slot />;');
++    expect(maxbldFenceProblems(L, early, SHELL_SRC).join('\n')).toMatch(/"return <Slot" comes before the Opening/);
++  });
++  it('planted: the layout no longer routes on APP_PRODUCT, or only in a comment', () => {
++    const gone = mutate(L, ROUTES_ON_PRODUCT_RE, 'true ? <MaxbldAppGate');
++    expect(maxbldFenceProblems(gone, GATE_SRC, SHELL_SRC).join('\n')).toMatch(/does not route on APP_PRODUCT/);
++    const commented = `// APP_PRODUCT === 'parcel_tool' ? <MaxbldAppGate />\n${gone}`;
++    expect(maxbldFenceProblems(commented, GATE_SRC, SHELL_SRC).join('\n')).toMatch(/does not route on APP_PRODUCT/);
++  });
++  it('planted: the Opening removed from the gate', () => {
++    const none = mutate(GATE_SRC, new RegExp(OPENING_RETURN.replace(/[<]/g, '\\$&'), 'g'), 'void <SurfaceRenderer');
++    expect(maxbldFenceProblems(L, none, SHELL_SRC).join('\n')).toMatch(/the Opening\) missing outside comments/);
++  });
++});
++
+diff --git a/src/tests/surfaces/static-page.logic.test.ts b/src/tests/surfaces/static-page.logic.test.ts
+index db15ffc7733be785aa8729edd2fe2ad3f3ec626d..abc9ef82a519e8e82345b927fe6a041f5e888157 100644
+--- a/src/tests/surfaces/static-page.logic.test.ts
++++ b/src/tests/surfaces/static-page.logic.test.ts
+@@ -113,6 +113,8 @@ describe('T9 the interactive screens (PAGE.TABLE, task-390)', () => {
+   const BINDINGS: Record<string, string> = {
+     mobile_parcel_semi_question: 'mobile/src/components/surfaces/SemiQuestionBinding.tsx',
+     mobile_parcel_wall: 'mobile/src/components/surfaces/WallBinding.tsx',
++    // task-313 McApp card 1 (dated 2026-11-26): the Opening S-097 is the third screens row.
++    mobile_parcel_opening: 'mobile/src/components/surfaces/OpeningBinding.tsx',
+   };
+   const IDS = Object.keys(BINDINGS);
+   const SCREENS = TABLE.screens as Json;
+diff --git a/src/tests/surfaces/surface-conformance.logic.test.ts b/src/tests/surfaces/surface-conformance.logic.test.ts
+index 46bb3d31750319e98bb99dda9197efb88a65393b..74b711498ce41d277a85304426969b801a1bcad1 100644
+--- a/src/tests/surfaces/surface-conformance.logic.test.ts
++++ b/src/tests/surfaces/surface-conformance.logic.test.ts
+@@ -243,7 +243,8 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
+     // MF-76 (dated 2026-11-11; operator D-1 (a); plan v3 §12 folds 14, 15): web_landing converted from pending (converted 11 -> 12, pending 5 -> 4;
+     // 29 in scope: the old Buildo page moved to its own scope-D descriptor); its 2 web goldens (59 -> 61) and 54 content strings (273 -> 327) join.
+     // SEARCHFIX.4 (task-452; dated 2026-11-24; RR-0444 MD:2290, RR-0455 MD:2357-2358): + the wall S-096 mobile_parcel_wall (converted 17 -> 18, in scope 33 -> 34; 2 mobile goldens rate_limited and unauthorized, 100 -> 102; +7 strings in mobile_parcel_wall.content.json, 436 -> 443; the second screens row, S-page 1 -> 2 of 2); measured with surface-validate --check before and after.
+-    expect(d.note).toBe('S-desc ok (examined 34 in scope: converted 18, pending 3, parked 9, report 4)'); // MF-19 plan v3 (2026-11-15): + report_lot_size_entry_area; MF-53: the map page converted; SEMI-B (dated 2026-11-13): + the one-question page
++    // task-313 McApp card 1 (dated 2026-11-26): + the Opening S-097 mobile_parcel_opening (converted 18 -> 19, in scope 34 -> 35).
++    expect(d.note).toBe('S-desc ok (examined 35 in scope: converted 19, pending 3, parked 9, report 4)'); // MF-19 plan v3 (2026-11-15): + report_lot_size_entry_area; MF-53: the map page converted; SEMI-B (dated 2026-11-13): + the one-question page
+     // MF-37 (dated 2026-11-09): converted was empty with waits MF-37 until this commit; the counts move with the three admin media surfaces.
+     // MF-58 (dated 2026-11-10; ruling 2026-11-10 items 16 and 5): the search page legal line joins as one content key (154 -> 155 strings);
+     // red evidence docs/reports/red-evidence/MF-58/legal-line-red.txt.
+@@ -264,7 +265,8 @@ describe('C-1 the arms on the real tree, and the queue state', () => {
+     // SEARCHFIX.4 (task-452; dated 2026-11-24; RR-0444 MD:2290, RR-0455 MD:2357-2358): + the wall S-096 mobile_parcel_wall (converted 17 -> 18, in scope 33 -> 34; 2 mobile goldens rate_limited and unauthorized, 100 -> 102; +7 strings in mobile_parcel_wall.content.json, 436 -> 443; the second screens row, S-page 1 -> 2 of 2); measured with surface-validate --check before and after.
+     // SEARCHFIX.4 round 2 (task-452; dated 2026-11-24; RR-0468 MD:2426-2430, Spec 128 rule 12): + the wall's error state (1 mobile golden, 102 -> 103; +1 string wall.error, 443 -> 444); measured with surface-validate --check before and after.
+     // McFixV2.1 (task-465; dated 2026-11-25; RR-0483 MD:2523, RR-0487 MD:2543, RR-0495 MD:2578-2579): + the search typing state partial (golden suggest, 2 goldens, 103 -> 105); search content -5 keys (list.rail, list.badge, list.select, list.select.label, search.prompt) +3 (list.hint, search.miss.hint, search.outside_toronto.title), 444 -> 442 strings.
+-    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (18 surfaces, 105 goldens)' }, { findings: [], note: 'S-sbind ok (18 surfaces, 442 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
++    // task-313 McApp card 1 (dated 2026-11-26; PLAN-313-v1 M6, T9; RR-0499 "1a", RR-0503 3 A): + the Opening S-097 mobile_parcel_opening (converted 18 -> 19, in scope 34 -> 35; 3 mobile goldens loading, offline and error, 105 -> 108; +8 strings in mobile_parcel_opening.content.json, 442 -> 450; the third screens row, S-page 2 -> 3 of 3; S-golden owed unchanged, the new states are phone-only); measured with surface-validate --check after (the before numbers are task-465's above).
++    expect([screenArm(ctx), sbindArm(ctx)]).toEqual([{ findings: [], note: 'S-screen ok (19 surfaces, 108 goldens)' }, { findings: [], note: 'S-sbind ok (19 surfaces, 450 strings)' }]); // SEMI-B (dated 2026-11-13): + the one-question page (8 goldens, 15 strings); MF-19: +2 FORM surfaces, +12 web goldens, +29 strings
+   });
+   it('every row the manifest names (waits and each pending row) is an open McFrontend queue heading', () => {
+     const m = rj(path.join(REPO, SCHEMA, 'converted-surfaces.json'));
+@@ -396,7 +398,8 @@ describe('C-3 bindings.json integrity', () => {
+     // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join.
+     // MF-76 (dated 2026-11-11; plan v3 §12 fold 13): + the landing mount (19 -> 20 mounts).
+     // SEARCHFIX.4 (task-452; dated 2026-11-24): + WallBinding.tsx (after PageTableBinding.tsx) and the wall's two mounts, the search page and the report route (25 -> 27).
+-    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([15, 8, 27]); // PAGE.TABLE (dated 2026-11-20, task-390): + PageTableBinding.tsx (the shared phone page-table builder; operator "yes approved", MORNING-DECISIONS.md:1444); task-384 STD.REPORT-OWN (dated 2026-11-20): + the three web report renderer files and their promoted entry binding_web_report. SEMI-B (dated 2026-11-13): + SemiQuestionBinding.tsx and the question page mount; MF-53: + LotMapBinding.tsx, binding_mobile_list, the map page mount; // MF-40: +5 mounts (the placements page, client mount, error boundary); MF-19: +3 (the admin lot-size page, client mount, error boundary)
++    // task-313 McApp card 1 (dated 2026-11-26): + OpeningBinding.tsx (after WallBinding.tsx) and the Opening's one mount, the MaxBLD front door MaxbldAppGate.tsx (15 -> 16 modules, 27 -> 28 mounts).
++    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([16, 8, 28]); // PAGE.TABLE (dated 2026-11-20, task-390): + PageTableBinding.tsx (the shared phone page-table builder; operator "yes approved", MORNING-DECISIONS.md:1444); task-384 STD.REPORT-OWN (dated 2026-11-20): + the three web report renderer files and their promoted entry binding_web_report. SEMI-B (dated 2026-11-13): + SemiQuestionBinding.tsx and the question page mount; MF-53: + LotMapBinding.tsx, binding_mobile_list, the map page mount; // MF-40: +5 mounts (the placements page, client mount, error boundary); MF-19: +3 (the admin lot-size page, client mount, error boundary)
+   });
+   it('RED (in memory): a glob as a path, a .ts module, a module under src/lib, an owner that does not own it, a promoted entry outside platform_shared', () => {
+     const owner = { identity: { owns: { components: [] } }, programme: { scope: 'parcel_admin' } };
+@@ -506,7 +509,8 @@ describe('C-7 schema closedness and the cutover (the closed render vocabulary gr
+     // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join.
+     // MF-76 (dated 2026-11-11; plan v3 §12 fold 15): +1 SURFACE (web_buildo_landing, scope D: the old src/app/page.tsx knowledge; web_landing is repointed).
+     // SEARCHFIX.4 (task-452; dated 2026-11-24): +1 SURFACE (mobile_parcel_wall, S-096); found by the pre-commit related run, a pin the plan did not list.
+-    expect(all.length).toBe(173); // task-384 STD.REPORT-OWN (dated 2026-11-20): +1 SURFACE (binding_web_report, the owner of the web report renderer files). MF-19 plan v3 (2026-11-15): +1 SURFACE (report_lot_size_entry_area). SEMI-B (dated 2026-11-13): +1 SURFACE (mobile_parcel_semi_question). MF-19: +2 SURFACE (admin_lot_size_revert, report_lot_size_entry), +2 CONTRACT (contract_parcels_lot_size_entry, contract_admin_lot_size_revert). MF-53: +1 promoted binding entry (binding_mobile_list); MF-48: +1 promoted binding entry; MF-44: +1 promoted binding entry (binding_web_search); MF-45: +1 CONTRACT (contract_parcels_entitlement, operator 2026-11-11 "4. ... we have the tokens now"); MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding); MF-40: +2 SURFACE, +3 CONTRACT
++    // task-313 McApp card 1 (dated 2026-11-26): +1 SURFACE (mobile_parcel_opening, S-097); found by the pre-commit related run, a pin the plan did not list.
++    expect(all.length).toBe(174); // task-384 STD.REPORT-OWN (dated 2026-11-20): +1 SURFACE (binding_web_report, the owner of the web report renderer files). MF-19 plan v3 (2026-11-15): +1 SURFACE (report_lot_size_entry_area). SEMI-B (dated 2026-11-13): +1 SURFACE (mobile_parcel_semi_question). MF-19: +2 SURFACE (admin_lot_size_revert, report_lot_size_entry), +2 CONTRACT (contract_parcels_lot_size_entry, contract_admin_lot_size_revert). MF-53: +1 promoted binding entry (binding_mobile_list); MF-48: +1 promoted binding entry; MF-44: +1 promoted binding entry (binding_web_search); MF-45: +1 CONTRACT (contract_parcels_entitlement, operator 2026-11-11 "4. ... we have the tokens now"); MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding); MF-40: +2 SURFACE, +3 CONTRACT
+     expect(all.filter((f) => v(rj(f)).length > 0)).toEqual([]);
+     // MF-40 converted admin_placements; the non-generated FORM control is now binding_web_form (status new, no render.form).
+     // Regression guardian LOW-1 (MF-40 OUTPUT panel): binding_web_form is a platform_shared promoted binding entry, not a pending user-facing surface;
+@@ -812,8 +816,9 @@ describe('C-8m the mobile closed table (MF-35; every element of a mobile binding
+   const mods = B.modules.filter((m: Json) => m.platform === 'mobile');
+   it('the real tree: the mobile modules render only through a COMPONENTS table equal to mapping.mobile for their archetypes (SEARCH; the renderer SEARCH and LIST); no FlashList', () => {
+     console.log(`C-8m: ${mods.length} mobile modules`);
++    // task-313 McApp card 1 (dated 2026-11-26): + OpeningBinding.tsx (no JSX) after WallBinding.tsx; found by the pre-commit related run.
+     // MF-48 (dated 2026-11-11): + ReportBinding.tsx (no JSX) and the host ReportPageHost.tsx (its own table, mapping.mobile.REPORT_HOST, host list). MF-53: + LotMapBinding.tsx (no JSX).
+-    expect(mods.map((m: Json) => m.path)).toEqual(['mobile/src/components/surfaces/SurfaceRenderer.tsx', 'mobile/src/components/surfaces/SearchBinding.tsx', 'mobile/src/components/surfaces/LotMapBinding.tsx', 'mobile/src/components/surfaces/SemiQuestionBinding.tsx', 'mobile/src/components/surfaces/PageTableBinding.tsx', 'mobile/src/components/surfaces/WallBinding.tsx', 'mobile/src/components/surfaces/ReportBinding.tsx', 'mobile/src/components/surfaces/ReportPageHost.tsx']); // SEARCHFIX.4 (task-452, dated 2026-11-24): + WallBinding.tsx (no JSX)
++    expect(mods.map((m: Json) => m.path)).toEqual(['mobile/src/components/surfaces/SurfaceRenderer.tsx', 'mobile/src/components/surfaces/SearchBinding.tsx', 'mobile/src/components/surfaces/LotMapBinding.tsx', 'mobile/src/components/surfaces/SemiQuestionBinding.tsx', 'mobile/src/components/surfaces/PageTableBinding.tsx', 'mobile/src/components/surfaces/WallBinding.tsx', 'mobile/src/components/surfaces/OpeningBinding.tsx', 'mobile/src/components/surfaces/ReportBinding.tsx', 'mobile/src/components/surfaces/ReportPageHost.tsx']); // SEARCHFIX.4 (task-452, dated 2026-11-24): + WallBinding.tsx (no JSX)
+     for (const m of mods) {
+       const host = MOBILE_HOSTS[m.path];
+       const allowed = [...new Set<string>(m.archetypes.flatMap((a: string) => B.mapping.mobile[host ? `${a}_HOST` : a] ?? []))];
+diff --git a/src/tests/surfaces/surface-goldens.ts b/src/tests/surfaces/surface-goldens.ts
+index 76924934787f365d7bd3354aa0d6ebb92acd512d..43e723c3084348d1891ac13e1561e27229efaa76 100644
+--- a/src/tests/surfaces/surface-goldens.ts
++++ b/src/tests/surfaces/surface-goldens.ts
+@@ -46,6 +46,8 @@ export const MOBILE_GOLDEN_TESTS: Record<string, string> = {
+   mobile_parcel_semi_question: 'mobile/__tests__/semiQuestionScreens.golden.test.ts',
+   // task-452 SEARCHFIX.4 (dated 2026-11-24): the report-limit and reactivate wall; its goldens are written by scripts/surfaces/wall-golden-capture.ts.
+   mobile_parcel_wall: 'mobile/__tests__/wallScreens.golden.test.ts',
++  // task-313 McApp card 1 (dated 2026-11-26): the Opening page of the MaxBLD front door; its goldens are written by scripts/surfaces/opening-golden-capture.ts.
++  mobile_parcel_opening: 'mobile/__tests__/openingScreens.golden.test.ts',
+ };
+ 
+ /** A non-web target: the declared mobile golden test of `id`, else a throw (fail closed; never a silent skip). */
+diff --git a/src/tests/surfaces/surface-validate.logic.test.ts b/src/tests/surfaces/surface-validate.logic.test.ts
+index 351036832d0ebe286bff8d3e2b0e038dbaa3c4ed..025722f056333fcaa5ff335ef871329a3fec262a 100644
+--- a/src/tests/surfaces/surface-validate.logic.test.ts
++++ b/src/tests/surfaces/surface-validate.logic.test.ts
+@@ -93,9 +93,10 @@ describe('FE-13 surface-validate gate: real tree', () => {
+     // SEARCHFIX.4 (task-452; dated 2026-11-24; RR-0444 MD:2290, RR-0455 MD:2357-2358): + the wall S-096 mobile_parcel_wall (converted 17 -> 18, in scope 33 -> 34; 2 mobile goldens rate_limited and unauthorized, 100 -> 102; +7 strings in mobile_parcel_wall.content.json, 436 -> 443; the second screens row, S-page 1 -> 2 of 2); measured with surface-validate --check before and after.
+     // SEARCHFIX.4 round 2 (task-452; dated 2026-11-24; RR-0468 MD:2426-2430, Spec 128 rule 12): + the wall's error state (1 mobile golden, 102 -> 103; +1 string wall.error, 443 -> 444); measured with surface-validate --check before and after.
+     // McFixV2.1 (task-465; dated 2026-11-25; RR-0483 MD:2523, RR-0487 MD:2543, RR-0495 MD:2578-2579): + the search typing state partial (golden suggest, 2 goldens, 103 -> 105); search content -5 keys (list.rail, list.badge, list.select, list.select.label, search.prompt) +3 (list.hint, search.miss.hint, search.outside_toronto.title), 444 -> 442 strings.
+-    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 34 in scope: converted 18, pending 3, parked 9, report 4) · S-screen ok (18 surfaces, 105 goldens) · S-sbind ok (18 surfaces, 442 strings) · S-page ok (2 of 2 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
++    // task-313 McApp card 1 (dated 2026-11-26; PLAN-313-v1 M6, T9; RR-0499 "1a", RR-0503 3 A): + the Opening S-097 mobile_parcel_opening (converted 18 -> 19, in scope 34 -> 35; 3 mobile goldens loading, offline and error, 105 -> 108; +8 strings in mobile_parcel_opening.content.json, 442 -> 450; the third screens row, S-page 2 -> 3 of 3; S-golden owed unchanged, the new states are phone-only); measured with surface-validate --check after (the before numbers are task-465's above).
++    expect(r.stdout).toBe('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 35 in scope: converted 19, pending 3, parked 9, report 4) · S-screen ok (19 surfaces, 108 goldens) · S-sbind ok (19 surfaces, 450 strings) · S-page ok (3 of 3 screens)\n'); // MF-19 plan v3 (2026-11-15): + the area form (report_lot_size_entry_area: 6 web goldens, content strings 398 -> 417); MF-19: +2 FORM surfaces; SEMI-B (dated 2026-11-13): + the one-question page (8 mobile goldens, 15 strings; red: docs/reports/red-evidence/SEMI-B/count-locks-red.txt) (red: docs/reports/red-evidence/MF-19/count-locks-red.txt)
+     expect(r.stdout.startsWith('surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · ')).toBe(true);
+-    expect(r.stdout).toContain('S-desc ok (examined 34 in scope:');
++    expect(r.stdout).toContain('S-desc ok (examined 35 in scope:');
+   });
+ 
+   it('MF-42: a missing screen-checks.mjs gives four unavailable lines, the REPORT arms still report, exit 1 (no stack)', () => {
+

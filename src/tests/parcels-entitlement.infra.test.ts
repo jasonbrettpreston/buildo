@@ -21,11 +21,14 @@ import type { NextRequest } from 'next/server';
 const poolQuery = vi.fn();
 vi.mock('@/lib/db/client', () => ({ pool: { query: (...a: unknown[]) => poolQuery(...a) }, withTransaction: vi.fn() }));
 vi.mock('@/lib/auth/get-user-context', () => ({ getCurrentUserContext: vi.fn() }));
+vi.mock('@/lib/auth/get-user', () => ({ getClaimsUid: vi.fn() }));
+vi.mock('@/lib/subscription/expiration', () => ({ applyTrialExpirationIfNeeded: vi.fn(async () => null) }));
 vi.mock('@/lib/auth/rate-limit', () => ({ withRateLimit: vi.fn(async () => ({ allowed: true, remaining: 10 })) }));
 const logInfo = vi.fn();
 vi.mock('@/lib/logger', () => ({ logInfo: (...a: unknown[]) => logInfo(...a), logWarn: vi.fn(), logError: vi.fn() }));
 
 import { getCurrentUserContext } from '@/lib/auth/get-user-context';
+import { getClaimsUid } from '@/lib/auth/get-user';
 import { withRateLimit } from '@/lib/auth/rate-limit';
 import { REPORT_LIMIT_KEYS } from '@/lib/entitlements';
 import { GET } from '@/app/api/parcels/entitlement/route';
@@ -149,10 +152,45 @@ describe('T11 GET /api/parcels/entitlement (the entitlement read contract)', () 
   it('getCurrentUserContext is the first await in the handler (Spec 90 §11)', () => {
     const src = fs.readFileSync(path.resolve(__dirname, '../app/api/parcels/entitlement/route.ts'), 'utf8');
     const h = src.indexOf('withApiEnvelope(async function GET');
-    const auth = src.indexOf('await getCurrentUserContext(request, pool)');
+    // task-313 (PLAN-313-v1 S2, T2; prior pin text 'await getCurrentUserContext(request, pool)'): the trade-less context.
+    const auth = src.indexOf('await getCurrentUserContext(request, pool, { needsTrade: false })');
     expect(h).toBeGreaterThan(-1);
     expect(auth).toBeGreaterThan(h);
     const other = src.slice(h).search(/await\s+(?!getCurrentUserContext)/);
     expect(other === -1 || h + other > auth).toBe(true);
+  });
+});
+
+describe('task-313 the trade-less context (PLAN-313-v1 S2, T2): a MaxBLD account with no profile row or no trade is not a 401', () => {
+  const real = async () => (await vi.importActual<typeof import('@/lib/auth/get-user-context')>('@/lib/auth/get-user-context')).getCurrentUserContext;
+  /** The pool also answers a trade-less user_profiles row, so the old (trade) path would read it and 401. */
+  const tradeLessProfile = () => {
+    const inner = poolQuery.getMockImplementation()!;
+    poolQuery.mockImplementation(async (text: string, params?: unknown) =>
+      /FROM user_profiles/.test(text) ? { rows: [{ trade_slug: null, trade_slugs_override: null, display_name: null, subscription_status: null }], rowCount: 1 } : inner(text, params));
+  };
+  it('the route asks for the trade-less context', async () => {
+    await call();
+    expect(vi.mocked(getCurrentUserContext)).toHaveBeenCalledWith(expect.anything(), expect.anything(), { needsTrade: false });
+  });
+  it('(a) signed in, no user_profiles row, no parcel_tool row -> 200 with every field null', async () => {
+    vi.mocked(getCurrentUserContext).mockImplementation((await real()) as never);
+    vi.mocked(getClaimsUid).mockResolvedValue(UID);
+    const r = await call();
+    expect([r.status, r.body.data]).toEqual([200, NULLS]);
+    expect(poolQuery.mock.calls.some((c) => /user_profiles/.test(String(c[0])))).toBe(false);
+  });
+  it('(b) signed in, a profile row with no trade -> 200 with every field null', async () => {
+    vi.mocked(getCurrentUserContext).mockImplementation((await real()) as never);
+    vi.mocked(getClaimsUid).mockResolvedValue(UID);
+    tradeLessProfile();
+    const r = await call();
+    expect([r.status, r.body.data]).toEqual([200, NULLS]);
+  });
+  it('(c) no session -> still 401', async () => {
+    vi.mocked(getCurrentUserContext).mockImplementation((await real()) as never);
+    vi.mocked(getClaimsUid).mockResolvedValue(null);
+    const r = await call();
+    expect([r.status, r.body.error?.code]).toEqual([401, 'UNAUTHORIZED']);
   });
 });

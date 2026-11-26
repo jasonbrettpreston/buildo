@@ -17,7 +17,7 @@ This is the **reviewable projection of the surface census** — the application 
 
 It is **not** a design document and it is **not** a plan. It is an inventory you can argue with. Each entry states what something is, who it is for, what it reads and writes, and what happens to it under the Spec 126 surface standard — so that the argument happens **here**, before anything is built, rather than in a code review six weeks later.
 
-There are **96 surfaces, 71 contracts and 6 jobs** in it today.
+There are **97 surfaces, 71 contracts and 6 jobs** in it today.
 
 ### 0.2 Why it exists
 
@@ -205,10 +205,10 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 | Kind | Count |
 |---|---:|
-| SURFACE | 96 |
+| SURFACE | 97 |
 | CONTRACT | 71 |
 | JOB | 6 |
-| **Total** | **173** |
+| **Total** | **174** |
 
 ### 2.1 By archetype
 
@@ -219,7 +219,7 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 | `DETAIL` | SURFACE | 6 | 0 | 0 | 6 |
 | `FORM` | SURFACE | 6 | 1 | 7 | 14 |
 | `GATE` | SURFACE | 9 | 0 | 0 | 9 |
-| `LIST` | SURFACE | 9 | 7 | 5 | 21 |
+| `LIST` | SURFACE | 9 | 7 | 6 | 22 |
 | `MUTATION` | CONTRACT | 20 | 7 | 0 | 27 |
 | `QUERY` | CONTRACT | 33 | 2 | 0 | 35 |
 | `REPORT` | SURFACE | 2 | 5 | 0 | 7 |
@@ -233,19 +233,19 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 ### 2.2 Research progress
 
-**33 of 173 rows fully researched · 140 still open · 443 unresearched fields in total.**
+**34 of 174 rows fully researched · 140 still open · 443 unresearched fields in total.**
 
 Every open field is the literal string `UNRESEARCHED` in the census — never a blank and never a guess — so the number below is a count of real work, not an estimate.
 
 | Shard | Rows | Fully researched | Rows with an open field | Unresearched fields |
 |---|---:|---:|---:|---:|
-| `mobile-product.json` | 42 | 12 | 30 | 63 |
+| `mobile-product.json` | 43 | 13 | 30 | 63 |
 | `web-product.json` | 22 | 11 | 11 | 92 |
 | `admin-existing.json` | 15 | 0 | 15 | 74 |
 | `admin-new.json` | 17 | 9 | 8 | 15 |
 | `contracts.json` | 71 | 1 | 70 | 168 |
 | `jobs.json` | 6 | 0 | 6 | 31 |
-| **total** | **173** | **33** | **140** | **443** |
+| **total** | **174** | **34** | **140** | **443** |
 
 **What is left, grouped by REASON.** Every remaining field is open for one of a small number of reasons, and they are not equally actionable — three are lookups a researcher can finish, and one is an escalation that needed a ruling.
 
@@ -266,7 +266,7 @@ Every open field is the literal string `UNRESEARCHED` in the census — never a 
 |---|---:|---|
 | exists | 127 | the code is in the tree today |
 | new | 28 | specified, not built |
-| generated | 18 | will be rendered from descriptors, not hand-written |
+| generated | 19 | will be rendered from descriptors, not hand-written |
 
 ---
 
@@ -276,11 +276,11 @@ A reader opening this document sees 137 entries and cannot tell the parcel cost 
 
 | § | Scope | Rows | Researched | Tables reached | Governed by Spec 126? |
 |---|---|---:|---:|---:|---|
-| **A** | `parcel_product` | 20 | 17 (85%) | 13 | yes |
+| **A** | `parcel_product` | 21 | 18 (86%) | 13 | yes |
 | **B** | `parcel_admin` | 26 | 9 (35%) | 21 | yes |
 | **C** | `platform_shared` | 80 | 7 (9%) | 43 | yes |
 | **D** | `estate_other` | 47 | 0 (0%) | 41 | **no** — inventory + seam only (R-03) |
-| | **total** | **173** | **33** | | |
+| | **total** | **174** | **34** | | |
 
 **The pilot is [`S-001`](#s-001) `mobile_parcel_detail`** — The full story of one building lot, assembled for a homeowner or buyer. It is the one surface in the estate marked `programme.pilot: true`.
 
@@ -320,7 +320,7 @@ The path from a customer tapping a screen to the pipeline step that built what t
 
 One line per entry in scopes A, B and C, organised **scope → type → build order**. `build_order` is derived, not chosen: scope rank × 1000 + feature rank × 10 + kind rank, where the kind rank puts **tables before contracts before surfaces before admin** — it answers *"what must exist before this can be built"*. Follow an id to its detail in §3.
 
-**§A `parcel_product` (20)**
+**§A `parcel_product` (21)**
 
 | id | type | name | archetype | feature | build | researched | detail |
 |---|---|---|---|---|---:|---:|---|
@@ -330,6 +330,7 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`S-004`](#s-004) | surface | `shell_parcel_tool_stack` | `SHELL` | `F01` address-lookup | 1013 | 100% | [detail](#s-004) |
 | [`S-093`](#s-093) | surface | `mobile_parcel_semi_question` | `LIST` | `F01` address-lookup | 1014 | 100% | [detail](#s-093) |
 | [`S-096`](#s-096) | surface | `mobile_parcel_wall` | `LIST` | `F01` address-lookup | 1015 | 100% | [detail](#s-096) |
+| [`S-097`](#s-097) | surface | `mobile_parcel_opening` | `LIST` | `F01` address-lookup | 1016 | 100% | [detail](#s-097) |
 | [`C-001`](#c-001) | contract | `contract_parcels_lookup` | `QUERY` | `F02` parcel-report | 1022 | 97% | [detail](#c-001) |
 | [`C-069`](#c-069) | contract | `contract_parcels_entitlement` | `QUERY` | `F02` parcel-report | 1023 | 97% | [detail](#c-069) |
 | [`S-001`](#s-001) | surface | `mobile_parcel_detail` **(pilot)** | `REPORT` | `F02` parcel-report | 1023 | 100% | [detail](#s-001) |
@@ -523,7 +524,7 @@ Spec 125 §2 recommends building schemas **by feature, so a feature can be remov
 
 | Feature | Scope | Entries (linked, in build order) | Contracts | Tables reached | Removing it deletes |
 |---|---|---|---:|---:|---|
-| **F01** address-lookup | `parcel_product` | [`S-073`](#s-073) · [`S-071`](#s-071) · [`S-002`](#s-002) · [`S-004`](#s-004) · [`S-093`](#s-093) · [`S-096`](#s-096) | 0 | 6 | 6 descriptor(s), and would orphan 1 table(s): `parcel_lot_form` |
+| **F01** address-lookup | `parcel_product` | [`S-073`](#s-073) · [`S-071`](#s-071) · [`S-002`](#s-002) · [`S-004`](#s-004) · [`S-093`](#s-093) · [`S-096`](#s-096) · [`S-097`](#s-097) | 0 | 6 | 7 descriptor(s), and would orphan 1 table(s): `parcel_lot_form` |
 | **F02** parcel-report | `parcel_product` | [`C-001`](#c-001) · [`S-001`](#s-001) · [`C-069`](#c-069) · [`S-086`](#s-086) · [`S-094`](#s-094) · [`C-070`](#c-070) | 3 | 9 | 6 descriptor(s), 3 contract(s), and would orphan no table — every table it touches is shared |
 | **F03** pdf-export | `parcel_product` | [`S-009`](#s-009) | 0 | 2 | 1 descriptor(s), and would orphan 1 table(s): `pdf_exports` |
 | **F04** sponsor-placements | `parcel_product` | [`S-003`](#s-003) · [`S-006`](#s-006) · [`S-013`](#s-013) · [`S-017`](#s-017) · [`C-066`](#c-066) · [`C-067`](#c-067) · [`C-068`](#c-068) · [`S-081`](#s-081) · [`S-080`](#s-080) | 3 | 5 | 9 descriptor(s), 3 contract(s), and would orphan 3 table(s): `advertisers` · `placements` · `offers` |
@@ -598,7 +599,7 @@ Where the **measured** behaviour contradicts what a MaxBLD user would reasonably
 
 The estate shares one repository; it does not share one programme. Sections A–C are what **Spec 126 governs**. Section D is the other product — inventoried so a shared contract or an orphan is visible, and deliberately rendered in one line each rather than in full (Spec 126 §2; the fence is Spec 128 R-03).
 
-### §A `parcel_product` — the MaxBLD parcel cost tool (20)
+### §A `parcel_product` — the MaxBLD parcel cost tool (21)
 
 **This is the programme.** The surfaces, contracts and jobs a customer of the parcel tool touches, plus the five business requirements that hang off them: the metered lookup, the PDF sent to a client, the ad placements, and the Vercel web front door. Governed by Spec 100 and Spec 126; batched first by Spec 127 §4.4.
 
@@ -1064,6 +1065,80 @@ ICONS. The shelf was specified with @expo/vector-icons Ionicons (compass / bookm
 **Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`](../../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md) · files: `mobile/src/hooks/useWallState.ts` · `mobile/src/components/surfaces/WallBinding.tsx`
 
 > ⚠️ SEARCHFIX.4 (task-452). One layout, two states, phone first; the web keeps its one not-entitled notice until its switch-on (RR-0455 item 1).
+
+<a id="s-097"></a>
+
+###### `S-097` `mobile_parcel_opening`
+
+**Programme.** `S-097` · scope `parcel_product` · feature `F01` · build order 1016 · batch `B2` · review `unreviewed` — The start-up screen of the MaxBLD phone app, in front of the parcel tool entry flow (McApp card 1).
+
+**What it is.** The Opening page of the MaxBLD phone app, its own start-up screen (task-313 McApp card 1, the front door; RR-0499 "1a", RR-0503 3 A). The front door draws it while the first entitlement read has no answer: the plain wordmark "MaxBLD" and "Lot Intelligence" as two header lines; "Connecting…" for the whole loading state; with no network a neutral notice "Can't reach MaxBLD" / "Check your connection and try again." and Try again; when the read fails, or is still pending after the give-up bound, a tone-error notice "Something went wrong" / "Try again in a moment." and Try again. Once the read has answered, the person is on the Lookup (the parcel-tool Stack and its one shelf) and the page is not drawn again.
+
+**What it reads and writes.** It reads one contract, GET /api/parcels/entitlement (contract_parcels_entitlement), through useParcelEntitlement (the query key the search page reads, so the search page reuses the answer). It draws no field of it: only whether the read is pending, paused (no network), in error, or has data picks the state (decideMaxbldGate in mobile/src/lib/appShell.ts). The plan is not checked here: the server 403 on the parcel routes is the plan check (RR-0503 Q1 A). It emits **no analytics event**; the redirect to the Lookup emits the DEV-only route_decision (Spec 99 §7.3).
+
+**Under Spec 126.** **CONVERTED (task-313)** — LIST, drawn from the rows of screens.mobile_parcel_opening in scripts/surfaces/_schema/static-page.json by pageProps (PageTableBinding.tsx) through OpeningBinding.tsx and the shared SurfaceRenderer.tsx, the third screens row after the semi page and the wall. Its one mount is the MaxBLD front door MaxbldAppGate.tsx, the (app) group layout of the MaxBLD build ((app)/_layout.tsx routes on APP_PRODUCT); a converted surface owns no component (C-4), so the (app) shell shell_app_tabs owns the gate.
+
+**kind** SURFACE · **archetype** `LIST` · **platforms** `mobile` · **status** generated · **lines** 0 · **shard** `mobile-product` · **researched** ✅ every field
+
+**Gate.** auth class **authenticated** (It is drawn inside the (app) group of a signed-in person; AuthGate sends a signed-out person to sign-in. The plan is not checked here (RR-0503 Q1 A): the server 403 on the parcel routes is the plan check.) · session **required** · entitlement none · flag none · device permission none
+
+**Calls.** `/api/parcels/entitlement` — idiom: hook
+
+**Components owned.** —
+
+**Emits.** —
+
+**Render states seen in code.** `loading` · `offline` · `error`
+
+**Data lineage.**
+
+| | Table | Columns it touches | Full column list (introspected) | Produced by | Chain position | Owner spec |
+|---|---|---|---|---|---|---|
+| reads | `entitlements` | `user_id` · `product` · `status` | `user_id` · `product` · `status` · `stripe_subscription_id` · `current_period_end` · `trial_started_at` · `last_stripe_event_at` · `created_at` · `updated_at` | `none` | `n/a` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md` |
+
+**Evidence.**
+
+| Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+|---|---|
+| `files` | `mobile/src/components/parcel/MaxbldAppGate.tsx` · `mobile/src/components/surfaces/OpeningBinding.tsx` · `mobile/src/lib/appShell.ts` · `mobile/app/(app)/_layout.tsx` |
+| `contracts` | `mobile/src/components/parcel/MaxbldAppGate.tsx — useParcelEntitlement() (GET /api/parcels/entitlement)` |
+| `tables` | `src/lib/entitlements/index.ts — readParcelToolUsage (the entitlements row of product parcel_tool)` |
+| `gate` | `mobile/src/lib/appShell.ts — decideMaxbldGate` · `src/lib/parcels/tool-gate.ts — parcelToolAccess (the server 403 is the plan check)` |
+| `states` | `mobile/src/lib/appShell.ts — decideMaxbldGate` · `mobile/__tests__/fixtures/opening.situations.json — goldens` |
+| `emits` | `mobile/src/components/parcel/MaxbldAppGate.tsx — route_decision (DEV only) on the redirect; no other track() call` |
+| `spec_refs` | `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4` · `docs/specs/00-architecture/116_multi_product_architecture.md §3` · `docs/specs/03-mobile/99_mobile_state_architecture.md §5.3` |
+
+<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+
+| # | Category | Answer (closed vocabulary) | Why / evidence |
+|---:|---|---|---|
+| 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 2 | `inputs` | `contract` | One GET /api/parcels/entitlement through useParcelEntitlement, the same TanStack entry the search page reads; the page reads its status and fetchStatus, never a field. — `mobile/src/components/parcel/MaxbldAppGate.tsx — useParcelEntitlement()`, `mobile/src/hooks/useParcelLookup.ts — export function useParcelEntitlement` |
+| 3 | `outputs` | `none` | It writes nothing. Its one action is Try again, a refetch of the entitlement read. — `mobile/src/components/parcel/MaxbldAppGate.tsx — retry: tryAgain (refetch)` |
+| 4 | `state` | `none` | No store and no field of its own: it reads the existing entitlement query and a give-up clock local to the mount. — `mobile/src/components/parcel/MaxbldAppGate.tsx` |
+| 5 | `staleness` | `query_cache` | useParcelEntitlement declares staleTime ENTITLEMENT_STALE_MS (the search slice config entitlement_stale_ms, 0); not persisted (persistFilter.ts), so with no network the page shows its offline state. — `mobile/src/hooks/useParcelLookup.ts — staleTime: ENTITLEMENT_STALE_MS`, `mobile/src/lib/persistFilter.ts` |
+| 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 12 | `errors` | `inline` | The page is itself the failure UI of the first entitlement read: offline when the device reports no network, error when the read fails or stalls. Try again refetches. — `mobile/src/lib/appShell.ts — decideMaxbldGate` |
+| 13 | `emits` | `none` | No client analytics on the page; the front door emits the DEV-only route_decision on a redirect (Spec 99 §7.3), never in a production build. — `mobile/src/components/parcel/MaxbldAppGate.tsx` |
+| 14 | `offers` | `none` | No sponsored placement is rendered. — `mobile/src/components/surfaces/OpeningBinding.tsx` |
+| 15 | `metering` | `none` | The page counts nothing; the entitlement read is a display read and meters nothing. — `src/app/api/parcels/entitlement/route.ts` |
+| 16 | `config` | `none` | No tunable of its own: the one time bound is REPORT_GIVE_UP_MS, the registered 60 000 the report loading screen reads (task-267). — `mobile/src/hooks/useParcelLookup.ts — REPORT_GIVE_UP_MS` |
+| 17 | `sharing` | `shared` | It shares contract_parcels_entitlement and its query with the search page (S-002) and the wall (S-096). — `mobile/src/hooks/useParcelLookup.ts — useParcelEntitlement` |
+| 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 19 | `deviations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+| 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+
+</details>
+
+**Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`](../../../docs/specs/03-mobile/100_mobile_parcel_cost_tool.md) · files: `mobile/src/components/parcel/MaxbldAppGate.tsx` · `mobile/src/components/surfaces/OpeningBinding.tsx`
+
+> ⚠️ task-313 McApp card 1, the front door. One page, three states, phone only.
 
 <a id="c-001"></a>
 
@@ -6661,11 +6736,11 @@ _No table is reached by this entry — every value it shows arrives through a co
 | Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
 |---|---|
 | `files` | `mobile/app/_layout.tsx:1` · `mobile/src/components/shared/NotificationToast.tsx:1` |
-| `contracts` | `mobile/src/hooks/useUserProfile.ts:38` · `mobile/app/_layout.tsx:263` |
+| `contracts` | `mobile/src/hooks/useUserProfile.ts:38` · `mobile/app/_layout.tsx:267` |
 | `tables` | `src/app/api/user-profile/route.ts:51` · `src/app/api/user-profile/reactivate/route.ts:139-170` |
-| `gate` | `mobile/app/_layout.tsx:141-231` · `mobile/src/lib/auth/decideAuthGateRoute.ts` |
-| `states` | `mobile/app/_layout.tsx:242-332` · `mobile/app/_layout.tsx:453-479` |
-| `emits` | `mobile/app/_layout.tsx:186-195` · `mobile/app/_layout.tsx:213-216` |
+| `gate` | `mobile/app/_layout.tsx:144-235` · `mobile/src/lib/auth/decideAuthGateRoute.ts` · `mobile/src/lib/appShell.ts — APP_PRODUCT` |
+| `states` | `mobile/app/_layout.tsx:246-336` · `mobile/app/_layout.tsx:457-483` |
+| `emits` | `mobile/app/_layout.tsx:190-199` · `mobile/app/_layout.tsx:217-220` |
 | `spec_refs` | `docs/specs/03-mobile/93_mobile_auth.md §3.6` · `docs/specs/03-mobile/93_mobile_auth.md §5` · `docs/specs/03-mobile/95_mobile_user_profiles.md §4` · `docs/specs/03-mobile/99_mobile_state_architecture.md §5.3` · `docs/specs/03-mobile/99_mobile_state_architecture.md §2.1` · `docs/specs/03-mobile/92_mobile_engagement_hardware.md §4.2` |
 
 <details><summary>21 category answers — 21 answered, 0 unresearched</summary>
@@ -6673,22 +6748,22 @@ _No table is reached by this entry — every value it shows arrives through a co
 | # | Category | Answer (closed vocabulary) | Why / evidence |
 |---:|---|---|---|
 | 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
-| 2 | `inputs` | `contract` | Its routing decision is driven entirely by GET /api/user-profile (plus the Supabase session): onboarding_complete, account_preset and the 403 ACCOUNT_DELETED body are what select the arm. — `mobile/app/_layout.tsx:98-101`, `mobile/app/_layout.tsx:156-168` |
-| 3 | `outputs` | `contract_only` | Its one write is POST /api/user-profile/reactivate from the deletion-window modal, followed by an invalidate of ["user-profile"]; the push-token registration it triggers is delegated to registerPushToken. — `mobile/app/_layout.tsx:259-275`, `mobile/app/_layout.tsx:197-202` |
-| 4 | `state` | `mmkv` | It mounts the PersistQueryClientProvider that writes the whole TanStack cache to MMKV with a 24h maxAge — and the dehydrate predicate that EXCLUDES ["user-profile"], because that payload carries five PII fields and MMKV is unencrypted. — `mobile/app/_layout.tsx:486-520`, `mobile/src/lib/persistFilter.ts:27`, `mobile/src/lib/mmkvPersister.ts:11` |
-| 5 | `staleness` | `query_cache` | The profile that drives routing is the shared 5-minute ["user-profile"] entry; the buster string on the persister forces a one-time full cache flush at the deploy that introduced the PII exclusion. — `mobile/src/hooks/useUserProfile.ts:67`, `mobile/app/_layout.tsx:518` |
+| 2 | `inputs` | `contract` | Its routing decision is driven entirely by GET /api/user-profile (plus the Supabase session): onboarding_complete, account_preset and the 403 ACCOUNT_DELETED body are what select the arm. Dated 2026-11-26 (task-313, McApp card 1; RR-0499 "1a"; prior text kept): in the lead build (APP_PRODUCT lead_gen) the routing decision is driven by GET /api/user-profile as above; in the MaxBLD build (APP_PRODUCT parcel_tool, mobile/src/lib/appShell.ts) AuthGate reads no profile (useUserProfile enabled only for lead_gen) and routes on the session and the segment alone: a signed-in person outside (app) goes to the Lookup (decideAuthGateRoute, the MaxBLD arm); the (app) front door MaxbldAppGate reads the entitlement read. — `mobile/app/_layout.tsx:101-104`, `mobile/app/_layout.tsx:159-172` |
+| 3 | `outputs` | `contract_only` | Its one write is POST /api/user-profile/reactivate from the deletion-window modal, followed by an invalidate of ["user-profile"]; the push-token registration it triggers is delegated to registerPushToken. — `mobile/app/_layout.tsx:263-279`, `mobile/app/_layout.tsx:201-206` |
+| 4 | `state` | `mmkv` | It mounts the PersistQueryClientProvider that writes the whole TanStack cache to MMKV with a 24h maxAge — and the dehydrate predicate that EXCLUDES ["user-profile"], because that payload carries five PII fields and MMKV is unencrypted. — `mobile/app/_layout.tsx:490-524`, `mobile/src/lib/persistFilter.ts:27`, `mobile/src/lib/mmkvPersister.ts:11` |
+| 5 | `staleness` | `query_cache` | The profile that drives routing is the shared 5-minute ["user-profile"] entry; the buster string on the persister forces a one-time full cache flush at the deploy that introduced the PII exclusion. — `mobile/src/hooks/useUserProfile.ts:67`, `mobile/app/_layout.tsx:522` |
 | 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 | 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 | 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
-| 12 | `errors` | `inline` | A profile fetch failure renders a full-screen "Could not load your profile." with a Retry instead of navigating; the 403 deletion case renders a modal; only an uncaught render error escapes to the ErrorBoundary it wraps everything in. — `mobile/app/_layout.tsx:314-333`, `mobile/app/_layout.tsx:246-311`, `mobile/app/_layout.tsx:484-529` |
-| 13 | `emits` | `events` | route_decision is DEV-only (a user can cross gate boundaries many times per session), but reactivation_modal_shown fires in production because it is a PIPEDA-relevant record that the prompt was seen. — `mobile/app/_layout.tsx:186-195`, `mobile/app/_layout.tsx:211-216`, `mobile/src/lib/analytics.ts:121-132` |
-| 14 | `offers` | `none` | A navigation shell renders no sponsored content. — `mobile/app/_layout.tsx:481-531` |
+| 12 | `errors` | `inline` | A profile fetch failure renders a full-screen "Could not load your profile." with a Retry instead of navigating; the 403 deletion case renders a modal; only an uncaught render error escapes to the ErrorBoundary it wraps everything in. — `mobile/app/_layout.tsx:318-337`, `mobile/app/_layout.tsx:250-315`, `mobile/app/_layout.tsx:488-533` |
+| 13 | `emits` | `events` | route_decision is DEV-only (a user can cross gate boundaries many times per session), but reactivation_modal_shown fires in production because it is a PIPEDA-relevant record that the prompt was seen. — `mobile/app/_layout.tsx:190-199`, `mobile/app/_layout.tsx:215-220`, `mobile/src/lib/analytics.ts:121-132` |
+| 14 | `offers` | `none` | A navigation shell renders no sponsored content. — `mobile/app/_layout.tsx:485-535` |
 | 15 | `metering` | `none` | Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller. — `src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)`, `src/app/api/leads/view/route.ts:110`, `src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx` |
 | 16 | `config` | `none` | The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row. — `src/lib/userProfile.schema.ts:40`, `src/app/api/user-profile/route.ts:328`, `docs/reference/logic-variables-registry.md — no radius_cap_km entry` |
-| 17 | `sharing` | `shared` | GET /api/user-profile is rendered by this shell, the tab shell, settings, the filter sheet and every onboarding step — one contract carrying the routing flag, the subscription status and the feed defaults. — `mobile/app/(app)/_layout.tsx:118`, `mobile/app/(app)/settings.tsx:80` |
+| 17 | `sharing` | `shared` | GET /api/user-profile is rendered by this shell, the tab shell, settings, the filter sheet and every onboarding step — one contract carrying the routing flag, the subscription status and the feed defaults. — `mobile/app/(app)/_layout.tsx:123`, `mobile/app/(app)/settings.tsx:80` |
 | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 | 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
@@ -6718,7 +6793,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Calls.** `/api/user-profile` — idiom: hook
 
-**Components owned.** `mobile/src/components/onboarding/IncompleteBanner.tsx`
+**Components owned.** `mobile/src/components/onboarding/IncompleteBanner.tsx` · `mobile/src/components/parcel/MaxbldAppGate.tsx`
 
 **Emits.** `cancelled_pending_deletion_signout` · `subscription_expired_to_active` · `route_decision (DEV-only)`
 
@@ -6736,11 +6811,11 @@ _No table is reached by this entry — every value it shows arrives through a co
 | Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
 |---|---|
 | `files` | `mobile/app/(app)/_layout.tsx:1` · `mobile/src/components/onboarding/IncompleteBanner.tsx:1` |
-| `contracts` | `mobile/app/(app)/_layout.tsx:118` |
+| `contracts` | `mobile/app/(app)/_layout.tsx:123` |
 | `tables` | `src/app/api/user-profile/route.ts:51` · `migrations/228_entitlements.sql:21-35` |
-| `gate` | `mobile/app/(app)/_layout.tsx:236-265` |
-| `states` | `mobile/app/(app)/_layout.tsx:236-265` · `mobile/app/(app)/_layout.tsx:267-290` |
-| `emits` | `mobile/app/(app)/_layout.tsx:165-176` · `mobile/app/(app)/_layout.tsx:200-203` |
+| `gate` | `mobile/app/(app)/_layout.tsx:241-270` |
+| `states` | `mobile/app/(app)/_layout.tsx:241-270` · `mobile/app/(app)/_layout.tsx:272-295` |
+| `emits` | `mobile/app/(app)/_layout.tsx:170-181` · `mobile/app/(app)/_layout.tsx:205-208` |
 | `spec_refs` | `docs/specs/03-mobile/96_mobile_subscription.md §10` · `docs/specs/03-mobile/96_mobile_subscription.md §9` · `docs/specs/03-mobile/91_mobile_lead_feed.md §2` · `docs/specs/03-mobile/99_mobile_state_architecture.md §6.5` · `docs/specs/03-mobile/92_mobile_engagement_hardware.md §4.4` |
 
 <details><summary>21 category answers — 21 answered, 0 unresearched</summary>
@@ -6748,22 +6823,22 @@ _No table is reached by this entry — every value it shows arrives through a co
 | # | Category | Answer (closed vocabulary) | Why / evidence |
 |---:|---|---|---|
 | 1 | `identity` | `UNRESEARCHED` | **UNRESEARCHED** |
-| 2 | `inputs` | `contract` | One contract decides whether five tabs exist at all: GET /api/user-profile supplies subscription_status (LEFT JOINed from the lead_gen entitlement row) and lead_views_count for the paywall copy. — `mobile/app/(app)/_layout.tsx:118`, `src/lib/entitlements/index.ts:68` |
-| 3 | `outputs` | `none` | A gate writes nothing. Its side effects are local — clearing the paywall store, invalidating caches, and calling authStore.signOut() on the pending-deletion branch. — `mobile/app/(app)/_layout.tsx:155-206` |
-| 4 | `state` | `zustand` | It reads notificationStore.unreadFlightBoard for the tab badge, paywallStore.dismissed for the inline-blur branch, and drives the tab bar off-screen through the tabBarVisible shared value. — `mobile/app/(app)/_layout.tsx:120-122`, `mobile/app/(app)/_layout.tsx:60-66` |
-| 5 | `staleness` | `query_cache` | It gates on the shared 5-minute ["user-profile"] entry and re-invalidates it on every AppState foreground, which is the primary post-payment access-restoration path. — `mobile/app/(app)/_layout.tsx:137-146`, `mobile/src/hooks/useUserProfile.ts:67` |
+| 2 | `inputs` | `contract` | One contract decides whether five tabs exist at all: GET /api/user-profile supplies subscription_status (LEFT JOINed from the lead_gen entitlement row) and lead_views_count for the paywall copy. — `mobile/app/(app)/_layout.tsx:123`, `src/lib/entitlements/index.ts:68` |
+| 3 | `outputs` | `none` | A gate writes nothing. Its side effects are local — clearing the paywall store, invalidating caches, and calling authStore.signOut() on the pending-deletion branch. — `mobile/app/(app)/_layout.tsx:160-211` |
+| 4 | `state` | `zustand` | It reads notificationStore.unreadFlightBoard for the tab badge, paywallStore.dismissed for the inline-blur branch, and drives the tab bar off-screen through the tabBarVisible shared value. — `mobile/app/(app)/_layout.tsx:125-127`, `mobile/app/(app)/_layout.tsx:65-71` |
+| 5 | `staleness` | `query_cache` | It gates on the shared 5-minute ["user-profile"] entry and re-invalidates it on every AppState foreground, which is the primary post-payment access-restoration path. — `mobile/app/(app)/_layout.tsx:142-151`, `mobile/src/hooks/useUserProfile.ts:67` |
 | 6 | `guards` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 7 | `render` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 8 | `checks` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 9 | `invariants` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 | 10 | `plausibility` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 | 11 | `states` | `UNRESEARCHED` | **UNRESEARCHED** |
-| 12 | `errors` | `redirect` | A gate does not render errors: an unresolved status renders the loading guard, and the terminal case (cancelled_pending_deletion) signs the user out and replaces the route to sign-in. — `mobile/app/(app)/_layout.tsx:236-258`, `mobile/app/(app)/_layout.tsx:155-180` |
-| 13 | `emits` | `events` | Two production events sit here — the forced sign-out on deletion and the expired→active conversion — plus a DEV-only route_decision; the conversion event is the closest thing the estate has to a revenue signal. — `mobile/app/(app)/_layout.tsx:165`, `mobile/app/(app)/_layout.tsx:200-203`, `mobile/src/lib/analytics.ts:121-132` |
-| 14 | `offers` | `none` | A navigation shell renders no sponsored content. — `mobile/app/(app)/_layout.tsx:267-290` |
+| 12 | `errors` | `redirect` | A gate does not render errors: an unresolved status renders the loading guard, and the terminal case (cancelled_pending_deletion) signs the user out and replaces the route to sign-in. — `mobile/app/(app)/_layout.tsx:241-263`, `mobile/app/(app)/_layout.tsx:160-185` |
+| 13 | `emits` | `events` | Two production events sit here — the forced sign-out on deletion and the expired→active conversion — plus a DEV-only route_decision; the conversion event is the closest thing the estate has to a revenue signal. — `mobile/app/(app)/_layout.tsx:170`, `mobile/app/(app)/_layout.tsx:205-208`, `mobile/src/lib/analytics.ts:121-132` |
+| 14 | `offers` | `none` | A navigation shell renders no sponsored content. — `mobile/app/(app)/_layout.tsx:272-295` |
 | 15 | `metering` | `none` | Nothing here is counted: the Spec 126 §7 usage ledger table does not exist (grep for usage_events in the introspected drizzle schema returns 0 hits), and the only quota-shaped counter, user_profiles.lead_views_count, is incremented solely by POST /api/leads/view, which has no mobile caller. — `src/lib/db/generated/schema.ts — no usage_events table (grep, 2026-09-15)`, `src/app/api/leads/view/route.ts:110`, `src/features/leads/api/useLeadView.ts:25 — imported only by src/tests/useLeadView.logic.test.tsx` |
 | 16 | `config` | `none` | The surface consumes no registered logic variable: the only server-side tunable in this path, user_profiles.radius_cap_km, is a per-user admin column, not a logic_variables row. — `src/lib/userProfile.schema.ts:40`, `src/app/api/user-profile/route.ts:328`, `docs/reference/logic-variables-registry.md — no radius_cap_km entry` |
-| 17 | `sharing` | `shared` | It renders the same ["user-profile"] entry the root shell, settings, the feed and the filter sheet read — which is why an invalidate here changes what every one of them sees. — `mobile/app/(app)/_layout.tsx:137-146` |
+| 17 | `sharing` | `shared` | It renders the same ["user-profile"] entry the root shell, settings, the feed and the filter sheet read — which is why an invalidate here changes what every one of them sees. — `mobile/app/(app)/_layout.tsx:142-151` |
 | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 | 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
@@ -6775,7 +6850,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 > ⚠️ This shell is the single most load-bearing gate in the mobile estate — five tabs, six subscription statuses, one contract. guards.entitlement.product is lead_gen rather than the schema's parcel_tool because migration 228's CHECK permits only lead_gen and flight_center.
 
-SELF-HIDING FOR THE MaxBLD PRODUCT (operator ruling 2026-09-16 (c)). This five-tab bar belongs to the LEAD-GEN app. It is NOT rendered while a `parcel-tool` route is focused, because that group is the MaxBLD product and has its own three-tab shelf (S-004 `shell_parcel_tool_stack`: Lookup, Tracked Lots, Account). The decision is a pure function of the focused route — `shouldHideAppTabBar` (mobile/src/lib/appShell.ts:29), consumed in the custom tabBar wrapper at mobile/app/(app)/_layout.tsx:69. The parcel-tool group deliberately STAYS inside `(app)` so it remains behind the subscription gate at mobile/app/(app)/_layout.tsx:236-265; hiding the bar was chosen over moving the group for that reason.
+SELF-HIDING FOR THE MaxBLD PRODUCT (operator ruling 2026-09-16 (c)). This five-tab bar belongs to the LEAD-GEN app. It is NOT rendered while a `parcel-tool` route is focused, because that group is the MaxBLD product and has its own three-tab shelf (S-004 `shell_parcel_tool_stack`: Lookup, Tracked Lots, Account). The decision is a pure function of the focused route — `shouldHideAppTabBar` (mobile/src/lib/appShell.ts:29), consumed in the custom tabBar wrapper at mobile/app/(app)/_layout.tsx:74. The parcel-tool group deliberately STAYS inside `(app)` so it remains behind the subscription gate at mobile/app/(app)/_layout.tsx:241-270; hiding the bar was chosen over moving the group for that reason. Dated 2026-11-26 (task-313, McApp card 1; RR-0499 "1a", the MaxBLD bar the only bar; prior text kept): the body of this shell is now LeadAppLayout in mobile/app/(app)/_layout.tsx, kept whole for the lead app; the default export routes on APP_PRODUCT (mobile/src/lib/appShell.ts), and in the MaxBLD build (parcel_tool) it draws MaxbldAppGate (S-097 mobile_parcel_opening, then the parcel-tool Stack) and never these five tabs.
 
 <a id="s-049"></a>
 
@@ -7287,7 +7362,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Calls.** —
 
-**Components owned.** `mobile/src/components/surfaces/LotMapBinding.tsx` · `mobile/src/components/surfaces/SemiQuestionBinding.tsx` · `mobile/src/components/surfaces/PageTableBinding.tsx` · `mobile/src/components/surfaces/WallBinding.tsx`
+**Components owned.** `mobile/src/components/surfaces/LotMapBinding.tsx` · `mobile/src/components/surfaces/SemiQuestionBinding.tsx` · `mobile/src/components/surfaces/PageTableBinding.tsx` · `mobile/src/components/surfaces/WallBinding.tsx` · `mobile/src/components/surfaces/OpeningBinding.tsx`
 
 **Emits.** —
 
@@ -9976,7 +10051,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 | `data_quality_snapshots` | `id` · `snapshot_date` · `total_permits` · `active_permits` · `permits_with_trades` · `trade_matches_total` · `trade_avg_confidence` · `trade_tier1_count` · `trade_tier2_count` · `trade_tier3_count` · `permits_with_builder` · `builders_total` · `builders_enriched` · `builders_with_phone` · `builders_with_email` · `builders_with_website` · `builders_with_google` · `builders_with_wsib` · `permits_with_parcel` · `parcel_exact_matches` · `parcel_name_matches` · `parcel_avg_confidence` · `permits_with_neighbourhood` · `permits_geocoded` · `coa_total` · `coa_linked` · `coa_avg_confidence` · `coa_high_confidence` · `coa_low_confidence` · `permits_updated_24h` · `permits_updated_7d` · `permits_updated_30d` · `last_sync_at` · `last_sync_status` · `created_at` · `parcel_spatial_matches` · `permits_with_scope` · `scope_project_type_breakdown` · `building_footprints_total` · `parcels_with_buildings` · `permits_with_scope_tags` · `scope_tags_top` · `permits_with_detailed_tags` · `trade_residential_classified` · `trade_residential_total` · `trade_commercial_classified` · `trade_commercial_total` · `null_description_count` · `null_builder_name_count` · `null_est_const_cost_count` · `null_street_num_count` · `null_street_name_count` · `null_geo_id_count` · `violation_cost_out_of_range` · `violation_future_issued_date` · `violation_missing_status` · `violations_total` · `schema_column_counts` · `sla_permits_ingestion_hours` · `inspections_total` · `inspections_permits_scraped` · `inspections_outstanding_count` · `inspections_passed_count` · `inspections_not_passed_count` · `cost_estimates_total` · `cost_estimates_from_permit` · `cost_estimates_from_model` · `cost_estimates_null_cost` · `timing_calibration_total` · `timing_calibration_avg_sample` · `timing_calibration_freshness_hours` · `cost_estimates_liar_gate_overrides` · `cost_estimates_zero_total_bypass` · `parcels_total` · `permits_active_distinct` · `map_areas_total` · `zoning_layer_version` · `permits_last_seen_at` · `coa_last_seen_at` | `web_landing` · `admin_data_quality` · `contract_quality` | `contract_quality_refresh` |
 | `device_tokens` | `id` · `user_id` · `push_token` · `platform` · `created_at` · `updated_at` | `admin_notifications` · `admin_user_detail` · `contract_admin_notifications` · `contract_admin_notifications_test_send` | `overlay_notification_permission_modal` · `shell_app_root` · `contract_notifications_register` |
 | `entities` | `id` · `legal_name` · `trade_name` · `name_normalized` · `entity_type` · `primary_phone` · `primary_email` · `website` · `linkedin_url` · `google_place_id` · `google_rating` · `google_review_count` · `is_wsib_registered` · `permit_count` · `first_seen_at` · `last_seen_at` · `last_enriched_at` · `photo_url` · `photo_validated_at` | `mobile_lead_feed` · `web_builder_detail` · `web_builders_list` · `web_dashboard` · `web_permit_detail` · `admin_data_quality` · `admin_flight_center` · `admin_lead_feed` · `admin_lead_feed_inspector` · `contract_admin_builders` · `contract_admin_leads_inspect_id` · `contract_admin_leads_test_feed` · `contract_admin_stats` · `contract_builders` · `contract_builders_id` · `contract_entities` · `contract_entities_id` · `contract_leads_feed` · `contract_permits_id` · `contract_quality_refresh` | `contract_admin_builders` |
-| `entitlements` | `user_id` · `product` · `status` · `stripe_subscription_id` · `current_period_end` · `trial_started_at` · `last_stripe_event_at` · `created_at` · `updated_at` | `mobile_flight_board` · `mobile_lead_feed` · `mobile_settings` · `overlay_paywall` · `shell_app_root` · `shell_app_tabs` · `mobile_parcel_wall` · `web_subscribe_success` · `admin_lead_feed_inspector` · `admin_user_detail` · `admin_users` · `contract_admin_users` · `contract_admin_users_uid` · `contract_admin_users_uid_subscription_events` · `contract_admin_users_uid_subscription_reconcile` · `contract_leads_detail_id` · `contract_leads_feed` · `contract_leads_flight_board` · `contract_leads_flight_board_detail_id` · `contract_leads_save` · `contract_leads_search` · `contract_leads_view` · `contract_parcels_lookup` · `contract_parcels_entitlement` · `contract_subscribe_session` · `contract_user_profile` · `contract_user_profile_reactivate` · `contract_webhooks_stripe` | `shell_app_root` · `admin_user_detail` · `admin_users` · `contract_admin_users` · `contract_admin_users_uid` · `contract_admin_users_uid_subscription_reconcile` · `contract_user_profile` · `contract_user_profile_delete` · `contract_user_profile_reactivate` · `contract_webhooks_stripe` |
+| `entitlements` | `user_id` · `product` · `status` · `stripe_subscription_id` · `current_period_end` · `trial_started_at` · `last_stripe_event_at` · `created_at` · `updated_at` | `mobile_flight_board` · `mobile_lead_feed` · `mobile_settings` · `overlay_paywall` · `shell_app_root` · `shell_app_tabs` · `mobile_parcel_wall` · `mobile_parcel_opening` · `web_subscribe_success` · `admin_lead_feed_inspector` · `admin_user_detail` · `admin_users` · `contract_admin_users` · `contract_admin_users_uid` · `contract_admin_users_uid_subscription_events` · `contract_admin_users_uid_subscription_reconcile` · `contract_leads_detail_id` · `contract_leads_feed` · `contract_leads_flight_board` · `contract_leads_flight_board_detail_id` · `contract_leads_save` · `contract_leads_search` · `contract_leads_view` · `contract_parcels_lookup` · `contract_parcels_entitlement` · `contract_subscribe_session` · `contract_user_profile` · `contract_user_profile_reactivate` · `contract_webhooks_stripe` | `shell_app_root` · `admin_user_detail` · `admin_users` · `contract_admin_users` · `contract_admin_users_uid` · `contract_admin_users_uid_subscription_reconcile` · `contract_user_profile` · `contract_user_profile_delete` · `contract_user_profile_reactivate` · `contract_webhooks_stripe` |
 | `entity_contacts` | `id` · `entity_id` · `contact_type` · `contact_value` · `source` · `contributed_by` · `verified` · `created_at` | `web_builder_detail` · `contract_builders_id` | `contract_admin_builders` |
 | `entity_projects` | `id` · `entity_id` · `permit_num` · `revision_num` · `coa_file_num` · `role` · `observed_at` | `mobile_lead_feed` · `web_builder_detail` · `web_builders_list` · `admin_lead_feed` · `contract_admin_leads_test_feed` · `contract_builders` · `contract_builders_id` · `contract_entities` · `contract_entities_id` · `contract_leads_feed` · `contract_permits_id` | — |
 | `lead_trades` | `id` · `lead_id` · `trade_id` · `tier` · `confidence` · `is_active` · `phase` · `lead_score` · `classified_at` · `attachment_basis` | `admin_flight_center` · `admin_flight_center` · `admin_lead_feed_inspector` · `contract_admin_leads_inspect_id` · `contract_admin_leads_watchlist` · `contract_admin_suppliers_leads` | — |
@@ -10053,7 +10128,7 @@ Every table any entry reads or writes, its real columns, and who touches it. **e
 
 Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src/components/**` appears in exactly **one** surface's `owns.components[]`. A file claimed by two surfaces makes this generator throw; a file claimed by **none** is listed here. Review question 5 of §0.6.
 
-**This section must be empty.** It is asserted empty by `src/tests/surface-registry.infra.test.ts`. Today it is **not** — 11 of 76 component files have no declared owner, which is the measurement R-13 exists to retire, stated rather than hidden.
+**This section must be empty.** It is asserted empty by `src/tests/surface-registry.infra.test.ts`. Today it is **not** — 11 of 78 component files have no declared owner, which is the measurement R-13 exists to retire, stated rather than hidden.
 
 | Component file | Owner |
 |---|---|
@@ -10090,4 +10165,4 @@ Spec 128 **R-13**: every component file under `src/components/**` or `mobile/src
 
 ---
 
-*Generated from 173 census rows and 272 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*
+*Generated from 174 census rows and 272 introspected tables. Nothing in this file is hand-written; correct it by correcting `scripts/surfaces/_schema/surface-census.json` and regenerating.*
