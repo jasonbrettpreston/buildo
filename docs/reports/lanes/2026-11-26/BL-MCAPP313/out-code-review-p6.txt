@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T17:09:36.357Z file_sha256=c12960d70d83baddb1c0eed29fca984c7739831311be10b1719d3333f049c439 prompt_sha256=da3af9c8be0b676eb6e981119a0e8dd01c442d71df0c55434b7389404f28f91b
+🔍 Lens review of docs/reports/lanes/2026-11-26/BL-MCAPP313/in-out-code-review-p6.txt (model: deepseek-reasoner)
+
+REJECT — scripts/surfaces/opening-golden-capture.ts:29 "const g = fixture.goldens[name]!;" — the non-null assertion looks like a hidden null — name comes from Object.keys(fixture.goldens) at line 46, so the lookup is total and the assertion masks nothing.
+
+DEFER severity=LOW — scripts/surfaces/opening-golden-capture.ts:56 "if (fs.existsSync(DIR)) for (const f of fs.readdirSync(DIR)) if (!names.includes(f.replace(/\.mobile\.json$/, ''))) problems.push(`STRAY ${f}`);" — every directory entry is tested as a golden, so a non-golden name (a .DS_Store, a subdirectory, a re-named file) fails the check permanently, and --write never deletes it while line 58 still prints "wrote N goldens" and line 59 exits 1 — filter entries to /\.mobile\.json$/ and report strays only in check mode.
+
+DEFER severity=LOW — scripts/surfaces/opening-golden-capture.ts:23 "const fixture = JSON.parse(fs.readFileSync(path.join(REPO, 'mobile/__tests__/fixtures/opening.situations.json'), 'utf8')) as {" — an unchecked cast declares inputs as Record<string, OpeningSituation> with no validation, so a situation missing a required key flows into openingProps and JSON.stringify at line 42 silently drops the undefined key instead of erroring — validate the situation shape (or throw on a missing key) before openingProps(s).
+
+DEFER severity=LOW — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_opening.descriptor.json "loc": 0," (same field in scripts/surfaces/_schema/census/mobile-product.json) — a measured field states 0 lines for a surface whose two files are listed right above it in x-draft.files — fill the measured count or drop the field so the measurement is not a false zero.
+
+DEFER severity=NIT — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_opening.descriptor.json "field_whitelist": ["status"]," — the same descriptor's why says "the page reads its status and fetchStatus, never a field", so listing a contract field in the whitelist contradicts it (and a checker reading the whitelist would permit drawing the plan status, which RR-0503 Q1 A denies) — empty the list, or name the query state explicitly if that is what "status" means here.
+
+DEFER severity=NIT — scripts/surfaces/_schema/converted-surfaces.json "expected_count": 35" — the count moves 34 -> 35 with no dated note in $comment, while every prior move carries one, e.g. the neighbouring note "expected_count moves 25 -> 29 (the four new parcel_product SURFACE rows)" — add the dated task-313 note naming mobile_parcel_opening, as static-page.json and the census both did.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  58877ms (58.9s)
+📊 Tokens — total: 46520, input: 35081, output: 11439, reasoning: 10770

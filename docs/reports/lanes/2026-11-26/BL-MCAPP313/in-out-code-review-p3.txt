@@ -1,0 +1,806 @@
+LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:17e4b98ffc4b0027a7d59a428e37b324d3435fd2fce1897f747e7aab5c346ce9 part 1 of 1 chunk 3 of 7
+NO RULE LIST: the lens template alone judges the material under review. The material is chunk 3 of 7 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/specs/03-mobile/99_mobile_state_architecture.md","mobile/__tests__/appIcon.test.ts","mobile/__tests__/appShell.test.ts","mobile/__tests__/authGate.test.ts","mobile/__tests__/fixtures/opening.situations.json","mobile/__tests__/maxbldAppGate.behaviour.test.tsx","mobile/__tests__/openingScreens.golden.test.ts","mobile/__tests__/routerTelemetry.test.ts","mobile/__tests__/signIn.behaviour.test.tsx","mobile/app.json","mobile/app/(app)/_layout.tsx","mobile/app/(auth)/sign-in.tsx","mobile/app/_layout.tsx"]
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/specs/03-mobile/99_mobile_state_architecture.md b/docs/specs/03-mobile/99_mobile_state_architecture.md
+index ba54f4d343fb3404dba5a280535186fc48b948d0..404d4d35dcf586d9c3b28af3b5af1e51aa927598 100644
+--- a/docs/specs/03-mobile/99_mobile_state_architecture.md
++++ b/docs/specs/03-mobile/99_mobile_state_architecture.md
+@@ -238,7 +238,7 @@ const query = useQuery({
+ | `['parcel-search', q]` | `useParcelSearch` (Spec 100) | debounced typeahead; public cadastral data; persists normally |
+ | `['parcel-lookup', parcelId]` | `useParcelLookup` (Spec 100) | the parcel detail; depends ONLY on `parcelId` (query-key hygiene — never on the search string) |
+ | `['parcel-checking', parcelId]` | `useParcelChecking` via `useReportScreen` (Spec 100; task-267 LOAD.2, dated 2026-11-25) | the report screen's fast read (`fast=1`): the stored page or the What we checked view; sent first at the pick, no retry; a page it finds is stored under `['parcel-lookup', parcelId]`; for this visit only, so not persisted (`mobile/src/lib/persistFilter.ts` NOT_PERSISTED) |
+-| `['parcel-entitlement']` | `useParcelEntitlement` (Spec 100; SRCH.A6, task-320) | the caller's plan and this month's report count ("N of M reports left until <date>"); a display, never a gate; the caller's own, so no parameter; not persisted across a restart (`mobile/src/lib/persistFilter.ts` NOT_PERSISTED) |
++| `['parcel-entitlement']` | `useParcelEntitlement` (Spec 100; SRCH.A6, task-320) | the caller's plan and this month's report count ("N of M reports left until <date>"); a display, never a gate; the caller's own, so no parameter; not persisted across a restart (`mobile/src/lib/persistFilter.ts` NOT_PERSISTED). Dated 2026-11-26 (task-313, M-246, prior text kept): also read by the MaxBLD front door (`MaxbldAppGate`) for offline and error only, the one gate use of the read; the plan is still the server 403 |
+ 
+ ### B2 — TanStack → Zustand (server-to-local hydration)
+ 
+@@ -464,6 +464,8 @@ This subsection is the canonical AuthGate matrix. Any change to AuthGate's branc
+ 5d.  profile && !auth && !onboarding && !complete    → getResumePath(profile, currentStep)
+ ```
+ 
++> Dated note 2026-11-26 (task-313, McApp card 1; M-246, prior text kept; operator RR-0499 "1a", ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2598; RR-0503 Q1 A, :2618): **the MaxBLD arm.** `decideAuthGateRoute` takes an optional `product` (default `lead_gen`: the 9 arms above, unchanged). With `product: 'parcel_tool'` (`APP_PRODUCT` in `mobile/src/lib/appShell.ts`) the profile is never read (§5.2: the MaxBLD app reads no Spec 95 profile; AuthGate calls `useUserProfile` only for `lead_gen`): no user → `/(auth)/sign-in` (arm 1, branch `maxbld-sign-in`); a user in `(auth)`, `(onboarding)` or the root → `/(app)/parcel-tool` with no `registerPushToken` (branch `maxbld-lookup`, named in the DEV `route_decision`); a user in `(app)` → wait. The lead arms the MaxBLD product skips: 2 reactivation modal, 3 profile 404, 4 retry, 4.5 manufacturer hold, 5a-5d, and the stale-profile wait. Inside `(app)` the front door `MaxbldAppGate` reads the `['parcel-entitlement']` answer for offline and error only (`decideMaxbldGate`: loading, offline, error, redirect, enter; status and fetchStatus, never isFetching, §6.5); the `parcel_tool` plan is checked by the server gate (RR-0503 Q1 A). Spec 96 §10 step 2 (the forced sign-out of a deleted account) waits for card 2 (task-271; RR-0505). Counting convention for §8.2: 9 lead arms plus 3 MaxBLD arms (sign-in, Lookup, wait in `(app)`), each with its Jest case (`mobile/__tests__/authGate.test.ts`, "MaxBLD front door"). The Spec 99 §10 amendment rule (a WF1 amendment with adversarial review) is met by card 313's plan review (lenses, seats, grounder: `docs/reports/reviews/task-313/GROUNDER-PLAN.md`).
++
+ ### 5.4 Lint rule: router useEffect dependency hygiene
+ 
+ Router `useEffect` dependency arrays MUST NOT contain Zustand fields read inside the effect body. Use lazy `useStore.getState().field` instead. **Exception:** the dep array MUST contain values that — when changed — should cause the routing decision to be re-evaluated (e.g., `segments`, `user`, `profile`). The distinction: `user.uid` is a routing input (in deps); `currentStep` is informational for the destination (lazy read).
+diff --git a/mobile/__tests__/appIcon.test.ts b/mobile/__tests__/appIcon.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..7a6a2f374272d95ea641cfb527dc43c965812591
+--- /dev/null
++++ b/mobile/__tests__/appIcon.test.ts
+@@ -0,0 +1,61 @@
++/** @jest-environment node */
++// SPEC LINK: docs/specs/00-architecture/117_maxbld_brand.md §5 (no placeholder art; the mark survives circular masking; dated note 2026-11-26).
++//
++// task-313 McApp card 1 (PLAN-313-v1 M9, T10; RR-0506 "the phone icon logo - this should be added as well to the existing task", RR-0509 "just the icon
++// with out the name"): the three icon files app.json names exist, none is an Expo template file, icon.png is 1024 x 1024 with no alpha channel (iOS), the
++// adaptive foreground is 1024 x 1024, and the Android adaptive background is the paper colour #f4f1eb. node fs only.
++import crypto from 'node:crypto';
++import fs from 'node:fs';
++import path from 'node:path';
++
++const MOBILE = path.resolve(__dirname, '..');
++const app = (JSON.parse(fs.readFileSync(path.join(MOBILE, 'app.json'), 'utf8')) as { expo: { icon: string; android: { adaptiveIcon: { foregroundImage: string; backgroundColor: string } }; web: { favicon: string } } }).expo;
++/** The sha256 of the Expo template files (icon.png; adaptive-icon.png and splash-icon.png; favicon.png). */
++const TEMPLATE = new Set([
++  '74c64047eb557b1341bba7a2831eedde9ddb705e6451a9ad9f5552bf558f13de',
++  '5f4c0a732b6325bf4071d9124d2ae67e037cb24fcc9c482ef82bea742109a3b8',
++  '24272cdaeff82cc5facdaccd982a6f05b60c4504704bbf94c19a6388659880bb',
++]);
++const sha = (b: Buffer): string => crypto.createHash('sha256').update(b).digest('hex');
++/** PNG IHDR: width, height and colour type (2 = RGB, no alpha; 6 = RGBA). */
++const ihdr = (b: Buffer) => ({ png: b.subarray(1, 4).toString('latin1') === 'PNG', width: b.readUInt32BE(16), height: b.readUInt32BE(20), colourType: b[25] });
++
++/** The icon rules on the three files as read; a plant swaps one buffer. */
++export function iconProblems(files: Record<'icon' | 'adaptive' | 'favicon', Buffer | null>): string[] {
++  const out: string[] = [];
++  for (const [k, b] of Object.entries(files)) {
++    if (b === null) { out.push(`${k}: missing`); continue; }
++    if (TEMPLATE.has(sha(b))) out.push(`${k}: an Expo template file`);
++    if (!ihdr(b).png) out.push(`${k}: not a PNG`);
++  }
++  const i = files.icon && ihdr(files.icon);
++  if (i && (i.width !== 1024 || i.height !== 1024 || i.colourType !== 2)) out.push(`icon: ${i.width}x${i.height} colour type ${i.colourType}, want 1024x1024 type 2`);
++  const a = files.adaptive && ihdr(files.adaptive);
++  if (a && (a.width !== 1024 || a.height !== 1024)) out.push(`adaptive: ${a.width}x${a.height}, want 1024x1024`);
++  return out;
++}
++
++const read = (rel: string): Buffer | null => { const p = path.join(MOBILE, rel); return fs.existsSync(p) ? fs.readFileSync(p) : null; };
++const REAL = { icon: read(app.icon), adaptive: read(app.android.adaptiveIcon.foregroundImage), favicon: read(app.web.favicon) };
++
++describe('the phone icon (task-313 M9)', () => {
++  it('app.json names the three files at their places', () => {
++    expect([app.icon, app.android.adaptiveIcon.foregroundImage, app.web.favicon]).toEqual(['./assets/icon.png', './assets/adaptive-icon.png', './assets/favicon.png']);
++  });
++  it('the three files exist, none is a template, icon.png is 1024 opaque, the adaptive foreground is 1024', () => {
++    expect(iconProblems(REAL)).toEqual([]);
++  });
++  it('the Android adaptive background is the paper colour #f4f1eb; the splash keeps #09090b and no image (M7)', () => {
++    const raw = JSON.parse(fs.readFileSync(path.join(MOBILE, 'app.json'), 'utf8')).expo;
++    expect(app.android.adaptiveIcon.backgroundColor).toBe('#f4f1eb');
++    expect(raw.splash).toEqual({ resizeMode: 'contain', backgroundColor: '#09090b' });
++  });
++  it('planted: a copy of a template file under the icon name is found', () => {
++    const tmpl = read('assets/splash-icon.png');
++    expect(tmpl).not.toBeNull();
++    expect(iconProblems({ ...REAL, icon: tmpl })).toEqual(expect.arrayContaining(['icon: an Expo template file']));
++  });
++  it('planted: an icon with an alpha channel is found', () => {
++    expect(iconProblems({ ...REAL, icon: REAL.adaptive })).toEqual(expect.arrayContaining(['icon: 1024x1024 colour type 6, want 1024x1024 type 2']));
++  });
++});
+diff --git a/mobile/__tests__/appShell.test.ts b/mobile/__tests__/appShell.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..c03b6d0f24bc4d54a95b6895f6318d3ab72fbc2e
+--- /dev/null
++++ b/mobile/__tests__/appShell.test.ts
+@@ -0,0 +1,108 @@
++/** @jest-environment node */
++// SPEC LINK: docs/specs/03-mobile/99_mobile_state_architecture.md §6.5 (stable gate signals), §8.3 (toggling isFetching does not flip a gate),
++//            docs/specs/00-architecture/116_multi_product_architecture.md §3 (dated note 2026-11-26: the MaxBLD app inside the one project).
++//
++// task-313 McApp card 1, the front door (PLAN-313-v1 M1, T4; RR-0499 "1a", MORNING-DECISIONS.md:2598). decideMaxbldGate is pure (mobile/src/lib/appShell.ts,
++// a leaf module): loading, offline, error, redirect and enter in their cases; once the read has data the answer never returns to the Opening; every lead
++// route file under mobile/app/(app), read from disk, redirects, so a lead screen added later is covered without a new case.
++import fs from 'node:fs';
++import path from 'node:path';
++import { APP_PRODUCT, MAXBLD_LOOKUP_ROUTE, decideMaxbldGate, shouldHideAppTabBar, type MaxbldGateInput } from '@/lib/appShell';
++import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';
++
++const GIVE_UP = 60_000;
++const base: MaxbldGateInput = {
++  hydrated: true,
++  signedIn: true,
++  read: { status: 'pending', fetchStatus: 'fetching', hasData: false },
++  segments: ['(app)', 'parcel-tool'],
++  pendingMs: 0,
++  giveUpMs: GIVE_UP,
++};
++const gate = (o: Partial<Omit<MaxbldGateInput, 'read'>> & { read?: Partial<MaxbldGateInput['read']> } = {}) =>
++  decideMaxbldGate({ ...base, ...o, read: { ...base.read, ...(o.read ?? {}) } });
++const DATA = { status: 'success', fetchStatus: 'idle', hasData: true } as const;
++
++/** The (app) child route names on disk, other than parcel-tool and the layout: the lead app's screens kept in the code (RR-0499). */
++const APP_DIR = path.resolve(__dirname, '../app/(app)');
++const leadRoutes = (): string[] =>
++  fs.readdirSync(APP_DIR).filter((f) => f !== '_layout.tsx' && f !== 'parcel-tool').map((f) => f.replace(/\.tsx$/, ''));
++
++describe('decideMaxbldGate (task-313 M1)', () => {
++  it('loading: the first read is pending (retries included), or the store is not hydrated, or nobody is signed in yet', () => {
++    expect(gate()).toBe('loading');
++    expect(gate({ hydrated: false })).toBe('loading');
++    expect(gate({ signedIn: false, read: { fetchStatus: 'idle' } })).toBe('loading');
++    expect(gate({ pendingMs: GIVE_UP - 1 })).toBe('loading');
++  });
++  it('offline: no data and the read is paused (the device reports no network); no failure count is read', () => {
++    expect(gate({ read: { fetchStatus: 'paused' } })).toBe('offline');
++    expect(gate({ read: { status: 'error', fetchStatus: 'paused' } })).toBe('offline');
++  });
++  it('error: the read is in error with no data, or still pending at REPORT_GIVE_UP_MS', () => {
++    expect(gate({ read: { status: 'error', fetchStatus: 'idle' } })).toBe('error');
++    expect(gate({ pendingMs: GIVE_UP })).toBe('error');
++  });
++  it('enter: data and a parcel-tool route; a nested parcel-tool route ([parcelId]) enters too', () => {
++    expect(gate({ read: DATA })).toBe('enter');
++    expect(gate({ read: DATA, segments: ['(app)', 'parcel-tool', '[parcelId]'] })).toBe('enter');
++    expect(gate({ read: DATA, segments: ['(app)', 'parcel-tool', 'tracked'] })).toBe('enter');
++  });
++  it('redirect: data and the (app) root', () => {
++    expect(gate({ read: DATA, segments: ['(app)'] })).toBe('redirect');
++  });
++  it('every lead route file under mobile/app/(app), read from disk, redirects', () => {
++    const names = leadRoutes();
++    expect(names.sort()).toEqual(expect.arrayContaining(['index', 'map', 'flight-board', 'settings', '[lead]', '[flight-job]']));
++    for (const n of names) expect([n, gate({ read: DATA, segments: ['(app)', n] })]).toEqual([n, 'redirect']);
++  });
++  it('stable gate (Spec 99 §6.5): once there is data a failed refetch keeps enter, a 401 included (the server is the fence)', () => {
++    expect(gate({ read: { status: 'error', fetchStatus: 'idle', hasData: true } })).toBe('enter');
++    expect(gate({ read: { status: 'error', fetchStatus: 'paused', hasData: true } })).toBe('enter');
++    expect(gate({ read: { ...DATA, fetchStatus: 'fetching' }, pendingMs: GIVE_UP * 2 })).toBe('enter');
++  });
++  it('Spec 99 §8.3: toggling isFetching does not change the answer (the input has no isFetching; fetchStatus fetching and idle answer alike)', () => {
++    expect(Object.keys(base.read).sort()).toEqual(['fetchStatus', 'hasData', 'status']);
++    expect(gate({ read: { fetchStatus: 'fetching' } })).toBe(gate({ read: { fetchStatus: 'idle' } }));
++    expect(gate({ read: { ...DATA, fetchStatus: 'fetching' } })).toBe(gate({ read: DATA }));
++  });
++  it('a settled read with no data cannot occur: useParcelEntitlement parses through Zod and throws first (error-paths#2)', () => {
++    const src = fs.readFileSync(path.resolve(__dirname, '../src/hooks/useParcelLookup.ts'), 'utf8');
++    expect(src).toMatch(/ParcelToolEntitlementSchema\.safeParse\(raw\.data\)[\s\S]{0,300}throw new ParcelLookupSchemaError/);
++  });
++});
++
++describe('the switch and the route constants', () => {
++  it('APP_PRODUCT is parcel_tool in this build', () => {
++    expect(APP_PRODUCT).toBe('parcel_tool');
++  });
++  it('MAXBLD_LOOKUP_ROUTE equals PARCEL_TAB_ROUTE.lookup, so the two cannot drift', () => {
++    expect(MAXBLD_LOOKUP_ROUTE).toBe(PARCEL_TAB_ROUTE.lookup);
++  });
++  it('the existing tab-bar rule is unchanged', () => {
++    expect([shouldHideAppTabBar('parcel-tool'), shouldHideAppTabBar('index'), shouldHideAppTabBar(undefined)]).toEqual([true, false, false]);
++  });
++  it('appShell.ts stays a leaf: no import of any kind', () => {
++    const src = fs.readFileSync(path.resolve(__dirname, '../src/lib/appShell.ts'), 'utf8');
++    expect(src).not.toMatch(/^\s*import\b/m);
++  });
++});
++
++describe('planted (fe.56): each break turns a case red', () => {
++  /** The rule of the redirect case above, run on a planted tree and a planted switch. */
++  const redirectProblems = (names: string[], product: string): string[] => {
++    const out: string[] = [];
++    if (product !== 'parcel_tool') out.push('APP_PRODUCT is not parcel_tool');
++    for (const n of names) if (gate({ read: DATA, segments: ['(app)', n] }) !== 'redirect') out.push(`${n} does not redirect`);
++    return out;
++  };
++  it('the real tree and switch have no problem', () => {
++    expect(redirectProblems(leadRoutes(), APP_PRODUCT)).toEqual([]);
++  });
++  it('planted: a lead route named parcel-tool in the list is found (it enters)', () => {
++    expect(redirectProblems([...leadRoutes(), 'parcel-tool'], APP_PRODUCT)).toEqual(['parcel-tool does not redirect']);
++  });
++  it('planted: APP_PRODUCT flipped to lead_gen is found', () => {
++    expect(redirectProblems(leadRoutes(), 'lead_gen')).toEqual(['APP_PRODUCT is not parcel_tool']);
++  });
++});
+diff --git a/mobile/__tests__/authGate.test.ts b/mobile/__tests__/authGate.test.ts
+index f3228c15c5e171dba8138bb76cdf61e797c80b11..0e0c085185cb96a16bedb7360ab82d5c1923db6b 100644
+--- a/mobile/__tests__/authGate.test.ts
++++ b/mobile/__tests__/authGate.test.ts
+@@ -326,3 +326,56 @@ describe('decideAuthGateRoute — idempotency (Spec 99 §8.1)', () => {
+     expect(a).toEqual(b);
+   });
+ });
++
++// task-313 McApp card 1, the front door (PLAN-313-v1 M2, T3; RR-0499 "1a", MORNING-DECISIONS.md:2598: sign-in straight to search, no lead-app
++// onboarding). With product 'parcel_tool' the profile is never read: every signed-in person outside (app) goes to the Lookup with no push-token
++// registration, whatever the profile says; inside (app) the front door (MaxbldAppGate) decides. The lead cases above are unchanged.
++describe('decideAuthGateRoute — MaxBLD front door (product parcel_tool)', () => {
++  const LOOKUP = { kind: 'navigate', to: '/(app)/parcel-tool', branch: 'maxbld-lookup' };
++  const maxbld = (o: Partial<AuthGateInput>): AuthGateDecision => decideAuthGateRoute({ ...baseInput, product: 'parcel_tool', ...o });
++  const SEGMENTS: ReadonlyArray<readonly string[]> = [['(auth)', 'sign-in'], ['(onboarding)', 'profession'], ['(onboarding)', 'address'], []];
++  const PROFILES: Array<[string, Partial<AuthGateInput>]> = [
++    ['profile 404', { profileError: new ApiError(404, 'not found') }],
++    ['incomplete', { profile: mkProfile({ onboarding_complete: false }) }],
++    ['complete', { profile: mkProfile({ onboarding_complete: true }) }],
++    ['none', {}],
++    ['account deleted', { profileError: new AccountDeletedError('2026-11-01T00:00:00Z', 20) }],
++    ['stale profile of another user', { profile: mkProfile({ user_id: UID_B }) }],
++  ];
++  for (const segments of SEGMENTS) {
++    for (const [name, p] of PROFILES) {
++      it(`signed in, segments [${segments.join(', ')}], ${name}: navigate to the Lookup, never registerPushToken`, () => {
++        const out = maxbld({ user: mkUser(), segments, ...p });
++        expect(out).toEqual(LOOKUP);
++        expect(out).not.toHaveProperty('sideEffect');
++      });
++    }
++  }
++  it('signed in, already in (app)/parcel-tool: wait (the front door owns what is drawn)', () => {
++    expect(maxbld({ user: mkUser(), segments: ['(app)', 'parcel-tool'] })).toEqual({ kind: 'wait' });
++  });
++  it('signed in, deep link into a lead screen of (app): wait (the front door redirects it)', () => {
++    expect(maxbld({ user: mkUser(), segments: ['(app)', 'settings'] })).toEqual({ kind: 'wait' });
++  });
++  it('no user: sign-in (arm 1), and wait when already in (auth)', () => {
++    expect(maxbld({ user: null, segments: ['(app)'] })).toEqual({ kind: 'navigate', to: '/(auth)/sign-in', branch: 'maxbld-sign-in' });
++    expect(maxbld({ user: null, segments: ['(auth)', 'sign-in'] })).toEqual({ kind: 'wait' });
++  });
++  it('a manufacturer account is sent to the Lookup too, with no hold (rg#6)', () => {
++    const p = mkProfile({ account_preset: 'manufacturer', onboarding_complete: false });
++    expect(maxbld({ user: mkUser(), segments: ['(auth)', 'sign-in'], profile: p })).toEqual(LOOKUP);
++    expect(maxbld({ user: mkUser(), segments: ['(onboarding)', 'manufacturer-hold'], profile: p })).toEqual(LOOKUP);
++  });
++  it('the readiness waits still come first', () => {
++    expect(maxbld({ user: mkUser(), isNavigationReady: false })).toEqual({ kind: 'wait' });
++    expect(maxbld({ user: mkUser(), hasHydrated: false })).toEqual({ kind: 'wait' });
++  });
++  it('no MaxBLD decision ever names onboarding or the lead root', () => {
++    const all = SEGMENTS.flatMap((segments) => PROFILES.map(([, p]) => maxbld({ user: mkUser(), segments, ...p })));
++    for (const d of all) expect(d.kind === 'navigate' ? d.to : '').not.toMatch(/onboarding|^\/\(app\)\/$/);
++  });
++  it('the default product is the lead app: the same input routes by the profile as before', () => {
++    const out = decideAuthGateRoute({ ...baseInput, user: mkUser(), segments: ['(auth)', 'sign-in'], profile: mkProfile({ onboarding_complete: true }) });
++    expect(out).toEqual({ kind: 'navigate', to: '/(app)/', sideEffect: 'registerPushToken' });
++  });
++});
+diff --git a/mobile/__tests__/fixtures/opening.situations.json b/mobile/__tests__/fixtures/opening.situations.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..418f08d627fa12424da26d93cdecc938d0f923c1
+--- /dev/null
++++ b/mobile/__tests__/fixtures/opening.situations.json
+@@ -0,0 +1,29 @@
++{
++  "$comment": "task-313 McApp card 1: the situations of mobile_parcel_opening (the Opening page of the MaxBLD front door). Each committed golden names its state and its situation; scripts/surfaces/opening-golden-capture.ts writes src/tests/fixtures/surfaces/mobile_parcel_opening/<golden>.mobile.json from them and mobile/__tests__/openingScreens.golden.test.ts asserts the same equality.",
++  "goldens": {
++    "loading": {
++      "state": "loading",
++      "situation": "loading"
++    },
++    "offline": {
++      "state": "offline",
++      "situation": "offline"
++    },
++    "error": {
++      "state": "error",
++      "situation": "error"
++    }
++  },
++  "inputs": {
++    "loading": {
++      "kind": "loading"
++    },
++    "offline": {
++      "kind": "offline"
++    },
++    "error": {
++      "kind": "error"
++    }
++  },
++  "named": []
++}
+diff --git a/mobile/__tests__/maxbldAppGate.behaviour.test.tsx b/mobile/__tests__/maxbldAppGate.behaviour.test.tsx
+new file mode 100644
+index 0000000000000000000000000000000000000000..a25587f19cbfe2e5539298e7d00a3e1d27521012
+--- /dev/null
++++ b/mobile/__tests__/maxbldAppGate.behaviour.test.tsx
+@@ -0,0 +1,132 @@
++// SPEC LINK: docs/specs/03-mobile/99_mobile_state_architecture.md §6.5 (stable gate), §7.3 (route_decision, DEV only),
++//            docs/specs/00-architecture/116_multi_product_architecture.md §3 (dated note 2026-11-26), docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4.
++//
++// task-313 McApp card 1, the front door (PLAN-313-v1 M4, M5, T5; RR-0499 "1a": the MaxBLD bar the only bar). Renders the (app) layout AppLayout with
++// expo-router and useParcelEntitlement mocked: the five-tab bar is never drawn; with no answer yet the Opening shows its state; Try again refetches;
++// the (app) root redirects to the Lookup; a parcel-tool route (nested ones included) draws the route (<Slot/>, where the parcel-tool Stack draws its
++// one shelf). The lead layout's own modules are mocked to empty parts so the test proves only which branch is drawn.
++require('react-native-css-interop/test');
++import * as React from 'react';
++import { act, fireEvent, render, screen } from '@testing-library/react-native';
++
++jest.mock('react-native-safe-area-context', () => {
++  const { View } = jest.requireActual('react-native');
++  return { SafeAreaView: View, useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) };
++});
++let mockSegments: string[] = ['(app)', 'parcel-tool'];
++const mockTabs = jest.fn();
++const mockRedirect = jest.fn();
++jest.mock('expo-router', () => {
++  const R = jest.requireActual('react');
++  const { View } = jest.requireActual('react-native');
++  const Tabs = (p: unknown) => { mockTabs(p); return R.createElement(View, { testID: 'lead-tabs' }); };
++  Tabs.Screen = () => null;
++  return {
++    Tabs,
++    Slot: () => R.createElement(View, { testID: 'slot' }),
++    Redirect: (p: { href: string }) => { mockRedirect(p.href); return R.createElement(View, { testID: 'redirect' }); },
++    useSegments: () => mockSegments,
++    useRouter: () => ({ replace: jest.fn(), push: jest.fn(), navigate: jest.fn() }),
++  };
++});
++type Ent = { data?: unknown; status: 'pending' | 'error' | 'success'; fetchStatus: 'fetching' | 'paused' | 'idle'; refetch: jest.Mock };
++let mockEnt: Ent = { data: undefined, status: 'pending', fetchStatus: 'fetching', refetch: jest.fn() };
++jest.mock('@/hooks/useParcelLookup', () => ({ REPORT_GIVE_UP_MS: 60_000, useParcelEntitlement: () => mockEnt }));
++jest.mock('@/store/authStore', () => ({
++  useAuthStore: (sel: (s: unknown) => unknown) => sel({ user: { uid: 'u-1', email: null, displayName: null }, _hasHydrated: true, signOut: jest.fn() }),
++}));
++const mockTrack = jest.fn();
++jest.mock('@/lib/analytics', () => ({ track: (...a: unknown[]) => mockTrack(...a) }));
++// The lead layout's modules: empty parts (LeadAppLayout is never mounted in this build; the test pins that).
++jest.mock('react-native-reanimated', () => ({ __esModule: true, default: { View: 'View' }, useAnimatedStyle: () => ({}), useSharedValue: () => ({ value: 0 }), withTiming: (v: unknown) => v, useDerivedValue: () => ({ value: 0 }), Easing: { out: () => undefined, cubic: undefined }, runOnJS: (f: unknown) => f }));
++jest.mock('@react-navigation/bottom-tabs', () => ({ BottomTabBar: () => null }));
++jest.mock('@tanstack/react-query', () => ({ useQueryClient: () => ({ invalidateQueries: jest.fn() }) }));
++jest.mock('@/components/ErrorBoundary', () => ({ ErrorBoundary: ({ children }: { children: unknown }) => children }));
++jest.mock('@/store/notificationStore', () => ({ useNotificationStore: () => 0 }));
++jest.mock('@/store/paywallStore', () => ({ usePaywallStore: () => false }));
++jest.mock('@/components/onboarding/IncompleteBanner', () => ({ IncompleteBanner: () => null }));
++jest.mock('@/store/tabBarStore', () => ({ tabBarVisible: { value: 1 } }));
++jest.mock('@/lib/haptics', () => ({ lightImpact: jest.fn() }));
++jest.mock('@/hooks/useUserProfile', () => ({ useUserProfile: () => ({ data: undefined, isLoading: true, isFetching: false }) }));
++jest.mock('@/components/paywall/SubscriptionLoadingGuard', () => ({ SubscriptionLoadingGuard: () => null }));
++jest.mock('@/components/paywall/PaywallScreen', () => ({ PaywallScreen: () => null }));
++jest.mock('@/lib/debug/stateDebug', () => ({ trackRender: jest.fn(), useDepsTracker: jest.fn() }));
++jest.mock('@/lib/queryTelemetry', () => ({ logQueryInvalidate: jest.fn() }));
++
++const AppLayout = require('../app/(app)/_layout').default as React.ComponentType;
++
++beforeEach(() => {
++  mockSegments = ['(app)', 'parcel-tool'];
++  mockTabs.mockClear(); mockRedirect.mockClear(); mockTrack.mockClear();
++  mockEnt = { data: undefined, status: 'pending', fetchStatus: 'fetching', refetch: jest.fn(async () => undefined) };
++});
++
++const ANSWER = { status: 'active', reportsUsed: 0, reportsLimit: 10, reportsLeft: 10, reportsLimitReached: false, resetsOn: null, resetsOnDisplay: null };
++
++describe('the MaxBLD front door (AppLayout in the MaxBLD build)', () => {
++  it('pending: the Opening with the wordmark, the tagline and Connecting…; no Tabs', () => {
++    render(<AppLayout />);
++    expect(screen.getByText('MaxBLD')).toBeTruthy();
++    expect(screen.getByText('Lot Intelligence')).toBeTruthy();
++    expect(screen.getByText('Connecting…')).toBeTruthy();
++    expect(mockTabs).not.toHaveBeenCalled();
++    expect(screen.queryByTestId('slot')).toBeNull();
++  });
++  it('paused with no data: "Can\'t reach MaxBLD"; Try again calls refetch', () => {
++    mockEnt = { ...mockEnt, fetchStatus: 'paused' };
++    render(<AppLayout />);
++    expect(screen.getByText("Can't reach MaxBLD")).toBeTruthy();
++    fireEvent.press(screen.getByTestId('parcel-opening-retry_offline'));
++    expect(mockEnt.refetch).toHaveBeenCalledTimes(1);
++  });
++  it('error with no data: "Something went wrong"; Try again calls refetch', () => {
++    mockEnt = { ...mockEnt, status: 'error', fetchStatus: 'idle' };
++    render(<AppLayout />);
++    expect(screen.getByText('Something went wrong')).toBeTruthy();
++    expect(screen.queryByText("Can't reach MaxBLD")).toBeNull();
++    fireEvent.press(screen.getByTestId('parcel-opening-retry_error'));
++    expect(mockEnt.refetch).toHaveBeenCalledTimes(1);
++  });
++  it('still pending at REPORT_GIVE_UP_MS: the error state; Try again restarts the clock (Connecting… again)', () => {
++    jest.useFakeTimers();
++    try {
++      render(<AppLayout />);
++      expect(screen.getByText('Connecting…')).toBeTruthy();
++      act(() => { jest.advanceTimersByTime(60_000); });
++      expect(screen.getByText('Something went wrong')).toBeTruthy();
++      fireEvent.press(screen.getByTestId('parcel-opening-retry_error'));
++      expect(screen.getByText('Connecting…')).toBeTruthy();
++    } finally {
++      jest.useRealTimers();
++    }
++  });
++  it("segments ['(app)'] with an answer: Redirect to the Lookup, and route_decision in a DEV build", () => {
++    mockSegments = ['(app)'];
++    mockEnt = { ...mockEnt, data: ANSWER, status: 'success', fetchStatus: 'idle' };
++    render(<AppLayout />);
++    expect(mockRedirect).toHaveBeenCalledWith('/(app)/parcel-tool');
++    expect(mockTrack).toHaveBeenCalledWith('route_decision', expect.objectContaining({ authority: 'MaxbldAppGate', branch: 'redirect', to: '/(app)/parcel-tool' }));
++    expect(mockTabs).not.toHaveBeenCalled();
++  });
++  it("['(app)','parcel-tool'] with an answer: the route (Slot); the Tabs mock is never rendered, so the parcel-tool shelf is the only bar", () => {
++    mockEnt = { ...mockEnt, data: ANSWER, status: 'success', fetchStatus: 'idle' };
++    render(<AppLayout />);
++    expect(screen.getByTestId('slot')).toBeTruthy();
++    expect(screen.queryByTestId('lead-tabs')).toBeNull();
++    expect(mockTabs).not.toHaveBeenCalled();
++    expect(mockRedirect).not.toHaveBeenCalled();
++  });
++  it("['(app)','parcel-tool','[parcelId]'] with an answer: Slot, not Redirect", () => {
++    mockSegments = ['(app)', 'parcel-tool', '[parcelId]'];
++    mockEnt = { ...mockEnt, data: ANSWER, status: 'success', fetchStatus: 'idle' };
++    render(<AppLayout />);
++    expect(screen.getByTestId('slot')).toBeTruthy();
++    expect(mockRedirect).not.toHaveBeenCalled();
++  });
++  it('a failed refetch after an answer keeps the route drawn (Spec 99 §6.5)', () => {
++    mockEnt = { ...mockEnt, data: ANSWER, status: 'error', fetchStatus: 'idle' };
++    render(<AppLayout />);
++    expect(screen.getByTestId('slot')).toBeTruthy();
++    expect(screen.queryByText('Something went wrong')).toBeNull();
++  });
++});
+diff --git a/mobile/__tests__/openingScreens.golden.test.ts b/mobile/__tests__/openingScreens.golden.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..773328566c197489a6528c4247d63e094b5653f4
+--- /dev/null
++++ b/mobile/__tests__/openingScreens.golden.test.ts
+@@ -0,0 +1,146 @@
++/** @jest-environment node */
++// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §0a principle 1 and §11b.2 (one props golden per state per target; refs only; the page
++//            structure is rows of the page table), docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.31, fe.57.
++//
++// task-313 McApp card 1 (PLAN-313-v1 M6, T6; RR-0499 "1a" own start-up screen; RR-0503 3 A) · the mobile golden test of S-097 `mobile_parcel_opening`, the
++// Opening page of the MaxBLD front door. The wall's golden test (wallScreens.golden.test.ts) on this surface: the committed goldens equal
++// openingProps(situation) exactly; every input is a golden or a named case; every content key is used by a golden; every component is in
++// mapping.mobile.LIST; every Button is 44 px or more; no two siblings share a React key. The goldens assert states and content keys, not snapshots.
++import fs from 'node:fs';
++import path from 'node:path';
++import { OPENING_SLICE, openingData, openingProps, type OpeningSituation } from '@/components/surfaces/OpeningBinding';
++import type { PropsNode } from '@/components/surfaces/SearchBinding';
++import { LOT_MAP_LAYOUT } from '@/constants/lotMap';
++
++type Json = Record<string, unknown>;
++const MOBILE = path.resolve(__dirname, '..');
++const REPO = path.resolve(MOBILE, '..');
++const rj = (p: string): Json => JSON.parse(fs.readFileSync(p, 'utf8'));
++const fixture = rj(path.join(__dirname, 'fixtures/opening.situations.json')) as { goldens: Record<string, { state: string; situation: string }>; inputs: Record<string, OpeningSituation>; named: string[] };
++const goldens = (rj(path.join(__dirname, 'fixtures/surfaces/mobile_parcel_opening.goldens.json')).goldens ?? {}) as Record<string, Json>;
++const bindings = rj(path.join(REPO, 'scripts/surfaces/_schema/bindings.json')) as { mapping: { mobile: Record<string, string[]> } };
++const descriptor = rj(path.join(REPO, 'scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_opening.descriptor.json')) as { states: Array<{ name: string; golden: string }> };
++
++const situation = (name: string): OpeningSituation => {
++  const i = fixture.inputs[name];
++  if (!i) throw new Error(`no input ${name}`);
++  return i;
++};
++const isNode = (v: unknown): v is PropsNode => typeof v === 'object' && v !== null && 'component' in v;
++const nodes = (t: PropsNode): PropsNode[] => [t, ...t.children.filter(isNode).flatMap(nodes)];
++const refs = (v: unknown, kind: string): string[] => {
++  if (Array.isArray(v)) return v.flatMap((x) => refs(x, kind));
++  if (typeof v !== 'object' || v === null) return [];
++  const o = v as Json;
++  if (Object.keys(o).length === 1 && kind in o) return [String(o[kind])];
++  return Object.values(o).flatMap((x) => refs(x, kind));
++};
++const ALL = [...Object.values(fixture.goldens).map((g) => g.situation), ...fixture.named];
++
++/** The layout rules on one tree: mapped components, keyed children, 44 px Buttons, no derived names (the Opening declares none). */
++export function openingProblems(t: PropsNode): string[] {
++  const out: string[] = [];
++  const allowed = bindings.mapping.mobile.LIST!;
++  const walk = (n: PropsNode, parent: PropsNode | null): void => {
++    const at = String(n.props.key ?? n.props.testID ?? n.component);
++    if (!allowed.includes(n.component)) out.push(`${at}: ${n.component} is not in mapping.mobile.LIST`);
++    if (parent && n.props.key === undefined) out.push(`${at}: a child node without a key`);
++    if (n.component === 'Button' && !String(n.props.className ?? '').split(/\s+/).some((c) => c === 'min-h-[44px]' || c === 'min-h-[48px]')) out.push(`${at}: Button without min-h-[44px] or min-h-[48px]`);
++    for (const c of n.children) if (isNode(c)) walk(c, n);
++  };
++  walk(t, null);
++  for (const name of refs(t, 'derived')) out.push(`derived name ${name} is not declared`);
++  return out;
++}
++
++/** React keys must be unique among siblings (a duplicate key reconciles wrongly on an update): every node's child keys, by parent. */
++export function duplicateSiblingKeys(t: PropsNode): string[] {
++  const out: string[] = [];
++  for (const n of nodes(t)) {
++    const keys = n.children.filter(isNode).map((c) => String(c.props.key));
++    for (const k of new Set(keys)) if (keys.filter((x) => x === k).length > 1) out.push(`${String(n.props.key ?? n.props.testID ?? n.component)}: key ${k} repeats`);
++  }
++  return out;
++}
++
++describe('mobile_parcel_opening goldens (FE-31)', () => {
++  const names = Object.keys(goldens);
++  it('one committed golden per declared state, each equal to openingProps(situation) exactly', () => {
++    expect(names.sort()).toEqual(descriptor.states.map((s) => s.golden).sort());
++    for (const n of names) {
++      const g = goldens[n] as { situation: string; props: PropsNode; target: string; surface: string; state: string };
++      expect([n, g.surface, g.target, g.state, g.situation]).toEqual([n, 'mobile_parcel_opening', 'mobile', fixture.goldens[n]!.state, fixture.goldens[n]!.situation]);
++      expect(openingProps(situation(g.situation))).toStrictEqual(g.props);
++    }
++  });
++  it('every input is a golden or a named case (both directions)', () => {
++    expect(Object.keys(fixture.inputs).filter((k) => !ALL.includes(k))).toEqual([]);
++    expect(ALL.filter((k) => !(k in fixture.inputs))).toEqual([]);
++  });
++  it('every content key is used by a committed golden, and every content ref names a key', () => {
++    const used = new Set(Object.values(goldens).flatMap((g) => refs(g.props, 'content')));
++    expect(Object.keys(OPENING_SLICE.content).filter((k) => !used.has(k))).toEqual([]);
++    expect([...used].filter((k) => !(k in OPENING_SLICE.content))).toEqual([]);
++  });
++  it('the layout rules hold on every golden (mapped components, keyed children, 44 px Buttons, no derived names)', () => {
++    for (const k of ALL) expect([k, openingProblems(openingProps(situation(k)))]).toEqual([k, []]);
++  });
++  it('no two siblings of any Opening golden props tree share a React key', () => {
++    for (const n of names) expect([n, duplicateSiblingKeys((goldens[n] as { props: PropsNode }).props)]).toEqual([n, []]);
++    for (const k of ALL) expect([k, duplicateSiblingKeys(openingProps(situation(k)))]).toEqual([k, []]);
++  });
++  it('RED (planted): a Card, a Button under 44 px, a child without a key, a repeated sibling key and a derived name are each found', () => {
++    const t = openingProps(situation('offline'));
++    const col = nodes(t).find((n) => n.props.testID === 'parcel-opening-column')!;
++    col.children.push({ component: 'Card', props: { key: 'c' }, children: [] });
++    col.children.push({ component: 'Button', props: { key: 'small', className: 'min-h-[30px]' }, children: [{ derived: 'nearest_lot' }] });
++    col.children.push({ component: 'View', props: {}, children: [] });
++    col.children.push({ component: 'View', props: { key: 'c' }, children: [] });
++    expect(openingProblems(t)).toEqual(expect.arrayContaining([
++      'c: Card is not in mapping.mobile.LIST', 'small: Button without min-h-[44px] or min-h-[48px]', 'View: a child node without a key', 'derived name nearest_lot is not declared',
++    ]));
++    expect(duplicateSiblingKeys(t)).toEqual(['column: key c repeats']);
++  });
++});
++
++describe('the Opening rules (named cases)', () => {
++  const testIDs = (t: PropsNode): string[] => nodes(t).map((n) => String(n.props.testID ?? '')).filter(Boolean);
++  it('every state opens with the two header lines: the plain wordmark and the tagline', () => {
++    for (const k of ['loading', 'offline', 'error']) {
++      const t = openingProps(situation(k));
++      const heads = nodes(t).filter((n) => n.props.role === 'header').map((n) => refs(n, 'content')[0]);
++      expect([k, heads]).toEqual([k, ['opening.wordmark', 'opening.tagline']]);
++    }
++    expect([OPENING_SLICE.content['opening.wordmark'], OPENING_SLICE.content['opening.tagline']]).toEqual(['MaxBLD', 'Lot Intelligence']);
++  });
++  it('loading: Connecting… and no notice and no button (RR-0503 3 A: for the whole loading state)', () => {
++    const t = openingProps(situation('loading'));
++    expect(refs(t, 'content')).toEqual(['opening.wordmark', 'opening.tagline', 'opening.connecting']);
++    expect(nodes(t).filter((n) => n.component === 'Button')).toEqual([]);
++    expect(OPENING_SLICE.content['opening.connecting']).toBe('Connecting…');
++  });
++  it('offline: one neutral notice and Try again (retry); no error copy', () => {
++    const t = openingProps(situation('offline'));
++    const notice = nodes(t).find((n) => n.props.testID === 'parcel-opening-offline')!;
++    expect(refs(notice, 'content')).toEqual(['opening.offline.title', 'opening.offline.text']);
++    expect(notice.props.className).toBe(LOT_MAP_LAYOUT.notice);
++    expect(testIDs(t)).not.toContain('parcel-opening-error');
++    const b = nodes(t).filter((n) => n.component === 'Button');
++    expect(b.map((n) => [n.props.testID, n.props.onPress])).toEqual([['parcel-opening-retry_offline', { action: 'retry' }]]);
++    expect([OPENING_SLICE.content['opening.offline.title'], OPENING_SLICE.content['opening.offline.text']]).toEqual(['Can\'t reach MaxBLD', 'Check your connection and try again.']);
++  });
++  it('error: one tone-error notice and Try again (retry); a 401, 429 or 500 is not called a connection problem', () => {
++    const t = openingProps(situation('error'));
++    const notice = nodes(t).find((n) => n.props.testID === 'parcel-opening-error')!;
++    expect(refs(notice, 'content')).toEqual(['opening.error.title', 'opening.error.text']);
++    expect([notice.props.icon, notice.props.className]).toEqual(['AlertTriangle', LOT_MAP_LAYOUT.noticeError]);
++    expect(refs(t, 'content')).not.toContain('opening.offline.text');
++    const b = nodes(t).filter((n) => n.component === 'Button');
++    expect(b.map((n) => [n.props.testID, n.props.onPress])).toEqual([['parcel-opening-retry_error', { action: 'retry' }]]);
++    expect([OPENING_SLICE.content['opening.error.title'], OPENING_SLICE.content['opening.error.text'], OPENING_SLICE.content['opening.retry']]).toEqual(['Something went wrong', 'Try again in a moment.', 'Try again']);
++  });
++  it('the rows read no contract value', () => {
++    for (const k of ['loading', 'offline', 'error']) expect([k, refs(openingProps(situation(k)), 'contract')]).toEqual([k, []]);
++    expect(openingData()).toEqual({ contract: { contract_parcels_entitlement: {} }, derived: {} });
++  });
++});
+diff --git a/mobile/__tests__/routerTelemetry.test.ts b/mobile/__tests__/routerTelemetry.test.ts
+index c8dc742a57fafa6ff6958ec8a410d54bc5d84337..3838288f2d4c1b7cd2c884e31bceb6cd07e61b93 100644
+--- a/mobile/__tests__/routerTelemetry.test.ts
++++ b/mobile/__tests__/routerTelemetry.test.ts
+@@ -225,6 +225,17 @@ describe('Spec 99 §7.3 — AppLayout (mobile/app/(app)/_layout.tsx) telemetry',
+   });
+ });
+ 
++// task-313 McApp card 1 (PLAN-313-v1 M5, T5): the MaxBLD front door redirects a lead route to the Lookup and emits route_decision for it, DEV only.
++describe('Spec 99 §7.3 — MaxbldAppGate (mobile/src/components/parcel/MaxbldAppGate.tsx) telemetry', () => {
++  it("emits track('route_decision', ...) for the redirect answer (DEV-only)", () => {
++    const gateSrc = fs.readFileSync(path.join(__dirname, '../src/components/parcel/MaxbldAppGate.tsx'), 'utf8');
++    const effect = gateSrc.match(/if \(gate !== 'redirect'\) return;[\s\S]*?\}, \[gate, segments\]\);/);
++    expect(effect).not.toBeNull();
++    expect(effect![0]).toMatch(/track\(['"]route_decision['"]/);
++    assertDevGuardedTrack(effect![0], 'route_decision');
++  });
++});
++
+ describe('Spec 99 §7.3 — existing telemetry regression guards', () => {
+   it("authStore.ts still emits track('signout_initiated') (production event #1, unchanged)", () => {
+     // Audit line 135: production event #1 is "partially covered by
+diff --git a/mobile/__tests__/signIn.behaviour.test.tsx b/mobile/__tests__/signIn.behaviour.test.tsx
+new file mode 100644
+index 0000000000000000000000000000000000000000..ea91cba806dcdf5d2bd36258438ea920db17b3e7
+--- /dev/null
++++ b/mobile/__tests__/signIn.behaviour.test.tsx
+@@ -0,0 +1,65 @@
++// SPEC LINK: docs/specs/03-mobile/93_mobile_auth.md §5 (the sign-in screen), docs/specs/03-mobile/98_mobile_testing_protocol.md §4 (behaviour tests).
++//
++// task-313 McApp card 1 (PLAN-313-v1 M8, T8; phone walk finding 7: a wrong email showed nothing). A wrong email or password takes one path:
++// signInWithPassword, handleAuthError, mapSupabaseError, which always returns text. The likely cause was the open keyboard covering the error line, so
++// the email handler closes the keyboard first. This test pins the order and the text; the occlusion itself is proven only on a device (the phone walk
++// types a wrong email with the keyboard up).
++require('react-native-css-interop/test');
++import * as React from 'react';
++import { Keyboard } from 'react-native';
++import { act, fireEvent, render, screen } from '@testing-library/react-native';
++
++jest.mock('react-native-safe-area-context', () => {
++  const { View } = jest.requireActual('react-native');
++  return { SafeAreaView: View, useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) };
++});
++jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => false }), useLocalSearchParams: () => ({}) }));
++jest.mock('expo-haptics', () => ({ notificationAsync: jest.fn(async () => undefined), NotificationFeedbackType: { Success: 'success', Error: 'error' } }));
++jest.mock('expo-apple-authentication', () => ({ AppleAuthenticationButton: () => null, AppleAuthenticationButtonType: { SIGN_IN: 0 }, AppleAuthenticationButtonStyle: { WHITE: 0 } }));
++jest.mock('@react-native-google-signin/google-signin', () => ({ GoogleSignin: { configure: jest.fn() }, isSuccessResponse: () => false, isErrorWithCode: () => false, statusCodes: {} }));
++jest.mock('@gorhom/bottom-sheet', () => ({ __esModule: true, ...jest.requireActual('@gorhom/bottom-sheet/mock') }));
++jest.mock('@sentry/react-native', () => ({ captureException: jest.fn(), captureMessage: jest.fn(), addBreadcrumb: jest.fn() }));
++const mockSignIn = jest.fn();
++jest.mock('@/lib/supabase', () => ({ supabase: { auth: { signInWithPassword: (...a: unknown[]) => mockSignIn(...a), linkIdentity: jest.fn() } } }));
++jest.mock('@/lib/analytics', () => ({ track: jest.fn() }));
++jest.mock('@/lib/appleAuth', () => ({ prepareAppleNonce: jest.fn() }));
++jest.mock('@/components/auth/GoogleSignInButton', () => ({ GoogleSignInButton: () => null }));
++jest.mock('@/components/auth/PhoneInputField', () => ({ PhoneInputField: () => null }));
++jest.mock('@/components/auth/OtpInputField', () => ({ OtpInputField: () => null }));
++jest.mock('@/components/auth/AccountLinkingSheet', () => {
++  const R = jest.requireActual('react');
++  return { AccountLinkingSheet: R.forwardRef(() => null) };
++});
++
++const SignIn = require('../app/(auth)/sign-in').default as React.ComponentType;
++
++beforeEach(() => {
++  mockSignIn.mockReset();
++});
++
++describe('sign-in: a wrong email or password shows the error with the keyboard closed (finding 7)', () => {
++  it('invalid_credentials: Keyboard.dismiss is called before the call, and "Incorrect email or password." is shown', async () => {
++    const order: string[] = [];
++    const dismiss = jest.spyOn(Keyboard, 'dismiss').mockImplementation(() => { order.push('dismiss'); });
++    mockSignIn.mockImplementation(async () => { order.push('signIn'); return { data: { user: null }, error: { code: 'invalid_credentials', message: 'Invalid login credentials' } }; });
++    render(<SignIn />);
++    fireEvent.press(screen.getByTestId('email-button'));
++    fireEvent.changeText(screen.getByTestId('email-input'), 'wrong@example.invalid');
++    fireEvent.changeText(screen.getByTestId('password-input'), 'not-the-password');
++    await act(async () => { fireEvent.press(screen.getByTestId('email-submit')); });
++    expect(dismiss).toHaveBeenCalled();
++    expect(order).toEqual(['dismiss', 'signIn']);
++    expect(screen.getByText('Incorrect email or password.')).toBeTruthy();
++    dismiss.mockRestore();
++  });
++  it('an empty form still closes the keyboard and says what is missing', async () => {
++    const dismiss = jest.spyOn(Keyboard, 'dismiss').mockImplementation(() => undefined);
++    render(<SignIn />);
++    fireEvent.press(screen.getByTestId('email-button'));
++    await act(async () => { fireEvent.press(screen.getByTestId('email-submit')); });
++    expect(dismiss).toHaveBeenCalled();
++    expect(mockSignIn).not.toHaveBeenCalled();
++    expect(screen.getByText('Enter your email and password.')).toBeTruthy();
++    dismiss.mockRestore();
++  });
++});
+diff --git a/mobile/app.json b/mobile/app.json
+index 33a9817245df597595a861488f0567b6dc4d1bf4..8f4661260596f46c9166bee9dbae98e3b9985e31 100644
+--- a/mobile/app.json
++++ b/mobile/app.json
+@@ -9,7 +9,6 @@
+     "userInterfaceStyle": "automatic",
+     "newArchEnabled": true,
+     "splash": {
+-      "image": "./assets/splash-icon.png",
+       "resizeMode": "contain",
+       "backgroundColor": "#09090b"
+     },
+@@ -26,7 +25,7 @@
+     "android": {
+       "adaptiveIcon": {
+         "foregroundImage": "./assets/adaptive-icon.png",
+-        "backgroundColor": "#09090b"
++        "backgroundColor": "#f4f1eb"
+       },
+       "package": "ca.maxbld.app",
+       "googleServicesFile": "./google-services.json",
+diff --git a/mobile/app/(app)/_layout.tsx b/mobile/app/(app)/_layout.tsx
+index 2024864ada4c33a09a4e5d94dcca3aeda05e2419..b075e46d5d6b96c9187d474e83210d360f7b1347 100644
+--- a/mobile/app/(app)/_layout.tsx
++++ b/mobile/app/(app)/_layout.tsx
+@@ -9,6 +9,10 @@
+ //   expired                                   → <PaywallScreen> (or inline-blur if dismissed)
+ //   cancelled_pending_deletion                → sign-out + redirect to /(auth)/sign-in
+ //   null/undefined                            → <SubscriptionLoadingGuard>
++//
++// task-313 (McApp card 1; PLAN-313-v1 M4; RR-0499 "1a", MORNING-DECISIONS.md:2598): the body above is the LEAD app's layout, kept whole as
++// LeadAppLayout for the other app. The default export routes on APP_PRODUCT (mobile/src/lib/appShell.ts): the MaxBLD app draws its own front door,
++// MaxbldAppGate (the Opening page, then the parcel-tool Stack with its one shelf), and never the five-tab bar.
+ import { useCallback, useEffect, useRef, useState } from 'react';
+ import { Tabs, useRouter } from 'expo-router';
+ import { AppState, type AppStateStatus, Platform } from 'react-native';
+@@ -32,7 +36,8 @@ import { lightImpact } from '@/lib/haptics';
+ import { useUserProfile } from '@/hooks/useUserProfile';
+ import { SubscriptionLoadingGuard } from '@/components/paywall/SubscriptionLoadingGuard';
+ import { PaywallScreen } from '@/components/paywall/PaywallScreen';
+-import { shouldHideAppTabBar } from '@/lib/appShell';
++import { APP_PRODUCT, shouldHideAppTabBar } from '@/lib/appShell';
++import { MaxbldAppGate } from '@/components/parcel/MaxbldAppGate';
+ import { trackRender, useDepsTracker } from '@/lib/debug/stateDebug';
+ import { track } from '@/lib/analytics';
+ import { logQueryInvalidate } from '@/lib/queryTelemetry';
+@@ -114,7 +119,7 @@ function PaywallMount({ leadViewsCount }: { leadViewsCount: number }) {
+   );
+ }
+ 
+-export default function AppLayout() {
++function LeadAppLayout() {
+   trackRender('AppLayout');
+   // Hydrates filterStore + userProfileStore from server profile on every authenticated launch.
+   // Must live here so it runs for all authenticated app screens (feed, map, settings, etc.)
+@@ -292,3 +297,8 @@ export default function AppLayout() {
+     </ErrorBoundary>
+   );
+ }
++
++/** The (app) group's layout: the MaxBLD front door in this build (APP_PRODUCT 'parcel_tool'), the lead app's layout otherwise. */
++export default function AppLayout() {
++  return APP_PRODUCT === 'parcel_tool' ? <MaxbldAppGate /> : <LeadAppLayout />;
++}
+diff --git a/mobile/app/(auth)/sign-in.tsx b/mobile/app/(auth)/sign-in.tsx
+index c28dd3c148f022454a0ef5dd84330d41a6688096..8c05325dd83d7e2267f6936323b2c6b498b7e829 100644
+--- a/mobile/app/(auth)/sign-in.tsx
++++ b/mobile/app/(auth)/sign-in.tsx
+@@ -352,6 +352,8 @@ export default function SignInScreen() {
+   }, [handleAuthError, linkPendingIdentity, isAuthenticating]);
+ 
+   const handleEmailSignIn = useCallback(async () => {
++    // task-313 (PLAN-313-v1 M8; phone walk finding 7): close the keyboard first, so the error line under the form is not covered by it.
++    Keyboard.dismiss();
+     if (isAuthenticating) return;
+     if (!email || !password) {
+       setErrorMessage('Enter your email and password.');
+diff --git a/mobile/app/_layout.tsx b/mobile/app/_layout.tsx
+index 03b0c1f361981608742a5120fc082c34f52387a6..c8f4786ed0e9cd768f50195e696b6f04684d3a2f 100644
+--- a/mobile/app/_layout.tsx
++++ b/mobile/app/_layout.tsx
+@@ -28,6 +28,7 @@ import { trackRender, useDepsTracker, wireStoreLogging } from '@/lib/debug/state
+ import { track } from '@/lib/analytics';
+ import { logQueryInvalidate } from '@/lib/queryTelemetry';
+ import { decideAuthGateRoute } from '@/lib/auth/decideAuthGateRoute';
++import { APP_PRODUCT } from '@/lib/appShell';
+ import { SubscriptionLoadingGuard } from '@/components/paywall/SubscriptionLoadingGuard';
+ 
+ // Spec 99 §7.1 + §9.5: wire Zustand subscribers once at module load. The
+@@ -95,8 +96,10 @@ function AuthGate() {
+ 
+   // Server-driven routing — Spec 95 §4 / Spec 93 §3.6.
+   // Only enabled once Supabase auth has resolved and a user is present.
++  // task-313 (PLAN-313-v1 M3): the MaxBLD app (APP_PRODUCT 'parcel_tool') reads no profile, so it no longer creates a lead_gen trial row
++  // through GET /api/user-profile; the lead app (APP_PRODUCT 'lead_gen') reads it as before.
+   const { data: profile, error: profileError, isLoading: profileLoading } = useUserProfile({
+-    enabled: !!user,
++    enabled: !!user && APP_PRODUCT === 'lead_gen',
+   });
+ 
+   const [reactivationState, setReactivationState] = useState<ReactivationState | null>(null);
+@@ -165,6 +168,7 @@ function AuthGate() {
+       // deps array; subscribing to it would re-run the effect on every
+       // setStep call (incident #1, fixed in 6c5d085).
+       currentStep: useOnboardingStore.getState().currentStep,
++      product: APP_PRODUCT,
+     });
+ 
+     switch (decision.kind) {
+@@ -186,7 +190,7 @@ function AuthGate() {
+         if (__DEV__) {
+           track('route_decision', {
+             authority: 'AuthGate',
+-            branch: 'navigate',
++            branch: decision.branch ?? 'navigate',
+             from: segments.join('/') || '(root)',
+             to: decision.to,
+             reason: 'auth_gate_routing_effect',
+

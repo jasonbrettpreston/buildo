@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T17:09:36.357Z file_sha256=fe61cb5b53e383757d5537d5b0fe6bd41b7746ab1d5b245e987d7370201a79a5 prompt_sha256=6f77a33d88febc82ebaac7617673171be9843edc78455a7184e0e943fd4ef176
+🔍 Lens review of docs/reports/lanes/2026-11-26/BL-MCAPP313/in-out-code-review-p4.txt (model: deepseek-reasoner)
+
+REJECT — mobile/assets/adaptive-icon.png:1 "IHDR     " — this chunk is binary PNG data rendered as text, so the lens has no code to judge — the header decodes to width 1024, height 1024, bit depth 8, colour type 6 (RGBA), matching the build note "adaptive-icon.png 1024x1024 RGBA sha256 b22be7e3".
+
+REJECT — mobile/assets/favicon.png:1 "IHDR  0  0  " — same, the hunk is an asset swap, not a source change — the header decodes to 48x48, bit depth 8, colour type 6, matching the note "favicon.png 48x48 sha256 50166610".
+
+REJECT — mobile/assets/adaptive-icon.png:1 "\ No newline at end of file" — the missing final newline reads as a defect in a text diff — it is present on both the old and the new side and is normal for a binary, nothing changed.
+
+DEFER severity=LOW — mobile/assets/adaptive-icon.png:1 "IEND" — the tail of the file carries a large zero-filled run between the last IDAT and IEND, which may be padding or an extra empty IDAT chunk and would be wasted bytes — cannot see the bytes reliably through the text-forced diff, so the grounder should confirm the PNG decodes clean and the committed file size is the one the render step produced.
+
+VERDICT: PASS on code correctness (chunk 4 of 7 holds only two PNG assets; no code, types, error handling, logging or dead code is in it; header dimensions and colour types agree with the recorded build note)
+
+---
+⏱  20320ms (20.3s)
+📊 Tokens — total: 53075, input: 50083, output: 2992, reasoning: 2630

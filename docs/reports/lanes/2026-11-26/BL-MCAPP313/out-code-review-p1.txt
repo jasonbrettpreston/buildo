@@ -1,0 +1,14 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T17:09:36.359Z file_sha256=77d7be767c3ee9298de88a922f6d8d508da72594c302a15c8c7e307cee522277 prompt_sha256=55962468233d8d94aa1f71eac444bca48ecc82c249515740c4685ee3b2dcad43
+🔍 Lens review of docs/reports/lanes/2026-11-26/BL-MCAPP313/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — docs/reports/generated/127-surface-registry.md:235 "**34 of 174 rows fully researched · 140 still open · 443 unresearched fields in total.**" — the new S-097 row is counted complete (mobile-product 13 fully researched, its table row "100%", "**researched** ✅ every field") while its own block renders eight `UNRESEARCHED` answers (identity, guards, render, checks, states, a11y, deviations, limitations) and `mobile-product.json` rows-with-open-field stays 30, so the headline count contradicts the row it counts — fix the census row for S-097 (answer those eight) or recount to 33 of 174, mobile-product 12 and 31, 141 open, 451 fields, and regenerate.
+DEFER severity=LOW — docs/reports/generated/127-surface-registry.md (shell_app_tabs note) "The parcel-tool group deliberately STAYS inside `(app)` so it remains behind the subscription gate at mobile/app/(app)/_layout.tsx:241-270" — the dated note added on the same line says the MaxBLD build draws MaxbldAppGate there and never these five tabs, so the stated rationale is no longer true for that build — rewrite to: inside `(app)`, gated by MaxbldAppGate in the MaxBLD build and by the five-tab subscription gate in the lead build.
+REJECT — docs/reports/generated/127-surface-registry.md "mobile/app/_layout.tsx:101-104" vs "mobile/app/_layout.tsx:159-172" — the first citation shifts three lines where the rest of the entry shifts four, which reads as a stale line number — it is correct: three inserted lines sit above line 98 and the fourth inside 141-156, so ranges starting at 98-101 move three and ranges ending at 168 or later move four.
+REJECT — docs/reports/generated/127-surface-registry.md "| `LIST` | SURFACE | 9 | 7 | 6 | 22 |" — the bump is in the third count column and could read as an `exists` change — it is correct: that column is `generated`, matching S-097's "**status** generated" and the status table's "generated | 19" and total 174.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  94364ms (94.4s)
+📊 Tokens — total: 39616, input: 22425, output: 17191, reasoning: 16670

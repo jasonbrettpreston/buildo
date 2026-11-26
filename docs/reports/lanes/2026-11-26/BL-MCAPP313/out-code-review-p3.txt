@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T17:09:36.359Z file_sha256=18a66bd1c880b71a2a0edac24af26e14e445f1e9576c0b18a352b99be14de784 prompt_sha256=ca526924e679269dadc250b52cd455611adcb7ea8775ea78cd3708c88915ccba
+🔍 Lens review of docs/reports/lanes/2026-11-26/BL-MCAPP313/in-out-code-review-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — mobile/app/(app)/_layout.tsx:303 "return APP_PRODUCT === 'parcel_tool' ? <MaxbldAppGate /> : <LeadAppLayout />;" — APP_PRODUCT is a build-pinned constant (appShell.test.ts: "expect(APP_PRODUCT).toBe('parcel_tool')"), so in this build the false arm is statically unreachable and LeadAppLayout is dead code that is not even exported, which contradicts the comment "kept whole as LeadAppLayout for the other app" — either type APP_PRODUCT as the AppProduct union (so the branch stays live) or drop the claim in the comment and treat LeadAppLayout as kept-for-a-later-project. — reachability, not behaviour, so bounded.
+
+DEFER severity=LOW — mobile/app/_layout.tsx:193 "branch: decision.branch ?? 'navigate'," — the DEV route_decision event's branch value now comes from each navigate decision instead of always being 'navigate'; only the MaxBLD arms are shown to carry a branch (authGate.test.ts: "expect(out).toEqual({ kind: 'navigate', to: '/(app)/', sideEffect: 'registerPushToken' })"), so any lead arm that also sets one silently renames an existing telemetry value — check decideAuthGateRoute that no lead_gen navigate arm sets branch, or keep 'navigate' for lead_gen. — DEV-only, but it changes an event other code may grep.
+
+DEFER severity=LOW — mobile/__tests__/openingScreens.golden.test.ts:44 "const allowed = bindings.mapping.mobile.LIST!;" — the non-null assertion hides a real null: if _schema/bindings.json drops or renames LIST, allowed is undefined and allowed.includes throws a TypeError inside walk, so the failure reads as a crash rather than "not in mapping.mobile.LIST" — assert LIST is an array first (expect(Array.isArray(...)).toBe(true)) before walking.
+
+DEFER severity=LOW — mobile/__tests__/openingScreens.golden.test.ts:73 "expect([n, g.surface, g.target, g.state, g.situation]).toEqual([n, 'mobile_parcel_opening', 'mobile', fixture.goldens[n]!.state, fixture.goldens[n]!.situation]);" — n comes from the surfaces goldens file, not from the situations fixture, so the "!" asserts a match that is not checked; a golden added to one file only makes this throw "cannot read properties of undefined" instead of naming the drift — check fixture.goldens[n] is defined and fail with that key first.
+
+DEFER severity=LOW — mobile/__tests__/appIcon.test.ts:21 "const ihdr = (b: Buffer) => ({ png: b.subarray(1, 4).toString('latin1') === 'PNG', width: b.readUInt32BE(16), height: b.readUInt32BE(20), colourType: b[25] });" — readUInt32BE throws RangeError for a buffer under 26 bytes, so a truncated or non-PNG icon makes iconProblems throw before it can report "not a PNG" — return the png flag first and only read the header fields when the length is at least 26.
+
+DEFER severity=NIT — mobile/__tests__/signIn.behaviour.test.tsx:53 "dismiss.mockRestore();" — the restore sits at the end of the test body, so a failing assertion skips it and the Keyboard.dismiss spy leaks into the next test — move it to an afterEach with jest.restoreAllMocks().
+
+DEFER severity=LOW — mobile/__tests__/openingScreens.golden.test.ts:21 "const goldens = (rj(path.join(__dirname, 'fixtures/surfaces/mobile_parcel_opening.goldens.json')).goldens ?? {}) as Record<string, Json>;" — the fixture it is keyed on says the writer emits a different file ("scripts/surfaces/opening-golden-capture.ts writes src/tests/fixtures/surfaces/mobile_parcel_opening/<golden>.mobile.json"), so one of the two paths is stale and a future capture can write where this test never reads — correct the fixture comment or the read path to the current one.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  104512ms (104.5s)
+📊 Tokens — total: 43109, input: 23149, output: 19960, reasoning: 19003

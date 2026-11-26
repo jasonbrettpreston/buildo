@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T17:09:36.358Z file_sha256=6ecbfe8e0c77519e49497ee15def7daaa28f24ec23f0cf415f517d49d6016743 prompt_sha256=16df564c736ed17cbe499fe9ca1d2ff7239919b29175363318e2212cd4b76c54
+🔍 Lens review of docs/reports/lanes/2026-11-26/BL-MCAPP313/in-out-code-review-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — docs/specs/00-architecture/116_multi_product_architecture.md:71 "+ for the migration's auth + entitlement work (BINDING)" — the replaced line loses the words "## 4. Normative implications", so section 4 ends up with no heading, and because no blank line follows the new blockquote the fragment is swallowed into the note as a lazy continuation, while that note itself asserts "M-246, prior text kept"; the two neighbouring inserts in 117 and 100 keep their heading and add a blank line after the note — fix: replace the two added lines with the note, then one blank line, then "## 4. Normative implications for the migration's auth + entitlement work (BINDING)".
+
+DEFER severity=MED — docs/specs/00-architecture/117_maxbld_brand.md:189 "RR-0509, :2645 \"just the icon with out the name\"" — the citation disagrees with both other records of the same ruling, docs/reports/panels/MF-49.json:14 "Operator, verbatim (RR-0509, MD:2646): \"go back to just the icon with out the name.\"" and the task decision list at ":2646", in line number and in wording — fix: cite :2646 with the full verbatim, or settle which line is right before a grounder reads the note.
+
+DEFER severity=LOW — docs/reports/panels/MF-49.json:28 "the three sign-in navigation exceptions (nav lock rows 15, 16, 22) are not built here: see the dated note and the operator question" — the record still points at an open operator question, but the task's decisions already carry RR-0521 "yes" ("The three sign-in navigation fixes move from McApp card 1 to McApp card 2", :2702) — fix: reference RR-0521 in place of "the operator question", or regenerate the panel record after the ruling.
+
+REJECT — docs/reports/generated/127-surface-review-queue.md:186 "It is 1 of 7 entr(ies) in feature `F01`." — reads like an off-by-one against the six lines rewritten from "1 of 6" — it is correct: F01 now holds seven rows, S-097 added at row 7, and every older F01 card renumbered to "1 of 7".
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- Spec 116 section 4 heading deleted and its remnant absorbed into the dated note's blockquote, contradicting "prior text kept"
+- Spec 117 note cites RR-0509 at :2645 with a truncated quote while the panel record and task list say :2646 with the full quote
+- Panel record MF-49 still flags an operator question that RR-0521 has already answered
+
+---
+⏱  78995ms (79.0s)
+📊 Tokens — total: 55771, input: 40866, output: 14905, reasoning: 14284

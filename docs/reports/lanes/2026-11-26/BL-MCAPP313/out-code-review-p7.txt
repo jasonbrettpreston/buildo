@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T17:09:36.357Z file_sha256=676c5c965aae658385cae2f32cb09762ec515832456b2a602c36375107f6ae59 prompt_sha256=3e14a42a5d0c1ba4b355c1ddec3b220829ca73a4936e68354a4e1d8d5009cc25
+🔍 Lens review of docs/reports/lanes/2026-11-26/BL-MCAPP313/in-out-code-review-p7.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/lib/auth/get-user-context.ts:109 "let status: string | null = row?.status ?? null;" — the explicit `string` annotation widens whatever `getEntitlementStatus` returns, so `status === 'trial'` and the later `status = 'expired'` are unchecked against that type (the sibling factory needs `status: status as never`, which shows the status type is a narrow union) — drop the annotation and let `row?.status ?? null` infer, or annotate with the entitlement status type.
+
+DEFER severity=MED — src/lib/auth/get-user-context.ts:111 "const expired = await applyTrialExpirationIfNeeded(uid, 'lead_gen');" with "if (expired) status = 'expired';" — any truthy return is reported as 'expired' and the returned status is discarded; the tests stub only null (the module mock default) and `{ status: 'expired' }`, so a helper that returns the unchanged trial row would mark a live trial expired (cannot see src/lib/subscription/expiration.ts) — read the returned status, `status = (await applyTrialExpirationIfNeeded(uid, 'lead_gen'))?.status ?? status;`, or assert the helper's null-when-no-change contract in the test.
+
+DEFER severity=LOW — src/lib/auth/get-user-context.ts:108 "const row = await getEntitlementStatus(pool, uid, 'lead_gen');" versus "const expired = await applyTrialExpirationIfNeeded(uid, 'lead_gen');" — the injected pool serves the read but the trial write is issued without it, so the two statements can run on different pools and both route tests must stub the whole expiration module instead of exercising it — thread `pool` into the expiry call if that helper accepts one.
+
+DEFER severity=LOW — src/tests/parcel-lookup-gate.infra.test.ts "vi.mocked(getCurrentUserContext).mockImplementation((await real()) as never);" (same line in parcels-entitlement.infra.test.ts) — casting through `never` switches off every type check on the implementation slot, so a mismatch between the new overloads and the real function is invisible here — cast to the implementation signature (the 3-arg `(request, pool, options?)` shape) rather than `never`.
+
+DEFER severity=LOW — src/tests/parcel-lookup-gate.infra.test.ts "const inner = poolQuery.getMockImplementation()!;" — the non-null assertion turns a missing setup into a TypeError instead of a clear assertion failure, and the override it installs (test b) is not restored, so (a2) and (c) run against (b)'s `user_profiles` branch — capture the implementation in a beforeEach / try-finally and restore it, or use `mockImplementationOnce`.
+
+DEFER severity=NIT — src/tests/get-user-context.logic.test.ts "createMockEntitlement({ user_id: UID, status: status as never, trial_started_at: trialStartedAt })" — `status as never` bypasses the status union, so a mistyped status string in a test compiles and then asserts against a value the code can never see — type the helper parameter as the entitlement status union.
+
+DEFER severity=NIT — src/tests/get-user-context.logic.test.ts "it('needsTrade:false, lead_gen trial older than 14 days → expired through applyTrialExpirationIfNeeded'" with "mock.query.mockResolvedValueOnce(qr([entRow('trial', new Date('2026-01-01T00:00:00Z'))]));" — the supplied `trial_started_at` is never read by the path under test (the stubbed helper decides), so nothing exercises the 14-day rule and the name overstates the proof — rename to "a trial status runs the expiry helper", or assert which date the helper is expected to read.
+
+REJECT — src/lib/auth/get-user-context.ts "export async function getCurrentUserContext(request: NextRequest, pool: Pool): Promise<UserContext | null>;" after the parcel overload — looks like a 2-argument call would bind to the parcel signature first and return the trade-less type — correct as written: `options` is required in the first overload, so a 2-argument call can only match this second overload.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL): n/a
+
+---
+⏱  126897ms (126.9s)
+📊 Tokens — total: 46970, input: 22748, output: 24222, reasoning: 23255
