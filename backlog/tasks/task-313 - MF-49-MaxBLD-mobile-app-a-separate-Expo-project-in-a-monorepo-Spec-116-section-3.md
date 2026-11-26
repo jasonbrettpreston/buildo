@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@operator'
 created_date: '2026-11-19T13:07:00Z'
-updated_date: '2026-11-25T21:05:00Z'
+updated_date: '2026-11-26T15:43:00Z'
 labels:
   - queue-row
   - McApp
@@ -90,15 +90,15 @@ F1. After sign-in, AuthGate always goes to the lead app. It reads GET /api/user-
 F2. The (app) gate reads the lead_gen status. (app)/_layout.tsx:239-241 shows SubscriptionLoadingGuard while `profile.subscription_status == null`, and the server fills that field from the lead_gen entitlement (user-profile/route.ts:51). A MaxBLD-only user therefore spins forever. If the lead gate is passed, the 5-tab <Tabs> is drawn (:273-291) and is hidden only while parcel-tool has focus (appShell.ts:29).
 F3. How mctest-paid got past the gate. The seed gives it a user_profiles row with trade 'plumbing' (seed-personas.mjs:144) and only its catalogue entitlement, with no lead_gen row (:147, :181). RR-0480 (MD:2509-2512) then set onboarding_complete true. Every GET /api/user-profile runs applyFallbackTrialInitIfNeeded(uid,'lead_gen') (route.ts:72), which inserts a lead_gen 'trial' row when onboarding_complete is true (src/lib/subscription/expiration.ts:52-63). subscription_status became 'trial' and the gate opened. This is inferred from the code; I did not read the database.
 F3a. Side effect: that trial row opens the unmetered lead_gen arm of the parcel gate (src/lib/parcels/tool-gate.ts:15) once a parcel_tool plan lapses.
-F4. What fails on the server today. All three parcel routes call getCurrentUserContext: lookup/route.ts:65, entitlement/route.ts:33, lot-size/route.ts:41. It returns null, so the route answers 401, in two cases: no user_profiles row (get-user-context.ts:100-106), and a row with no trade (:135-142). A web buyer's row is created with no trade (parcel-checkout.ts:136; maxbld-terms.ts:10). So a paying MaxBLD customer gets 401 from search, the reports-left line and lot size, today.
+F4. What fails on the server today. All three parcel routes call getCurrentUserContext: lookup/route.ts:69, entitlement/route.ts:33, lot-size/route.ts:41. It returns null, so the route answers 401, in two cases: no user_profiles row (get-user-context.ts:100-106), and a row with no trade (:135-142). A web buyer's row is created with no trade (parcel-checkout.ts:136; maxbld-terms.ts:10). So a paying MaxBLD customer gets 401 from search, the reports-left line and lot size, today.
 F4a. No database step is needed. usage_events, entitlements and parcel_user_inputs all reference auth.users, not user_profiles (migrations/303:28, 228:22, 305:36). Nothing has to write a row.
 F5. Start-up screen. app.json:11-15 points the splash at mobile/assets/splash-icon.png. I opened that file: it is the Expo template grid, and assets/icon.png is the same grid. The in-app loading screen is the dark spinner SubscriptionLoadingGuard. expo-splash-screen is not installed (mobile/node_modules).
 F6. Finding 7 (wrong email showed nothing). Wrong email and wrong password take the same path: signInWithPassword, then handleAuthError, then mapSupabaseError, which always returns text ('invalid_credentials' gives "Incorrect email or password.", supabaseErrors.ts:14-15). The red error line sits below the email form and its Back link (sign-in.tsx:576-579). The screen centres its content with no ScrollView or KeyboardAvoidingView. Only the OTP path calls Keyboard.dismiss() (:429). Likely cause: the open keyboard covered the error line. This is inferred; I could not see it on a device.
-F7. The search page already handles a no-plan user: "a plain 403 or no plan keep today's notice" (parcel-tool/index.tsx:63-66; content key search.entitlement).
-F8. useParcelEntitlement exists (useParcelLookup.ts:168-177): key ['parcel-entitlement'], not persisted (persistFilter.ts:28), retried through shouldRetryParcelLookup. The route answers 200 with every field null when the user has no plan.
+F7. The search page already handles a no-plan user: "a plain 403 or no plan keep today's notice" (parcel-tool/index.tsx:64-67; content key search.entitlement).
+F8. useParcelEntitlement exists (useParcelLookup.ts:300-309): key ['parcel-entitlement'], not persisted (persistFilter.ts:30), retried through shouldRetryParcelLookup. The route answers 200 with every field null when the user has no plan.
 F9. The pattern for building a phone page is the task-452 wall, S-096: rows in static-page.json `screens`, drawn by PageTableBinding through a thin binding. Its commits 4cf68ec45 and 7d4410db0 carry the files that pin counts.
 F9a. Schema limits on those rows: section kinds are only bar, status, text, notice, choices and button; action is one of [back, retry, push, select]; there is no footer kind for screens (static-page.schema.json $defs).
-F10. The navigation lock still names three exceptions as "owed: MF-49": #15 and #16 (sign-in setMode) and #22 (sign-up). See nav-by-route.logic.test.ts:313-318 and :350.
+F10. The navigation lock still names three exceptions as "owed: MF-49": #15 and #16 (sign-in setMode) and #22 (sign-up). See nav-by-route.logic.test.ts:313-318 and :351.
 
 3. WHAT THE PLAN REUSES
 useParcelEntitlement; the server gate parcelToolAccess (tool-gate.ts:12-17); getEntitlementStatus (entitlements/index.ts:112); ParcelShelf and the parcel-tool Stack, unchanged; the wall pattern (WallBinding.tsx, useWallState.ts, wall-golden-capture.ts, wallScreens.golden.test.ts); the contract contract_parcels_entitlement; the Keyboard.dismiss pattern (sign-in.tsx:429); the sign-up method-param precedent resolveSignUpMethod (featureFlags.ts:34); the typed-switch precedent MAXBLD_WEB_LIVE (src/lib/surfaces/maxbld-web.ts:19).
@@ -107,7 +107,7 @@ useParcelEntitlement; the server gate parcelToolAccess (tool-gate.ts:12-17); get
 Server (no database step):
 S1. src/lib/auth/get-user-context.ts. Add an optional third argument `{ needsTrade: false }`, typed by overload to return `{uid, subscription_status} | null`. On that path the function does not read user_profiles; it reads the lead_gen status with getEntitlementStatus(pool, uid, 'lead_gen'). Without the argument, nothing changes for the lead routes.
   Round 1 (rg#2, security#1, error-paths#4): it reads the lead_gen status; when it reads 'trial' it calls applyTrialExpirationIfNeeded(uid, 'lead_gen') (the existing idempotent update the profile route calls: a trial older than 14 days becomes expired), because the phone no longer calls GET /api/user-profile and would otherwise leave a trial row unexpired for good. The tool-gate.ts transitional arm is the ruled MF-45 D-4 a arm until MF-50 and is not changed. Both reads sit inside the function's existing try, so a thrown read returns null and the route answers 401, as a thrown profile read does today.
-S2. The three parcel routes (lookup/route.ts:65, entitlement/route.ts:33, lot-size/route.ts:41) pass `{ needsTrade: false }`. Nothing else changes; the 403 gate is unchanged. lookup/route.ts is also on task-267's Files line.
+S2. The three parcel routes (lookup/route.ts:69, entitlement/route.ts:33, lot-size/route.ts:41) pass `{ needsTrade: false }`. Nothing else changes; the 403 gate is unchanged. lookup/route.ts is also on task-267's Files line.
 
 Phone:
 M1. mobile/src/lib/appShell.ts (an existing leaf module, not new: it already exports SELF_SHELVED_ROUTES and shouldHideAppTabBar at line 29, anchored in the census and two descriptors, and has callers; both exports and the ZERO side-effect import rule stay, the new exports go below line 29; integration#2, rg#7):
@@ -179,10 +179,10 @@ T8. NEW mobile/__tests__/signIn.behaviour.test.tsx: signInWithPassword rejects w
 T9. Count and list pins that move (from the wall commits):
 - src/tests/surfaces/static-page.logic.test.ts: screens 2 → 3;
 - page-arm.logic.test.ts: "2 of 2" → "3 of 3";
-- surface-validate.logic.test.ts and surface-conformance.logic.test.ts: converted 18 → 19, in scope +1, goldens +3 (three states), strings +1 per content key, all recomputed on top of task-465's landed numbers (commit 0aa1b011e: 105 goldens, 442 strings), never written from the current tree; surface-conformance.logic.test.ts:398 [15, 8, 27] becomes [16, 8, 28]; the S-golden "owed 13 states / 52 files" note moves with the new states (integration#3, #4);
-- admin-media.golden.test.ts:71 and :99: the mobile list;
+- surface-validate.logic.test.ts and surface-conformance.logic.test.ts: converted 18 → 19, in scope +1, goldens +3 (three states), strings +1 per content key, all recomputed on top of task-465's landed numbers (commit 0aa1b011e: 105 goldens, 442 strings), never written from the current tree; surface-conformance.logic.test.ts:399 [15, 8, 27] becomes [16, 8, 28]; the S-golden "owed 13 states / 52 files" note moves with the new states (integration#3, #4);
+- admin-media.golden.test.ts:72 and :100: the mobile list;
 - surface-goldens.ts:48: the map;
-- nav-by-route.logic.test.ts:313-318 and :350 under Q2 A: three entries removed, EXCEPTION_AUDIT_ROWS becomes [29, 30].
+- nav-by-route.logic.test.ts:313-318 and :351 under Q2 A: three entries removed, EXCEPTION_AUDIT_ROWS becomes [29, 30].
 T10. NEW mobile/__tests__/appIcon.test.ts (node fs only): app.json icon, android.adaptiveIcon.foregroundImage and web.favicon name files that exist; none of the three has the sha256 of a template file (icon.png 74c64047eb557b1341bba7a2831eedde9ddb705e6451a9ad9f5552bf558f13de; adaptive-icon.png and splash-icon.png 5f4c0a732b6325bf4071d9124d2ae67e037cb24fcc9c482ef82bea742109a3b8; favicon.png 24272cdaeff82cc5facdaccd982a6f05b60c4504704bbf94c19a6388659880bb); icon.png is 1024x1024 with no alpha channel (PNG header colour type 2) and adaptive-icon.png is 1024x1024; android.adaptiveIcon.backgroundColor is #f4f1eb. Red today, because the files are the template; plant: a copy of a template file under the icon name goes red. The phone walk after a clean prebuild and rebuild shows the house mark on the home screen.
 
 Re-run, expected unchanged: subscriptionGate.test.ts and routerTelemetry.test.ts (both read (app)/_layout.tsx and _layout.tsx), spec99.mandates.lint.test.ts, phoneGate.coverage.test.ts, useAuth.test.ts:623, parcel-routes.security.test.ts, parcel-lookup-gate.infra.test.ts. The pre-commit related run does not pick all of these; the station suite does.
@@ -190,14 +190,14 @@ Re-run, expected unchanged: subscriptionGate.test.ts and routerTelemetry.test.ts
 How the lock on the lead screens is proven (scope item 7): T3 (AuthGate never names onboarding or '/(app)/'), T4 (every lead route redirects, read from disk), T5 (no Tabs, Redirect drawn), T7 (structural fence). PHONE WALK (RR-0488, a standing proof step), by hand on a device: cold start signed out and signed in; a wrong email with the keyboard up shows "Incorrect email or password."; airplane mode shows "Can't reach MaxBLD" and Try again recovers; a deep link to /(app)/settings and to /(app)/[lead] lands on the Lookup; an account with no plan reaches the search page and sees the refusal notice on a search; after signing in as mctest-paid a read-only SELECT of its entitlements shows no new lead_gen row (F3a).
 
 6. LIMITS AND SURPRISES
-- With no network the app cannot open: the plan read is not persisted, so the paused read shows "Can't reach MaxBLD" and the stored reports are not reachable offline. A persisted gate answer would let a lapsed plan in offline (Spec 99 section 4), and the lead app's gate is no different (persistFilter.ts:28). This matches the mock's state 4.
+- With no network the app cannot open: the plan read is not persisted, so the paused read shows "Can't reach MaxBLD" and the stored reports are not reachable offline. A persisted gate answer would let a lapsed plan in offline (Spec 99 section 4), and the lead app's gate is no different (persistFilter.ts:30). This matches the mock's state 4.
 - "Connecting…" shows for the whole 'loading' state (the first read and its retries), not after 2 s: a 2 s threshold would be a registered setting, which is a database step (fe.47). The only time bound is the existing REPORT_GIVE_UP_MS that task-267 exports (RR-0341 binds that card's loading screen); 313 re-reads it after 267 lands, and until then the stall bound is UNVERIFIED.
 - The wordmark is plain text: the two-tone accent has no row role. Help & Support and the footer are left out: there is no open_help action in the closed list.
 - The app icon joins this card (RR-0506, MD:2633: "the only other missing piece on the McApp is the phone icon logo - this should be added as well to the existing task"): see M9.
 - The sign-in tagline "Leads for the trades." (sign-in.tsx:463) is left as is: the card does not name it.
 - No sign-out in MaxBLD until card 2 (task-271; RR-0498 item 3, RR-0501): a person with no plan, or who signed in as the wrong account, has no way out until then, so card 1 must not reach real users before card 271 lands (RR-0328, the app is not in use). The search notice says "reactivate" (search.entitlement), which is wrong for a person who never subscribed; task-357 replaces it. Maestro auth.yaml:28-36 taps "Settings" after sign-in and fails until then. auth.yaml and the lead flows (scroll-feed, onboarding-leads, onboarding-tracking, subscription-paywall) are not edited here: Spec 98 section 3.2 requires them before a production release, which is the launch gate, the last increment (RR-0501); the airplane-mode step of Spec 90 section 10 is done by hand in this card's phone walk.
 - The account-deletion reactivation modal does not show for MaxBLD, and the forced sign-out of Spec 96 section 10 step 2 ((app)/_layout.tsx:152-185) is not run: deleting an account sets every product entitlement to cancelled_pending_deletion (user-profile/delete/route.ts:42), so under Q1 A such an account reaches Lookup and sees the search notice, and the rule that it is shown no app content is not met for MaxBLD until card 271 adds the sign-out. RULED A by RR-0505 (a deleted-pending account reaches search with the no-plan notice until card 2, task-271); the gap against Spec 96 section 10 step 2 is recorded, and card 1 must not reach real users before card 2.
-- The useParcelLookup.ts:155 comment, the entitlement route header and Spec 99 section 4 (the B1 row, line 238) call the entitlement read "a display, never a gate". It is now also the front-door gate for offline and error: this card amends the Spec 99 B1 row, the entitlement route header and the Spec 100 text on the entitlement read to say so; the useParcelLookup.ts comment stays because the file is task-267's.
+- The useParcelLookup.ts:287 comment, the entitlement route header and Spec 99 section 4 (the B1 row, line 241) call the entitlement read "a display, never a gate". It is now also the front-door gate for offline and error: this card amends the Spec 99 B1 row, the entitlement route header and the Spec 100 text on the entitlement read to say so; the useParcelLookup.ts comment stays because that file is not on this card's Files line.
 - get-user-context with no trade: the overload types stop a lead route from passing the option silently, and the typecheck catches a misuse.
 - A future lead-app screen file is covered by T4 automatically.
 
@@ -210,8 +210,8 @@ How the lock on the lead screens is proven (scope item 7): T3 (AuthGate never na
 - The MF-49 queue row in the same commit (DoD #6).
 
 8. OPEN CHOICES (round 1: RR-0503 rules Q1 A and Q3 A, RR-0505 rules Q4 A; Q2 proceeds on its default)
-Q1 (ruled A by RR-0503, kept by RR-0504 "stay with A"). A user with no plan reaches Lookup and sees today's refusal notice when they search (F7) until card 2 adds the No plan page. His A was given on the planner's text; the seats then showed that with A a no-plan or wrong-account person has no sign-out until card 271 and that the RR-0499 put text says "the gate checks the MaxBLD plan". A stands: in card 1 the plan check is the server 403 (tool-gate.ts:12-17), the Spec 116 note says so as a named narrowing, and the gaps are recorded in section 6. Grounded: yes (F8; parcelSearchMatch.ts:391); the recommendation is verified by the plan grounder (QUESTIONS-RULED.md).
-Q2 (default A, proceeding; the operator may say otherwise: RR-0504 reading, not a ruling). The three navigation exceptions #15, #16 and #22 are fixed here: the nav lock owes them to MF-49 (nav-by-route.logic.test.ts:313-318, :347), same files, RR-0477 batching, RR-0392 (no new card). Cost about half a day. B: a later owner; cost none now, but the lock's reasons point at a closed card.
+Q1 (ruled A by RR-0503, kept by RR-0504 "stay with A"). A user with no plan reaches Lookup and sees today's refusal notice when they search (F7) until card 2 adds the No plan page. His A was given on the planner's text; the seats then showed that with A a no-plan or wrong-account person has no sign-out until card 271 and that the RR-0499 put text says "the gate checks the MaxBLD plan". A stands: in card 1 the plan check is the server 403 (tool-gate.ts:12-17), the Spec 116 note says so as a named narrowing, and the gaps are recorded in section 6. Grounded: yes (F8; parcelSearchMatch.ts:442); the recommendation is verified by the plan grounder (QUESTIONS-RULED.md).
+Q2 (default A, proceeding; the operator may say otherwise: RR-0504 reading, not a ruling). The three navigation exceptions #15, #16 and #22 are fixed here: the nav lock owes them to MF-49 (nav-by-route.logic.test.ts:313-318, :348), same files, RR-0477 batching, RR-0392 (no new card). Cost about half a day. B: a later owner; cost none now, but the lock's reasons point at a closed card.
 Q3 (ruled A by RR-0503). The Opening page departs from the mock in three ways (Connecting… for the whole loading state rather than at 2 s; a plain wordmark; no Help & Support). Spec 136 fe.48 says an element with no source is left out and not raised as a decision; a registered 2 s setting is a database step and a new row role or action needs its own ruling, so none is added.
 Q4 (ruled A by RR-0505). A deleted-pending account reaches search with the no-plan notice until card 2 (task-271); the gap against Spec 96 section 10 step 2 is recorded (section 6), and card 1 must not reach real users before card 2.
 
@@ -244,7 +244,7 @@ Files: src/lib/auth/get-user-context.ts, src/app/api/parcels/lookup/route.ts, sr
 - That sharp's librsvg draws the House Mark's thin strokes as a browser does: a test SVG rendered in this read, the mark itself was not.
 - Whether the House Mark of the Building Possibilities Report is the mark the operator means by the phone icon logo: it is the only approved art found (brand README), and Spec 117 section 5 still says the MaxBLD mark is not designed.
 
-Plan review round 1: 80 folded, 0 task, 0 ruling, 0 wontfix, 10 pile; grounder docs/reports/reviews/task-313/GROUNDER-PLAN.md; triage docs/reports/reviews/task-313/TRIAGE-PLAN.md
+Plan review round 1: 73 folded, 0 task, 0 ruling, 0 wontfix, 10 pile; grounder docs/reports/reviews/task-313/GROUNDER-PLAN.md; triage docs/reports/reviews/task-313/TRIAGE-PLAN.md
 plan-compliance-inc-1-2#1 MED folded expires when task-46
 plan-compliance-inc-1-2#2 MED folded RR-0503 rules Q1 A a
 plan-compliance-mobile-90#1 MED folded proven in a temp cop
@@ -257,16 +257,9 @@ plan-compliance-mobile-98#3 MED folded RR-0503 rules Q1 A a
 plan-compliance-mobile-98#4 MED folded ParcelShelf (Lookup,
 plan-compliance-mobile-98#6 MED folded proven in a temp cop
 plan-compliance-mobile-99-p1#1 MED folded It is now also the f
-plan-compliance-mobile-99-p1#2 MED folded sets every product e
-plan-compliance-mobile-99-p1#3 MED folded carries a branch id,
-plan-compliance-mobile-99-p1#4 HIGH folded front-door gate does
-plan-compliance-mobile-99-p1#6 MED folded met by this card's p
-plan-compliance-mobile-99-p1#7 MED folded settled read with no
+plan-compliance-mobile-99-p1#2 MED folded carries a branch id,
+plan-compliance-mobile-99-p1#3 MED folded change the answer (S
 plan-compliance-mobile-99-p2#3 MED folded met by this card's p
-plan-compliance-mobile-99-p2#4 HIGH folded front-door gate does
-plan-compliance-mobile-99-p2#6 MED folded expires when task-46
-plan-compliance-mobile-99-p2#7 MED folded met by this card's p
-plan-compliance-mobile-99-p2#8 MED folded RR-0503 rules Q1 A a
 plan-compliance-ms-1-2#3 MED folded ParcelShelf is the o
 plan-compliance-ms-1-2#4 MED folded neither is used anyw
 plan-compliance-ms-1-2#5 MED folded expires when task-46
