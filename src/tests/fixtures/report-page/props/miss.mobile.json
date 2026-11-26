@@ -25,6 +25,32 @@
             "content": "states.lifecycle.miss"
           }
         ]
+      },
+      {
+        "component": "Button",
+        "props": {
+          "key": "back-to-search",
+          "testID": "report-back-to-search",
+          "className": "min-h-[44px] rounded-[12px] border border-report-line bg-transparent px-[18px] h-auto shadow-none opacity-100 active:bg-report-line",
+          "accessibilityRole": "button",
+          "onPress": {
+            "action": "back"
+          }
+        },
+        "children": [
+          {
+            "component": "Text",
+            "props": {
+              "key": "back-to-search-label",
+              "className": "text-[15px] leading-[20px] font-semibold text-report-ink"
+            },
+            "children": [
+              {
+                "content": "back_to_search.text"
+              }
+            ]
+          }
+        ]
       }
     ]
   }

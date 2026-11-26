@@ -43,6 +43,9 @@ export const ConsumerParcelLookupQuerySchema = z
     parcelId: z.string().trim().min(1).max(32).optional(),
     // SRCH.SEMI stage 2 (task-319, MF-93; RR-0278): the semi question page sets this on its Continue fetch, so an unsure lot counts like any lot once it is answered.
     semi: z.literal('answered').optional(),
+    // task-267 LOAD.2 (PLAN-267-v2 step 2, O1-A2; RR-0497 Q-e A; the semi=answered precedent): the fast read the report screen sends first, at the pick. It
+    // returns the stored page or the What we checked view (whatWeChecked) and runs no compute. It belongs to parcelId and is never sent with semi.
+    fast: z.literal('1').optional(),
   })
   .superRefine((v, ctx) => {
     if (Boolean(v.q) === Boolean(v.parcelId)) {
@@ -50,6 +53,9 @@ export const ConsumerParcelLookupQuerySchema = z
     }
     if (v.semi !== undefined && !v.parcelId) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'semi belongs to a known lot: send it with parcelId' });
+    }
+    if (v.fast !== undefined && (!v.parcelId || v.semi !== undefined)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'fast belongs to a known lot: send it with parcelId and without semi' });
     }
   });
 export type ConsumerParcelLookupQuery = z.infer<typeof ConsumerParcelLookupQuerySchema>;
@@ -182,6 +188,29 @@ export const ReportPageViewSchema = z
   .strict();
 export type ReportPageView = z.infer<typeof ReportPageViewSchema>;
 
+// task-267 LOAD.2 (PLAN-267-v2 step 2; X-4 a, operator "x-4 a" 2026-11-11, .cursor/MCFRONTEND-QUEUE.md:367): the What we checked view of the fast read, the
+// core's ViewChecked (src/lib/surfaces/report/core.ts: CheckedTree plus paced and href) built on the server by buildTree and viewOf from readWhatWeChecked
+// (src/lib/parcels/what-we-checked.ts). Every text is a server-filled content template (FE-05); the pace is integer milliseconds. href is always null here
+// (no Skip is drawn: RR-0176 "always runs to completion"). Every level is .strict(), so a stray key fails the boundary parse.
+const Ms = z.number().int().nonnegative();
+export const CheckedViewSchema = z
+  .object({
+    summary: z.string(),
+    groups: z.array(z.object({
+      key: z.string(),
+      lines: z.array(z.object({ key: z.string(), text: z.string(), verb: z.string(), delay_ms: Ms, done_ms: Ms }).strict()),
+    }).strict()),
+    dates: z.object({ text: z.string(), delay_ms: Ms }).strict().optional(),
+    skip: z.object({ text: z.string(), after_ms: Ms }).strict(),
+    ready: z.object({ text: z.string(), at_ms: Ms }).strict(),
+    open: z.object({ text: z.string() }).strict(),
+    min_ms: Ms,
+    paced: z.boolean(),
+    href: z.null(),
+  })
+  .strict();
+export type CheckedView = z.infer<typeof CheckedViewSchema>;
+
 export const ConsumerParcelLookupResponseSchema = z
   .object({
     match: ParcelMatchSchema.nullable(),
@@ -192,10 +221,12 @@ export const ConsumerParcelLookupResponseSchema = z
     map: ConsumerLotMapSchema.nullable(),
     page: ReportPageViewSchema.nullable(), // MF-48 Stage B: a page only with a parcel (the refine below)
     lotForm: ConsumerLotFormSchema.nullable().default(null), // SEMI-B: the lot form, only with a parcel (the refine below)
+    whatWeChecked: CheckedViewSchema.nullable().default(null), // task-267: the fast read's checked view, only with a parcel and no page (the refine below)
   })
   .strict()
   .refine((r) => r.page === null || r.parcel !== null, { message: 'page is present only with a parcel (a hit)', path: ['page'] })
   .refine((r) => r.lotForm === null || r.parcel !== null, { message: 'lotForm is present only with a parcel (a hit)', path: ['lotForm'] })
+  .refine((r) => r.whatWeChecked === null || (r.parcel !== null && r.page === null), { message: 'whatWeChecked is present only with a parcel and no page', path: ['whatWeChecked'] })
   .refine((r) => (r.map !== null) === MAP_RESOLUTIONS.includes(r.resolution), {
     message: 'map is present exactly when resolution is multi_parcel or unlinked',
     path: ['map'],

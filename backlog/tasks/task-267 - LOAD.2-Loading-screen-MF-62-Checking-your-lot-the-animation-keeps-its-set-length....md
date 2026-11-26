@@ -3,11 +3,11 @@ id: TASK-267
 title: >-
   LOAD.2 Loading screen (MF-62 Checking your lot): the animation keeps its set
   length...
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-MCFIX267'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-25T22:50:00Z'
+updated_date: '2026-11-26T01:04:00Z'
 due_date: '2026-11-26'
 labels:
   - McFixV2
@@ -49,6 +49,10 @@ references:
   - docs/reports/reviews/task-267/seat-reality-check-1.md
   - docs/reports/reviews/task-267/seat-regression-1.md
   - compliance:step-132 docs/specs/01-pipeline/132_step_standard_handbook.md
+  - docs/reports/lanes/2026-11-25/BL-MCFIX267/REPORT.md
+  - docs/reports/lanes/2026-11-25/BL-MCFIX267/FINDINGS.md
+  - docs/reports/lanes/2026-11-25/BL-MCFIX267/GROUNDER.md
+  - docs/reports/lanes/2026-11-25/BL-MCFIX267/TRIAGE.md
 documentation:
   - backlog/docs/increments/doc-2 - Increment-S-requirements.md
 priority: low
@@ -73,7 +77,7 @@ planNote: loading-r2: title Loading screen (MF-62 Checking your lot): the animat
 planNote: loading-r2: status RULED; panel + build pass owed; edge case owed: the screen when a load fails; waits LOAD.1 (operator 2026-11-18 MORNING-DECISIONS.md ("so right now the animation takes 23 seconds ... the report and the details should be loaded" + "yes that is correct"))
 who (plan text): McFrontend lane (MF-62 follow-up)
 
-Files: src/lib/parcels/lookup-flow.ts, src/app/api/parcels/lookup/route.ts, src/app/api/parcels/lookup/types.ts, src/lib/parcels/what-we-checked.ts, mobile/src/lib/schemas.ts, mobile/src/hooks/useParcelLookup.ts, mobile/src/components/surfaces/ReportBinding.tsx, mobile/src/components/surfaces/ReportPageHost.tsx, mobile/app/(app)/parcel-tool/[parcelId].tsx, mobile/src/constants/reportPage.ts, mobile/src/lib/persistFilter.ts, scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.content.json, scripts/surfaces/_schema/census/mobile-product.json, scripts/surfaces/_schema/census/contracts.json, scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.descriptor.json, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json, scripts/surfaces/platform_shared/F14/surfaces/binding_mobile_report.descriptor.json, src/lib/surfaces/generated/surface-descriptor.d.ts, src/lib/surfaces/generated/validate-descriptor.mjs, mobile/src/generated/surfaces/mobile_parcel_detail.json, src/tests/fixtures/report-page/props, scripts/surfaces/report-page-capture.ts, docs/reports/generated/127-surface-registry.md, docs/reports/generated/127-surface-review-queue.md, src/tests/parcel-lookup-gate.infra.test.ts, src/tests/fix-tune.logic.test.ts, src/tests/consumer-parcel-lookup.infra.test.ts, src/tests/report-checked-producer.logic.test.ts, src/tests/surfaces/report-mobile.logic.test.ts, src/tests/surfaces/report-failure.logic.test.ts, src/tests/surfaces/nav-by-route.logic.test.ts, mobile/__tests__/reportScreen.mount.behaviour.test.tsx, mobile/__tests__/reportPage.behaviour.test.tsx, mobile/__tests__/reportScreens.golden.test.ts, mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx, mobile/__tests__/useParcelLookup.test.ts, mobile/__tests__/reportChecked.behaviour.test.tsx, mobile/__tests__/offline.test.ts, mobile/__tests__/semiQuestionPage.behaviour.test.tsx, docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, docs/specs/03-mobile/99_mobile_state_architecture.md, docs/specs/02-web-admin/126_maxbld_surface_standard.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, docs/specs/02-web-admin/128_surface_standard_policy.md, .cursor/MCFRONTEND-QUEUE.md, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-99-1.json, docs/reports/panels/MF-99.json
+Files: src/lib/parcels/lookup-flow.ts, src/app/api/parcels/lookup/route.ts, src/app/api/parcels/lookup/types.ts, src/lib/parcels/what-we-checked.ts, mobile/src/lib/schemas.ts, mobile/src/hooks/useParcelLookup.ts, mobile/src/components/surfaces/ReportBinding.tsx, mobile/src/components/surfaces/ReportPageHost.tsx, mobile/app/(app)/parcel-tool/[parcelId].tsx, mobile/src/constants/reportPage.ts, mobile/src/lib/persistFilter.ts, scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.content.json, scripts/surfaces/_schema/census/mobile-product.json, scripts/surfaces/_schema/census/contracts.json, scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.descriptor.json, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json, scripts/surfaces/platform_shared/F14/surfaces/binding_mobile_report.descriptor.json, src/lib/surfaces/generated/surface-descriptor.d.ts, src/lib/surfaces/generated/validate-descriptor.mjs, mobile/src/generated/surfaces/mobile_parcel_detail.json, src/tests/fixtures/report-page/props, scripts/surfaces/report-page-capture.ts, docs/reports/generated/127-surface-registry.md, docs/reports/generated/127-surface-review-queue.md, src/tests/parcel-lookup-gate.infra.test.ts, src/tests/fix-tune.logic.test.ts, src/tests/consumer-parcel-lookup.infra.test.ts, src/tests/report-checked-producer.logic.test.ts, src/tests/surfaces/report-mobile.logic.test.ts, src/tests/surfaces/report-failure.logic.test.ts, src/tests/surfaces/nav-by-route.logic.test.ts, mobile/__tests__/reportScreen.mount.behaviour.test.tsx, mobile/__tests__/reportPage.behaviour.test.tsx, mobile/__tests__/reportScreens.golden.test.ts, mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx, mobile/__tests__/useParcelLookup.test.ts, mobile/__tests__/reportChecked.behaviour.test.tsx, mobile/__tests__/offline.test.ts, mobile/__tests__/semiQuestionPage.behaviour.test.tsx, docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, docs/specs/03-mobile/99_mobile_state_architecture.md, docs/specs/02-web-admin/126_maxbld_surface_standard.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, docs/specs/02-web-admin/128_surface_standard_policy.md, .cursor/MCFRONTEND-QUEUE.md, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-99-1.json, docs/reports/panels/MF-99.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json, docs/reports/generated/rule-lists-by-kind.md, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json, src/tests/fixtures/surfaces/mobile_parcel_semi_question, mobile/__tests__/fixtures/surfaces/mobile_parcel_semi_question.goldens.json
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -92,11 +96,11 @@ Files: src/lib/parcels/lookup-flow.ts, src/app/api/parcels/lookup/route.ts, src/
 <!-- DOD:BEGIN -->
 - [ ] #1 The rule the task rests on is quoted with file:line in the task, or the task is a card for the missing rule — "Quote the rule first" (.cursor/MCBYLAWS-QUEUE.md:107)
 - [ ] #2 The tests were written first and proven red, then green — "Every lock is proven in BOTH directions" (docs/specs/00-architecture/08_agents.md:462)
-- [ ] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
-- [ ] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
-- [ ] #5 Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — "A ruling enters a row as a verbatim dated note." (docs/specs/00-architecture/137_mcqueue.md:109)
+- [x] #3 The work is committed through the real hooks, none bypassed — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
+- [x] #4 The named test is green before the task is called done — "Never declare a task done until" (CLAUDE.md:32)
+- [x] #5 Any operator ruling the task needed is recorded verbatim as a dated note or a decision-log row — "A ruling enters a row as a verbatim dated note." (docs/specs/00-architecture/137_mcqueue.md:109)
 - [ ] #6 The task file and its queue row are updated in the same commit as the work — "The status line changes in the same commit as the work." (docs/specs/00-architecture/137_mcqueue.md:84)
-- [ ] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
+- [x] #7 DONE carries its evidence (commit sha, test, hook result) — "The work landed and the evidence exists" (docs/specs/00-architecture/137_mcqueue.md:63)
 - [ ] #8 Nothing was added that the card or ruling did not name — "no change adds a tool, field or rule its card or ruling did not name" (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md:988)
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
@@ -531,4 +535,36 @@ McFixV2 addition 2026-11-25 (operator phone walk; rulings RR-0483, RR-0485, RR-0
 2026-11-25 taken on the board at lane launch (lane BL-MCFIX267, worktree /Users/brettpreston_macmini/Buildo-wt-mcfix267, branch wf2/mcfix267), RR-0240
 
 2026-11-25 (lane BL-MCFIX267, build): Files line gains scripts/analysis/bylaw-validation/coa-expected/prereg-MF-99-1.json and docs/reports/panels/MF-99.json by the backlog CLI: commit 0 of plan section 5 (the pre-registration, .cursor/MCBYLAWS-QUEUE.md:109) and the panel record the arm-C McFrontend judgement reads (cite-arms.mjs, panel.mjs recordPath docs/reports/panels/<MF-n>.json). Deviation recorded: plan section 5 says rules[] = the RR list; the arm-C gate refuses a rules[] id that is not a RULED Spec 135 row (cite-arms.mjs runFrontend FAIL:C:not-ruled), so rules[] holds FE-05, FE-18, FE-31, FE-35, FE-36 and the RR list sits in the prereg's rulings field; the panel record is named for the queue row (MF-99.json), the name panel.mjs reads, not task-267.json. MF-99 and round-204 claimed in ~/Buildo-scratch/ids.
+
+2026-11-25 (lane BL-MCFIX267, build): Files line gains scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json by the backlog CLI: the descriptor the registry generator (--emit-descriptors) rewrites from the semi census row whose why plan step 9 and 11.1 edit (the report give-up as a second reader of maxbld_page_continue_wait_ms); never hand-edited.
+
+2026-11-25 (lane BL-MCFIX267, build): Files line gains docs/reports/generated/rule-lists-by-kind.md by the backlog CLI: the green commit was refused by its drift check ("rule-lists: docs/reports/generated/rule-lists-by-kind.md is out of date") because the plan's Spec 99 B1 row moves the mobile-99 list size (85,828 to 86,228 bytes); regenerated by node scripts/analysis/rule-lists.mjs page --write, never hand-edited. Plan grounder rulings Q1 (a) and Q2 (a) applied; the done-line mark is the approved mock's tick drawn with Svg and SvgLine (PLAN-GROUNDER-RULING-Q1Q2.md).
+
+2026-11-25 (lane BL-MCFIX267, build): the second green attempt was refused by two related tests: consumer-parcel-lookup.infra.test.ts:96 (the flow file imports no logger; lookup-flow now returns the checked-view problem and the route logs it) and fix-tune.logic.test.ts:91 (the entitlement contract cites the line of useParcelEntitlement, moved 168 to 300 by the plan's hook additions; the cite moved in the census row contract_parcels_entitlement and its descriptor re-emitted). Files line gains scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json by the backlog CLI (regenerated, never hand-edited).
+
+2026-11-25 (lane BL-MCFIX267, station fix): the station run on 41fe484d3 failed mobile/__tests__/reportChecked.behaviour.test.tsx (C1-C8, C10, C11: the screen stayed in the plain loading state). Cause: the test harness, not the code. Its tick advanced the fake clock in one synchronous step inside one act, so no promise settled and React did not render inside a tick: the fast read's answer (a promise, then the library's notify timer, then a render, then the report read's start) never reached the screen. C9 passed and drew the checked lines once the answer arrived, which shows the code path draws them. Fix: tick advances in steps of the screen's redraw tick (250 ms), each its own act with advanceTimersByTimeAsync, then three empty flush steps; the query client keeps no gc timer; C1 waits one redraw tick past done_ms, C5 reads the four attempts at 8 s, C6 reads the miss at 0.5 s (both still well inside 'at once'). No assertion of the plan's table was removed.
+
+2026-11-25 (lane BL-MCFIX267, station fix 2): the station on 969bcf3ef failed three web tests (surface-validate.logic.test.ts:71, surface-conformance.logic.test.ts:267, mcfront-proof.infra.test.ts:96/:174) on one cause: SV-SCREEN 'fingerprint stale: mobile_parcel_semi_question.descriptor.json' on the eight semi-question goldens, because the descriptor was re-emitted from the semi census row (the give-up second-reader note). Re-stamped by the repo's own tool (node_modules/.bin/tsx --tsconfig mobile/tsconfig.json scripts/surfaces/semi-question-golden-capture.ts --write, then emit-mobile-surfaces.mjs --write): only the descriptor fingerprint (386287c9836498eb to c6f7476b5ec3a6fa) moved in the eight goldens and the mobile copy (and its input_sha); no drawn content of the semi page changed. Files line gains src/tests/fixtures/surfaces/mobile_parcel_semi_question and mobile/__tests__/fixtures/surfaces/mobile_parcel_semi_question.goldens.json by the backlog CLI.
+
+2026-11-25 (lane BL-MCFIX267): station PASS on 251d41e7d (~/Buildo-scratch/push-station/pass/251d41e7d6209b4708bcbf2aa6a1c33cf59d5658.pass; phone 951 of 951, web 28436 passed). Output review round 1: material cb69d7f50..251d41e7d over the Files line with the launch excludes, 41 files, 4 chunks by lens-input, code-review lens (DeepSeek), context docs/reports/reviews/task-267/context-r3.md. Findings HIGH 1, MED 11, LOW 10, NIT 3 (25), untriaged in docs/reports/lanes/2026-11-25/BL-MCFIX267/FINDINGS.md. Status stays RUNNING: grounder owed (RR-0359).
+
+2026-11-25 (lane BL-MCFIX267, round 1 fix): the output grounder Cairn-Ground-O267 ruled round 1 (15 CONFIRMED: 3 MED, 9 LOW, 3 NIT; 10 REJECTED; no code defect). The test-only fix for the three MED (out-code-review-p4#1, p4#2, p4#3) is in src/tests/parcel-lookup-gate.infra.test.ts as its LANE-STEPS step 2 names: the raw-q assertion on the q call's log before the clear; the malformed-view test retitled and a rejected-read test added; the schema test retitled and its dead mock removed; one dated header line. Red by refused commit attempts with temporary uncommitted mutations (q in the route log line; the checked read moved above the try in lookup-flow.ts; .strict() removed from CheckedViewSchema), each reverted byte-identical before the real commit. The optional LOW and NIT tidies are left alone.
+
+2026-11-25 (lane BL-MCFIX267): station PASS on ef05ba130 (~/Buildo-scratch/push-station/pass/ef05ba130eb460288b11be58032438dcc7609ca4.pass; phone 951 of 951, web 28437 passed). Output review round 2: material cb69d7f50..ef05ba130, 41 files, 4 chunks, code-review lens (DeepSeek), context docs/reports/reviews/task-267/context-r4.md. Findings CRITICAL 0, HIGH 0, MED 5, LOW 10, NIT 3 (18), untriaged in docs/reports/lanes/2026-11-25/BL-MCFIX267/FINDINGS.md. Status stays RUNNING: round-2 grounder owed.
+
+2026-11-25 (lane BL-MCFIX267): the close was refused by check-lane-close (the lens outputs' prompt_sha256: the lens was run without --context and --section); round 2 re-made in the brief's form on the same inputs (context-r4.md); the close check's prompt hash recomputed offline matches all four outputs. Findings CRITICAL 0, HIGH 0, MED 6, LOW 15, NIT 2 (23), untriaged. Status stays RUNNING: round-2 grounder owed on the new outputs.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+task-267 LOAD.2 with task-317 LOAD.4 landed in one lane: the search only finds the lot and the report is computed once on the pick; the fast read (fast=1) sends the stored page or the What we checked view; the phone report screen plays the lines to the end and shows View report only when the report is in (RR-0176); a failure shows at once after the 3 retries or at 60 s from the pick, a no-report lot shows the no-report screen at once; work 41fe484d3, station fixes 969bcf3ef and 251d41e7d, round 1 fix ef05ba130, station PASS on ef05ba130; the operator phone walk follows the push
+
+Review round 1: 3 fixed, 0 task, 0 ruling, 0 wontfix, 12 pile; grounder /Users/brettpreston_macmini/Buildo-scratch/lanes-20261125/BL-MCFIX267/grounder/r1/GROUNDER.md (round 1 as ruled, outputs at bdbda5811); triage /Users/brettpreston_macmini/Buildo-scratch/lanes-20261125/BL-MCFIX267/grounder/r1/TRIAGE.md
+
+out-code-review-p4#1 MED fixed ef05ba130
+out-code-review-p4#2 MED fixed ef05ba130
+out-code-review-p4#3 MED fixed ef05ba130
+
+Review round 2: 0 fixed, 0 task, 0 ruling, 0 wontfix, 12 pile; grounder docs/reports/lanes/2026-11-25/BL-MCFIX267/GROUNDER.md; triage docs/reports/lanes/2026-11-25/BL-MCFIX267/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->

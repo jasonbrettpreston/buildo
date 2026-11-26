@@ -303,6 +303,9 @@ describe('mmkvPersister shape guard', () => {
       typeof import('../src/lib/persistFilter');
     expect(shouldDehydrateQueryFn({ queryKey: ['user-profile'] })).toBe(false);
     expect(shouldDehydrateQueryFn({ queryKey: ['user-profile', 'uid-123'] })).toBe(false);
+    // task-267 (Spec 99 §4 B1 row parcel-checking): the loading screen's fast read is for this visit only; the report it finds persists under parcel-lookup.
+    expect(shouldDehydrateQueryFn({ queryKey: ['parcel-checking', 'PIN-777'] })).toBe(false);
+    expect(shouldDehydrateQueryFn({ queryKey: ['parcel-lookup', 'PIN-777'] })).toBe(true);
     // Non-PII queries persist normally.
     expect(shouldDehydrateQueryFn({ queryKey: ['lead-feed'] })).toBe(true);
     expect(shouldDehydrateQueryFn({ queryKey: ['flight-board'] })).toBe(true);

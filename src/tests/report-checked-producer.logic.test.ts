@@ -88,7 +88,7 @@ describe('P1 citywide: the stored row only (X-1 a)', () => {
 describe('P2 per lot', () => {
   it('a resolved lot: area, the evaluated limit count, ravine, heritage, decisions', () => {
     expect(lotLines(LOT as never, 12)).toEqual([
-      { key: 'area', value: '246 m²' }, { key: 'limits', value: '163', types: '5' }, { key: 'ravine_out' }, { key: 'heritage_out' }, { key: 'decisions', value: '12' },
+      { key: 'area', value: '2,652 sq ft · 246 m²' }, { key: 'limits', value: '163', types: '5' }, { key: 'ravine_out' }, { key: 'heritage_out' }, { key: 'decisions', value: '12' },
     ]);
   });
   it('the limits line is the evaluated count, never the 270 rows: LOT_SQL excludes not_evaluated', () => {
@@ -211,7 +211,7 @@ describe('P6 OUTPUT panel folds', () => {
   });
   it('N-2: an area that rounds below 1 m² is omitted', () => {
     expect(lotLines({ ...LOT, lot_size_sqm: '0.4' } as never, 1).map((l) => l.key)).not.toContain('area');
-    expect(lotLines({ ...LOT, lot_size_sqm: '0.6' } as never, 1)[0]).toEqual({ key: 'area', value: '1 m²' });
+    expect(lotLines({ ...LOT, lot_size_sqm: '0.6' } as never, 1)[0]).toEqual({ key: 'area', value: '6 sq ft · 1 m²' }); // task-267: the report area rule (sq ft first)
   });
   it('N-4: the by-law date is sent only with a counted limits line', async () => {
     const counted = await readWhatWeChecked(fakeDb() as never, 'P1');

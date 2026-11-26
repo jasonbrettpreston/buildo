@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T00:53:08.615Z file_sha256=934886a780a323c707153b3000622ccc95b14e76e8d78cc3778165e216103d8b prompt_sha256=0956a1ce2525f32d2931912dbec05140fd1b45c6efbdf5112e1c8e5c48416448
+🔍 Lens review of docs/reports/lanes/2026-11-25/BL-MCFIX267/in-out-code-review-p4.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 6836 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 14985 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 22685 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 29404 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 36264 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 42551 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 48893 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 55466 chars, answer 0 chars, 120s
+[deepseek-review] deepseek-reasoner working… reasoning 62061 chars, answer 0 chars, 135s
+[deepseek-review] deepseek-reasoner working… reasoning 69669 chars, answer 544 chars, 150s
+BUG none — no correctness, async or error-handling defect is provable from the pasted material; the four observations below are type and hygiene deferrals, plus one rejection.
+
+DEFER severity=LOW — src/tests/surfaces/report-mobile.logic.test.ts:15 "import { buildTree, viewOf } from '../../lib/surfaces/report/core';" — a second import statement from a module already imported two lines above ("import { buildPage, pageViewOf } from '../../lib/surfaces/report/core';"), which import/no-duplicates and the file's one-import-per-module shape both refuse — merge into the existing import, `import { buildPage, buildTree, pageViewOf, viewOf } from '../../lib/surfaces/report/core';`
+
+DEFER severity=LOW — src/tests/surfaces/report-mobile.logic.test.ts:48 "const checked = (viewOf(buildTree(rj(CHECKED_RESPONSE_GOLDEN).response_fixture, reportCtx), { target: 'mobile' }, reportCtx) as Json).checked;" — the `as Json` (Record<string, any>) cast erases the core's return type, so `checked` and `checked.href` are untyped and a missing `checked` surfaces as a TypeError on the next line rather than a readable assertion failure — assert the shape instead, `const view = viewOf(...) as { checked: { href: unknown } | null }; expect(view.checked?.href).toBeNull();`
+
+DEFER severity=LOW — src/tests/parcel-lookup-gate.infra.test.ts:499 "const CHECKED_FIXTURE = (JSON.parse(fs.readFileSync(...)) as { response_fixture: { what_we_checked: unknown } }).response_fixture.what_we_checked;" — the fixture is typed `unknown` and every use re-casts it ("vi.mocked(readWhatWeChecked).mockResolvedValue(CHECKED_FIXTURE as never);", :549, :567), so a drift between the fixture's `what_we_checked` and readWhatWeChecked's return type can never be a type error — type the constant with the checked-view type and drop the `as never` at the three call sites.
+
+DEFER severity=NIT — src/tests/parcel-lookup-gate.infra.test.ts:566 "it('a stored page is returned (no checked view) and counted like any page', async () => {" — this test never sets readCustomerPageResponse and depends on the shared `beforeEach(() => { ctx(null); parcelTool('active'); })` default for its "expect(r.body.data?.page).not.toBeNull();" (:569), while the neighbouring fast test sets it explicitly ("vi.mocked(readCustomerPageResponse).mockResolvedValue(null);", :548) — state the precondition in the test so the assertion cannot silently ride on another helper's default.
+
+REJECT — src/tests/parcel-lookup-gate.infra.test.ts:554 "expect(w!.href).toBeNull();" — the non-null assertion looks like it hides a null `whatWeChecked` — it is correct: "expect(w).not.toBeNull();" on the line before throws and aborts the test, so `w!` can never dereference null.
+
+VERDICT: PASS on code correctness
+
+Top 3 defects (if FAIL):
+- none
+
+---
+⏱  154165ms (154.2s)
+📊 Tokens — total: 37990, input: 18180, output: 19810, reasoning: 19078

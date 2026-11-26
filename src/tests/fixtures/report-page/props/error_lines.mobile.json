@@ -1,0 +1,460 @@
+{
+  "harness": "MF-48 mobile props golden",
+  "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md 11b.2",
+  "surface": "mobile_parcel_detail",
+  "state": "error_lines",
+  "target": "mobile",
+  "screen": "error",
+  "elapsed_ms": 8000,
+  "checked": {
+    "summary": "Your report is ready.",
+    "groups": [
+      {
+        "key": "citywide",
+        "lines": [
+          {
+            "key": "lots",
+            "text": "496,536 lots scanned",
+            "verb": "Loading the lot…",
+            "delay_ms": 0,
+            "done_ms": 1954
+          },
+          {
+            "key": "regulations",
+            "text": "4,356 by-law rules searched",
+            "verb": "Pulling by-law results…",
+            "delay_ms": 1954,
+            "done_ms": 3908
+          },
+          {
+            "key": "buildings",
+            "text": "427,077 buildings measured",
+            "verb": "Loading building outlines…",
+            "delay_ms": 3908,
+            "done_ms": 5862
+          },
+          {
+            "key": "builds",
+            "text": "194,110 builds examined",
+            "verb": "Loading permits and applications…",
+            "delay_ms": 5862,
+            "done_ms": 7816
+          },
+          {
+            "key": "map_areas",
+            "text": "27,759 map areas checked",
+            "verb": "Loading zoning maps…",
+            "delay_ms": 7816,
+            "done_ms": 9770
+          }
+        ]
+      },
+      {
+        "key": "lot",
+        "lines": [
+          {
+            "key": "area",
+            "text": "Lot: 246 m²",
+            "verb": "Loading the lot size…",
+            "delay_ms": 9770,
+            "done_ms": 11724
+          },
+          {
+            "key": "limits",
+            "text": "163 by-law checks across 5 house types",
+            "verb": "Matching by-law limits…",
+            "delay_ms": 11724,
+            "done_ms": 13678
+          },
+          {
+            "key": "ravine_out",
+            "text": "Not in a ravine area",
+            "verb": "Loading ravine areas…",
+            "delay_ms": 13678,
+            "done_ms": 15632
+          },
+          {
+            "key": "heritage_out",
+            "text": "Not heritage designated",
+            "verb": "Loading heritage records…",
+            "delay_ms": 15632,
+            "done_ms": 17586
+          },
+          {
+            "key": "decisions",
+            "text": "12 decisions nearby",
+            "verb": "Matching nearby applications…",
+            "delay_ms": 17586,
+            "done_ms": 19540
+          }
+        ]
+      }
+    ],
+    "dates": {
+      "text": "By-law results dated 2026-11-10. Zoning maps 2026-02-20. Permits to 2026-10-25. Decisions to 2026-10-23.",
+      "delay_ms": 19540
+    },
+    "skip": {
+      "text": "Skip",
+      "after_ms": 0
+    },
+    "ready": {
+      "text": "The Building Possibilities Report for 100 Example Ave is ready.",
+      "at_ms": 21494
+    },
+    "open": {
+      "text": "View report"
+    },
+    "min_ms": 23000,
+    "paced": true,
+    "href": null
+  },
+  "props": {
+    "component": "View",
+    "props": {
+      "key": "report-checked",
+      "testID": "report-checked-error",
+      "className": "flex-1 gap-[18px] bg-report-page px-[16px] pb-[24px] pt-[20px]"
+    },
+    "children": [
+      {
+        "component": "Text",
+        "props": {
+          "key": "label",
+          "className": "text-[12px] leading-[16px] font-semibold uppercase tracking-[0.06em] text-report-quiet",
+          "role": "heading"
+        },
+        "children": [
+          {
+            "content": "checks.label"
+          }
+        ]
+      },
+      {
+        "component": "View",
+        "props": {
+          "key": "lines",
+          "className": "gap-[9px]"
+        },
+        "children": [
+          {
+            "component": "View",
+            "props": {
+              "key": "line-citywide-lots",
+              "testID": "report-line-citywide-lots",
+              "className": "flex-row items-start gap-[10px]"
+            },
+            "children": [
+              {
+                "component": "Svg",
+                "props": {
+                  "key": "tick",
+                  "viewBox": "0 0 24 24",
+                  "width": "18",
+                  "height": "18"
+                },
+                "children": [
+                  {
+                    "component": "SvgLine",
+                    "props": {
+                      "key": "tick-a",
+                      "x1": "5",
+                      "y1": "12.5",
+                      "x2": "9.5",
+                      "y2": "17",
+                      "stroke": "#1a7340",
+                      "strokeWidth": "2.25"
+                    },
+                    "children": []
+                  },
+                  {
+                    "component": "SvgLine",
+                    "props": {
+                      "key": "tick-b",
+                      "x1": "9.5",
+                      "y1": "17",
+                      "x2": "19",
+                      "y2": "7.5",
+                      "stroke": "#1a7340",
+                      "strokeWidth": "2.25"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "text",
+                  "className": "flex-1 text-[14px] leading-[20px] font-normal text-report-ink"
+                },
+                "children": [
+                  {
+                    "derived": "checked.groups.0.lines.0.text"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "component": "View",
+            "props": {
+              "key": "line-citywide-regulations",
+              "testID": "report-line-citywide-regulations",
+              "className": "flex-row items-start gap-[10px]"
+            },
+            "children": [
+              {
+                "component": "Svg",
+                "props": {
+                  "key": "tick",
+                  "viewBox": "0 0 24 24",
+                  "width": "18",
+                  "height": "18"
+                },
+                "children": [
+                  {
+                    "component": "SvgLine",
+                    "props": {
+                      "key": "tick-a",
+                      "x1": "5",
+                      "y1": "12.5",
+                      "x2": "9.5",
+                      "y2": "17",
+                      "stroke": "#1a7340",
+                      "strokeWidth": "2.25"
+                    },
+                    "children": []
+                  },
+                  {
+                    "component": "SvgLine",
+                    "props": {
+                      "key": "tick-b",
+                      "x1": "9.5",
+                      "y1": "17",
+                      "x2": "19",
+                      "y2": "7.5",
+                      "stroke": "#1a7340",
+                      "strokeWidth": "2.25"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "text",
+                  "className": "flex-1 text-[14px] leading-[20px] font-normal text-report-ink"
+                },
+                "children": [
+                  {
+                    "derived": "checked.groups.0.lines.1.text"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "component": "View",
+            "props": {
+              "key": "line-citywide-buildings",
+              "testID": "report-line-citywide-buildings",
+              "className": "flex-row items-start gap-[10px]"
+            },
+            "children": [
+              {
+                "component": "Svg",
+                "props": {
+                  "key": "tick",
+                  "viewBox": "0 0 24 24",
+                  "width": "18",
+                  "height": "18"
+                },
+                "children": [
+                  {
+                    "component": "SvgLine",
+                    "props": {
+                      "key": "tick-a",
+                      "x1": "5",
+                      "y1": "12.5",
+                      "x2": "9.5",
+                      "y2": "17",
+                      "stroke": "#1a7340",
+                      "strokeWidth": "2.25"
+                    },
+                    "children": []
+                  },
+                  {
+                    "component": "SvgLine",
+                    "props": {
+                      "key": "tick-b",
+                      "x1": "9.5",
+                      "y1": "17",
+                      "x2": "19",
+                      "y2": "7.5",
+                      "stroke": "#1a7340",
+                      "strokeWidth": "2.25"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "text",
+                  "className": "flex-1 text-[14px] leading-[20px] font-normal text-report-ink"
+                },
+                "children": [
+                  {
+                    "derived": "checked.groups.0.lines.2.text"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "component": "View",
+            "props": {
+              "key": "line-citywide-builds",
+              "testID": "report-line-citywide-builds",
+              "className": "flex-row items-start gap-[10px]"
+            },
+            "children": [
+              {
+                "component": "Svg",
+                "props": {
+                  "key": "tick",
+                  "viewBox": "0 0 24 24",
+                  "width": "18",
+                  "height": "18"
+                },
+                "children": [
+                  {
+                    "component": "SvgLine",
+                    "props": {
+                      "key": "tick-a",
+                      "x1": "5",
+                      "y1": "12.5",
+                      "x2": "9.5",
+                      "y2": "17",
+                      "stroke": "#1a7340",
+                      "strokeWidth": "2.25"
+                    },
+                    "children": []
+                  },
+                  {
+                    "component": "SvgLine",
+                    "props": {
+                      "key": "tick-b",
+                      "x1": "9.5",
+                      "y1": "17",
+                      "x2": "19",
+                      "y2": "7.5",
+                      "stroke": "#1a7340",
+                      "strokeWidth": "2.25"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "text",
+                  "className": "flex-1 text-[14px] leading-[20px] font-normal text-report-ink"
+                },
+                "children": [
+                  {
+                    "derived": "checked.groups.0.lines.3.text"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "component": "View",
+            "props": {
+              "key": "line-citywide-map_areas",
+              "testID": "report-line-citywide-map_areas",
+              "className": "flex-row items-start gap-[10px]"
+            },
+            "children": [
+              {
+                "component": "ActivityIndicator",
+                "props": {
+                  "key": "wait",
+                  "size": "small",
+                  "color": "#f59e0b"
+                },
+                "children": []
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "text",
+                  "className": "flex-1 text-[14px] leading-[20px] font-normal text-report-quiet"
+                },
+                "children": [
+                  {
+                    "derived": "checked.groups.0.lines.4.verb"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "component": "View",
+        "props": {
+          "key": "end",
+          "testID": "report-error",
+          "className": "mt-auto gap-[12px] border-t border-report-line pt-[8px]"
+        },
+        "children": [
+          {
+            "component": "Text",
+            "props": {
+              "key": "message",
+              "className": "text-[16px] leading-[22px] font-semibold text-report-ink",
+              "accessibilityRole": "text"
+            },
+            "children": [
+              {
+                "content": "states.lifecycle.error"
+              }
+            ]
+          },
+          {
+            "component": "Button",
+            "props": {
+              "key": "retry",
+              "testID": "report-retry",
+              "className": "min-h-[44px] rounded-[12px] border border-report-line bg-transparent px-[18px] h-auto shadow-none opacity-100 active:bg-report-line",
+              "accessibilityRole": "button",
+              "onPress": {
+                "action": "retry"
+              }
+            },
+            "children": [
+              {
+                "component": "Text",
+                "props": {
+                  "key": "retry-label",
+                  "className": "text-[15px] leading-[20px] font-semibold text-report-ink"
+                },
+                "children": [
+                  {
+                    "content": "retry.text"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

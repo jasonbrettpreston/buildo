@@ -13,11 +13,14 @@
 // Nav-audit #62 (~/Buildo-scratch/mcfrontend/NAV-AUDIT-20261111.md; operator "yes" 2026-11-11): while the sheet is open, the Android Back
 // button closes it and is consumed (the React Native BackHandler, an existing core API); closed, Back is not intercepted. The Back control is a
 // routing control the screen owns (onBack); Cancel only closes the sheet.
+// task-267 LOAD.2 + task-317 LOAD.4 (PLAN-267-v2 step 6): with no page shown and a checked view, the host draws the loading screen (checkedProps) for the
+// screen the route picked; the clock, the give-up and the pick mark come in as props from the route's hook (useReportScreen), so the host holds no timer.
+// View report calls onOpen (no auto-open, no Skip). The bar names the lot (address). Back and Back to search share one first-press guard: two taps pop once.
 import * as React from 'react';
 import { BackHandler, View } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
-import { SurfaceRenderer, type ReportActions, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
-import { backProps, lifecycleProps, reportProps, REPORT_UI_CLOSED, type LifecycleState, type PageView, type ReportUi } from '@/components/surfaces/ReportBinding';
+import { SurfaceRenderer, type ReportActions, type SurfaceActions, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
+import { backProps, checkedProps, lifecycleProps, reportProps, REPORT_UI_CLOSED, type CheckedView, type LifecycleState, type PageView, type ReportScreen, type ReportUi } from '@/components/surfaces/ReportBinding';
 import { REPORT_HEX as H, REPORT_PAGE_LAYOUT as L } from '@/constants/reportPage';
 import type { WallView } from '@/hooks/useWallState';
 
@@ -34,24 +37,28 @@ export const REPORT_UI = {
 
 /** task-452 SEARCHFIX.4: `wall` (from useWallState) is the report-limit or reactivate wall of a refused lookup, drawn with its own tree, content, data and
  *  actions (this host's content lacks the wall keys and ReportActions lack push). It replaces the lifecycle only while no report is shown. */
-export function ReportPageHost({ view, lifecycle, content, onRetry, onBack, wall }: {
+export function ReportPageHost({ view, lifecycle, content, onRetry, onBack, wall, screen, checked, lineElapsedMs = 0, address = null, onOpen }: {
   view: PageView | null; lifecycle: LifecycleState; content: Record<string, string>; onRetry: () => void; onBack: () => void; wall?: WallView | null;
+  /** task-267: the loading screen the route picked (reportScreenState), the server's checked view (null: no lines), the line clock and the lot's address. */
+  screen?: ReportScreen; checked?: CheckedView | null; lineElapsedMs?: number; address?: string | null; onOpen?: () => void;
 }) {
   const [ui, setUi] = React.useState<ReportUi>(REPORT_UI_CLOSED);
+  const leaving = React.useRef(false);
   const [sheetOpen, setSheetOpen] = React.useState(false);
   const Box = COMPONENTS['View'];
   const Renderer = COMPONENTS['SurfaceRenderer'];
   const Sheet = COMPONENTS['BottomSheet'];
   const SheetBody = COMPONENTS['BottomSheetView'];
   const Backdrop = COMPONENTS['BottomSheetBackdrop'];
-  const actions: ReportActions = {
+  const actions: ReportActions & Pick<SurfaceActions, 'submit'> = {
     toggle_panel: (option, panel) => setUi((u) => REPORT_UI.togglePanel(u, option, panel)),
     toggle_how: (option) => setUi((u) => REPORT_UI.toggleHow(u, option)),
     open_sheet: () => setSheetOpen(true),
     close_sheet: () => setSheetOpen(false),
     close_detail: () => setUi((u) => REPORT_UI.closeDetail(u)),
     retry: onRetry,
-    back: onBack,
+    back: () => { if (leaving.current) return; leaving.current = true; onBack(); },
+    submit: () => onOpen?.(), // task-267: View report
   };
   const detailOpen = view?.layout.details_view === 'sheet' && (Object.values(ui.panel).some((p) => p !== null) || Object.values(ui.how).some((h) => h));
   React.useEffect(() => {
@@ -60,15 +67,17 @@ export function ReportPageHost({ view, lifecycle, content, onRetry, onBack, wall
     return () => sub.remove();
   }, [sheetOpen, detailOpen]);
   const backdrop = React.useCallback((p: BottomSheetBackdropProps) => <Backdrop {...p} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />, [Backdrop]);
-  const top = <Renderer tree={backProps() as SurfaceTree} content={content} data={NO_DATA} actions={actions} />;
+  const screenData = { contract: {}, derived: { checked: checked ?? null, address } };
+  const top = <Renderer tree={backProps(Boolean(address)) as SurfaceTree} content={content} data={screenData} actions={actions} />;
   if (view === null) {
+    const loading = checked && screen && screen !== 'view' ? checkedProps(checked, lineElapsedMs, screen) : lifecycleProps(lifecycle);
     return (
       <Box className={L.host} testID="report-host">
         {top}
         {wall ? (
           <Renderer tree={wall.tree} content={wall.content} data={wall.data} actions={wall.actions} />
         ) : (
-          <Renderer tree={lifecycleProps(lifecycle) as SurfaceTree} content={content} data={NO_DATA} actions={actions} />
+          <Renderer tree={loading as SurfaceTree} content={content} data={screenData} actions={actions} />
         )}
       </Box>
     );

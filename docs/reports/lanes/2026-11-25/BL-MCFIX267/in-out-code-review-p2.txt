@@ -1,0 +1,1236 @@
+LIST none sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 material sha256:525ab1e43f7ffad9cf95fd5e266b710a847cddcb56127e93266e1c249ad06c85 part 1 of 1 chunk 2 of 4
+NO RULE LIST: the lens template alone judges the material under review. The material is chunk 2 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["mobile/__tests__/reportChecked.behaviour.test.tsx","mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx","mobile/__tests__/reportScreen.mount.behaviour.test.tsx","mobile/__tests__/reportScreens.golden.test.ts","mobile/__tests__/semiQuestionPage.behaviour.test.tsx","mobile/__tests__/useParcelLookup.test.ts","mobile/app/(app)/parcel-tool/[parcelId].tsx","mobile/src/components/surfaces/ReportBinding.tsx","mobile/src/components/surfaces/ReportPageHost.tsx","mobile/src/constants/reportPage.ts","mobile/src/generated/surfaces/mobile_parcel_detail.json","mobile/src/hooks/useParcelLookup.ts","mobile/src/lib/persistFilter.ts","mobile/src/lib/schemas.ts"]
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/mobile/__tests__/reportChecked.behaviour.test.tsx b/mobile/__tests__/reportChecked.behaviour.test.tsx
+new file mode 100644
+index 0000000000000000000000000000000000000000..926c39544c57a01dc46696046a2cbc45343477d6
+--- /dev/null
++++ b/mobile/__tests__/reportChecked.behaviour.test.tsx
+@@ -0,0 +1,277 @@
++// SPEC LINK: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4 (dated note 2026-11-25, task-267 LOAD.2 and task-317 LOAD.4: the loading screen and its endings),
++//            docs/specs/03-mobile/99_mobile_state_architecture.md §4 B1 (the parcel-checking key) and §6.5 (stable signals),
++//            docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.7 (dated note 2026-11-25: the app render of What we checked).
++//
++// task-267 + task-317 (PLAN-267-v2 section 5, C1-C11). The REAL lot route with the REAL hooks under a REAL QueryClient and fake timers; only the network
++// (fetchWithAuth), expo-router, the auth store and Sentry are mocked. The fast read (fast=1) answers the What we checked view the server built (the
++// committed loading-screen golden's `checked`, src/tests/fixtures/report-page/props/ready.mobile.json); the report read answers at the time each case sets.
++// Rulings: RR-0176 (MD:785: the lines always run to completion; the button only when the report is in), RR-0491 (MD:2563: the approved mock), RR-0492
++// item 3 (MD:2567: a failure shows right away), RR-0493 (MD:2571: 60 s from the pick is the failure limit), RR-0494 (MD:2575: no report shows at once),
++// RR-0497 (MD:2588: after the 3 ruled retries or at 60 s).
++require('react-native-css-interop/test');
++import * as React from 'react';
++import fs from 'node:fs';
++import path from 'node:path';
++import { AccessibilityInfo } from 'react-native';
++import { act, fireEvent, render, screen } from '@testing-library/react-native';
++import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
++
++jest.mock('@gorhom/bottom-sheet', () => ({ __esModule: true, ...jest.requireActual('@gorhom/bottom-sheet/mock') }));
++const mockBack = jest.fn();
++const mockReplace = jest.fn();
++jest.mock('expo-router', () => ({
++  useRouter: () => ({ replace: mockReplace, back: mockBack, push: jest.fn(), canGoBack: () => true }),
++  useLocalSearchParams: () => ({ parcelId: 'PIN-777' }),
++}));
++jest.mock('@/lib/apiClient', () => ({ fetchWithAuth: jest.fn() }));
++jest.mock('@/store/authStore', () => ({
++  useAuthStore: Object.assign(jest.fn(() => 'tok-1'), { getState: () => ({ accessToken: 'tok-1' }), setState: jest.fn() }),
++}));
++jest.mock('@sentry/react-native', () => ({ captureException: jest.fn() }));
++
++import { fetchWithAuth } from '@/lib/apiClient';
++import { ApiError, ReportLimitError } from '@/lib/errors';
++import { reportClock } from '@/hooks/useParcelLookup';
++
++// eslint-disable-next-line @typescript-eslint/no-require-imports
++const Screen = require('../app/(app)/parcel-tool/[parcelId]').default as React.ComponentType;
++
++type Json = Record<string, unknown>;
++const REPO = path.resolve(__dirname, '..', '..');
++const rj = (p: string): Json => JSON.parse(fs.readFileSync(path.join(REPO, p), 'utf8'));
++const CHECKED = rj('src/tests/fixtures/report-page/props/ready.mobile.json').checked as {
++  groups: { key: string; lines: { key: string; text: string; verb: string; delay_ms: number; done_ms: number }[] }[]; ready: { text: string }; open: { text: string }; min_ms: number; summary: string;
++};
++const VIEW = rj('src/tests/fixtures/report-page/props/page_v21.mobile.json').view as Json;
++const LIFE = (rj('scripts/surfaces/_schema/report-presentation.json').states as Json).lifecycle as Record<string, string>;
++const OWN = rj('scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.content.json') as Record<string, string>;
++const MATCH = { parcelId: 'PIN-777', matchType: 'direct', address: '48 Larchmere Avenue' };
++const answer = (o: Json) => ({ data: { match: MATCH, candidates: [], warnings: [], parcel: null, resolution: 'unique', map: null, page: null, lotForm: null, ...o } });
++const FAST = answer({ whatWeChecked: CHECKED });
++const PAGE = answer({ page: VIEW });
++const MISS = answer({});
++const ENTITLEMENT = { data: { status: 'active', reportsUsed: 10, reportsLimit: 10, reportsLeft: 0, reportsLimitReached: true, resetsOn: '2026-12-09T05:00:00.000Z', resetsOnDisplay: '9 Dec 2026' } };
++const line = (g: number, l: number) => CHECKED.groups[g]!.lines[l]!;
++const last = (): { g: number; l: number } => ({ g: CHECKED.groups.length - 1, l: CHECKED.groups[CHECKED.groups.length - 1]!.lines.length - 1 });
++
++const mockFetch = fetchWithAuth as jest.MockedFunction<typeof fetchWithAuth>;
++type Report = () => Promise<unknown>;
++let report: Report;
++let fast: () => Promise<unknown>;
++const calls = { fast: 0, report: 0 };
++const after = <T,>(ms: number, v: T): Promise<T> => new Promise((res) => setTimeout(() => res(v), ms));
++const failAfter = (ms: number, e: Error): Promise<never> => new Promise((_res, rej) => setTimeout(() => rej(e), ms));
++const never = (): Promise<never> => new Promise(() => undefined);
++
++let client: QueryClient;
++const mount = () => render(<QueryClientProvider client={client}><Screen /></QueryClientProvider>);
++// Station fix (2026-11-25, 41fe484d3 C1-C11 red): one synchronous advance inside one act ran every timer before any promise settled and before React
++// rendered, so the fast read's answer (a promise, then the library's notify timer, then a render, then the report read's start) never reached the screen
++// inside a tick. The clock now advances in steps of the screen's redraw tick, each its own act with the microtasks flushed between timers
++// (advanceTimersByTimeAsync), then three empty steps flush the last notify and render. A step is the hook's redraw tick (TICK_MS, 250 ms).
++const STEP = 250;
++const tick = async (ms: number): Promise<void> => {
++  let left = ms;
++  do {
++    const s = Math.min(STEP, left);
++    await act(async () => { await jest.advanceTimersByTimeAsync(s); });
++    left -= s;
++  } while (left > 0);
++  for (let i = 0; i < 3; i += 1) await act(async () => { await jest.advanceTimersByTimeAsync(0); });
++};
++
++beforeEach(() => {
++  jest.useFakeTimers();
++  reportClock.reset();
++  client = new QueryClient({ defaultOptions: { queries: { gcTime: Infinity } } }); // no garbage-collection timer left behind a test
++  mockBack.mockClear(); mockReplace.mockClear();
++  calls.fast = 0; calls.report = 0;
++  fast = () => Promise.resolve(FAST);
++  report = never;
++  mockFetch.mockReset();
++  mockFetch.mockImplementation(((url: string) => {
++    if (url.startsWith('/api/parcels/entitlement')) return Promise.resolve(ENTITLEMENT);
++    if (url.includes('fast=1')) { calls.fast += 1; return fast(); }
++    calls.report += 1;
++    return report();
++  }) as never);
++  jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(false);
++});
++afterEach(() => { client.clear(); jest.useRealTimers(); jest.restoreAllMocks(); });
++
++describe('C1 the lines play from the pick', () => {
++  it('each line shows its verb at delay_ms and its finding at done_ms; the label Checks for this lot and the address in the bar', async () => {
++    mount();
++    await tick(0);
++    expect(screen.getByText(OWN['checks.label']!)).toBeTruthy();
++    expect(screen.getByText(MATCH.address)).toBeTruthy();
++    expect(screen.getByText(line(0, 0).verb)).toBeTruthy();
++    expect(screen.queryByText(line(0, 0).text)).toBeNull();
++    expect(screen.queryByTestId(`report-line-${CHECKED.groups[0]!.key}-${line(0, 1).key}`)).toBeNull();
++    await tick(line(0, 0).done_ms + STEP); // the screen redraws on its tick: a line turns within one tick of its time
++    expect(screen.getByText(line(0, 0).text)).toBeTruthy();
++    expect(screen.getByText(line(0, 1).verb)).toBeTruthy();
++    expect(calls).toEqual({ fast: 1, report: 1 }); // the report read is sent once the fast read settles with no page
++  });
++});
++
++describe('C2 a report in at 5 s waits for the lines (RR-0176)', () => {
++  it('no View report and no ready sentence before the minimum; then both; no auto-open; no Skip; a press opens the page', async () => {
++    report = () => after(5000, PAGE);
++    mount();
++    await tick(5000);
++    expect(screen.queryByText(CHECKED.open.text)).toBeNull();
++    expect(screen.queryByText(CHECKED.ready.text)).toBeNull();
++    await tick(CHECKED.min_ms - 5000 - 500);
++    expect(screen.queryByText(CHECKED.open.text)).toBeNull();
++    await tick(1000);
++    expect(screen.getByText(CHECKED.ready.text)).toBeTruthy();
++    expect(screen.getByText(CHECKED.open.text)).toBeTruthy();
++    await tick(10000);
++    expect(screen.queryByTestId('report-page')).toBeNull(); // no auto-open
++    expect(screen.queryByText('Skip')).toBeNull();
++    fireEvent.press(screen.getByTestId('report-open'));
++    await tick(0);
++    expect(screen.getByTestId('report-page')).toBeTruthy();
++  });
++});
++
++describe('C3 still building (RR-0491)', () => {
++  it('no page at 30 s: the lines stay, the centred spinner and Loading the report…', async () => {
++    mount();
++    await tick(30000);
++    expect(screen.getByTestId('report-holding')).toBeTruthy();
++    expect(screen.getByText(LIFE.loading!)).toBeTruthy();
++    const { g, l } = last();
++    expect(screen.getByText(line(g, l).text)).toBeTruthy();
++  });
++});
++
++describe('C4 the give-up at 60 s from the pick (RR-0493)', () => {
++  it('no page at 60 s: the failure sentence and Try again, with the lines kept', async () => {
++    mount();
++    await tick(60500);
++    expect(screen.getByText(LIFE.error!)).toBeTruthy();
++    expect(screen.getByText(OWN['retry.text']!)).toBeTruthy();
++    expect(screen.getByText(line(0, 0).text)).toBeTruthy();
++  });
++});
++
++describe('C5 a failure shows right away (RR-0492 item 3; RR-0497 Q-a A)', () => {
++  it('a 500 with the three retries spent shows the failure at once, the lines as far as they got', async () => {
++    report = () => Promise.reject(new ApiError(500, 'boom'));
++    mount();
++    await tick(8000); // attempts at about 0, 1, 3 and 7 s (the library delays 1, 2 and 4 s)
++    expect(calls.report).toBe(4);
++    expect(screen.getByText(LIFE.error!)).toBeTruthy();
++    const { g, l } = last();
++    expect(screen.queryByTestId(`report-line-${CHECKED.groups[g]!.key}-${line(g, l).key}`)).toBeNull(); // the last line never started
++    await tick(20000);
++    expect(screen.queryByTestId(`report-line-${CHECKED.groups[g]!.key}-${line(g, l).key}`)).toBeNull(); // and never does: the reveal stopped
++  });
++  it('a compute that fails at 20 s each try: the failure at 60 s and no further retry afterwards', async () => {
++    report = () => failAfter(20000, new ApiError(500, 'slow failure'));
++    mount();
++    await tick(59000);
++    expect(screen.queryByText(LIFE.error!)).toBeNull();
++    await tick(1500);
++    expect(screen.getByText(LIFE.error!)).toBeTruthy();
++    await tick(60000);
++    expect(calls.report).toBe(3); // 0, 21 and 43 s; the third fails at 63 s, after the give-up, and is not retried
++  });
++});
++
++describe('C6 no report for this lot (RR-0490 4 B, RR-0494)', () => {
++  it('a miss at 0.1 s shows No report for this lot yet. and Back to search at once; one press goes back, a second does not', async () => {
++    report = () => after(100, MISS);
++    mount();
++    await tick(500); // the fast read, then the report read answering at 0.1 s, then the render: well under a second (RR-0494)
++    expect(screen.getByText(LIFE.miss!)).toBeTruthy();
++    expect(screen.getByText(OWN['back_to_search.text']!)).toBeTruthy();
++    fireEvent.press(screen.getByTestId('report-back-to-search'));
++    fireEvent.press(screen.getByTestId('report-back-to-search'));
++    expect(mockBack).toHaveBeenCalledTimes(1);
++  });
++});
++
++describe('C7 Try again after the give-up', () => {
++  it('a late page after the give-up: Try again shows it with no new read', async () => {
++    report = () => after(70000, PAGE);
++    mount();
++    await tick(61000);
++    expect(screen.getByText(LIFE.error!)).toBeTruthy();
++    await tick(10000);
++    expect(screen.getByText(LIFE.error!)).toBeTruthy(); // the late page waits in the cache
++    const before = calls.report;
++    fireEvent.press(screen.getByTestId('report-retry'));
++    await tick(0);
++    expect(screen.getByTestId('report-page')).toBeTruthy();
++    expect(calls.report).toBe(before);
++  });
++  it('with no page: Try again shows still building with the lines in full; a second read that never answers ends on the failure at a fresh 60 s', async () => {
++    mount();
++    await tick(61000);
++    fireEvent.press(screen.getByTestId('report-retry'));
++    await tick(0);
++    expect(screen.getByTestId('report-holding')).toBeTruthy();
++    const { g, l } = last();
++    expect(screen.getByText(line(g, l).text)).toBeTruthy();
++    await tick(59000);
++    expect(screen.queryByText(LIFE.error!)).toBeNull();
++    await tick(1500);
++    expect(screen.getByText(LIFE.error!)).toBeTruthy();
++  });
++});
++
++describe('C8 Reduce Motion', () => {
++  it('all lines at once and one announcement; the button still waits for the minimum', async () => {
++    jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(true);
++    const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => undefined);
++    report = () => after(1000, PAGE);
++    mount();
++    await tick(100);
++    const { g, l } = last();
++    expect(screen.getByText(line(g, l).text)).toBeTruthy();
++    await tick(5000);
++    expect(screen.queryByText(CHECKED.open.text)).toBeNull();
++    await tick(CHECKED.min_ms);
++    expect(screen.getByText(CHECKED.open.text)).toBeTruthy();
++    expect(announce.mock.calls).toEqual([[CHECKED.summary]]);
++  });
++});
++
++describe('C9 Back during the compute, then the lot opened again', () => {
++  it('the lines come back from the pick mark and the report read in flight is not sent again (an abandoned open is counted once)', async () => {
++    report = () => after(15000, PAGE);
++    const first = mount();
++    await tick(5000);
++    first.unmount();
++    await tick(1000);
++    mount();
++    await tick(0);
++    expect(screen.getByText(line(0, 0).text)).toBeTruthy(); // 6 s from the pick: the first line is done, not restarted
++    expect(calls.report).toBe(1);
++  });
++});
++
++describe('C10 the fast read fails', () => {
++  it('no lines and the spinner with Loading the report…; the report read is still sent', async () => {
++    fast = () => Promise.reject(new ApiError(500, 'fast down'));
++    mount();
++    await tick(10);
++    expect(screen.queryByText(OWN['checks.label']!)).toBeNull();
++    expect(screen.getByTestId('report-spinner')).toBeTruthy();
++    expect(screen.getByText(LIFE.loading!)).toBeTruthy();
++    expect(calls).toEqual({ fast: 1, report: 1 });
++  });
++});
++
++describe('C11 a refused report read shows the wall, not the failure screen', () => {
++  it('a 403 limit refusal shows the report-limit wall', async () => {
++    report = () => Promise.reject(new ReportLimitError(10, '2026-12-09T05:00:00.000Z'));
++    mount();
++    await tick(100);
++    expect(screen.getByTestId('parcel-wall-limit')).toBeTruthy();
++    expect(screen.queryByText(LIFE.error!)).toBeNull();
++  });
++});
+diff --git a/mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx b/mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx
+index de023c4e85543300579b63eb6ee4b6333d7c8915..08aa83df0488351fdb81fdef66cdd74366c75dd9 100644
+--- a/mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx
++++ b/mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx
+@@ -6,6 +6,8 @@
+ // (mobile/app/(app)/parcel-tool/[parcelId].tsx: reportScreenState over data and isError; `isFetching` only holds the semi redirect effect, never a render branch).
+ // For each state the route can show, the route is rendered twice on the same lookup state, isFetching true then false; the two trees must be equal. The states
+ // are compared with themselves, never with each other (loading, miss, served page and error stay four different screens).
++// task-267 (dated 2026-11-25, PLAN-267-v2 step 7): the route reads useReportScreen (the fast read, the report read and the clock); reportScreenState reads no
++// isFetching. + the loading screen states with the lines (checking, ready, holding, and the endings with the lines).
+ require('react-native-css-interop/test');
+ import * as React from 'react';
+ import fs from 'node:fs';
+@@ -20,13 +22,15 @@ jest.mock('expo-router', () => ({
+ type Hook = { data: unknown; isError: boolean; isFetching: boolean; refetch: jest.Mock };
+ let mockHook: Hook = { data: undefined, isError: false, isFetching: false, refetch: jest.fn() };
+ // task-452: the route also reads the entitlement read through useWallState (no refusal here, so no wall).
+-jest.mock('@/hooks/useParcelLookup', () => ({ useParcelLookup: () => mockHook, useParcelEntitlement: () => ({ data: undefined, isFetching: false, isError: false }) }));
++let mockExtra: Record<string, unknown> = {};
++jest.mock('@/hooks/useParcelLookup', () => ({ useReportScreen: () => ({ ...{ checked: null, elapsedMs: 0, lineElapsedMs: 0, gaveUp: false, answeredThisVisit: true, opened: false, linesFull: false, open: jest.fn(), retry: jest.fn(), address: null, isError: false, isFetching: false, error: null }, ...mockHook, ...mockExtra }), useParcelEntitlement: () => ({ data: undefined, isFetching: false, isError: false }) }));
+ 
+ // eslint-disable-next-line @typescript-eslint/no-require-imports
+ const Screen = require('../app/(app)/parcel-tool/[parcelId]').default as React.ComponentType;
+ 
+ const REPO = path.resolve(__dirname, '..', '..');
+ const VIEW = (JSON.parse(fs.readFileSync(path.join(REPO, 'src/tests/fixtures/report-page/props/page_v21.mobile.json'), 'utf8')) as { view: unknown }).view;
++const CHECKED = (JSON.parse(fs.readFileSync(path.join(REPO, 'src/tests/fixtures/report-page/props/ready.mobile.json'), 'utf8')) as { checked: unknown }).checked;
+ const hit = (page: unknown) => ({ match: { parcelId: 'PIN-777', matchType: 'direct', address: '26 Hurlingham Cres' }, candidates: [], warnings: [], parcel: null, resolution: 'unique', map: null, page });
+ 
+ describe('Spec 99 §8.3: toggling isFetching does not flip the report route gate', () => {
+@@ -39,6 +43,7 @@ describe('Spec 99 §8.3: toggling isFetching does not flip the report route gate
+     // task-456 X5 (mcfixreborn-g3 GROUNDER-B.md:89, D4): the held unsure lot (SRCH.METER-2: `data && !ask`); basis as reportScreen.mount.behaviour.test.tsx:108.
+     ['the held unsure lot (semi question owed)', { ...hit(null), lotForm: { detected: 'semi_half', basis: 'o4_two_parcel_abut', unsure: true } }, false],
+   ])('%s: the same tree with isFetching true and false', (_name, data, isError) => {
++    mockExtra = {};
+     mockHook = { data, isError, isFetching: true, refetch: jest.fn() };
+     const fetching = render(<Screen />);
+     const treeFetching = JSON.stringify(fetching.toJSON());
+@@ -51,3 +56,25 @@ describe('Spec 99 §8.3: toggling isFetching does not flip the report route gate
+     expect(treeFetching).toBe(treeSettled);
+   });
+ });
++
++describe('task-267: the loading screen states hold under an isFetching toggle too', () => {
++  it.each<[string, unknown, Record<string, unknown>]>([
++    ['checking (the lines playing)', undefined, { checked: CHECKED, elapsedMs: 5000, lineElapsedMs: 5000 }],
++    ['ready (the lines done, the report in)', hit(VIEW), { checked: CHECKED, elapsedMs: 23000, lineElapsedMs: 23000 }],
++    ['holding (the lines done, no report)', undefined, { checked: CHECKED, elapsedMs: 30000, lineElapsedMs: 30000 }],
++    ['the failure with the lines (the give-up)', undefined, { checked: CHECKED, elapsedMs: 60000, lineElapsedMs: 60000, gaveUp: true }],
++    ['no report with the lines', hit(null), { checked: CHECKED, elapsedMs: 100, lineElapsedMs: 100 }],
++  ])('%s: the same tree with isFetching true and false', (_name, data, extra) => {
++    mockExtra = extra;
++    mockHook = { data, isError: false, isFetching: true, refetch: jest.fn() };
++    const fetching = render(<Screen />);
++    const a = JSON.stringify(fetching.toJSON());
++    fetching.unmount();
++    mockHook = { data, isError: false, isFetching: false, refetch: jest.fn() };
++    const settled = render(<Screen />);
++    const b = JSON.stringify(settled.toJSON());
++    settled.unmount();
++    expect(a).not.toBe('null');
++    expect(a).toBe(b);
++  });
++});
+diff --git a/mobile/__tests__/reportScreen.mount.behaviour.test.tsx b/mobile/__tests__/reportScreen.mount.behaviour.test.tsx
+index 4d075fdb1abb2ea51e0d3c64db7e8bae182d8c39..1b8539b78718eb078a1fc26eac432087e42519e3 100644
+--- a/mobile/__tests__/reportScreen.mount.behaviour.test.tsx
++++ b/mobile/__tests__/reportScreen.mount.behaviour.test.tsx
+@@ -11,6 +11,9 @@
+ //        Carried over from the retired W-0 / EI-D1 lock (parcelDetailW0Hide.behaviour.test.tsx, retired with the old screen, MF-74 Q2 i): no
+ //        legacy size or cost label or value renders in any state, even when a server still sent a legacy menu and legacy headlines.
+ //   T-B2 Back: with history it goes back; on a cold open (deep link, no history) it replaces with the Lookup route; it has a role and a label.
++// task-267 (dated 2026-11-25, PLAN-267-v2 section 5, M1-M3): the route reads useReportScreen (the fast read, the report read and the clock); the mock
++// returns its stable signals. Retry is the hook's retry (prior text: the lookup's refetch). M1 a cached miss from an earlier visit is not this visit's
++// answer; M2 a cached page opens at once with no lines and a refetch behind it brings back none; M3 the bar names the lot.
+ require('react-native-css-interop/test');
+ import * as React from 'react';
+ import fs from 'node:fs';
+@@ -26,13 +29,13 @@ jest.mock('expo-router', () => ({
+   useRouter: () => ({ replace: mockReplace, back: mockBack, push: jest.fn(), canGoBack: () => mockCanGoBack }),
+   useLocalSearchParams: () => mockParams,
+ }));
+-type Hook = { data: unknown; isError: boolean; refetch: jest.Mock; error?: unknown };
+-let mockHook: Hook = { data: undefined, isError: false, refetch: jest.fn() };
++type Hook = { data: unknown; isError: boolean; retry: jest.Mock; error?: unknown; [k: string]: unknown };
++let mockHook: Hook = { data: undefined, isError: false, retry: jest.fn() };
+ // task-452: the entitlement read the route's wall waits on (useWallState).
+ let mockEntitlement: { data: unknown; isFetching: boolean; isError: boolean } = { data: undefined, isFetching: false, isError: false };
+ const mockIds: unknown[] = [];
+ const mockSemi: unknown[] = [];
+-jest.mock('@/hooks/useParcelLookup', () => ({ useParcelLookup: (id: unknown, semi?: unknown) => { mockIds.push(id); mockSemi.push(semi); return mockHook; }, useParcelEntitlement: () => mockEntitlement }));
++jest.mock('@/hooks/useParcelLookup', () => ({ useReportScreen: (id: unknown, semi?: unknown) => { mockIds.push(id); mockSemi.push(semi); return { ...{ checked: null, elapsedMs: 0, lineElapsedMs: 0, gaveUp: false, answeredThisVisit: true, opened: false, linesFull: false, open: jest.fn(), retry: jest.fn(), address: null, isError: false, isFetching: false, error: null }, ...mockHook }; }, useParcelEntitlement: () => mockEntitlement }));
+ 
+ // eslint-disable-next-line @typescript-eslint/no-require-imports
+ const Screen = require('../app/(app)/parcel-tool/[parcelId]').default as React.ComponentType;
+@@ -55,14 +58,14 @@ const LEGACY = /Max build FSI|Max buildable GFA|As-of-right|Max build storeys|Co
+ 
+ beforeEach(() => {
+   mockReplace.mockClear(); mockBack.mockClear(); mockCanGoBack = true; mockIds.length = 0; mockSemi.length = 0; mockParams = { parcelId: 'PIN-777' };
+-  mockHook = { data: undefined, isError: false, refetch: jest.fn() };
++  mockHook = { data: undefined, isError: false, retry: jest.fn() };
+   mockEntitlement = { data: undefined, isFetching: false, isError: false };
+ });
+ const noLegacy = (): void => expect(screen.queryAllByText(LEGACY)).toEqual([]);
+ 
+ describe('T-B1 the lot route mounts the REPORT host on the lookup query', () => {
+   it('a served page: the v21 page renders (the golden view), the lookup is keyed on the route parcelId, no legacy text', () => {
+-    mockHook = { data: hit(VIEW), isError: false, refetch: jest.fn() };
++    mockHook = { data: hit(VIEW), isError: false, retry: jest.fn() };
+     render(<Screen />);
+     expect(mockIds).toContain('PIN-777');
+     expect(screen.getByTestId('report-page')).toBeTruthy();
+@@ -75,7 +78,7 @@ describe('T-B1 the lot route mounts the REPORT host on the lookup query', () =>
+     ['an older server (no page key)', { ...hit(null), page: undefined }],
+     ['a miss', { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match', map: null, page: null }],
+   ])('%s: the approved miss text, no page, no legacy text', (_n, data) => {
+-    mockHook = { data, isError: false, refetch: jest.fn() };
++    mockHook = { data, isError: false, retry: jest.fn() };
+     render(<Screen />);
+     expect(screen.getByText(LIFE.miss!)).toBeTruthy();
+     expect(screen.queryByTestId('report-page')).toBeNull();
+@@ -87,15 +90,15 @@ describe('T-B1 the lot route mounts the REPORT host on the lookup query', () =>
+     expect(screen.getByTestId('report-spinner')).toBeTruthy();
+   });
+   it('an error with nothing cached: the error text and Retry ("Try again"); a press refetches once', () => {
+-    mockHook = { data: undefined, isError: true, refetch: jest.fn() };
++    mockHook = { data: undefined, isError: true, retry: jest.fn() };
+     render(<Screen />);
+     expect(screen.getByText(LIFE.error!)).toBeTruthy();
+     expect(within(screen.getByTestId('report-retry')).getByText(OWN['retry.text']!)).toBeTruthy();
+     fireEvent.press(screen.getByTestId('report-retry'));
+-    expect(mockHook.refetch).toHaveBeenCalledTimes(1);
++    expect(mockHook.retry).toHaveBeenCalledTimes(1);
+   });
+   it('offline: an error with a cached page still shows the page, never the error', () => {
+-    mockHook = { data: hit(VIEW), isError: true, refetch: jest.fn() };
++    mockHook = { data: hit(VIEW), isError: true, retry: jest.fn() };
+     render(<Screen />);
+     expect(screen.getByTestId('report-page')).toBeTruthy();
+     expect(screen.queryByText(LIFE.error!)).toBeNull();
+@@ -108,7 +111,7 @@ describe('T-B1 the lot route mounts the REPORT host on the lookup query', () =>
+ const unsureHit = (page: Json | null) => ({ ...hit(page), lotForm: { detected: 'semi_half', basis: 'o4_two_parcel_abut', unsure: true } });
+ describe('SRCH.METER-2 the held report screen', () => {
+   it('a settled unsure lot with page null shows the loading state, not the miss text, and redirects to the question once', () => {
+-    mockHook = { data: unsureHit(null), isError: false, refetch: jest.fn() };
++    mockHook = { data: unsureHit(null), isError: false, retry: jest.fn() };
+     render(<Screen />);
+     expect(screen.getByText(LIFE.loading!)).toBeTruthy();
+     expect(screen.queryByText(LIFE.miss!)).toBeNull();
+@@ -116,13 +119,13 @@ describe('SRCH.METER-2 the held report screen', () => {
+   });
+   it('an answered unsure lot (semi=answered) with its page shows the report and does not redirect', () => {
+     mockParams = { parcelId: 'PIN-777', semi: 'answered' };
+-    mockHook = { data: unsureHit(VIEW), isError: false, refetch: jest.fn() };
++    mockHook = { data: unsureHit(VIEW), isError: false, retry: jest.fn() };
+     render(<Screen />);
+     expect(screen.getByTestId('report-page')).toBeTruthy();
+     expect(mockReplace).not.toHaveBeenCalled();
+   });
+   it('a clear lot with page null still shows the miss text (only the unsure, unanswered case is held)', () => {
+-    mockHook = { data: { ...hit(null), lotForm: { detected: 'detached', basis: 'o4_not_met', unsure: false } }, isError: false, refetch: jest.fn() };
++    mockHook = { data: { ...hit(null), lotForm: { detected: 'detached', basis: 'o4_not_met', unsure: false } }, isError: false, retry: jest.fn() };
+     render(<Screen />);
+     expect(screen.getByText(LIFE.miss!)).toBeTruthy();
+     expect(mockReplace).not.toHaveBeenCalled();
+@@ -140,7 +143,7 @@ describe('SRCH.METER-2 the held report screen', () => {
+ 
+ describe('T-B2 Back is a route (FE-36; NAV-AUDIT #3, the MF-53 rule)', () => {
+   it('with history: router.back(); the control is a labelled button', () => {
+-    mockHook = { data: hit(null), isError: false, refetch: jest.fn() };
++    mockHook = { data: hit(null), isError: false, retry: jest.fn() };
+     render(<Screen />);
+     const back = screen.getByTestId('report-back');
+     expect(back.props.accessibilityRole).toBe('button');
+@@ -162,7 +165,7 @@ describe('T-B2 Back is a route (FE-36; NAV-AUDIT #3, the MF-53 rule)', () => {
+ describe('task-452 the report route draws the wall', () => {
+   // eslint-disable-next-line @typescript-eslint/no-require-imports
+   const { ReportLimitError } = require('@/lib/errors') as typeof import('@/lib/errors');
+-  const refused = (): void => { mockHook = { data: undefined, isError: true, error: new ReportLimitError(10, '2026-12-09T05:00:00.000Z'), refetch: jest.fn() }; };
++  const refused = (): void => { mockHook = { data: undefined, isError: true, error: new ReportLimitError(10, '2026-12-09T05:00:00.000Z'), retry: jest.fn() }; };
+   it('a limit 403 with an answered read shows the wall with the read\'s count and date, Back, and not the error text', () => {
+     refused();
+     mockEntitlement = { data: { status: 'active', reportsLimit: 10, resetsOnDisplay: '9 Dec 2026' }, isFetching: false, isError: false };
+@@ -190,3 +193,39 @@ describe('task-452 the report route draws the wall', () => {
+     expect(screen.queryByText(LIFE.error as string)).toBeNull();
+   });
+ });
++
++// task-267 (PLAN-267-v2 section 5): M1-M3.
++const CHECKED = rj('src/tests/fixtures/report-page/props/ready.mobile.json').checked as { min_ms: number };
++describe('task-267 the loading screen on the real route', () => {
++  it('M1 a cached miss from an earlier visit shows no miss text until this visit\'s answer', () => {
++    mockHook = { data: hit(null), isError: false, retry: jest.fn(), answeredThisVisit: false, checked: CHECKED, elapsedMs: 3000, lineElapsedMs: 3000 };
++    const view = render(<Screen />);
++    expect(screen.queryByText(LIFE.miss!)).toBeNull();
++    expect(screen.getByText(OWN['checks.label']!)).toBeTruthy();
++    mockHook = { ...mockHook, answeredThisVisit: true, elapsedMs: 3100, lineElapsedMs: 3100 };
++    view.rerender(<Screen />);
++    expect(screen.getByText(LIFE.miss!)).toBeTruthy();
++    expect(screen.getByText(OWN['back_to_search.text']!)).toBeTruthy();
++  });
++  it('M2 a cached page opens at once with no lines; the silent refetch behind it brings back no lines or checking state', () => {
++    mockHook = { data: hit(VIEW), isError: false, retry: jest.fn(), answeredThisVisit: false };
++    const view = render(<Screen />);
++    expect(screen.getByTestId('report-page')).toBeTruthy();
++    expect(screen.queryByText(OWN['checks.label']!)).toBeNull();
++    mockHook = { ...mockHook, isFetching: true };
++    view.rerender(<Screen />);
++    expect(screen.getByTestId('report-page')).toBeTruthy();
++    expect(screen.queryByText(OWN['checks.label']!)).toBeNull();
++    expect(screen.queryByTestId('report-spinner')).toBeNull();
++  });
++  it('M3 the lot\'s address is the bar title; with no address there is no title node', () => {
++    mockHook = { data: undefined, isError: false, retry: jest.fn(), address: '48 Larchmere Avenue' };
++    const view = render(<Screen />);
++    expect(screen.getByTestId('report-title')).toBeTruthy();
++    expect(screen.getByText('48 Larchmere Avenue')).toBeTruthy();
++    view.unmount();
++    mockHook = { data: undefined, isError: false, retry: jest.fn(), address: null };
++    render(<Screen />);
++    expect(screen.queryByTestId('report-title')).toBeNull();
++  });
++});
+diff --git a/mobile/__tests__/reportScreens.golden.test.ts b/mobile/__tests__/reportScreens.golden.test.ts
+index f9bd8ff5b1e9d38b7d3633dab7a9b6916486a997..827e0f082332dbc5866a1c50baee11bb65bfa5e9 100644
+--- a/mobile/__tests__/reportScreens.golden.test.ts
++++ b/mobile/__tests__/reportScreens.golden.test.ts
+@@ -9,9 +9,12 @@
+ // role (totality); T2 every pending part carries the pending style last; T3 no literal display text, every ref kind declared, every part ref
+ // resolves; T4 the REPORT layout rules (mapping.mobile.REPORT, keyed children, Text size/weight/report colour, exactly min-h-[44px]); T5 the binding
+ // throws on an unknown section kind, an unplaced part, an ad section without its ad. Each rule has a planted case.
++// task-267 + task-317 (dated 2026-11-25, PLAN-267-v2 section 5): + the five loading screen goldens (checking, ready, holding, error_lines, miss_lines): T1
++// checkedProps(checked, elapsed_ms, screen) equals the committed props; every derived ref resolves to a text of the server's checked view; the miss state
++// carries Back to search (RR-0490 4 B) and the label Checks for this lot is content (RR-0493).
+ import fs from 'node:fs';
+ import path from 'node:path';
+-import { backProps, lifecycleProps, reportProps, REPORT_UI_CLOSED, UNSHOWN, type LifecycleState, type PageView, type PropsNode, type ReportUi } from '@/components/surfaces/ReportBinding';
++import { backProps, checkedProps, lifecycleProps, reportProps, REPORT_UI_CLOSED, UNSHOWN, type CheckedView, type LifecycleState, type PageView, type PropsNode, type ReportScreen, type ReportUi } from '@/components/surfaces/ReportBinding';
+ import { resolveValue, type SurfaceActions } from '@/components/surfaces/SurfaceRenderer';
+ import { REPORT_PENDING } from '@/constants/reportPage';
+ 
+@@ -24,6 +27,7 @@ const goldens = Object.fromEntries(fs.readdirSync(DIR).filter((f) => f.endsWith(
+ const bindings = rj(path.join(REPO, 'scripts/surfaces/_schema/bindings.json')) as { mapping: { mobile: Record<string, string[]> }; touch_targets: { mobile: Record<string, string[]> }; ref_kinds: string[]; non_display_keys: string[] };
+ const PAGE_STATES = ['page_all_null', 'page_no_ad', 'page_not_evaluated', 'page_option_hidden', 'page_v21'];
+ const LIFE_STATES = ['error', 'loading', 'miss'];
++const CHECKED_STATES = ['checking', 'error_lines', 'holding', 'miss_lines', 'ready'];
+ const viewOf = (n: string): PageView => goldens[n]!.view as PageView;
+ const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
+ /** The 35 report-* colour keys (MF-83: 31 re-valued + amber-ink, amber-soft, stage, field) of mobile/tailwind.config.js (membership, not a prefix). */
+@@ -99,8 +103,8 @@ const noActions = {} as unknown as SurfaceActions;
+ const ctxOf = (v: PageView) => ({ content: {}, data: { contract: {}, derived: {}, page: v }, actions: noActions });
+ 
+ describe('MF-48 mobile REPORT props goldens', () => {
+-  it('8 committed goldens: 5 page states and the 3 lifecycle states', () => {
+-    expect(Object.keys(goldens)).toEqual([...LIFE_STATES, ...PAGE_STATES].sort());
++  it('13 committed goldens: 5 page states, the 3 lifecycle states and the 5 loading screen states', () => {
++    expect(Object.keys(goldens)).toEqual([...LIFE_STATES, ...PAGE_STATES, ...CHECKED_STATES].sort());
+     expect(REPORT_COLOURS).toHaveLength(35);
+   });
+   it('T1: reportProps(view) and lifecycleProps(state) equal the committed props exactly', () => {
+@@ -110,6 +114,32 @@ describe('MF-48 mobile REPORT props goldens', () => {
+       expect(reportProps(viewOf(n))).toStrictEqual(g.props);
+     }
+     for (const n of LIFE_STATES) expect(lifecycleProps(n as LifecycleState)).toStrictEqual(goldens[n]!.props);
++    for (const n of CHECKED_STATES) {
++      const g = goldens[n]!;
++      expect(checkedProps(g.checked as CheckedView, g.elapsed_ms as number, g.screen as Exclude<ReportScreen, 'view'>)).toStrictEqual(g.props);
++    }
++  });
++  it('task-267: every derived ref of a loading screen golden resolves to a text of its checked view; the screens draw their own end area and no Skip', () => {
++    for (const n of CHECKED_STATES) {
++      const g = goldens[n]!;
++      const c = { content: {}, data: { contract: {}, derived: { checked: g.checked }, page: undefined }, actions: noActions };
++      for (const r of refs(g.props, 'derived')) expect([n, r, typeof resolveValue({ derived: r }, c)]).toEqual([n, r, 'string']);
++      const content = refs(g.props, 'content');
++      expect(content[0]).toBe('checks.label');
++      expect(JSON.stringify(g.props)).not.toContain('skip');
++    }
++    expect(refs(goldens.ready!.props, 'derived')).toEqual(expect.arrayContaining(['checked.ready.text', 'checked.open.text']));
++    expect(refs(goldens.holding!.props, 'content')).toEqual(['checks.label', 'states.lifecycle.loading']);
++    expect(refs(goldens.error_lines!.props, 'content')).toEqual(['checks.label', 'states.lifecycle.error', 'retry.text']);
++    expect(refs(goldens.miss_lines!.props, 'content')).toEqual(['checks.label', 'states.lifecycle.miss', 'back_to_search.text']);
++    expect(refs(goldens.checking!.props, 'content')).toEqual(['checks.label']);
++    // the endings keep the lines as far as they got: the golden's lines are exactly those whose delay has come
++    for (const n of CHECKED_STATES) {
++      const g = goldens[n]!;
++      const ck = g.checked as CheckedView;
++      const shown = ck.groups.flatMap((x) => x.lines.filter((l) => l.delay_ms <= (g.elapsed_ms as number)).map((l) => `line-${x.key}-${l.key}`));
++      expect([n, nodes(g.props as unknown as PropsNode).map((x) => String(x.props.key)).filter((k) => k.startsWith('line-'))]).toEqual([n, shown]);
++    }
+   });
+   it('T1 totality: every part of every view is shown in some UI state (closed, a panel open, How? open) or is a declared unshown role', () => {
+     for (const n of PAGE_STATES) {
+@@ -183,6 +213,7 @@ describe('MF-48 mobile REPORT props goldens', () => {
+     // MF-48 Stage B (dated 2026-11-12): + SafeAreaView, the Back bar's top safe area (the SEARCH and LIST form, edges {top: additive}).
+     expect(bindings.mapping.mobile.REPORT).toEqual(['ScrollView', 'View', 'Text', 'Button', 'Input', 'ActivityIndicator', 'SafeAreaView', 'Svg', 'SvgPolygon', 'SvgLine']);
+     expect(['back', reportLayoutProblems(backProps()), textProblems(backProps(), 'back')]).toEqual(['back', [], []]);
++    expect(['back+title', reportLayoutProblems(backProps(true)), textProblems(backProps(true), 'back')]).toEqual(['back+title', [], []]); // task-267: the bar names the lot
+     for (const n of Object.keys(goldens)) {
+       const p = goldens[n]!.props as Json;
+       for (const t of 'page' in p ? both(p as { page: PropsNode; sheet: PropsNode | null }) : [p as unknown as PropsNode]) expect([n, reportLayoutProblems(t)]).toEqual([n, []]);
+@@ -281,8 +312,9 @@ describe('MF-48 mobile REPORT props goldens', () => {
+   it('T9: the lifecycle trees show their approved content key, never a blank or the dash; loading has the spinner', () => {
+     for (const n of LIFE_STATES) {
+       const t = lifecycleProps(n as LifecycleState);
+-      // MF-48 Stage B (B-4 b): the error state also carries Retry, its text the content key retry.text ("Try again").
+-      expect(refs(t, 'content')).toEqual([`states.lifecycle.${n}`, ...(n === 'error' ? ['retry.text'] : [])]);
++      // MF-48 Stage B (B-4 b): the error state also carries Retry, its text the content key retry.text ("Try again"). task-317 (RR-0490 4 B): the miss
++      // state carries Back to search, its text the content key back_to_search.text.
++      expect(refs(t, 'content')).toEqual([`states.lifecycle.${n}`, ...(n === 'error' ? ['retry.text'] : []), ...(n === 'miss' ? ['back_to_search.text'] : [])]);
+       expect(nodes(t).some((x) => x.component === 'ActivityIndicator')).toBe(n === 'loading');
+     }
+   });
+diff --git a/mobile/__tests__/semiQuestionPage.behaviour.test.tsx b/mobile/__tests__/semiQuestionPage.behaviour.test.tsx
+index e92d396aaeb61dce55f4cf730849bbb86d8e294a..955d417ffb8f9a26c548e541333bd0ffa061a978 100644
+--- a/mobile/__tests__/semiQuestionPage.behaviour.test.tsx
++++ b/mobile/__tests__/semiQuestionPage.behaviour.test.tsx
+@@ -35,7 +35,8 @@ const mockSetQueryData = jest.fn();
+ jest.mock('@/hooks/useParcelLookup', () => {
+   class ParcelLookupSchemaError extends Error {}
+   const { boundedWait, SEMI_CONTINUE_WAIT_MS } = jest.requireActual('@/lib/semiQuestion');
+-  return { ParcelLookupSchemaError, useAnswerParcelLookup: () => ({ mutateAsync: (parcelId: string) => { mockAnswerCalls.push(parcelId); return boundedWait(mockFetchLookup({ parcelId, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS); } }), fetchParcelLookup: (...a: unknown[]) => mockFetchLookup(...a), useParcelLookup: (id: string | undefined) => { mockCalls.push(id); return mockHook; }, useSetParcelLookup: () => (id: string, result: unknown) => mockSetQueryData(['parcel-lookup', id], result), useParcelEntitlement: () => ({ data: undefined, isFetching: false, isError: false }) }; // task-452: the report route reads the entitlement through useWallState
++  return { ParcelLookupSchemaError, useAnswerParcelLookup: () => ({ mutateAsync: (parcelId: string) => { mockAnswerCalls.push(parcelId); return boundedWait(mockFetchLookup({ parcelId, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS); } }), fetchParcelLookup: (...a: unknown[]) => mockFetchLookup(...a), useParcelLookup: (id: string | undefined) => { mockCalls.push(id); return mockHook; }, useReportScreen: (id: string | undefined) => { mockCalls.push(id); return { ...{ checked: null, elapsedMs: 0, lineElapsedMs: 0, gaveUp: false, answeredThisVisit: true, opened: false, linesFull: false, open: jest.fn(), retry: jest.fn(), address: null, isError: false, isFetching: false, error: null }, ...mockHook }; }, // task-267: the report route reads useReportScreen
++ useSetParcelLookup: () => (id: string, result: unknown) => mockSetQueryData(['parcel-lookup', id], result), useParcelEntitlement: () => ({ data: undefined, isFetching: false, isError: false }) }; // task-452: the report route reads the entitlement through useWallState
+ });
+ jest.mock('@/components/surfaces/ReportPageHost', () => {
+   const { View } = jest.requireActual('react-native');
+diff --git a/mobile/__tests__/useParcelLookup.test.ts b/mobile/__tests__/useParcelLookup.test.ts
+index 99c2898775bfefa8c30168d147c9b3ae6e59ba56..e4fc9fc83f51eef9633a2900c88b839967089f13 100644
+--- a/mobile/__tests__/useParcelLookup.test.ts
++++ b/mobile/__tests__/useParcelLookup.test.ts
+@@ -27,6 +27,7 @@ import {
+   buildAnswerParcelLookupOptions,
+   fetchParcelLookup,
+   parcelLookupParams,
++  REPORT_GIVE_UP_MS,
+   shouldRetryParcelLookup,
+   shouldRetryParcelSearch,
+   ParcelLookupSchemaError,
+@@ -113,6 +114,26 @@ describe('fetchParcelLookup — Zod boundary', () => {
+     expect(mockFetch).toHaveBeenLastCalledWith('/api/parcels/lookup?parcelId=PIN-777&semi=answered');
+   });
+ 
++  // task-267 LOAD.2 (PLAN-267-v2 step 4): the fast read is the parcelId form with fast=1; its checked view parses (href null) and an older server's
++  // answer with no whatWeChecked parses to undefined (no lines, never drift).
++  it('task-267: the fast flag is appended to the parcelId form; whatWeChecked parses, null and absent too; a malformed one is drift', async () => {
++    const checked = { summary: 's', groups: [{ key: 'lot', lines: [{ key: 'area', text: 'Lot: 1', verb: 'v', delay_ms: 0, done_ms: 10 }] }], skip: { text: 'Skip', after_ms: 0 }, ready: { text: 'r', at_ms: 20 }, open: { text: 'View report' }, min_ms: 30, paced: true, href: null };
++    mockFetch.mockResolvedValue({ data: { ...hitResponse, page: null, whatWeChecked: checked } });
++    const r = await fetchParcelLookup({ parcelId: 'PIN-777', fast: '1' });
++    expect(mockFetch).toHaveBeenLastCalledWith('/api/parcels/lookup?parcelId=PIN-777&fast=1');
++    expect(r.whatWeChecked).toEqual(checked);
++    mockFetch.mockResolvedValue({ data: { ...hitResponse, whatWeChecked: null } });
++    expect((await fetchParcelLookup({ parcelId: 'PIN-777' })).whatWeChecked).toBeNull();
++    mockFetch.mockResolvedValue({ data: hitResponse });
++    expect((await fetchParcelLookup({ parcelId: 'PIN-777' })).whatWeChecked).toBeUndefined();
++    mockFetch.mockResolvedValue({ data: { ...hitResponse, whatWeChecked: { ...checked, groups: 'x' } } });
++    await expect(fetchParcelLookup({ parcelId: 'PIN-777' })).rejects.toBeInstanceOf(ParcelLookupSchemaError);
++  });
++  it('task-267 O7 (a): the report give-up is the registered 60 000 the semi wait reads (one value, no typed number)', () => {
++    expect(REPORT_GIVE_UP_MS).toBe(SEMI_CONTINUE_WAIT_MS);
++    expect(REPORT_GIVE_UP_MS).toBe(60000);
++  });
++
+   // SRCH.METER-2 (task-360, RR-0278; SE-1, SE-2): the report screen's own query forwards the route param, so an answered lot refetches WITH the flag (the server
+   // holds an unsure lot's page without it). Only the exact sentinel counts as answered; a stray param, an empty one or none sends nothing (a stray param asks, never skips).
+   it('parcelLookupParams sends semi=answered only when the route param is exactly "answered"', () => {
+diff --git a/mobile/app/(app)/parcel-tool/[parcelId].tsx b/mobile/app/(app)/parcel-tool/[parcelId].tsx
+index 4cb53bda90f067b90fe2ee1aabb0b05fe68a070b..72e64820a8be466f9957df3fefa76c0b2bb0c3d7 100644
+--- a/mobile/app/(app)/parcel-tool/[parcelId].tsx
++++ b/mobile/app/(app)/parcel-tool/[parcelId].tsx
+@@ -8,11 +8,13 @@
+ // the page view itself is built on the server by MF-57's core and sent as `page` (null for every lot until MB-44, so the approved miss text shows).
+ // Offline, the persisted query cache (mobile/app/_layout.tsx, 24 h) still serves a fetched page. Back goes back with history, else to the Lookup
+ // route (the MF-53 rule, NAV-AUDIT #3). The old hand-built screen, its sponsor slot and its phone formatting are retired (MF-74 Q2 i).
+-import React, { useCallback } from 'react';
++// task-267 LOAD.2 + task-317 LOAD.4 (PLAN-267-v2 step 7): the reads and the clock come from useReportScreen (the fast read first, then the report read);
++// the screen is reportScreenState over their stable signals (no isFetching); the wall stays the first branch while no page is shown.
++import React from 'react';
+ import { useLocalSearchParams } from 'expo-router';
+ import { ReportPageHost } from '@/components/surfaces/ReportPageHost';
+ import { REPORT_SLICE, reportScreenState } from '@/components/surfaces/ReportBinding';
+-import { useParcelLookup } from '@/hooks/useParcelLookup';
++import { useReportScreen } from '@/hooks/useParcelLookup';
+ import { useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
+ import { useWallState } from '@/hooks/useWallState';
+ import { needsSemiQuestion, semiQuestionRoute, SEMI_PARAM } from '@/lib/lotForm';
+@@ -20,7 +22,8 @@ import { needsSemiQuestion, semiQuestionRoute, SEMI_PARAM } from '@/lib/lotForm'
+ export default function ParcelReportScreen() {
+   const { parcelId, [SEMI_PARAM]: semi } = useLocalSearchParams<{ parcelId: string; semi?: string }>();
+   const semiParam = typeof semi === 'string' ? semi : undefined;
+-  const { data, isError, isFetching, refetch, error } = useParcelLookup(parcelId, semiParam);
++  const r = useReportScreen(parcelId, semiParam);
++  const { data, isFetching, error } = r;
+   // task-452 SEARCHFIX.4: a refused lookup (limit, expired) shows the wall once the entitlement read has answered; while it is pending the loading
+   // lifecycle shows, never the error one; a shown report is never replaced (the wall is drawn only while view is null).
+   const { kind: wallKind, wall } = useWallState(error);
+@@ -31,8 +34,16 @@ export default function ParcelReportScreen() {
+   useSettledRedirect(ask && parcelId ? semiQuestionRoute(parcelId) : null, isFetching);
+   // SRCH.METER-2 (task-360, UX-2c): the server holds an unsure lot's page (null) until the answer, so while the question is owed the screen shows the loading
+   // state, never the miss text, on the settled render before the redirect above fires.
+-  const { view, lifecycle } = reportScreenState({ data: data && !ask ? { page: data.page ?? null } : undefined, isError });
+-  const onRetry = useCallback(() => void refetch(), [refetch]);
++  const { view, lifecycle, screen } = reportScreenState({
++    data: data && !ask ? { page: data.page ?? null } : undefined, checked: ask ? null : r.checked, isError: r.isError, elapsedMs: r.elapsedMs,
++    gaveUp: r.gaveUp, answeredThisVisit: r.answeredThisVisit && !ask, opened: r.opened, linesFull: r.linesFull,
++  });
+   const onBack = useGoBack();
+-  return <ReportPageHost view={view} lifecycle={view === null && wallKind === 'wait' ? 'loading' : lifecycle} content={REPORT_SLICE.content} onRetry={onRetry} onBack={onBack} wall={view === null ? wall : null} />;
++  const waiting = view === null && wallKind === 'wait';
++  return (
++    <ReportPageHost
++      view={view} lifecycle={waiting ? 'loading' : lifecycle} content={REPORT_SLICE.content} onRetry={r.retry} onBack={onBack} wall={view === null ? wall : null}
++      screen={waiting ? 'holding' : screen} checked={ask ? null : r.checked} lineElapsedMs={r.lineElapsedMs} address={r.address} onOpen={r.open}
++    />
++  );
+ }
+diff --git a/mobile/src/components/surfaces/ReportBinding.tsx b/mobile/src/components/surfaces/ReportBinding.tsx
+index c1795c999749d23bfaa50e7ecf7cac14da164d93..bb2a1b4e17752288cc85a168edd1a184ceb02740 100644
+--- a/mobile/src/components/surfaces/ReportBinding.tsx
++++ b/mobile/src/components/surfaces/ReportBinding.tsx
+@@ -12,6 +12,12 @@
+ // A pending part shows its ruled text in its own slot with REPORT_PENDING appended last (MF-57 D-E). Nothing is skipped silently: an unknown
+ // section kind throws, and so does any part of the view that is neither placed nor a declared unshown role (UNSHOWN). FE-05: no numeric literal but
+ // 0 and 1, no arithmetic.
++// task-267 LOAD.2 + task-317 LOAD.4 (PLAN-267-v2 step 5; approved mock MOCK-LOADING-ENDINGS-v3, RR-0491; RR-0492, RR-0493, RR-0494): the loading screen.
++// checkedProps draws the What we checked view the server built (whatWeChecked, the fast read) as five screens from existing kinds only: the lines
++// playing (checking), the ready line and View report (ready), the centred spinner and the loading words (holding), the failure sentence and Try again
++// (error), the no-report sentence and Back to search (miss). Every text is a ref: {"derived": "checked.<path>"} into the view the server sent, or an
++// approved content key. A line is a node present or absent by its delay_ms against the elapsed time the host passes in (no maths but the compare).
++// reportScreenState is total over the screen's stable signals and picks one of view, checking, ready, holding, error, miss.
+ import { REPORT_HEX as H, REPORT_PAGE_LAYOUT as L, REPORT_PENDING } from '@/constants/reportPage';
+ import slice from '@/generated/surfaces/mobile_parcel_detail.json';
+ 
+@@ -28,7 +34,15 @@ export type PanelName = 'size' | 'cost';
+ /** Screen-local UI state (Spec 99: ephemeral, never persisted; every visit starts closed). Keyed by option section id. */
+ export type ReportUi = { panel: Record<string, PanelName | null>; how: Record<string, boolean> };
+ export type LifecycleState = 'loading' | 'miss' | 'error';
+-export type Ref = { part: string } | { content: string };
++/** task-267: the server-built What we checked view (core ViewChecked; mobile/src/lib/schemas.ts CheckedViewSchema). */
++export type CheckedLine = { key: string; text: string; verb: string; delay_ms: number; done_ms: number };
++export type CheckedView = {
++  summary: string; groups: { key: string; lines: CheckedLine[] }[]; dates?: { text: string; delay_ms: number }; skip: { text: string; after_ms: number };
++  ready: { text: string; at_ms: number }; open: { text: string }; min_ms: number; paced: boolean; href: string | null;
++};
++/** task-267: what the report screen shows. `view` is the page; the other five are the loading screen and its endings. */
++export type ReportScreen = 'view' | 'checking' | 'ready' | 'holding' | 'error' | 'miss';
++export type Ref = { part: string } | { content: string } | { derived: string }; // task-267: + derived (the checked view and the address the host passes as data.derived)
+ export type PropsNode = { component: string; props: Record<string, unknown>; children: (PropsNode | Ref)[] };
+ 
+ export const REPORT_UI_CLOSED: ReportUi = { panel: {}, how: {} };
+@@ -370,34 +384,113 @@ export function lifecycleProps(state: LifecycleState): PropsNode {
+   return node('View', { key: 'report-lifecycle', testID: `report-${state}`, className: L.lifecycle }, [
+     ...(state === 'loading' ? [node('ActivityIndicator', { key: 'spinner', testID: 'report-spinner', size: 'small', color: H.amber })] : []),
+     node('Text', { key: 'message', className: L.lifecycleText, accessibilityRole: 'text' }, [{ content: `states.lifecycle.${state}` }]),
+-    ...(state === 'error'
+-      ? [node('Button', { key: 'retry', testID: 'report-retry', className: L.retry, accessibilityRole: 'button', onPress: { action: 'retry' } }, [
+-          node('Text', { key: 'retry-label', className: L.retryText }, [{ content: 'retry.text' }]),
++    ...(state === 'error' ? [retryButton()] : []),
++    // task-317 LOAD.4 (RR-0490 "4 B - no report screen"; the approved mock, screen 5): the no-report state carries Back to search (the `back` action).
++    ...(state === 'miss' ? [backToSearchButton()] : []),
++  ]);
++}
++
++const retryButton = (): PropsNode => node('Button', { key: 'retry', testID: 'report-retry', className: L.retry, accessibilityRole: 'button', onPress: { action: 'retry' } }, [
++  node('Text', { key: 'retry-label', className: L.retryText }, [{ content: 'retry.text' }]),
++]);
++const backToSearchButton = (): PropsNode => node('Button', { key: 'back-to-search', testID: 'report-back-to-search', className: L.retry, accessibilityRole: 'button', onPress: { action: 'back' } }, [
++  node('Text', { key: 'back-to-search-label', className: L.retryText }, [{ content: 'back_to_search.text' }]),
++]);
++
++/**
++ * task-267 LOAD.2 + task-317 LOAD.4: the loading screen over the server's checked view (data.derived.checked). `lineElapsedMs` is the time since the pick
++ * mark (the host passes a number past every delay under Reduce Motion or after Try again: all lines at once). A line shows its verb from delay_ms and its
++ * finding from done_ms; the dates line from its delay_ms. The end area is the screen's: none while checking; the ready line and View report (submit) when
++ * the lines are done and the report is in; the centred spinner and the loading words while the report is still building; the failure sentence and Try again;
++ * the no-report sentence and Back to search. On an ending the host stops the clock, so the lines stay as far as they got (RR-0492 item 2). No Skip (RR-0176).
++ */
++/** The approved mock's done-line tick (MOCK-LOADING-ENDINGS-v3 .tick: path M5 12.5 l4.5 4.5 L19 7.5), drawn with the existing Svg kinds of the REPORT table (no Icon,
++ *  no new component); the stroke is the report-ok green. strokeLinecap is not passed: it is not a declared non-display key (bindings.json). */
++const tick = (): PropsNode => node('Svg', { key: 'tick', viewBox: '0 0 24 24', width: '18', height: '18' }, [
++  node('SvgLine', { key: 'tick-a', x1: '5', y1: '12.5', x2: '9.5', y2: '17', stroke: H.ok, strokeWidth: '2.25' }),
++  node('SvgLine', { key: 'tick-b', x1: '9.5', y1: '17', x2: '19', y2: '7.5', stroke: H.ok, strokeWidth: '2.25' }),
++]);
++
++export function checkedProps(checked: CheckedView, lineElapsedMs: number, screen: Exclude<ReportScreen, 'view'>): PropsNode {
++  const lines: PropsNode[] = [];
++  checked.groups.forEach((g, gi) => g.lines.forEach((l, li) => {
++    if (lineElapsedMs < l.delay_ms) return;
++    const at = `checked.groups.${gi}.lines.${li}`;
++    const done = lineElapsedMs >= l.done_ms;
++    lines.push(node('View', { key: `line-${g.key}-${l.key}`, testID: `report-line-${g.key}-${l.key}`, className: L.checkLine }, done
++      ? [tick(), node('Text', { key: 'text', className: L.checkText }, [{ derived: `${at}.text` }])]
++      : [node('ActivityIndicator', { key: 'wait', size: 'small', color: H.amber }), node('Text', { key: 'text', className: L.checkWait }, [{ derived: `${at}.verb` }])]));
++  }));
++  const dates = checked.dates && lineElapsedMs >= checked.dates.delay_ms ? [node('Text', { key: 'dates', className: L.checkDates }, [{ derived: 'checked.dates.text' }])] : [];
++  const end: PropsNode[] = screen === 'ready'
++    ? [node('View', { key: 'end', testID: 'report-ready', className: L.checkEnd }, [
++        node('Text', { key: 'ready', className: L.checkReady, accessibilityRole: 'text' }, [{ derived: 'checked.ready.text' }]),
++        // submit is the existing optional action (SurfaceRenderer); here it opens the report (View report; RR-0176: no auto-open)
++        node('Button', { key: 'open', testID: 'report-open', className: L.open, accessibilityRole: 'button', onPress: { action: 'submit' } }, [
++          node('Text', { key: 'open-label', className: L.openText }, [{ derived: 'checked.open.text' }]),
++        ]),
++      ])]
++    : screen === 'holding'
++      ? [node('View', { key: 'end', testID: 'report-holding', className: L.checkHold }, [
++          node('ActivityIndicator', { key: 'spinner', testID: 'report-spinner', size: 'small', color: H.amber }),
++          node('Text', { key: 'message', className: L.checkHoldText, accessibilityRole: 'text' }, [{ content: 'states.lifecycle.loading' }]),
+         ])]
+-      : []),
++      : screen === 'error' || screen === 'miss'
++        ? [node('View', { key: 'end', testID: `report-${screen}`, className: L.checkEnd }, [
++            node('Text', { key: 'message', className: L.checkEndText, accessibilityRole: 'text' }, [{ content: `states.lifecycle.${screen}` }]),
++            screen === 'error' ? retryButton() : backToSearchButton(),
++          ])]
++        : [];
++  return node('View', { key: 'report-checked', testID: `report-checked-${screen}`, className: L.check }, [
++    node('Text', { key: 'label', className: L.checkLabel, role: 'heading' }, [{ content: 'checks.label' }]),
++    node('View', { key: 'lines', className: L.checkLines }, lines),
++    ...dates,
++    ...end,
+   ]);
+ }
+ 
+ /** MF-48 Stage B (nav-by-route audit #3, review F-11): the screen's one Back control, above the page and every lifecycle state, inside the top safe
+  * area. The screen decides where it goes (router.back() with history, else the Lookup route: the MF-53 rule). */
+-export function backProps(): PropsNode {
++export function backProps(title = false): PropsNode {
+   return node('SafeAreaView', { key: 'report-top', className: L.top, edges: { top: 'additive' } }, [
+-    node('Button', { key: 'back', testID: 'report-back', className: L.back, accessibilityRole: 'button', onPress: { action: 'back' } }, [
+-      node('Text', { key: 'back-label', className: L.backText }, [{ content: 'back.text' }]),
++    node('View', { key: 'report-bar', className: L.bar }, [
++      node('Button', { key: 'back', testID: 'report-back', className: L.back, accessibilityRole: 'button', onPress: { action: 'back' } }, [
++        node('Text', { key: 'back-label', className: L.backText }, [{ content: 'back.text' }]),
++      ]),
++      // task-267 (PLAN-267-v2 section 3, O6; RR-0486 "it may not be the users lot"): the bar names the lot (data.derived.address, the stored display
++      // address of the answer); with no address there is no title node at all.
++      ...(title ? [node('Text', { key: 'title', testID: 'report-title', className: L.barTitle, numberOfLines: 1, role: 'heading' }, [{ derived: 'address' }])] : []),
+     ]),
+   ]);
+ }
+ 
+ /** The lifecycle content keys the host needs (report-presentation.json states.lifecycle): the screen passes their texts in. */
+ export const LIFECYCLE_CONTENT_KEYS = ['states.lifecycle.loading', 'states.lifecycle.miss', 'states.lifecycle.error'];
+-/** MF-48 Stage B: the screen's own content keys (mobile_parcel_detail.content.json): Retry and Back. */
+-export const SCREEN_CONTENT_KEYS = ['retry.text', 'back.text'];
++/** MF-48 Stage B: the screen's own content keys (mobile_parcel_detail.content.json): Retry and Back. task-267: + Back to search (RR-0490 4 B) and the
++ *  visible label Checks for this lot (RR-0493). */
++export const SCREEN_CONTENT_KEYS = ['retry.text', 'back.text', 'back_to_search.text', 'checks.label'];
++
++/** The screen's stable signals (Spec 99 §6.5: never isFetching). `data` is the report read's answer (the page), `checked` the fast read's view (null: no
++ *  lines), `elapsedMs` the time since the pick mark, `gaveUp` the 60 s give-up, `answeredThisVisit` whether `data` was answered since this visit (or
++ *  this Try again) began, `opened` whether View report was pressed, `linesFull` whether the lines are drawn in full (after Try again). */
++export type ScreenSignals = {
++  data: { page?: PageView | null } | undefined; checked: CheckedView | null; isError: boolean; elapsedMs: number; gaveUp: boolean;
++  answeredThisVisit: boolean; opened: boolean; linesFull: boolean;
++};
+ 
+-/** MF-48 Stage B (D-6; Spec 99 §6.5: loading is a gate state, not data): the lot route's lookup query to the host's input. A served page shows,
+- * also from the persisted cache while a refetch fails (offline); a settled lookup with no page (every lot until MB-44, a miss, a dangling id) is
+- * the miss text; an error with nothing cached is the error text and Retry; anything else is loading. */
+-export function reportScreenState(q: { data: { page?: PageView | null } | undefined; isError: boolean }): { view: PageView | null; lifecycle: LifecycleState } {
+-  if (q.data?.page) return { view: q.data.page, lifecycle: 'loading' }; // the host ignores lifecycle when a view is given
+-  if (q.data) return { view: null, lifecycle: 'miss' };
+-  return { view: null, lifecycle: q.isError ? 'error' : 'loading' };
++/** MF-48 Stage B (D-6; Spec 99 §6.5: loading is a gate state, not data). task-267 LOAD.2 + task-317 LOAD.4 (PLAN-267-v2 step 5; dated 2026-11-25, prior
++ * text: a page, else a settled miss, else error or loading): total over the signals. Only the report read decides an ending, and an ending shows at once:
++ * the give-up or an error (after the ruled retries) is error (RR-0492 item 3, RR-0493); this visit's answer with no page is miss (RR-0494). A page shows at
++ * once with no lines (a cached or stored page, or no checked view), else after the lines are done and View report is pressed (RR-0176): checking while the
++ * lines play, ready when they are done. With no page and no ending: checking while the lines play, then holding. `lifecycle` is the state of the
++ * no-lines screen (lifecycleProps) and of the wall branch. A page that stays in the cache from an earlier visit is a page; a miss from one is not an answer. */
++export function reportScreenState(q: ScreenSignals): { view: PageView | null; lifecycle: LifecycleState; screen: ReportScreen } {
++  const page = q.data?.page ?? null;
++  const linesDone = q.checked === null || q.linesFull || q.elapsedMs >= q.checked.min_ms;
++  if (q.gaveUp) return { view: null, lifecycle: 'error', screen: 'error' };
++  if (page && (q.checked === null || q.opened)) return { view: page, lifecycle: 'loading', screen: 'view' }; // the host ignores lifecycle when a view is given
++  if (page) return { view: null, lifecycle: 'loading', screen: linesDone ? 'ready' : 'checking' };
++  if (q.isError) return { view: null, lifecycle: 'error', screen: 'error' };
++  if (q.data && q.answeredThisVisit) return { view: null, lifecycle: 'miss', screen: 'miss' };
++  return { view: null, lifecycle: 'loading', screen: linesDone ? 'holding' : 'checking' };
+ }
+diff --git a/mobile/src/components/surfaces/ReportPageHost.tsx b/mobile/src/components/surfaces/ReportPageHost.tsx
+index 7883ab72e3f6a839762cb45d6f7f0a8d3fd33119..a44377219b89c3d6bc8dcf080910b96ed5596051 100644
+--- a/mobile/src/components/surfaces/ReportPageHost.tsx
++++ b/mobile/src/components/surfaces/ReportPageHost.tsx
+@@ -13,11 +13,14 @@
+ // Nav-audit #62 (~/Buildo-scratch/mcfrontend/NAV-AUDIT-20261111.md; operator "yes" 2026-11-11): while the sheet is open, the Android Back
+ // button closes it and is consumed (the React Native BackHandler, an existing core API); closed, Back is not intercepted. The Back control is a
+ // routing control the screen owns (onBack); Cancel only closes the sheet.
++// task-267 LOAD.2 + task-317 LOAD.4 (PLAN-267-v2 step 6): with no page shown and a checked view, the host draws the loading screen (checkedProps) for the
++// screen the route picked; the clock, the give-up and the pick mark come in as props from the route's hook (useReportScreen), so the host holds no timer.
++// View report calls onOpen (no auto-open, no Skip). The bar names the lot (address). Back and Back to search share one first-press guard: two taps pop once.
+ import * as React from 'react';
+ import { BackHandler, View } from 'react-native';
+ import BottomSheet, { BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
+-import { SurfaceRenderer, type ReportActions, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
+-import { backProps, lifecycleProps, reportProps, REPORT_UI_CLOSED, type LifecycleState, type PageView, type ReportUi } from '@/components/surfaces/ReportBinding';
++import { SurfaceRenderer, type ReportActions, type SurfaceActions, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
++import { backProps, checkedProps, lifecycleProps, reportProps, REPORT_UI_CLOSED, type CheckedView, type LifecycleState, type PageView, type ReportScreen, type ReportUi } from '@/components/surfaces/ReportBinding';
+ import { REPORT_HEX as H, REPORT_PAGE_LAYOUT as L } from '@/constants/reportPage';
+ import type { WallView } from '@/hooks/useWallState';
+ 
+@@ -34,24 +37,28 @@ export const REPORT_UI = {
+ 
+ /** task-452 SEARCHFIX.4: `wall` (from useWallState) is the report-limit or reactivate wall of a refused lookup, drawn with its own tree, content, data and
+  *  actions (this host's content lacks the wall keys and ReportActions lack push). It replaces the lifecycle only while no report is shown. */
+-export function ReportPageHost({ view, lifecycle, content, onRetry, onBack, wall }: {
++export function ReportPageHost({ view, lifecycle, content, onRetry, onBack, wall, screen, checked, lineElapsedMs = 0, address = null, onOpen }: {
+   view: PageView | null; lifecycle: LifecycleState; content: Record<string, string>; onRetry: () => void; onBack: () => void; wall?: WallView | null;
++  /** task-267: the loading screen the route picked (reportScreenState), the server's checked view (null: no lines), the line clock and the lot's address. */
++  screen?: ReportScreen; checked?: CheckedView | null; lineElapsedMs?: number; address?: string | null; onOpen?: () => void;
+ }) {
+   const [ui, setUi] = React.useState<ReportUi>(REPORT_UI_CLOSED);
++  const leaving = React.useRef(false);
+   const [sheetOpen, setSheetOpen] = React.useState(false);
+   const Box = COMPONENTS['View'];
+   const Renderer = COMPONENTS['SurfaceRenderer'];
+   const Sheet = COMPONENTS['BottomSheet'];
+   const SheetBody = COMPONENTS['BottomSheetView'];
+   const Backdrop = COMPONENTS['BottomSheetBackdrop'];
+-  const actions: ReportActions = {
++  const actions: ReportActions & Pick<SurfaceActions, 'submit'> = {
+     toggle_panel: (option, panel) => setUi((u) => REPORT_UI.togglePanel(u, option, panel)),
+     toggle_how: (option) => setUi((u) => REPORT_UI.toggleHow(u, option)),
+     open_sheet: () => setSheetOpen(true),
+     close_sheet: () => setSheetOpen(false),
+     close_detail: () => setUi((u) => REPORT_UI.closeDetail(u)),
+     retry: onRetry,
+-    back: onBack,
++    back: () => { if (leaving.current) return; leaving.current = true; onBack(); },
++    submit: () => onOpen?.(), // task-267: View report
+   };
+   const detailOpen = view?.layout.details_view === 'sheet' && (Object.values(ui.panel).some((p) => p !== null) || Object.values(ui.how).some((h) => h));
+   React.useEffect(() => {
+@@ -60,15 +67,17 @@ export function ReportPageHost({ view, lifecycle, content, onRetry, onBack, wall
+     return () => sub.remove();
+   }, [sheetOpen, detailOpen]);
+   const backdrop = React.useCallback((p: BottomSheetBackdropProps) => <Backdrop {...p} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />, [Backdrop]);
+-  const top = <Renderer tree={backProps() as SurfaceTree} content={content} data={NO_DATA} actions={actions} />;
++  const screenData = { contract: {}, derived: { checked: checked ?? null, address } };
++  const top = <Renderer tree={backProps(Boolean(address)) as SurfaceTree} content={content} data={screenData} actions={actions} />;
+   if (view === null) {
++    const loading = checked && screen && screen !== 'view' ? checkedProps(checked, lineElapsedMs, screen) : lifecycleProps(lifecycle);
+     return (
+       <Box className={L.host} testID="report-host">
+         {top}
+         {wall ? (
+           <Renderer tree={wall.tree} content={wall.content} data={wall.data} actions={wall.actions} />
+         ) : (
+-          <Renderer tree={lifecycleProps(lifecycle) as SurfaceTree} content={content} data={NO_DATA} actions={actions} />
++          <Renderer tree={loading as SurfaceTree} content={content} data={screenData} actions={actions} />
+         )}
+       </Box>
+     );
+diff --git a/mobile/src/constants/reportPage.ts b/mobile/src/constants/reportPage.ts
+index de09e9c64c2e9388457d37b08eca59e45c59e652..d03de2f71d6ad680cb07075d667a11869dbca157 100644
+--- a/mobile/src/constants/reportPage.ts
++++ b/mobile/src/constants/reportPage.ts
+@@ -23,6 +23,8 @@ export const REPORT_HEX = {
+   amberInk: '#9a4a07',
+   amberSoft: '#fdf1d8',
+   sky: '#efe9df',
++  // task-267 (approved mock MOCK-LOADING-ENDINGS-v3 .tick, RR-0491): the done line tick stroke, the twin of report-ok in mobile/tailwind.config.js
++  ok: '#1a7340',
+ } as const;
+ 
+ export const REPORT_PAGE_LAYOUT = {
+@@ -37,6 +39,25 @@ export const REPORT_PAGE_LAYOUT = {
+   top: 'bg-report-page px-[8px]',
+   back: 'min-h-[44px] self-start rounded-[12px] bg-transparent px-[8px] h-auto shadow-none opacity-100 active:bg-report-line',
+   backText: 'text-[15px] leading-[20px] font-semibold text-report-ink',
++  // task-267 LOAD.2 + task-317 LOAD.4 (PLAN-267-v2 step 8; approved mock MOCK-LOADING-ENDINGS-v3, RR-0491): the bar with the lot's address, and the loading
++  // screen: the label, the lines (a waiting line: spinner and the muted verb; a done line: the ok mark and the finding), the dates, and the end area
++  // (the ready line and View report; the centred spinner and words, RR-0491's one change; the failure or no-report sentence and its button).
++  bar: 'min-h-[44px] flex-row items-center gap-[8px]',
++  barTitle: 'flex-1 text-[15px] leading-[20px] font-bold text-report-ink',
++  check: 'flex-1 gap-[18px] bg-report-page px-[16px] pb-[24px] pt-[20px]',
++  checkLabel: 'text-[12px] leading-[16px] font-semibold uppercase tracking-[0.06em] text-report-quiet',
++  checkLines: 'gap-[9px]',
++  checkLine: 'flex-row items-start gap-[10px]',
++  checkText: 'flex-1 text-[14px] leading-[20px] font-normal text-report-ink',
++  checkWait: 'flex-1 text-[14px] leading-[20px] font-normal text-report-quiet',
++  checkDates: 'text-[13px] leading-[18px] font-normal text-report-quiet',
++  checkEnd: 'mt-auto gap-[12px] border-t border-report-line pt-[8px]',
++  checkReady: 'text-[16px] leading-[22px] font-semibold text-report-ink',
++  checkEndText: 'text-[16px] leading-[22px] font-semibold text-report-ink',
++  open: 'min-h-[48px] items-center justify-center rounded-[12px] bg-report-amber h-auto shadow-none opacity-100 active:bg-report-amber',
++  openText: 'text-[16px] leading-[24px] font-semibold text-report-ink',
++  checkHold: 'mt-auto flex-row items-center justify-center gap-[12px] pt-[8px]',
++  checkHoldText: 'text-center text-[14px] leading-[20px] font-normal text-report-muted',
+   // page top
+   title: 'text-[28px] leading-[34px] font-bold tracking-tight text-report-ink',
+   address: 'text-[18px] leading-[24px] font-semibold text-report-ink -mt-[16px]',
+diff --git a/mobile/src/generated/surfaces/mobile_parcel_detail.json b/mobile/src/generated/surfaces/mobile_parcel_detail.json
+index bc9c11b53c34072f865e1163b7f7b423ec9fa494..e94b4225740f98d6b035f12a237664778f33d19d 100644
+--- a/mobile/src/generated/surfaces/mobile_parcel_detail.json
++++ b/mobile/src/generated/surfaces/mobile_parcel_detail.json
+@@ -1,5 +1,5 @@
+ {
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 24a56fb520d9feef)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 04f762332b82e538)",
+   "surface": "mobile_parcel_detail",
+   "config": {},
+   "content": {
+@@ -7,6 +7,8 @@
+     "states.lifecycle.miss": "No report for this lot yet.",
+     "states.lifecycle.error": "Could not load this report. Try again.",
+     "retry.text": "Try again",
+-    "back.text": "Back"
++    "back.text": "Back",
++    "back_to_search.text": "Back to search",
++    "checks.label": "Checks for this lot"
+   }
+ }
+diff --git a/mobile/src/hooks/useParcelLookup.ts b/mobile/src/hooks/useParcelLookup.ts
+index d2d879ffe41332bf92dad19624ef9e3db9d6264f..39a123be60ab795dbc0da60d8cb79a2ed77c205f 100644
+--- a/mobile/src/hooks/useParcelLookup.ts
++++ b/mobile/src/hooks/useParcelLookup.ts
+@@ -5,11 +5,13 @@
+ // TanStack Query hooks for the Parcel Cost Tool. Two query keys (Spec 99 §4):
+ //   ['parcel-search', q]      — debounced typeahead (search screen)
+ //   ['parcel-lookup', parcelId] — the detail screen (depends ONLY on parcelId, query-key hygiene)
++//   ['parcel-checking', parcelId] — task-267 LOAD.2: the report screen's fast read (fast=1), sent first at the pick; never persisted (persistFilter.ts)
+ // Both endpoints return the SAME whitelist envelope shape; the hook parses `raw.data` through
+ // ConsumerParcelLookupResultSchema. A drifted server shape re-throws to the ErrorBoundary; network
+ // errors (ApiError/RateLimitError/NetworkError) stay in `isError` for inline handling.
+ 
+-import { useCallback } from 'react';
++import { useCallback, useEffect, useState } from 'react';
++import { AccessibilityInfo, AppState } from 'react-native';
+ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+ import * as Sentry from '@sentry/react-native';
+ import { fetchWithAuth } from '@/lib/apiClient';
+@@ -37,11 +39,13 @@ export class ParcelLookupSchemaError extends Error {
+ export async function fetchParcelLookup(
+   // SRCH.SEMI stage 2 (task-319, MF-93; RR-0278): `semi: 'answered'` is the one optional flag the semi question page sends at Continue, so the
+   // server counts the lot once its report is produced (contract_parcels_lookup, route.ts). It belongs to the parcelId form only.
+-  params: { q: string } | { parcelId: string; semi?: 'answered' },
++  // task-267 LOAD.2 (PLAN-267-v2 step 4): `fast: '1'` is the report screen's fast read (the stored page or the What we checked view, never a compute); it
++  // belongs to the parcelId form and is never sent with semi (the server refuses the pair).
++  params: { q: string } | { parcelId: string; semi?: 'answered'; fast?: '1' },
+ ): Promise<ConsumerParcelLookupResult> {
+   const qs = 'q' in params
+     ? `q=${encodeURIComponent(params.q)}`
+-    : `parcelId=${encodeURIComponent(params.parcelId)}${params.semi ? `&semi=${params.semi}` : ''}`;
++    : `parcelId=${encodeURIComponent(params.parcelId)}${params.semi ? `&semi=${params.semi}` : ''}${params.fast ? `&fast=${params.fast}` : ''}`;
+   const raw = await fetchWithAuth<{ data: unknown }>(`/api/parcels/lookup?${qs}`);
+   const parsed = ConsumerParcelLookupResultSchema.safeParse(raw.data);
+   if (!parsed.success) {
+@@ -104,17 +108,145 @@ export function parcelLookupParams(parcelId: string, semi?: string): { parcelId:
+  * fold #9 query-key hygiene) — never on the search query string. `semi` is the report route's param (the report screen only); it changes the request,
+  * not the key (the semi page stores its answered result under the same key, useSetParcelLookup).
+  */
+-export function useParcelLookup(parcelId: string | undefined, semi?: string) {
++export function useParcelLookup(parcelId: string | undefined, semi?: string, gate = true) {
+   const accessToken = useAuthStore((s) => s.accessToken);
+   return useQuery({
+     queryKey: ['parcel-lookup', parcelId],
+     queryFn: () => fetchParcelLookup(parcelLookupParams(parcelId!, semi)),
+-    enabled: !!parcelId && !!accessToken,
++    // task-267: `gate` holds the report read until the fast read has settled (useReportScreen); every other caller leaves it true.
++    enabled: !!parcelId && !!accessToken && gate,
++    // LOOKUP_STALE_MS stays (PLAN-267-v2 step 4, O5 reversed): a cached page shows at once and the refetch behind it is silent (Spec 90 §14).
+     staleTime: LOOKUP_STALE_MS,
+-    retry: shouldRetryParcelLookup,
++    retry: (failureCount, err) => !(parcelId !== undefined && REPORT_GAVE_UP.has(parcelId)) && shouldRetryParcelLookup(failureCount, err),
+   });
+ }
+ 
++/**
++ * task-267 LOAD.2 (PLAN-267-v2 steps 4, 6 and 9; RR-0491 and RR-0493: 60 s from the pick is the failure limit; RR-0497 Q-a A: after the 3 ruled retries
++ * or at 60 s). The give-up is the existing registered 60 000 (maxbld_page_continue_wait_ms, read as SEMI_CONTINUE_WAIT_MS): the semi wait and the report
++ * give-up share one value (a later card gives the report its own row, RR-0477). No typed number (Spec 128 Rule 3).
++ */
++export const REPORT_GIVE_UP_MS = SEMI_CONTINUE_WAIT_MS;
++/** The lots whose report read gave up: their retries stop (the attempt in flight is left to land in the cache). Try again clears the lot. */
++const REPORT_GAVE_UP = new Set<string>();
++/** The pick mark per lot (the screen's first mount, milliseconds after the push), kept outside the component so a remount or a second push for the
++ *  same lot does not restart the lines; a mark older than the give-up is stale and replaced. Removed once the screen ends (a page shown or an ending). */
++const PICK_MARKS = new Map<string, number>();
++const TICK_MS = 250; // the redraw tick of the line reveal (animation timing, Spec 128 §2.1 exception 4), not a business value
++export const reportClock = {
++  mark(id: string, now: number): number {
++    const m = PICK_MARKS.get(id);
++    if (m !== undefined && now - m < REPORT_GIVE_UP_MS) return m;
++    PICK_MARKS.set(id, now);
++    return now;
++  },
++  end(id: string): void { PICK_MARKS.delete(id); },
++  gaveUp: (id: string): boolean => REPORT_GAVE_UP.has(id),
++  /** Test seam: forget every mark and every give-up. */
++  reset(): void { PICK_MARKS.clear(); REPORT_GAVE_UP.clear(); },
++};
++
++/** The fast read (fast=1): the stored page or the checked view, never a compute. A page it finds is stored under the report's own key, so no report read
++ *  is sent for it. No retry (it is optional and shares the parcels-lookup bucket with the report read). */
++export function useParcelChecking(parcelId: string | undefined, send: boolean) {
++  const accessToken = useAuthStore((s) => s.accessToken);
++  const queryClient = useQueryClient();
++  return useQuery({
++    queryKey: ['parcel-checking', parcelId],
++    queryFn: async () => {
++      // enabled below holds the query until parcelId is set, so the query function never runs without it
++      const r = await fetchParcelLookup({ parcelId: parcelId!, fast: '1' });
++      if (r.page) queryClient.setQueryData(['parcel-lookup', parcelId], r);
++      return r;
++    },
++    enabled: !!parcelId && !!accessToken && send,
++    retry: false,
++  });
++}
++
++/**
++ * task-267 LOAD.2 + task-317 LOAD.4: the report screen's reads and clock. The fast read is sent first unless the lot's page is already in the cache
++ * (opened on this phone: the lines are skipped, RR-0485 item 5) or the route carries the semi answer; the report read only after the fast read settles
++ * with no page (or fails). The clock starts at the pick mark; it ticks while the screen waits and stops at an ending, so the lines stay as far as they got
++ * (RR-0492 item 2). Every signal it returns is stable (Spec 99 §6.5): timestamps and settled answers, never isFetching.
++ */
++export function useReportScreen(parcelId: string | undefined, semi?: string) {
++  const queryClient = useQueryClient();
++  const id = parcelId ?? '';
++  const [mountAt] = useState(() => Date.now());
++  const [cachedPage] = useState(() => Boolean((queryClient.getQueryData(['parcel-lookup', parcelId]) as ConsumerParcelLookupResult | undefined)?.page));
++  const sendFast = semi === undefined && !cachedPage;
++  const checking = useParcelChecking(parcelId, sendFast);
++  const fastDone = !sendFast || checking.isError || (checking.data !== undefined && !checking.data.page);
++  const report = useParcelLookup(parcelId, semi, fastDone);
++  const [mark] = useState(() => reportClock.mark(id, mountAt));
++  const [tryAt, setTryAt] = useState(mountAt);
++  const [giveUpFrom, setGiveUpFrom] = useState(mark);
++  const [now, setNow] = useState(mountAt);
++  // A new visit starts with no give-up (the mark of an earlier visit's give-up is cleared; the retries of this visit stop at this visit's give-up).
++  const [gaveUp, setGaveUp] = useState(() => { REPORT_GAVE_UP.delete(id); return false; });
++  const [kicked, setKicked] = useState(false);
++  const [opened, setOpened] = useState(false);
++  const [linesFull, setLinesFull] = useState(false);
++  const reduceMotion = useReduceMotion();
++  const checked = checking.data?.whatWeChecked ?? null;
++  const pageIn = Boolean(report.data?.page);
++  const answeredThisVisit = report.data !== undefined && report.dataUpdatedAt >= tryAt;
++  const errorThisTry = report.isError && report.errorUpdatedAt >= tryAt;
++  const linesDone = checked === null || linesFull || now - mark >= checked.min_ms;
++  const ended = gaveUp || errorThisTry || (answeredThisVisit && !pageIn);
++  const running = !opened && !ended && !(pageIn && linesDone);
++  useEffect(() => {
++    if (!running) return undefined;
++    const t = setInterval(() => setNow(Date.now()), TICK_MS);
++    const sub = AppState.addEventListener('change', (s) => { if (s === 'active') setNow(Date.now()); });
++    return () => { clearInterval(t); sub.remove(); };
++  }, [running]);
++  useEffect(() => {
++    if (running && !pageIn && now - giveUpFrom >= REPORT_GIVE_UP_MS) { REPORT_GAVE_UP.add(id); setGaveUp(true); }
++  }, [running, pageIn, now, giveUpFrom, id]);
++  useEffect(() => { if (!running) reportClock.end(id); }, [running, id]);
++  // A miss cached from an earlier visit (fresh within the stale time, so enabling the query does not refetch it) is not this visit's answer: ask once.
++  const { data: reportData, dataUpdatedAt: reportAt, refetch } = report;
++  useEffect(() => {
++    if (!kicked && fastDone && reportData !== undefined && !reportData.page && reportAt < tryAt) { setKicked(true); void refetch(); }
++  }, [kicked, fastDone, reportData, reportAt, tryAt, refetch]);
++  const ready = checked !== null && pageIn && linesDone && !opened && !gaveUp;
++  useEffect(() => { if (ready && reduceMotion && checked) AccessibilityInfo.announceForAccessibility(checked.summary); }, [ready, reduceMotion, checked]);
++  const retry = useCallback(() => {
++    REPORT_GAVE_UP.delete(id);
++    setGaveUp(false);
++    if (queryClient.getQueryData<ConsumerParcelLookupResult>(['parcel-lookup', parcelId])?.page) { setOpened(true); return; } // a late page in the cache: no new compute
++    const t = Date.now();
++    setLinesFull(true);
++    setTryAt(t);
++    setGiveUpFrom(t);
++    setNow(t);
++    void refetch();
++  }, [id, parcelId, queryClient, refetch]);
++  const open = useCallback(() => setOpened(true), []);
++  // The wall reads the report read's refusal, or the fast read's only when it is a 403 (a stored lot at the limit); any other fast error is ignored.
++  const fastRefusal = checking.error instanceof ApiError && checking.error.status === 403 ? checking.error : null;
++  return {
++    data: report.data, isError: errorThisTry, isFetching: report.isFetching, error: report.error ?? fastRefusal,
++    checked, elapsedMs: now - mark, lineElapsedMs: reduceMotion || linesFull ? Number.MAX_SAFE_INTEGER : now - mark,
++    gaveUp, answeredThisVisit, opened, linesFull, open, retry,
++    address: report.data?.match?.address || checking.data?.match?.address || null,
++  };
++}
++
++/** Reduce Motion (Spec 100 §4 MF-62): the lines show at once; read once and kept current. */
++export function useReduceMotion(): boolean {
++  const [on, setOn] = useState(false);
++  useEffect(() => {
++    let live = true;
++    void AccessibilityInfo.isReduceMotionEnabled().then((v) => { if (live) setOn(v); });
++    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setOn);
++    return () => { live = false; sub.remove(); };
++  }, []);
++  return on;
++}
++
+ /**
+  * Store an answered lookup under the report's own cache key. SUITE.FIX-2 (task-353, 2026-11-19): the semi question page (a mount file) used to call
+  * useQueryClient itself (9fea46277); a mount may import only framework packages, binding modules and @/hooks/ (bindings.json mount_internal, FE-31 C-2),
+diff --git a/mobile/src/lib/persistFilter.ts b/mobile/src/lib/persistFilter.ts
+index dd85288369acebf31dffa3629ee9c002dfb029f7..a017e2303753beb6ca40e28bc1b6e4258edacec3 100644
+--- a/mobile/src/lib/persistFilter.ts
++++ b/mobile/src/lib/persistFilter.ts
+@@ -25,7 +25,9 @@ export interface QueryShape {
+ }
+ 
+ // SRCH.A6 (task-320): ['parcel-entitlement'] is the reports-left count; a count kept from a previous session would be a wrong number, so it is not persisted.
+-const NOT_PERSISTED = ['user-profile', 'parcel-entitlement'];
++// task-267 (PLAN-267-v2 step 4; Spec 99 §4 B1 row parcel-checking): ['parcel-checking'] is the fast read of the loading screen; its lines and pace are for
++// this visit only, so it is not persisted (a page it finds is stored under ['parcel-lookup', id], which is).
++const NOT_PERSISTED = ['user-profile', 'parcel-entitlement', 'parcel-checking'];
+ 
+ export const shouldDehydrateQueryFn = (query: QueryShape): boolean =>
+   !NOT_PERSISTED.includes(String(query.queryKey[0]));
+diff --git a/mobile/src/lib/schemas.ts b/mobile/src/lib/schemas.ts
+index 45670d6cfe089fa069493409faae6dc686e2dbfe..68b5a1378372cf8cf38891507592e5378f94dde4 100644
+--- a/mobile/src/lib/schemas.ts
++++ b/mobile/src/lib/schemas.ts
+@@ -429,6 +429,22 @@ export const ParcelLotFormSchema = z.object({
+ });
+ export type ParcelLotForm = z.infer<typeof ParcelLotFormSchema>;
+ 
++// task-267 LOAD.2 (PLAN-267-v2 step 3; X-4 a): the fast read's What we checked view, the phone's Zod mirror of src/app/api/parcels/lookup/types.ts
++// CheckedViewSchema (Spec 90 §13). Plain, the MF-53 form above, so a server-added field never raises ParcelLookupSchemaError; href is nullable (always
++// null from this server). An older server that sends no whatWeChecked parses to undefined, and the screen then shows no lines and the spinner.
++export const CheckedViewSchema = z.object({
++  summary: z.string(),
++  groups: z.array(z.object({ key: z.string(), lines: z.array(z.object({ key: z.string(), text: z.string(), verb: z.string(), delay_ms: z.number(), done_ms: z.number() })) })),
++  dates: z.object({ text: z.string(), delay_ms: z.number() }).optional(),
++  skip: z.object({ text: z.string(), after_ms: z.number() }),
++  ready: z.object({ text: z.string(), at_ms: z.number() }),
++  open: z.object({ text: z.string() }),
++  min_ms: z.number(),
++  paced: z.boolean(),
++  href: z.string().nullable(),
++});
++export type CheckedView = z.infer<typeof CheckedViewSchema>;
++
+ export const ConsumerParcelLookupResultSchema = z.object({
+   match: ParcelMatchSchema.nullable(),
+   candidates: z.array(ParcelCandidateSchema),
+@@ -438,6 +454,7 @@ export const ConsumerParcelLookupResultSchema = z.object({
+   map: ParcelLotMapSchema.nullable().optional(),
+   page: ReportPageViewSchema.nullable().optional(),
+   lotForm: ParcelLotFormSchema.nullable().optional(),
++  whatWeChecked: CheckedViewSchema.nullable().optional(), // task-267: the fast read's checked view
+ });
+ export type ConsumerParcelLookupResult = z.infer<typeof ConsumerParcelLookupResultSchema>;
+ export type ParcelMatch = z.infer<typeof ParcelMatchSchema>;
+

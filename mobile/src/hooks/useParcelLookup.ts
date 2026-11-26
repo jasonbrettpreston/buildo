@@ -5,11 +5,13 @@
 // TanStack Query hooks for the Parcel Cost Tool. Two query keys (Spec 99 §4):
 //   ['parcel-search', q]      — debounced typeahead (search screen)
 //   ['parcel-lookup', parcelId] — the detail screen (depends ONLY on parcelId, query-key hygiene)
+//   ['parcel-checking', parcelId] — task-267 LOAD.2: the report screen's fast read (fast=1), sent first at the pick; never persisted (persistFilter.ts)
 // Both endpoints return the SAME whitelist envelope shape; the hook parses `raw.data` through
 // ConsumerParcelLookupResultSchema. A drifted server shape re-throws to the ErrorBoundary; network
 // errors (ApiError/RateLimitError/NetworkError) stay in `isError` for inline handling.
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { AccessibilityInfo, AppState } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Sentry from '@sentry/react-native';
 import { fetchWithAuth } from '@/lib/apiClient';
@@ -37,11 +39,13 @@ export class ParcelLookupSchemaError extends Error {
 export async function fetchParcelLookup(
   // SRCH.SEMI stage 2 (task-319, MF-93; RR-0278): `semi: 'answered'` is the one optional flag the semi question page sends at Continue, so the
   // server counts the lot once its report is produced (contract_parcels_lookup, route.ts). It belongs to the parcelId form only.
-  params: { q: string } | { parcelId: string; semi?: 'answered' },
+  // task-267 LOAD.2 (PLAN-267-v2 step 4): `fast: '1'` is the report screen's fast read (the stored page or the What we checked view, never a compute); it
+  // belongs to the parcelId form and is never sent with semi (the server refuses the pair).
+  params: { q: string } | { parcelId: string; semi?: 'answered'; fast?: '1' },
 ): Promise<ConsumerParcelLookupResult> {
   const qs = 'q' in params
     ? `q=${encodeURIComponent(params.q)}`
-    : `parcelId=${encodeURIComponent(params.parcelId)}${params.semi ? `&semi=${params.semi}` : ''}`;
+    : `parcelId=${encodeURIComponent(params.parcelId)}${params.semi ? `&semi=${params.semi}` : ''}${params.fast ? `&fast=${params.fast}` : ''}`;
   const raw = await fetchWithAuth<{ data: unknown }>(`/api/parcels/lookup?${qs}`);
   const parsed = ConsumerParcelLookupResultSchema.safeParse(raw.data);
   if (!parsed.success) {
@@ -104,15 +108,143 @@ export function parcelLookupParams(parcelId: string, semi?: string): { parcelId:
  * fold #9 query-key hygiene) — never on the search query string. `semi` is the report route's param (the report screen only); it changes the request,
  * not the key (the semi page stores its answered result under the same key, useSetParcelLookup).
  */
-export function useParcelLookup(parcelId: string | undefined, semi?: string) {
+export function useParcelLookup(parcelId: string | undefined, semi?: string, gate = true) {
   const accessToken = useAuthStore((s) => s.accessToken);
   return useQuery({
     queryKey: ['parcel-lookup', parcelId],
     queryFn: () => fetchParcelLookup(parcelLookupParams(parcelId!, semi)),
-    enabled: !!parcelId && !!accessToken,
+    // task-267: `gate` holds the report read until the fast read has settled (useReportScreen); every other caller leaves it true.
+    enabled: !!parcelId && !!accessToken && gate,
+    // LOOKUP_STALE_MS stays (PLAN-267-v2 step 4, O5 reversed): a cached page shows at once and the refetch behind it is silent (Spec 90 §14).
     staleTime: LOOKUP_STALE_MS,
-    retry: shouldRetryParcelLookup,
+    retry: (failureCount, err) => !(parcelId !== undefined && REPORT_GAVE_UP.has(parcelId)) && shouldRetryParcelLookup(failureCount, err),
   });
+}
+
+/**
+ * task-267 LOAD.2 (PLAN-267-v2 steps 4, 6 and 9; RR-0491 and RR-0493: 60 s from the pick is the failure limit; RR-0497 Q-a A: after the 3 ruled retries
+ * or at 60 s). The give-up is the existing registered 60 000 (maxbld_page_continue_wait_ms, read as SEMI_CONTINUE_WAIT_MS): the semi wait and the report
+ * give-up share one value (a later card gives the report its own row, RR-0477). No typed number (Spec 128 Rule 3).
+ */
+export const REPORT_GIVE_UP_MS = SEMI_CONTINUE_WAIT_MS;
+/** The lots whose report read gave up: their retries stop (the attempt in flight is left to land in the cache). Try again clears the lot. */
+const REPORT_GAVE_UP = new Set<string>();
+/** The pick mark per lot (the screen's first mount, milliseconds after the push), kept outside the component so a remount or a second push for the
+ *  same lot does not restart the lines; a mark older than the give-up is stale and replaced. Removed once the screen ends (a page shown or an ending). */
+const PICK_MARKS = new Map<string, number>();
+const TICK_MS = 250; // the redraw tick of the line reveal (animation timing, Spec 128 §2.1 exception 4), not a business value
+export const reportClock = {
+  mark(id: string, now: number): number {
+    const m = PICK_MARKS.get(id);
+    if (m !== undefined && now - m < REPORT_GIVE_UP_MS) return m;
+    PICK_MARKS.set(id, now);
+    return now;
+  },
+  end(id: string): void { PICK_MARKS.delete(id); },
+  gaveUp: (id: string): boolean => REPORT_GAVE_UP.has(id),
+  /** Test seam: forget every mark and every give-up. */
+  reset(): void { PICK_MARKS.clear(); REPORT_GAVE_UP.clear(); },
+};
+
+/** The fast read (fast=1): the stored page or the checked view, never a compute. A page it finds is stored under the report's own key, so no report read
+ *  is sent for it. No retry (it is optional and shares the parcels-lookup bucket with the report read). */
+export function useParcelChecking(parcelId: string | undefined, send: boolean) {
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const queryClient = useQueryClient();
+  return useQuery({
+    queryKey: ['parcel-checking', parcelId],
+    queryFn: async () => {
+      // enabled below holds the query until parcelId is set, so the query function never runs without it
+      const r = await fetchParcelLookup({ parcelId: parcelId!, fast: '1' });
+      if (r.page) queryClient.setQueryData(['parcel-lookup', parcelId], r);
+      return r;
+    },
+    enabled: !!parcelId && !!accessToken && send,
+    retry: false,
+  });
+}
+
+/**
+ * task-267 LOAD.2 + task-317 LOAD.4: the report screen's reads and clock. The fast read is sent first unless the lot's page is already in the cache
+ * (opened on this phone: the lines are skipped, RR-0485 item 5) or the route carries the semi answer; the report read only after the fast read settles
+ * with no page (or fails). The clock starts at the pick mark; it ticks while the screen waits and stops at an ending, so the lines stay as far as they got
+ * (RR-0492 item 2). Every signal it returns is stable (Spec 99 §6.5): timestamps and settled answers, never isFetching.
+ */
+export function useReportScreen(parcelId: string | undefined, semi?: string) {
+  const queryClient = useQueryClient();
+  const id = parcelId ?? '';
+  const [mountAt] = useState(() => Date.now());
+  const [cachedPage] = useState(() => Boolean((queryClient.getQueryData(['parcel-lookup', parcelId]) as ConsumerParcelLookupResult | undefined)?.page));
+  const sendFast = semi === undefined && !cachedPage;
+  const checking = useParcelChecking(parcelId, sendFast);
+  const fastDone = !sendFast || checking.isError || (checking.data !== undefined && !checking.data.page);
+  const report = useParcelLookup(parcelId, semi, fastDone);
+  const [mark] = useState(() => reportClock.mark(id, mountAt));
+  const [tryAt, setTryAt] = useState(mountAt);
+  const [giveUpFrom, setGiveUpFrom] = useState(mark);
+  const [now, setNow] = useState(mountAt);
+  // A new visit starts with no give-up (the mark of an earlier visit's give-up is cleared; the retries of this visit stop at this visit's give-up).
+  const [gaveUp, setGaveUp] = useState(() => { REPORT_GAVE_UP.delete(id); return false; });
+  const [kicked, setKicked] = useState(false);
+  const [opened, setOpened] = useState(false);
+  const [linesFull, setLinesFull] = useState(false);
+  const reduceMotion = useReduceMotion();
+  const checked = checking.data?.whatWeChecked ?? null;
+  const pageIn = Boolean(report.data?.page);
+  const answeredThisVisit = report.data !== undefined && report.dataUpdatedAt >= tryAt;
+  const errorThisTry = report.isError && report.errorUpdatedAt >= tryAt;
+  const linesDone = checked === null || linesFull || now - mark >= checked.min_ms;
+  const ended = gaveUp || errorThisTry || (answeredThisVisit && !pageIn);
+  const running = !opened && !ended && !(pageIn && linesDone);
+  useEffect(() => {
+    if (!running) return undefined;
+    const t = setInterval(() => setNow(Date.now()), TICK_MS);
+    const sub = AppState.addEventListener('change', (s) => { if (s === 'active') setNow(Date.now()); });
+    return () => { clearInterval(t); sub.remove(); };
+  }, [running]);
+  useEffect(() => {
+    if (running && !pageIn && now - giveUpFrom >= REPORT_GIVE_UP_MS) { REPORT_GAVE_UP.add(id); setGaveUp(true); }
+  }, [running, pageIn, now, giveUpFrom, id]);
+  useEffect(() => { if (!running) reportClock.end(id); }, [running, id]);
+  // A miss cached from an earlier visit (fresh within the stale time, so enabling the query does not refetch it) is not this visit's answer: ask once.
+  const { data: reportData, dataUpdatedAt: reportAt, refetch } = report;
+  useEffect(() => {
+    if (!kicked && fastDone && reportData !== undefined && !reportData.page && reportAt < tryAt) { setKicked(true); void refetch(); }
+  }, [kicked, fastDone, reportData, reportAt, tryAt, refetch]);
+  const ready = checked !== null && pageIn && linesDone && !opened && !gaveUp;
+  useEffect(() => { if (ready && reduceMotion && checked) AccessibilityInfo.announceForAccessibility(checked.summary); }, [ready, reduceMotion, checked]);
+  const retry = useCallback(() => {
+    REPORT_GAVE_UP.delete(id);
+    setGaveUp(false);
+    if (queryClient.getQueryData<ConsumerParcelLookupResult>(['parcel-lookup', parcelId])?.page) { setOpened(true); return; } // a late page in the cache: no new compute
+    const t = Date.now();
+    setLinesFull(true);
+    setTryAt(t);
+    setGiveUpFrom(t);
+    setNow(t);
+    void refetch();
+  }, [id, parcelId, queryClient, refetch]);
+  const open = useCallback(() => setOpened(true), []);
+  // The wall reads the report read's refusal, or the fast read's only when it is a 403 (a stored lot at the limit); any other fast error is ignored.
+  const fastRefusal = checking.error instanceof ApiError && checking.error.status === 403 ? checking.error : null;
+  return {
+    data: report.data, isError: errorThisTry, isFetching: report.isFetching, error: report.error ?? fastRefusal,
+    checked, elapsedMs: now - mark, lineElapsedMs: reduceMotion || linesFull ? Number.MAX_SAFE_INTEGER : now - mark,
+    gaveUp, answeredThisVisit, opened, linesFull, open, retry,
+    address: report.data?.match?.address || checking.data?.match?.address || null,
+  };
+}
+
+/** Reduce Motion (Spec 100 §4 MF-62): the lines show at once; read once and kept current. */
+export function useReduceMotion(): boolean {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    let live = true;
+    void AccessibilityInfo.isReduceMotionEnabled().then((v) => { if (live) setOn(v); });
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setOn);
+    return () => { live = false; sub.remove(); };
+  }, []);
+  return on;
 }
 
 /**

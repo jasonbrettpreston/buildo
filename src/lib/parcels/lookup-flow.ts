@@ -7,6 +7,12 @@
 // WHAT STAYS IN THE ROUTE (RR-0331, operator 2026-11-20 "2. y", MORNING-DECISIONS.md:1432: the report meter stays in the lookup route): auth, the entitlement
 // gate, the query parse, the two rate buckets, the meter decision and its openReport call, the log line, the refusal mapping and the error boundary.
 // This module imports no meter, entitlement or usage code and writes nothing; a thrown read or compute error propagates to the route's catch (a 500: no page, no meter).
+// task-267 LOAD.2 (PLAN-267-v2 step 1; RR-0485 MD:2533; the 2026-11-25 phone walk, findings 22, 23, 30 and M1): the search only FINDS the lot. On the q form
+// (findOnly) neither the stored read nor the compute runs and page is null; the report is read or computed once, on the parcelId read the pick opens.
+// The fast read (fast=1, step 2) is the parcelId form that never computes: the stored page if there is one, else the What we checked view
+// (readFastChecked below, which takes the route's db handle), else nothing. A failed checked read or an unusable checked view is null, never a 500; its
+// problem is returned to the route, which logs it (this module still imports no logger).
+// Prior text: the q form read the stored page and ran the compute too (lookup-flow.ts:79-90 at 2fd2f6042).
 // The raw q is never logged here or returned beyond the resolver's own fields (Spec 100 §2.8).
 // task-454 SEARCHFIX.6 (MORNING-DECISIONS.md:1494; Spec 128 Rule 3): the route reads the search settings once (readSearchSettings, re-exported here so
 // the route keeps importing no resolver module) and passes the candidate cap in; this module reads no setting.
@@ -17,7 +23,30 @@ import { resolveLotMap } from '@/lib/parcels/lot-map';
 import { readLotForm } from '@/lib/parcels/lot-form';
 import { mobilePageView, readCustomerPageResponse } from '@/lib/parcels/report-page';
 import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';
-import { ConsumerParcelLookupResponseSchema, type ConsumerParcelLookupResponse } from '@/app/api/parcels/lookup/types';
+import { readWhatWeChecked } from '@/lib/parcels/what-we-checked';
+import type { Queryable } from '@/lib/parcels/report-check-pace';
+import { buildTree, viewOf } from '@/lib/surfaces/report/core';
+import { reportCtx } from '@/lib/surfaces/report/data';
+import { CheckedViewSchema, ConsumerParcelLookupResponseSchema, type CheckedView, type ConsumerParcelLookupResponse } from '@/app/api/parcels/lookup/types';
+
+const MOBILE_TARGET = 'mobile';
+
+/**
+ * task-267 LOAD.2 (PLAN-267-v2 step 2; X-4 a): the What we checked view of one lot for the fast read. readWhatWeChecked (MF-62) gives the paced lines or null;
+ * the core builds them into a loading tree and projects the mobile view with no skip href (no Skip is drawn, RR-0176), and only `checked` is sent. Any
+ * failure (a core refusal, a shape the strict schema refuses, a thrown read) is null with its problem named for the route's log: this screen never fails a
+ * lookup. A producer null (unknown lot, unusable pace) is null with no problem (readWhatWeChecked logs its own).
+ */
+export async function readFastChecked(db: Queryable, parcelRef: string): Promise<{ checked: CheckedView | null; problem: string | null }> {
+  try {
+    const w = await readWhatWeChecked(db, parcelRef);
+    if (w === null) return { checked: null, problem: null };
+    const view = viewOf(buildTree({ lifecycle: 'loading', what_we_checked: w }, reportCtx), { target: MOBILE_TARGET }, reportCtx) as { checked?: unknown };
+    return { checked: CheckedViewSchema.parse(view.checked), problem: null };
+  } catch (err) {
+    return { checked: null, problem: err instanceof Error ? err.name : 'unknown' };
+  }
+}
 
 export interface LookupFlowResult {
   /** The assembled response before the boundary parse (the route logs from it, as before). */
@@ -30,6 +59,8 @@ export interface LookupFlowResult {
   pageSource: 'stored' | 'computed' | 'none';
   /** LOAD.1: the compute entry's time when it ran (a compute that ends in a miss is timed too), null when W served the page or the lot was held. */
   computeMs: number | null;
+  /** task-267: the fast read's checked-view problem (an error name, never content), for the route's log; null when none. */
+  checkedProblem: string | null;
 }
 
 /** The query schema (ConsumerParcelLookupQuerySchema) guarantees exactly one of q | parcelId, so q is set whenever parcelId is not; this narrows the type without a non-null assertion. */
@@ -38,8 +69,14 @@ function requireQ(q: string | undefined): string {
   return q;
 }
 
-export async function runLookupFlow(input: { q?: string | undefined; parcelId?: string | undefined; semi?: string | undefined; candidateCap: number }): Promise<LookupFlowResult> {
-  const { q, parcelId, semi, candidateCap } = input;
+export async function runLookupFlow(input: {
+  q?: string | undefined; parcelId?: string | undefined; semi?: string | undefined; candidateCap: number;
+  /** task-267: the fast read (fast=1) with the route's db handle for the checked read; absent on every other read. */
+  fast?: { db: Queryable } | undefined;
+}): Promise<LookupFlowResult> {
+  const { q, parcelId, semi, candidateCap, fast } = input;
+  // task-267 (PLAN-267-v2 step 1): the q form only finds the lot; the stored read and the compute run on the parcelId form only.
+  const findOnly = parcelId === undefined;
   // Resolution: direct id (candidate click) bypasses address parsing.
   const resolved = parcelId
     ? { match: { parcelId, matchType: 'direct' as const, address: '' }, candidates: [], truncated: false, resolution: 'unique' as const, lotMap: null }
@@ -57,16 +94,18 @@ export async function runLookupFlow(input: { q?: string | undefined; parcelId?: 
     map,
     page: null,
     lotForm: null,
+    whatWeChecked: null,
   };
 
   let parcelRef: string | null = null;
   let pageSource: 'stored' | 'computed' | 'none' = 'none';
   let computeMs: number | null = null;
+  let checkedProblem: string | null = null;
   if (resolved.match) {
     const row = await fetchParcelById(resolved.match.parcelId);
     if (!row) {
       // An unknown parcelId (dangling id / direct path) is a 200 miss, NOT a 404 (§2.6).
-      response = { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match', map: null, page: null, lotForm: null };
+      response = { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match', map: null, page: null, lotForm: null, whatWeChecked: null };
     } else {
       const nbhdId = row.neighbourhood_id == null ? null : Number(row.neighbourhood_id);
       const coaProjects = await fetchCoaProjects(nbhdId); // NULL-neighbourhood → []
@@ -80,15 +119,20 @@ export async function runLookupFlow(input: { q?: string | undefined; parcelId?: 
       // SRCH.METER-2 (task-360, RR-0278): an unsure lot's page is HELD until the semi answer (semi=answered, the task-319 flag): neither the stored read nor
       // the compute runs for a held lot (the compute can take many seconds) and `page` is null. `unsure` is the server's own read of the view, never request text.
       const held = lotForm?.unsure === true && semi !== 'answered';
-      let pageResponse = held ? null : await readCustomerPageResponse(parcelRef);
+      // task-267: findOnly (the q form) skips the stored read and the compute; the fast read skips the compute only.
+      let pageResponse = held || findOnly ? null : await readCustomerPageResponse(parcelRef);
       if (pageResponse !== null) pageSource = 'stored';
-      else if (!held) {
+      else if (!held && !findOnly && fast === undefined) {
         const c0 = Date.now();
         pageResponse = await computeCustomerPageResponse(parcelRef);
         computeMs = Date.now() - c0; // the time of a compute that ends in a miss is logged too (the slow case is the one to see)
         if (pageResponse !== null) pageSource = 'computed';
       }
       const page = pageResponse === null ? null : mobilePageView(pageResponse);
+      // task-267: the fast read sends the checked view only for a lot that is not held and has no stored page (the lines play while the report read computes).
+      const fastChecked = fast !== undefined && page === null && !held ? await readFastChecked(fast.db, parcelRef) : null;
+      const whatWeChecked = fastChecked?.checked ?? null;
+      checkedProblem = fastChecked?.problem ?? null;
       response = {
         match: { ...resolved.match, address: resolved.match.address || String(row.__display_address ?? '') },
         candidates: [],
@@ -98,6 +142,7 @@ export async function runLookupFlow(input: { q?: string | undefined; parcelId?: 
         map: null,
         page,
         lotForm,
+        whatWeChecked,
       };
     }
   }
@@ -105,5 +150,5 @@ export async function runLookupFlow(input: { q?: string | undefined; parcelId?: 
   // Boundary validation of OUR OWN assembled shape — the .strict() parse rejects any Tier-3 leak. It runs BEFORE the meter (the route's), so a response
   // that fails it charges nothing (MF-45 fold 3).
   const body = ConsumerParcelLookupResponseSchema.parse(response);
-  return { response, body, parcelRef, pageSource, computeMs };
+  return { response, body, parcelRef, pageSource, computeMs, checkedProblem };
 }

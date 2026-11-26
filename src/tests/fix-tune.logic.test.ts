@@ -77,9 +77,12 @@ describe('D15 the two descriptor entries are corrected', () => {
     expect(src('src/app/api/parcels/lookup/types.ts')).toMatch(/ConsumerParcelLookupQuerySchema[\s\S]{0,900}semi: z\.literal\('answered'\)/);
     const whitelist: string[] = json(LOOKUP_CONTRACT).inputs.field_whitelist;
     expect(whitelist).not.toContain('semi');
-    expect(whitelist.length).toBe(80); // 81 entries before FIX.TUNE, the one removed is semi (the last)
+    // task-267 (dated 2026-11-25, PLAN-267-v2 step 11.2): + whatWeChecked and the 14 keys inside it, appended after unsure; 80 before, the last three were detected, basis, unsure.
+    expect(whitelist.length).toBe(95); // 81 entries before FIX.TUNE, the one removed is semi (the last)
     expect(whitelist.slice(0, 4)).toEqual(['match', 'candidates', 'warnings', 'parcel']);
-    expect(whitelist.slice(-3)).toEqual(['detected', 'basis', 'unsure']);
+    expect(whitelist.slice(77, 81)).toEqual(['detected', 'basis', 'unsure', 'whatWeChecked']);
+    expect(whitelist.slice(-3)).toEqual(['min_ms', 'paced', 'href']);
+    expect(whitelist).not.toContain('fast'); // the fast flag is a request parameter, like semi
   });
   it('the entitlement contract names the line of useParcelEntitlement in the hook as its call site (found by reading the hook, not a typed number)', () => {
     const line = src(HOOK).split('\n').findIndex((l) => l.startsWith('export function useParcelEntitlement(')) + 1;

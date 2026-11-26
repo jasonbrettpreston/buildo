@@ -237,6 +237,7 @@ const query = useQuery({
 | `['lead-detail', id]` | `useLeadDetail` | single lead |
 | `['parcel-search', q]` | `useParcelSearch` (Spec 100) | debounced typeahead; public cadastral data; persists normally |
 | `['parcel-lookup', parcelId]` | `useParcelLookup` (Spec 100) | the parcel detail; depends ONLY on `parcelId` (query-key hygiene — never on the search string) |
+| `['parcel-checking', parcelId]` | `useParcelChecking` via `useReportScreen` (Spec 100; task-267 LOAD.2, dated 2026-11-25) | the report screen's fast read (`fast=1`): the stored page or the What we checked view; sent first at the pick, no retry; a page it finds is stored under `['parcel-lookup', parcelId]`; for this visit only, so not persisted (`mobile/src/lib/persistFilter.ts` NOT_PERSISTED) |
 | `['parcel-entitlement']` | `useParcelEntitlement` (Spec 100; SRCH.A6, task-320) | the caller's plan and this month's report count ("N of M reports left until <date>"); a display, never a gate; the caller's own, so no parameter; not persisted across a restart (`mobile/src/lib/persistFilter.ts` NOT_PERSISTED) |
 
 ### B2 — TanStack → Zustand (server-to-local hydration)

@@ -12,7 +12,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { buildPage, pageViewOf } from '../../lib/surfaces/report/core';
 import { reportCtx } from '../../lib/surfaces/report/data';
-import { captureMobileViews, MOBILE_LIFECYCLE_STATES, MOBILE_PAGE_STATES, MOBILE_PROPS_DIR, PAGE_GOLDEN_DIR } from '../../../scripts/surfaces/report-page-capture';
+import { buildTree, viewOf } from '../../lib/surfaces/report/core';
+import { captureMobileViews, CHECKED_RESPONSE_GOLDEN, MOBILE_CHECKED_STATES, MOBILE_LIFECYCLE_STATES, MOBILE_PAGE_STATES, MOBILE_PROPS_DIR, PAGE_GOLDEN_DIR } from '../../../scripts/surfaces/report-page-capture';
 import { propsProblems } from '../../../scripts/surfaces/screen-checks.mjs';
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- JSON under test
@@ -22,14 +23,17 @@ const B = rj('scripts/surfaces/_schema/bindings.json');
 const LIFE = rj('scripts/surfaces/_schema/report-presentation.json').states.lifecycle as Record<string, string>;
 // MF-48 Stage B (dated 2026-11-12): + the screen's own content file (Retry, Back), the second input of the generated mobile slice.
 const CONTENT = { ...Object.fromEntries(Object.entries(LIFE).map(([k, v]) => [`states.lifecycle.${k}`, v])), ...rj('scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.content.json') };
+// task-267 (PLAN-267-v2 section 5; 317 R1): the loading screen states (checking, ready, holding and the two endings with the lines) are goldens too.
+const CHECKED_NAMES = Object.keys(MOBILE_CHECKED_STATES);
 const names = fs.readdirSync(path.join(ROOT, MOBILE_PROPS_DIR)).filter((f) => f.endsWith('.mobile.json')).sort();
 const golden = (f: string): Json => rj(`${MOBILE_PROPS_DIR}/${f}`);
 const sbind = (v: unknown, at: string): string[] => propsProblems(v, at, { kinds: B.ref_kinds, nonDisplay: B.non_display_keys, content: CONTENT, used: new Set(), contracts: new Map() });
 const walkC = (o: Json): string[] => [o.component, ...((o.children ?? []) as Json[]).filter((c) => c && typeof c === 'object' && 'component' in c).flatMap(walkC)];
 
 describe('MF-48 the mobile props goldens: the root half', () => {
-  it('8 goldens, one per declared state; the capture writes each byte for byte (a stale view fails)', () => {
-    expect(names).toEqual([...Object.keys(MOBILE_PAGE_STATES), ...MOBILE_LIFECYCLE_STATES].map((s) => `${s}.mobile.json`).sort());
+  it('13 goldens, one per declared state (5 page, 3 lifecycle, 5 loading screen); the capture writes each byte for byte (a stale view fails)', () => {
+    expect(CHECKED_NAMES).toEqual(['checking', 'ready', 'holding', 'error_lines', 'miss_lines']);
+    expect(names).toEqual([...Object.keys(MOBILE_PAGE_STATES), ...MOBILE_LIFECYCLE_STATES, ...CHECKED_NAMES].map((s) => `${s}.mobile.json`).sort());
     const cap = captureMobileViews(ROOT);
     for (const f of names) expect([f, cap.get(`props/${f}`)]).toEqual([f, fs.readFileSync(path.join(ROOT, MOBILE_PROPS_DIR, f), 'utf8')]);
   });
@@ -39,6 +43,11 @@ describe('MF-48 the mobile props goldens: the root half', () => {
       expect(g.response_fixture.synthetic).toBe(true);
       expect([f, g.view]).toEqual([f, pageViewOf(buildPage(g.response_fixture, reportCtx), { target: 'mobile' }, reportCtx)]);
     }
+  });
+  it('task-267: every loading screen golden carries the checked view the core builds from the MF-62 loading response (href null: no Skip), never a hand copy', () => {
+    const checked = (viewOf(buildTree(rj(CHECKED_RESPONSE_GOLDEN).response_fixture, reportCtx), { target: 'mobile' }, reportCtx) as Json).checked;
+    expect(checked.href).toBeNull();
+    for (const s of CHECKED_NAMES) expect([s, golden(`${s}.mobile.json`).checked]).toEqual([s, checked]);
   });
   it('RED (in memory): a view edited by hand no longer equals the core output', () => {
     const g = golden('page_v21.mobile.json');
