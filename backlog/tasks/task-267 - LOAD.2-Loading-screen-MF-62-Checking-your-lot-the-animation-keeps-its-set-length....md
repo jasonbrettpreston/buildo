@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MCFIX267'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-26T00:42:00Z'
+updated_date: '2026-11-26T00:51:00Z'
 due_date: '2026-11-26'
 labels:
   - McFixV2
@@ -548,3 +548,15 @@ McFixV2 addition 2026-11-25 (operator phone walk; rulings RR-0483, RR-0485, RR-0
 
 2026-11-25 (lane BL-MCFIX267): station PASS on ef05ba130 (~/Buildo-scratch/push-station/pass/ef05ba130eb460288b11be58032438dcc7609ca4.pass; phone 951 of 951, web 28437 passed). Output review round 2: material cb69d7f50..ef05ba130, 41 files, 4 chunks, code-review lens (DeepSeek), context docs/reports/reviews/task-267/context-r4.md. Findings CRITICAL 0, HIGH 0, MED 5, LOW 10, NIT 3 (18), untriaged in docs/reports/lanes/2026-11-25/BL-MCFIX267/FINDINGS.md. Status stays RUNNING: round-2 grounder owed.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+task-267 LOAD.2 with task-317 LOAD.4 landed in one lane: the search only finds the lot and the report is computed once on the pick; the fast read (fast=1) sends the stored page or the What we checked view; the phone report screen plays the lines to the end and shows View report only when the report is in (RR-0176); a failure shows at once after the 3 retries or at 60 s from the pick, a no-report lot shows the no-report screen at once; work 41fe484d3, station fixes 969bcf3ef and 251d41e7d, round 1 fix ef05ba130, station PASS on ef05ba130; the operator phone walk follows the push
+
+Review round 1: 3 fixed, 0 task, 0 ruling, 0 wontfix, 12 pile; grounder /Users/brettpreston_macmini/Buildo-scratch/lanes-20261125/BL-MCFIX267/grounder/r1/GROUNDER.md (round 1 as ruled, outputs at bdbda5811); triage /Users/brettpreston_macmini/Buildo-scratch/lanes-20261125/BL-MCFIX267/grounder/r1/TRIAGE.md
+
+out-code-review-p4#1 MED fixed ef05ba130
+out-code-review-p4#2 MED fixed ef05ba130
+out-code-review-p4#3 MED fixed ef05ba130
+<!-- SECTION:FINAL_SUMMARY:END -->
