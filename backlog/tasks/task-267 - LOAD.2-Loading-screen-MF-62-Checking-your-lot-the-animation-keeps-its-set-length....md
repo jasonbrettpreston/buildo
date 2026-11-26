@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MCFIX267'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-26T00:51:00Z'
+updated_date: '2026-11-26T00:56:00Z'
 due_date: '2026-11-26'
 labels:
   - McFixV2
@@ -547,6 +547,8 @@ McFixV2 addition 2026-11-25 (operator phone walk; rulings RR-0483, RR-0485, RR-0
 2026-11-25 (lane BL-MCFIX267, round 1 fix): the output grounder Cairn-Ground-O267 ruled round 1 (15 CONFIRMED: 3 MED, 9 LOW, 3 NIT; 10 REJECTED; no code defect). The test-only fix for the three MED (out-code-review-p4#1, p4#2, p4#3) is in src/tests/parcel-lookup-gate.infra.test.ts as its LANE-STEPS step 2 names: the raw-q assertion on the q call's log before the clear; the malformed-view test retitled and a rejected-read test added; the schema test retitled and its dead mock removed; one dated header line. Red by refused commit attempts with temporary uncommitted mutations (q in the route log line; the checked read moved above the try in lookup-flow.ts; .strict() removed from CheckedViewSchema), each reverted byte-identical before the real commit. The optional LOW and NIT tidies are left alone.
 
 2026-11-25 (lane BL-MCFIX267): station PASS on ef05ba130 (~/Buildo-scratch/push-station/pass/ef05ba130eb460288b11be58032438dcc7609ca4.pass; phone 951 of 951, web 28437 passed). Output review round 2: material cb69d7f50..ef05ba130, 41 files, 4 chunks, code-review lens (DeepSeek), context docs/reports/reviews/task-267/context-r4.md. Findings CRITICAL 0, HIGH 0, MED 5, LOW 10, NIT 3 (18), untriaged in docs/reports/lanes/2026-11-25/BL-MCFIX267/FINDINGS.md. Status stays RUNNING: round-2 grounder owed.
+
+2026-11-25 (lane BL-MCFIX267): the close was refused by check-lane-close (the lens outputs' prompt_sha256: the lens was run without --context and --section); round 2 re-made in the brief's form on the same inputs (context-r4.md); the close check's prompt hash recomputed offline matches all four outputs. Findings CRITICAL 0, HIGH 0, MED 6, LOW 15, NIT 2 (23), untriaged. Status stays RUNNING: round-2 grounder owed on the new outputs.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

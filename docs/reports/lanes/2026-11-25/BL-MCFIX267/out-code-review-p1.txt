@@ -1,24 +1,29 @@
 ◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
-REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T00:36:49.342Z file_sha256=e1674ecad6c1081b7e4f80f4ee1ecf9b3a136799f2435d4d70886d14e8430bee prompt_sha256=98db763f59f9326ef1439a960fcb9579961133a2e7281611d6fde8350f2ac869
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T00:53:08.616Z file_sha256=e1674ecad6c1081b7e4f80f4ee1ecf9b3a136799f2435d4d70886d14e8430bee prompt_sha256=ed6903180eb8bc7ac5329b58eff64c2ef823643cfb9b7dfdd7defbc27ca119f5
 🔍 Lens review of docs/reports/lanes/2026-11-25/BL-MCFIX267/in-out-code-review-p1.txt (model: deepseek-reasoner)
 
-[deepseek-review] deepseek-reasoner working… reasoning 9726 chars, answer 0 chars, 15s
-[deepseek-review] deepseek-reasoner working… reasoning 20747 chars, answer 0 chars, 30s
-[deepseek-review] deepseek-reasoner working… reasoning 31700 chars, answer 0 chars, 45s
-[deepseek-review] deepseek-reasoner working… reasoning 42725 chars, answer 0 chars, 60s
-[deepseek-review] deepseek-reasoner working… reasoning 54335 chars, answer 0 chars, 75s
-DEFER severity=MED — docs/reports/panels/MF-99.json:28 "Operator, verbatim (RR-0497, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2588): \"We will not move the database to the cloud until the increments are complete.\" (the three plan questions answered A)." — the same RR-0497 at :2588 is quoted four times in this commit as "As per the 3 questions 2. A - whatever the existing animation does - I assume this is the checklines 3. a 1 a" (126, 128, 100, 127), so one of the two either misquotes the operator or pairs an unrelated sentence with the three answers — re-quote RR-0497 as the specs do, or move the cloud sentence to its own RR citation.
+[deepseek-review] deepseek-reasoner working… reasoning 5934 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 16016 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 28927 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43915 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 59585 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 66598 chars, answer 183 chars, 90s
+DEFER severity=MED — docs/reports/generated/127-surface-registry.md row 13 "`src/app/api/parcels/lookup/route.ts:102-114 (the meter: openReport only when `page` is produced)`" against row 15 "`src/app/api/parcels/lookup/route.ts:116-128 (the meter: ...) [Dated 2026-11-25 ...: moved from :102-114]`" — the same meter block now carries two different line ranges in one row set, and only row 15 was moved — row 13 is wrong by exactly the +14 shift row 15 records; move row 13 and its census row to :116-128 in the same commit.
 
-DEFER severity=MED — docs/reports/generated/127-surface-registry.md "| 13 | `emits` | `ledger` | … `src/app/api/parcels/lookup/route.ts:102-114 (the meter: openReport only when `page` is produced)`" — row 15 of the same table now cites the meter at ":116-128" and records "[Dated 2026-11-25 … moved from :102-114]", so row 13 keeps a line cite this commit declares stale — update row 13 to :116-128 with the same dated note.
+DEFER severity=LOW — docs/reports/generated/127-surface-registry.md row 12 "`src/app/api/parcels/lookup/route.ts:125`, ... `src/app/api/parcels/lookup/route.ts:76 (429)`" — cites below the insertion point were left at their old lines while row 15 records the handler grew by 14 lines above them, so these now point at other code; re-emit the errors census row's cites; doc only, no runtime path.
 
-DEFER severity=LOW — docs/reports/generated/127-surface-registry.md "`gate` | `src/app/api/parcels/lookup/route.ts:47-60` · `src/app/api/parcels/lookup/route.ts:71-76` · `src/app/api/parcels/lookup/route.ts:69-88 (auth, the gate and the query parse with the fast flag)`" — the added 69-88 range subsumes the untouched 71-76 cite in the same cell, and it claims "auth" at 69-88 while row 12 of the same table puts the 401 at ":54" and the 403 at ":59" — cite 69-88 for the fast-flag parse only, or drop 71-76.
+DEFER severity=MED — docs/reports/panels/MF-99.json "Operator, verbatim (RR-0497, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:2588): \"We will not move the database to the cloud until the increments are complete.\"" against docs/specs/03-mobile/100_mobile_parcel_cost_tool.md "RR-0497: \"As per the 3 questions 2. A - whatever the existing animation does - I assume this is the checklines 3. a 1 a\" (:2588)" — one ruling id at one line number is quoted with two different texts, so at least one record is wrong; quote the full :2588 text once and reuse it, or give the second quote its own ruling id and line.
 
-REJECT — docs/reports/generated/rule-lists-by-kind.md "| mobile-99 | docs/specs/03-mobile/99_mobile_state_architecture.md | whole file | 86,228 | 2 |" and "| total | 9 lists | | 218,325 | 10 |" — the +400 over 85,828 and 217,925 looks unchecked against the one added row — the added Spec 99 table row is 399 characters plus its newline, exactly 400, and the total moves by the same 400, so the generated arithmetic is correct.
+DEFER severity=LOW — .cursor/MCFRONTEND-QUEUE.md MF-99 row "Status: RUNNING · since 2026-11-25 · expires 2026-12-02 · next: Land the work commit (tests red first through the real hooks), then the station suite, the output review and its grounder (lane BL-MCFIX267, task-267)" — the same task's notes record "station PASS on 251d41e7d" and "Output review round 1 ... grounder ruled round 1", so the row's next step no longer names what is left; the row is the DONE record, so restate next as the remaining grounder round and set it before the DONE flip.
 
-REJECT — mobile/__tests__/offline.test.ts:306 "expect(shouldDehydrateQueryFn({ queryKey: ['parcel-lookup', 'PIN-777'] })).toBe(true);" — a positive persist assertion for parcel-lookup looks like it belongs with the other positives further down — it is the point of the added pair (the fast read is not persisted, the report it finds is), and the surrounding lines call the same helper the same way, so no typing or scoping problem is introduced.
+DEFER severity=LOW — mobile/__tests__/offline.test.ts "expect(shouldDehydrateQueryFn({ queryKey: ['parcel-checking', 'PIN-777'] })).toBe(false);" — the assertion depends on a NOT_PERSISTED entry in mobile/src/lib/persistFilter.ts, which is not in this chunk, so the entry and its key matching cannot be seen; the grounder must confirm the entry exists and matches "parcel-checking" only, and this assertion is the only in-chunk evidence either way.
+
+REJECT — docs/reports/generated/rule-lists-by-kind.md "| mobile-99 | ... | 86,228 | 2 |" and "| total | 9 lists | | 218,325 | 10 |" — looks like an unverifiable +400 size jump with nothing else changed — the single Spec 99 row added by this diff is exactly 400 bytes including its newline, and the total moves by the same 400, so the arithmetic is right.
+
+REJECT — .cursor/MCFRONTEND-QUEUE.md "Next free id: **MF-100** (ids are never reused). Dated note 2026-11-25 ... the line read \"Next free id: **MF-99**\" before this note." — looks like the header now names an id one past the row just added — MF-99 is consumed by the new MF-99 row, and the dated note keeps the prior value as the file's notes require.
 
 VERDICT: PASS on code correctness
 
 ---
-⏱  86038ms (86.0s)
-📊 Tokens — total: 47267, input: 27722, output: 19545, reasoning: 18807
+⏱  96466ms (96.5s)
+📊 Tokens — total: 54838, input: 35405, output: 19433, reasoning: 18493

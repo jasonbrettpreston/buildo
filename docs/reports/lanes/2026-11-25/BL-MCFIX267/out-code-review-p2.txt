@@ -1,43 +1,30 @@
-◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
-REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T00:36:49.343Z file_sha256=1adebb380e27e7bd5a4fe4e0e5789170117e01ab9a6e0b6fe1ae7f39452169fe prompt_sha256=e4f9e301fc7c6122cb896f8c1088a267ec995a51c77b4c176c1c7996dfcc5030
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-26T00:53:08.614Z file_sha256=1adebb380e27e7bd5a4fe4e0e5789170117e01ab9a6e0b6fe1ae7f39452169fe prompt_sha256=59f96244e0bcae36826ee780b76b80f82410bce1d38f1083cff3f17c71af648b
 🔍 Lens review of docs/reports/lanes/2026-11-25/BL-MCFIX267/in-out-code-review-p2.txt (model: deepseek-reasoner)
 
-[deepseek-review] deepseek-reasoner working… reasoning 7004 chars, answer 0 chars, 15s
-[deepseek-review] deepseek-reasoner working… reasoning 14678 chars, answer 0 chars, 30s
-[deepseek-review] deepseek-reasoner working… reasoning 21942 chars, answer 0 chars, 45s
-[deepseek-review] deepseek-reasoner working… reasoning 29374 chars, answer 0 chars, 60s
-[deepseek-review] deepseek-reasoner working… reasoning 36482 chars, answer 0 chars, 75s
-[deepseek-review] deepseek-reasoner working… reasoning 43432 chars, answer 0 chars, 90s
-[deepseek-review] deepseek-reasoner working… reasoning 50428 chars, answer 0 chars, 105s
-[deepseek-review] deepseek-reasoner working… reasoning 57072 chars, answer 0 chars, 120s
-[deepseek-review] deepseek-reasoner working… reasoning 63961 chars, answer 0 chars, 135s
-[deepseek-review] deepseek-reasoner working… reasoning 71144 chars, answer 0 chars, 150s
-[deepseek-review] deepseek-reasoner working… reasoning 78064 chars, answer 0 chars, 165s
-[deepseek-review] deepseek-reasoner working… reasoning 84175 chars, answer 0 chars, 180s
-[deepseek-review] deepseek-reasoner working… reasoning 90665 chars, answer 0 chars, 195s
-[deepseek-review] deepseek-reasoner working… reasoning 97394 chars, answer 0 chars, 210s
-[deepseek-review] deepseek-reasoner working… reasoning 104287 chars, answer 0 chars, 225s
-[deepseek-review] deepseek-reasoner working… reasoning 110704 chars, answer 0 chars, 240s
-[deepseek-review] deepseek-reasoner working… reasoning 117623 chars, answer 0 chars, 255s
-[deepseek-review] deepseek-reasoner working… reasoning 124624 chars, answer 0 chars, 270s
-[deepseek-review] deepseek-reasoner working… reasoning 131794 chars, answer 0 chars, 285s
-[deepseek-review] deepseek-reasoner working… reasoning 138445 chars, answer 0 chars, 300s
-DEFER severity=LOW — mobile/src/hooks/useParcelLookup.ts "void AccessibilityInfo.isReduceMotionEnabled().then((v) => { if (live) setOn(v); });" — the promise has no .catch, so a rejection becomes an unhandled rejection and is never logged — append `.catch(() => undefined)` (or Sentry.captureException) so the failure is handled and logged.
-
-DEFER severity=LOW — mobile/src/hooks/useParcelLookup.ts "const [mark] = useState(() => reportClock.mark(id, mountAt));" — mark and mountAt are captured only on first mount; if parcelId changes without a remount (router.replace / setParams reusing the screen) the line clock and pick mark belong to the previous lot — recompute on id change (key the state by id or reset in an effect when id changes).
-
-DEFER severity=LOW — mobile/src/hooks/useParcelLookup.ts "if (running && !pageIn && now - giveUpFrom >= REPORT_GIVE_UP_MS) { REPORT_GAVE_UP.add(id); setGaveUp(true); }" — the 60 s give-up is a failure that is silently swallowed (no Sentry/log), so systematic upstream slowness is invisible to telemetry — log the give-up once (e.g., Sentry.captureMessage) with the lot id.
-
-DEFER severity=LOW — mobile/src/components/surfaces/ReportBinding.tsx "if (page && (q.checked === null || q.opened)) return { view: page, lifecycle: 'loading', screen: 'view' };" — the doc above claims "A page shows at once with no lines (a cached or stored page, or no checked view)", but a fast-read page that carries a checked view is gated on opened and plays the lines first; code and comment disagree — either widen the condition to treat the fast-read/stored page as immediate or narrow the comment.
-
-DEFER severity=NIT — mobile/src/lib/schemas.ts "export type CheckedView = z.infer<typeof CheckedViewSchema>;" and mobile/src/components/surfaces/ReportBinding.tsx "export type CheckedView = {" — the same shape is declared twice with no linkage, so an optional field added to only one side passes structural assignability silently — derive the ReportBinding type from the schema export to keep a single source.
-
-REJECT — mobile/src/components/surfaces/ReportBinding.tsx "if (q.gaveUp) return { view: null, lifecycle: 'error', screen: 'error' };" — looks wrong that a late page arriving after the give-up is ignored (page in cache, screen stays error) — it is correct: RR-0492/0497 keep the give-up screen until Try again, and the hook's retry() promotes the cached page without a new read.
+[deepseek-review] deepseek-reasoner working… reasoning 6786 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 13705 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 20558 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 26991 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 33518 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 39893 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 46418 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 52588 chars, answer 0 chars, 120s
+[deepseek-review] deepseek-reasoner working… reasoning 59409 chars, answer 0 chars, 135s
+[deepseek-review] deepseek-reasoner working… reasoning 65797 chars, answer 0 chars, 150s
+[deepseek-review] deepseek-reasoner working… reasoning 72194 chars, answer 0 chars, 165s
+DEFER severity=MED — mobile/src/hooks/useParcelLookup.ts "const [gaveUp, setGaveUp] = useState(() => { REPORT_GAVE_UP.delete(id); return false; });" — a module-level Set is mutated during render (the sibling initializer mutates PICK_MARKS the same way), so an aborted or doubly-invoked render changes shared state outside any effect and can clear a give-up another mounted screen still relies on — move both mutations into a mount effect (or a lazily-run ref init) so nothing shared is written in the render phase.
+DEFER severity=MED — mobile/src/hooks/useParcelLookup.ts "const [mark] = useState(() => reportClock.mark(id, mountAt));" — mark, tryAt, giveUpFrom and now are captured once and never reset when `parcelId` changes on an already-mounted screen, so a second lot inherits the first lot's pick mark (wrong line times, wrong give-up origin) — reset the clock state on an id change (effect keyed on id, or a keyed remount of the route).
+DEFER severity=LOW — mobile/src/hooks/useParcelLookup.ts "const [cachedPage] = useState(() => Boolean((queryClient.getQueryData(['parcel-lookup', parcelId]) as ConsumerParcelLookupResult | undefined)?.page));" — an unchecked cast where the same file already uses the typed generic form, so the assertion buys nothing and can hide a wrong cache shape — use queryClient.getQueryData<ConsumerParcelLookupResult>(['parcel-lookup', parcelId])?.page.
+DEFER severity=LOW — mobile/src/hooks/useParcelLookup.ts "void AccessibilityInfo.isReduceMotionEnabled().then((v) => { if (live) setOn(v); });" — a promise with no rejection handler, so a native failure becomes an unhandled rejection and Reduce Motion silently stays false with nothing logged — add .catch(() => setOn(false)) (or log) after the then.
+DEFER severity=LOW — mobile/src/hooks/useParcelLookup.ts "const fastRefusal = checking.error instanceof ApiError && checking.error.status === 403 ? checking.error : null;" — every other fast-read failure (500, network, ParcelLookupSchemaError) is dropped without a log while the module already imports Sentry, so the first evidence of server drift on the fast path is lost — capture non-403 fast errors once (Sentry.captureException in the query fn or an effect) before returning.
+DEFER severity=LOW — mobile/src/components/surfaces/ReportBinding.tsx "node('Text', { key: 'title', testID: 'report-title', className: L.barTitle, numberOfLines: 1, role: 'heading' }, [{ derived: 'address' }])" — breaks the file's own prop pattern, the neighbouring nodes use accessibilityRole ("node('Text', { key: 'message', className: L.lifecycleText, accessibilityRole: 'text' }"), and the tick comment says an undeclared prop is not passed, so `role` may be dropped and the heading lost — use accessibilityRole: 'header' (same for the checks.label node).
+DEFER severity=LOW — mobile/src/hooks/useParcelLookup.ts "gaveUp: (id: string): boolean => REPORT_GAVE_UP.has(id)," — no reader of this accessor appears in this material (only mark, end and reset are called), so it is dead API added by the diff — drop it, or have the screen read it instead of duplicating the set lookup.
+DEFER severity=LOW — mobile/src/components/surfaces/ReportPageHost.tsx "data={screenData} actions={actions} />" — both NO_DATA uses in this hunk ("<Renderer tree={lifecycleProps(lifecycle) as SurfaceTree} content={content} data={NO_DATA} actions={actions} />" and the top bar) are replaced by screenData, so unless a third use exists outside the hunk (cannot see) NO_DATA and its import are now dead — remove the constant/import or keep one use visible.
 
 VERDICT: PASS on code correctness
-Top 3 defects (if FAIL):
-- none blocking
+Top 3 defects (if FAIL): not applicable, verdict is PASS (the MED items above are render-phase mutation and per-lot state reset, neither of which breaks the reviewed path today).
 
 ---
-⏱  305880ms (305.9s)
-📊 Tokens — total: 64678, input: 27583, output: 37095, reasoning: 36465
+⏱  179008ms (179.0s)
+📊 Tokens — total: 56288, input: 35266, output: 21022, reasoning: 20077
