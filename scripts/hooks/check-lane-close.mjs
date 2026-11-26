@@ -35,6 +35,8 @@
 //  * self-edit: a commit that changes a protected path (table protected_paths: this check, the table, the helper, the review tool, the hooks) may not also move a task to finished.
 // Presence, form and the quote check; never judgement: THIS CHECK CANNOT PROVE THAT THE GROUNDER DID THE WORK WELL, that a quote bears on its finding, or that the grounder is truly a
 // different agent. Known limits: deleting the highest -pN output is not detected; ids are positional (a re-run lens needs fresh verdicts). `closeErrors` is exported for a push-range arm.
+// task-470 (RR-0511, RR-0513 A, RR-0514): PLAN_FOLD is the one switch of the severities the plan folds; ROUND2.testOnlySkip lets a round-1 output that binds at an earlier commit R stand when every
+// covered path changed after R is under TEST_ROOT and a STATION.pass of the fix is committed; a records commit (no task move) has the REVIEW header form of its staged out-*.txt checked (recordsFormErrors).
 import { spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -42,7 +44,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { asList, parseFM } from '../analysis/backlog-lib.mjs';
-import { coveredBy, DIFF_ARGS, diffPaths, JOINED_ID, joinLists, lensPromptHash, renderLensInput, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, outputLists, parseLensInput, readTable, resolveTask, ruledLine, seatOf } from '../analysis/rule-lists.mjs';
+import { TEST_ROOT, coveredBy, DIFF_ARGS, diffPaths, JOINED_ID, joinLists, lensPromptHash, renderLensInput, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, outputLists, parseLensInput, readTable, resolveTask, ruledLine, seatOf } from '../analysis/rule-lists.mjs';
 import { matchesAny } from '../analysis/mcbylaws/paths.mjs';
 
 const { CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections } = createRequire(import.meta.url)('../lib/review-template.js');
@@ -139,6 +141,9 @@ export function parseVerdicts(g) {
 // task-399 (FOLD.ADOPT, Spec 08 section 7 rule 3 08_agents.md:350 "fold survivors, file rejections with reasons", rule 6 :360 BUG goes to WF3 before Green Light, DEFER to review_followups.md with reasons):
 // every CONFIRMED or CONFLICT id of the grounder file carries ONE outcome line in TRIAGE.md (the last line of an id is judged). Presence, form and git facts; never judgement: it cannot prove that a fix fixes.
 const SEVS = ['CRITICAL', 'HIGH', 'MED', 'LOW', 'NIT'];
+// task-470 RR-0511 (MORNING-DECISIONS.md:2654): the severities the plan folds, the ONE switch of piece 1; a plan severity outside it is recorded (pile, wontfix, task, ruling), as LOW and NIT are.
+// Shipped as today (RR-0514 :2668 "3b 1a 2a", answer 1a). ['CRITICAL', 'HIGH'] is RR-0511 as approved; 'DOWNGRADED' also folds a finding whose lens or seat severity was CRITICAL or HIGH.
+export const PLAN_FOLD = ['CRITICAL', 'HIGH', 'MED'];
 const normSev = (s) => { const u = String(s ?? '').toUpperCase(); const k = u === 'CRIT' ? 'CRITICAL' : u === 'MEDIUM' ? 'MED' : u; return SEVS.includes(k) ? k : null; };
 /** The severity a grounder writes at the START of its reason (the first word, after punctuation), else null. S5 (task-453): a severity word later in the reason ("not a NIT") sets nothing. */
 const reasonSev = (reason) => { const m = /^\W*(CRITICAL|CRIT|HIGH|MEDIUM|MED|LOW|NIT)\b/.exec(String(reason ?? '')); return m ? normSev(m[1]) : null; };
@@ -166,7 +171,7 @@ const FAIL = Symbol('fact failed');
  *   summary?:{text:string, headText:string, grounderPath:string, triagePath:string}|null}} a
  * @returns {{errors:string[], ids:number}} refusal lines (one per failing id) and the number of CONFIRMED or CONFLICT ids checked
  */
-export function outcomeErrors({ verdicts, triageText, lensKinds, facts, mode = 'close', seats = [], seatRoot = null, summary = null, selfTask = null }) {
+export function outcomeErrors({ verdicts, triageText, lensKinds, facts, mode = 'close', seats = [], seatRoot = null, summary = null, selfTask = null, planFold = PLAN_FOLD }) {
   const errors = [];
   const kinds = new Map(lensKinds ?? []);
   // seats (Integration, Reality-Check, Ground-truth): one report each, one finding per line; its findings are BUG kind and need a verdict and an outcome like any lens finding
@@ -195,11 +200,14 @@ export function outcomeErrors({ verdicts, triageText, lensKinds, facts, mode = '
     const k = kinds.get(id) ?? { kind: 'BUG', sev: null };
     const sev = reasonSev(v.reason) ?? normSev(k.sev) ?? 'CRITICAL';
     const low = sev === 'LOW' || sev === 'NIT';
+    // task-470: at the plan a severity PLAN_FOLD does not fold is recorded like LOW and NIT; close mode is unchanged
+    const folds = planFold.includes(sev) || (planFold.includes('DOWNGRADED') && ['CRITICAL', 'HIGH'].includes(normSev(k.sev)));
+    const recorded = low || (mode === 'plan' && !folds);
     const conflict = v.word === 'CONFLICT';
     const fixWord = mode === 'plan' ? 'folded' : 'fixed';
-    const allowed = conflict ? ['ruling', fixWord] : low ? FORM_WORDS[mode] : k.kind === 'DEFER' ? [fixWord, 'task', 'ruling'] : [fixWord, 'ruling'];
+    const allowed = conflict ? ['ruling', fixWord] : recorded ? FORM_WORDS[mode] : k.kind === 'DEFER' ? [fixWord, 'task', 'ruling'] : [fixWord, 'ruling'];
     const pass = allowed.map((w) => ({ fixed: `fixed:<sha> <path the commit touches>`, folded: `folded:"<20+ characters present in the task text>"`, task: 'task:task-N (its text names this id)', ruling: 'ruling:RR-NNNN or ruling:decision-N', wontfix: 'wontfix:"<reason, 30+ characters>"', pile: 'pile:"<reason, 30+ characters>"' })[w]).join(' | ');
-    const rule = conflict ? 'Spec 08 section 5.3 (08_agents.md:225): a conflict waits for the operator ruling' : k.kind === 'DEFER' && !low ? 'Spec 08 section 7 rule 6 (08_agents.md:360): DEFER goes to review_followups.md with reasons' : low ? 'Spec 08 section 7 rule 3 (08_agents.md:346) and the operator ruling :1580 (low priorities filed for later)' : 'Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors';
+    const rule = conflict ? 'Spec 08 section 5.3 (08_agents.md:225): a conflict waits for the operator ruling' : recorded && !low ? `RR-0511 (MORNING-DECISIONS.md:2654): at the plan ${planFold.join(', ')} are folded, the other severities are recorded` : k.kind === 'DEFER' && !low ? 'Spec 08 section 7 rule 6 (08_agents.md:360): DEFER goes to review_followups.md with reasons' : low ? 'Spec 08 section 7 rule 3 (08_agents.md:346) and the operator ruling :1580 (low priorities filed for later)' : 'Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors';
     const refuse = (why) => errors.push(`${id} ${sev}: ${why} [${rule}; verdict ${v.file}:${v.line}; form that passes: ${id} ${pass}]`);
     const text = last.get(id);
     if (text === undefined) { refuse(`no outcome line in TRIAGE.md`); continue; }
@@ -208,7 +216,7 @@ export function outcomeErrors({ verdicts, triageText, lensKinds, facts, mode = '
     const [, word, rawArg] = fm;
     const arg = rawArg.trim();
     if (!allowed.includes(word)) {
-      refuse(word === 'fixed' && mode === 'plan' ? 'fixed is refused in plan mode (the fix is made before a lane branch exists; use folded)' : word === 'folded' && mode !== 'plan' ? 'folded is a plan-mode form (a lane close uses fixed)' : conflict ? `a CONFLICT takes ${allowed.join(' or ')} only, not ${word}` : `${word} is not allowed for a ${sev} ${k.kind} finding${(word === 'wontfix' || word === 'pile') ? ' (wontfix and pile are for LOW and NIT only)' : word === 'task' ? ' (task is for a DEFER finding; a BUG is fixed before Green Light)' : ''}`);
+      refuse(word === 'fixed' && mode === 'plan' ? 'fixed is refused in plan mode (the fix is made before a lane branch exists; use folded)' : word === 'folded' && mode !== 'plan' ? 'folded is a plan-mode form (a lane close uses fixed)' : conflict ? `a CONFLICT takes ${allowed.join(' or ')} only, not ${word}` : `${word} is not allowed for a ${sev} ${k.kind} finding${(word === 'wontfix' || word === 'pile') ? ' (wontfix and pile are for LOW and NIT only)' : word === 'task' ? ' (task is for a DEFER finding; a BUG is fixed before Green Light)' : ''}${mode === 'plan' ? ` (PLAN_FOLD folds ${planFold.join(', ')} at the plan; RR-0511)` : ''}`);
       continue;
     }
     const errs = [];
@@ -277,7 +285,7 @@ export function outcomeErrors({ verdicts, triageText, lensKinds, facts, mode = '
     const head = /<!-- SECTION:FINAL_SUMMARY:BEGIN -->([\s\S]*?)<!-- SECTION:FINAL_SUMMARY:END -->/.exec(summary.headText ?? '')?.[1] ?? '';
     const n = 1 + (head.match(/^\s*Review round \d+:/gm) ?? []).length;
     const round = `Review round ${n}: ${count(fixWord)} ${fixWord}, ${count('task')} task, ${count('ruling')} ruling, ${count('wontfix')} wontfix, ${count('pile')} pile; grounder ${summary.grounderPath}; triage ${summary.triagePath}`;
-    const lines = rows.filter((r) => r.sev === 'CRITICAL' || r.sev === 'HIGH' || r.sev === 'MED').map((r) => `${r.id} ${r.sev} ${r.word} ${r.ref}`);
+    const lines = rows.filter((r) => r.sev === 'CRITICAL' || r.sev === 'HIGH' || r.sev === 'MED').map((r) => `${r.id} ${r.sev} ${r.word} ${r.ref}`.trimEnd()); // task-470: a pile or wontfix has no ref, so no trailing space (plan-prep post compares trimmed lines)
     // the block is looked for in the Final Summary section only: a block placed in Notes does not make the outcomes visible on the page
     const have = /<!-- SECTION:FINAL_SUMMARY:BEGIN -->([\s\S]*?)<!-- SECTION:FINAL_SUMMARY:END -->/.exec(String(summary.text ?? ''))?.[1] ?? '';
     const miss = [round, ...lines].filter((l) => !have.includes(l));
@@ -462,6 +470,41 @@ function complianceSetErrors({ id, seat = 'compliance', lists, phases, files, ta
 /** task-423 (adjustment 3): true when the plan evidence is on the board: GROUNDER-PLAN.md at the launch commit is non-empty and holds a "Plan: <task id> sha256:<12 hex>" line (the launch gate put it there; the hash is not compared at close). */
 export const planOnBoard = (text, id) => typeof text === 'string' && text.trim() !== '' && [...text.matchAll(/^\s*Plan:\s*(\S+)\s+sha256:[0-9a-f]{12}\s*$/gm)].some((m) => m[1].toLowerCase() === String(id).toLowerCase());
 
+/**
+ * task-470 piece 3 (RR-0511 MORNING-DECISIONS.md:2654, RR-0467 :2425): the ONE switch of the test-only skip. testOnlySkip false = every output binds at HEAD, as before (no R search).
+ * The narrowed round 2 (piece 2) is not built: task-414 holds it (RR-0514 :2668, answer 3b).
+ */
+export const ROUND2 = { testOnlySkip: true };
+/** The STATION.pass problem for a round-1 commit R ('' never; null when valid): a "RESULT: PASS" line, a "sha: <40 hex>" line, the sha in R..HEAD, no covered path changed after it. The machine checks the form and the place only. */
+function stationProblem(text, R, inRange, between) {
+  if (text === undefined || text === null) return 'no STATION.pass in the lane folder';
+  if (!/^RESULT: PASS[ \t\r]*$/m.test(text)) return 'STATION.pass has no "RESULT: PASS" line';
+  const sm = /^sha: ([0-9a-f]{40})[ \t\r]*$/m.exec(text);
+  if (!sm) return 'STATION.pass has no "sha: <40 hex>" line';
+  if (!inRange(R, sm[1])) return `the sha ${sm[1]} of STATION.pass is not in ${R.slice(0, 9)}..HEAD (the station must have passed on the fix commit or a later one)`;
+  const after = between(sm[1]);
+  if (after === null) return `git diff from the STATION.pass sha ${sm[1].slice(0, 9)} failed (fail closed)`;
+  if (after.length) return `${after.length} covered path(s) changed after the STATION.pass sha ${sm[1].slice(0, 9)} (${after.slice(0, 4).join(', ')}): the station did not pass on the code at HEAD`;
+  return null;
+}
+/**
+ * task-470 piece 3, pure: may a lens output that does not bind at HEAD stand without round 2? `lensErrorsAt(c)` the lens errors when the range ends at commit c (null: unreadable), `commits` the candidate
+ * commits newest first (HEAD left out; at most 30 are tried), `between(a)` the covered fix paths from a to HEAD (null on a git failure), `station` the STATION.pass text, `inRange(R, sha)` sha in R..HEAD.
+ * Returns {skip, R, fix, testOnly, why}: R the newest commit the output binds at (null: none, so the refusal is today's), fix the covered paths changed after R.
+ */
+export function roundSkip({ lensErrorsAt, commits, between, station, inRange, round2 = ROUND2 }) {
+  if (!round2?.testOnlySkip) return { skip: false, R: null, fix: [], testOnly: false, why: null };
+  let R = null;
+  for (const c of (commits ?? []).slice(0, 30)) { const e = lensErrorsAt(c); if (e && e.length === 0) { R = c; break; } }
+  if (!R) return { skip: false, R: null, fix: [], testOnly: false, why: null };
+  const fix = between(R);
+  if (fix === null) return { skip: false, R, fix: [], testOnly: false, why: `git diff from ${R.slice(0, 9)} failed (fail closed)` };
+  const testOnly = fix.length > 0 && fix.every((p) => TEST_ROOT.test(p));
+  if (!testOnly) return { skip: false, R, fix, testOnly, why: null };
+  const why = stationProblem(station, R, inRange, between);
+  return { skip: why === null, R, fix, testOnly, why };
+}
+
 export function closeErrors(i) {
   const { id, type, readRepo } = i;
   const readBase = i.readBase ?? readRepo; // F10: templates come from the range base
@@ -502,7 +545,7 @@ export function closeErrors(i) {
   for (const f of i.laneFiles) { if (!dirs.has(f.dir)) dirs.set(f.dir, []); dirs.get(f.dir).push(f); }
   const dirNote = `docs/reports/lanes/<date>/${laneName}/`;
   // task-407 (V2.LAYOUT): the one place the check reads, named in every refusal that says a file is missing
-  const layout = `put every plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> and TASK directly in ${dirNote}: a file in a subfolder (lens-plan/, lens-out/, stage2/) or named fix-*.txt is never read; a fix round (r2) re-makes every file under the same names, and an out-<lens>[-<list id>]-rN.txt file is read for findings like any out- file but never stands in for a round-1 name`;
+  const layout = `put every plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> and TASK directly in ${dirNote}: a file in a subfolder (lens-plan/, lens-out/, stage2/) or named fix-*.txt is never read; a fix round (r2) re-makes every file under the same names, and an out-<lens>[-<list id>]-rN.txt file is read for findings like any out- file but never stands in for a round-1 name; a fix that touches test files only needs no round 2 when STATION.pass (the station pass file of the fix commit) is committed after it (task-470)`;
   const mine = [...dirs.entries()].filter(([, fs_]) => fs_.some((f) => f.name === 'TASK' && f.text.trim().toLowerCase() === id));
   if (mine.length === 0) return [...errors, `${id}: no ${dirNote} holds a TASK file naming exactly ${id} (a lane report dir is scoped to one task: write the task id in TASK; a dir used for another task does not count); ${layout}`];
   const files = mine.flatMap(([, fs_]) => fs_);
@@ -528,14 +571,17 @@ export function closeErrors(i) {
   // (a') the rest of the lens set a build or fix task calls for, and a plan-stage output
   if (build) {
     const set = lensSet({ type, files: filesText(i.taskText) });
-    for (const lens of set.out) {
+    // task-470: the checks of one output lens for a range that ends at HEAD or, in the round search, at an earlier commit (ctx: {expected, optional, diffOf}); the refusal lines
+    const lensOut = (lens, ctx) => {
+      const errors = [];
+      const { expected, diffOf } = ctx; const optionalPaths = ctx.optional;
       const n = `out-${lens}.txt`;
       const t = textOf(n);
       const lparts = files.map((f) => new RegExp(`^out-${esc(lens)}-p(\\d+)\\.txt$`).exec(f.name)).filter(Boolean).map((x) => Number(x[1])).sort((a, b) => a - b);
       if (t === undefined && lparts.length) {
         // V2.WHOLE: a lens whose prompt was over the bound is split by the same tool (lens-input with the lens template, no --list): out-<lens>-pN.txt, each with its committed in- input
         const gapAt = lparts.findIndex((x, k) => x !== k + 1);
-        if (gapAt !== -1) { errors.push(`${id}: out-${lens}: parts ${lparts.join(',')} have a gap, out-${lens}-p${gapAt + 1}.txt is missing`); continue; }
+        if (gapAt !== -1) { errors.push(`${id}: out-${lens}: parts ${lparts.join(',')} have a gap, out-${lens}-p${gapAt + 1}.txt is missing`); return errors; }
         const items = [];
         for (const x of lparts) {
           const nm = `out-${lens}-p${x}.txt`;
@@ -547,18 +593,28 @@ export function closeErrors(i) {
           else if (!p || p.id !== 'none' || !p.ok || p.listPart.trim() !== '') errors.push(`${id}: in-${nm}: not an input written by lens-input for a lens with no rule list (first line "LIST none sha256:... part 1 of 1 chunk c of m", stamps matching its text)`);
           else items.push({ name: `in-${nm}`, k: x, p });
         }
-        if (items.length === lparts.length && expected.length) errors.push(...chunkErrors({ label: `out-${lens}`, items, expected, diffOf: i.diffOf, optional: i.optionalPaths }).map((y) => `${id}: ${y}`));
-        continue;
+        if (items.length === lparts.length && expected.length) errors.push(...chunkErrors({ label: `out-${lens}`, items, expected, diffOf, optional: optionalPaths }).map((y) => `${id}: ${y}`));
+        return errors;
       }
-      if (t !== undefined && lparts.length) { errors.push(`${id}: ${n} and out-${lens}-pN.txt both exist (one file, or -p1..-pK): an unsplit file does not stand in for split parts`); continue; }
+      if (t !== undefined && lparts.length) { errors.push(`${id}: ${n} and out-${lens}-pN.txt both exist (one file, or -p1..-pK): an unsplit file does not stand in for split parts`); return errors; }
       if (t === undefined) errors.push(`${id}: the lens set of a ${type} task needs ${n} in ${dirNote} (Spec 08 section 7 rule 4: never one generic pass); ${layout}`);
       else {
         // F3: an unsplit lens output is bound to the whole range: its file_sha256 must be the sha256 of the recomputed diff text of every changed path (the file the lens read)
-        const whole = expected.length && i.diffOf ? i.diffOf(expected) : '';
+        const whole = expected.length && diffOf ? diffOf(expected) : '';
         if (expected.length === 0) errors.push(...reviewErrors(n, t, `lens-${lens}.md`, null).map((x) => `${id}: ${x}`));
         else if (whole === null || whole === '') errors.push(`${id}: ${n}: the whole-range diff text cannot be recomputed, so the file the lens read cannot be proved`);
         else errors.push(...reviewErrors(n, t, `lens-${lens}.md`, whole, { what: 'the recomputed diff of the whole task range (the diff file the lens must have read, made with the command in the brief)', templateText: readBase(`.claude/review-templates/lens-${lens}.md`), contexts: lc.values }).map((x) => `${id}: ${x}`));
       }
+      return errors;
+    };
+    for (const lens of set.out) {
+      const atHead = lensOut(lens, { expected, optional: i.optionalPaths, diffOf: i.diffOf });
+      if (atHead.length === 0 || !i.rounds) { errors.push(...atHead); continue; }
+      // task-470 piece 3: the newest earlier commit R the round-1 output binds at; a test-only fix with a valid STATION.pass stands without round 2, anything else is refused as today, naming R
+      const rs = roundSkip({ lensErrorsAt: (c) => { const at = i.rounds.at(c); return at && at.expected.length ? lensOut(lens, at) : null; }, commits: i.rounds.commits, between: i.rounds.between, station: textOf('STATION.pass'), inRange: i.rounds.inRange, round2: i.round2 ?? ROUND2 });
+      if (rs.skip) continue;
+      errors.push(...atHead);
+      if (rs.R) errors.push(`${id}: out-${lens}: the round-1 output binds at ${rs.R.slice(0, 9)} (the commit it reviewed); ${rs.fix.length} covered path(s) changed after it (${rs.fix.slice(0, 6).join(', ')}${rs.fix.length > 6 ? ', ...' : ''}): ${rs.testOnly ? `every one is a test, so round 2 is skipped once the station pass file of the fix commit (~/Buildo-scratch/push-station/pass/<sha>.pass) is committed as STATION.pass in ${dirNote} after the fix commit (${rs.why})` : `a fix that touches non-test code needs the whole-range round 2 at HEAD (every output re-made under the same names; the narrowed round 2 is task-414)${rs.why ? ` (${rs.why})` : ''}`}`);
     }
     // task-423 (adjustment 3): plan findings are ruled once, at the plan: with the plan evidence on the board no plan-stage output is required in the lane folder
     if (!i.planOnBoard && !files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(`${id}: no plan-stage lens output (plan-<lens>.txt) in ${dirNote}: the plan is reviewed before the build (Spec 08 section 7); ${layout}`);
@@ -681,7 +737,7 @@ function planGateInner(i) {
     const wrap = (t) => `<!-- SECTION:FINAL_SUMMARY:BEGIN -->${t}<!-- SECTION:FINAL_SUMMARY:END -->`;
     const asRound = (t) => t.replace(/Plan review round/g, 'Review round');
     if (rounds.length === 0) errors.push(`${id}: the Implementation Plan field holds no "Plan review round N: <a> folded, <b> task, <c> ruling, <d> wontfix, <e> pile; grounder <path>; triage <path>" line (backlog task edit ${id} --append-plan ...)`);
-    const oc = outcomeErrors({ verdicts: ge.verdicts, triageText: textOf('TRIAGE-PLAN.md') ?? '', lensKinds: new Map(found.map((f) => [f.id, lensKindOf(f.line)])), facts: { ...i.facts, taskText: () => i.taskText }, mode: 'plan', seats, seatRoot: dirNote, selfTask: id,
+    const oc = outcomeErrors({ verdicts: ge.verdicts, triageText: textOf('TRIAGE-PLAN.md') ?? '', lensKinds: new Map(found.map((f) => [f.id, lensKindOf(f.line)])), facts: { ...i.facts, taskText: () => i.taskText }, mode: 'plan', seats, seatRoot: dirNote, selfTask: id, planFold: i.planFold ?? PLAN_FOLD,
       summary: rounds.length ? { text: wrap(asRound(planField)), headText: wrap(asRound(rounds.slice(0, -1).join('\n'))), grounderPath: `${dir}/GROUNDER-PLAN.md`, triagePath: `${dir}/TRIAGE-PLAN.md` } : null });
     errors.push(...oc.errors.map((x) => x.replace(/Final Summary/g, 'Implementation Plan field')));
     findings = ge.verdicts.size;
@@ -758,7 +814,8 @@ function check(msgFile) {
     if (was.status === 0 && String(headFm.status ?? '').toUpperCase() === status) continue;
     moves.push({ f, now: now.stdout, fm, headFm, status, headText: was.status === 0 ? was.stdout : '' });
   }
-  if (moves.length === 0) return 0;
+  // task-470 piece A (RR-0513 A): a commit that moves no task has the form of its staged lane out files checked (never in a merge: those were checked on their own branches); removing this call is the switch off
+  if (moves.length === 0) return inMerge ? 0 : recordsFormErrors(boardRef);
   if (!boardTable) return fail([`the board ref ${BOARD_REFS[0]} or its scripts/analysis/rule-lists.json cannot be read: a task close needs the board, because the keys that decide what is checked and the task's launch commit come from it (fail closed)`]);
   const errors = [];
   // self-edit: the check, its table, its helper, the review tool and the hooks may not change in a commit that also closes a task
@@ -832,6 +889,7 @@ function check(msgFile) {
     let optionalPaths = [];
     let rangeEmpty = false;
     let diffOf = () => null;
+    let rounds = null;
     if (L) {
       const lr = git(['diff', '--name-only', '--no-renames', L, 'HEAD']);
       if (lr.status !== 0) { errors.push(`${id}: git diff --name-only ${L.slice(0, 9)} HEAD failed (status ${lr.status}): the changed paths cannot be recomputed (fail closed)`); continue; }
@@ -842,6 +900,18 @@ function check(msgFile) {
       expectedPaths = cov.filter((p) => !matchesAny(exempt, p));
       optionalPaths = all.filter((p) => !matchesAny(exempt, p) && (p.startsWith('docs/reports/') || p.startsWith('backlog/')));
       diffOf = (paths) => { const r = git(['--literal-pathspecs', 'diff', ...DIFF_ARGS, L, 'HEAD', '--', ...paths]); return r.status === 0 ? r.stdout : null; };
+      // task-470 piece 3: the same coverage set for a range that ends at an earlier commit c, the covered fix paths after a commit, and the candidate commits (only a commit that changes a covered path can change the covered diff)
+      const namesBetween = (a, b) => { const r = git(['diff', '--name-only', '--no-renames', a, b]); return r.status === 0 ? r.stdout.split('\n').filter(Boolean) : null; };
+      const fixPaths = (a) => { const x = namesBetween(a, 'HEAD'); return x === null ? null : x.filter((p) => coveredBy(entries, p) && !matchesAny(exempt, p) && !p.startsWith('backlog/')); };
+      const rl = expectedPaths.length ? git(['--literal-pathspecs', 'rev-list', '--max-count=31', `${L}..HEAD`, '--', ...expectedPaths]) : { status: 1, stdout: '' };
+      const headSha = git(['rev-parse', 'HEAD']).stdout.trim();
+      let rangeSet = null;
+      rounds = {
+        commits: rl.status === 0 ? rl.stdout.split('\n').filter((c) => c && c !== headSha) : [],
+        at: (c) => { const a = namesBetween(L, c); if (a === null) return null; return { expected: a.filter((p) => coveredBy(entries, p) && !matchesAny(exempt, p)), optional: a.filter((p) => !matchesAny(exempt, p) && (p.startsWith('docs/reports/') || p.startsWith('backlog/'))), diffOf: (paths) => { const r = git(['--literal-pathspecs', 'diff', ...DIFF_ARGS, L, c, '--', ...paths]); return r.status === 0 ? r.stdout : null; } }; },
+        between: fixPaths,
+        inRange: (R, x) => { if (!rangeSet) { const r = git(['rev-list', `${R}..HEAD`]); rangeSet = r.status === 0 ? { R, set: new Set(r.stdout.split('\n').filter(Boolean)) } : { R, set: new Set() }; } return rangeSet.R === R && rangeSet.set.has(x); },
+      };
       // F4 + F12: a lane build or fix close holds records only: the lane's own report directory, the review context directory of the task, the task files and the decision record
       if (['build', 'fix'].includes(type)) {
         const rec = (p) => p.startsWith(`docs/reports/lanes/`) && p.split('/')[4] === laneName || p.startsWith(`docs/reports/reviews/${id}/`) || /^backlog\/tasks\/task-\d+/.test(p) || p.startsWith('backlog/decisions/');
@@ -860,7 +930,7 @@ function check(msgFile) {
     // task-375 A5: every committed context file of the task (docs/reports/reviews/<id>/context-rN.md), the INDEX first, then HEAD (the order readRepo uses), never the range base
     const ctxDir = `docs/reports/reviews/${id}/`;
     const contexts = [...new Set([...git(['ls-files', '--cached', '--', ctxDir]).stdout.split('\n'), ...git(['ls-tree', '-r', '--name-only', 'HEAD', '--', ctxDir]).stdout.split('\n')].filter((q) => new RegExp(`^${esc(ctxDir)}context-r\\d+\\.md$`).test(q)))].sort().map((q) => ({ name: q, text: readRepo(q) })).filter((x) => x.text !== null);
-    errors.push(...closeErrors({ id, contexts, planOnBoard: planBoard, taskText: resolveText, fm: mv.fm, assignees: allAssignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase, facts: gitFacts(L), headTaskText: mv.headText }));
+    errors.push(...closeErrors({ id, contexts, planOnBoard: planBoard, taskText: resolveText, fm: mv.fm, assignees: allAssignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, rounds, round2: ROUND2, readRepo, readBase, facts: gitFacts(L), headTaskText: mv.headText }));
   }
   // H10: a branch whose tree lacks a board task file that is a lane build or fix task whose lane directory the branch carries has deleted or renumbered the real task: refused for any close
   const idxNums = new Set(git(['ls-files', '--cached', '--', 'backlog/tasks']).stdout.split('\n').map((p) => /backlog\/tasks\/task-0*(\d+)/i.exec(p)?.[1]).filter(Boolean));
@@ -871,6 +941,43 @@ function check(msgFile) {
       const fm = bm.status === 0 ? parseFM(bm.stdout).fm : {};
       const n = /task-0*(\d+)/i.exec(path.basename(bf))?.[1];
       if (['build', 'fix'].includes(String(fm.type ?? '').toLowerCase()) && asList(fm.assignee).map(String).includes(`@lane-${lane}`) && n && !idxNums.has(n)) errors.push(`this branch carries the lane directory of ${lane} but its tree has no task-${n} file: the board holds that task as a lane ${String(fm.type).toLowerCase()} task (${bf}); a branch that deletes or renumbers its task file cannot close anything`);
+    }
+  }
+  return errors.length ? fail(errors) : 0;
+}
+/**
+ * task-470 piece A (RR-0513 A, MORNING-DECISIONS.md:2664): at a records commit the staged (added or modified) out-*.txt directly in a lane report dir get the close's own REVIEW header check
+ * (reviewErrors): with a committed in-<same name> the prompt hash is recomputed from the template (at the board merge-base, else HEAD), that input and the task's committed contexts; an unsplit lens output
+ * (no input) gets the form check only (its file_sha256 needs the launch commit: a close-time check). Every file is read from the index, then HEAD. Fails closed when a file it needs cannot be read.
+ */
+function recordsFormErrors(boardRef) {
+  const st = git(['diff', '--cached', '--name-only', '--diff-filter=AM', '--no-renames']);
+  if (st.status !== 0) return fail([`git diff --cached failed (status ${st.status}): the staged review files cannot be listed, so their REVIEW header form cannot be checked (fail closed)`]);
+  const outs = st.stdout.split('\n').filter(Boolean).filter((f) => { const p = f.split('/'); return p.length === 6 && f.startsWith('docs/reports/lanes/') && /^out-.+\.txt$/.test(p[5]); });
+  if (outs.length === 0) return 0;
+  const readIdx = (p) => { for (const ref of [`:${p}`, `HEAD:${p}`]) { const x = git(['show', ref]); if (x.status === 0) return x.stdout; } return null; };
+  const mb = boardRef ? git(['merge-base', 'HEAD', boardRef]) : null;
+  const tplRef = mb && mb.status === 0 && mb.stdout.trim() ? mb.stdout.trim() : 'HEAD';
+  const readTpl = (p) => { const x = git(['show', `${tplRef}:${p}`]); return x.status === 0 ? x.stdout : null; };
+  const errors = [];
+  for (const dir of [...new Set(outs.map((f) => path.posix.dirname(f)))]) {
+    const tt = readIdx(`${dir}/TASK`);
+    if (tt === null) { errors.push(`${dir}/TASK cannot be read (index or HEAD): the out files staged in ${dir}/ cannot be tied to a task, so their prompt hash cannot be recomputed (fail closed: commit the file TASK with them)`); continue; }
+    const id = tt.trim().toLowerCase();
+    if (!/^task-\d+$/.test(id)) { errors.push(`${dir}/TASK does not hold one task id (task-N): the out files staged in ${dir}/ cannot be tied to a task (fail closed)`); continue; }
+    const ctxDir = `docs/reports/reviews/${id}/`;
+    const ls = git(['ls-files', '--cached', '--', ctxDir]);
+    const lt = git(['ls-tree', '-r', '--name-only', 'HEAD', '--', ctxDir]);
+    const names = [...new Set([...(ls.status === 0 ? ls.stdout.split('\n') : []), ...(lt.status === 0 ? lt.stdout.split('\n') : [])].filter((q) => new RegExp(`^${esc(ctxDir)}context-r\\d+\\.md$`).test(q)))].sort();
+    const contexts = names.map((q) => ({ name: q, text: readIdx(q) })).filter((x) => x.text !== null);
+    const values = [...new Set([...lensContexts(contexts, true).values, ...lensContexts(contexts, false).values])];
+    if (values.length === 0) { errors.push(`${id}: no committed review context file ${ctxDir}context-rN.md (index or HEAD) holds the context the review tool used, so the prompt hash of the out files staged in ${dir}/ cannot be recomputed (fail closed: commit the round's context with them)`); continue; }
+    for (const f of outs.filter((x) => path.posix.dirname(x) === dir)) {
+      const name = path.posix.basename(f);
+      const seat = /^out-(compliance|engineering)-/.exec(name)?.[1];
+      const template = `lens-${seat ?? name.replace(/^out-/, '').replace(/(-r\d+)?(-p\d+)?\.txt$/, '')}.md`;
+      const input = readIdx(`${dir}/in-${name}`);
+      errors.push(...reviewErrors(name, readIdx(f) ?? '', template, input, input === null ? {} : { templateText: readTpl(`.claude/review-templates/${template}`), contexts: values }).map((y) => `${id}: ${y}`));
     }
   }
   return errors.length ? fail(errors) : 0;

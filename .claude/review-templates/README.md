@@ -95,13 +95,13 @@ Each lens asks one question, names what it is not responsible for, rejects any f
 
 | Lens template | The one question | Spec 08 seat | When it fires | Altitude |
 |---|---|---|---|---|
-| `plan-review-deepseek.md` | Failure modes and rollback, data reality, sibling bugs | A2 DeepSeek (adversarial) | every task | plan, and output on money or pipeline work |
+| `plan-review-deepseek.md` | Failure modes and rollback, data reality, sibling bugs | A2 DeepSeek (adversarial) | on request only (task-470, RR-0511); its three axes rest on the reality-check and integration seats alone | plan, and output on money or pipeline work |
 | `lens-compliance.md` | Does it satisfy every pasted spec clause and operator ruling? | A10 Compliance (section 5.1) | every task, including record-only tasks (the only lens for those) | plan and output (not at the output of a build or fix task: output_off, task-460) |
 | `lens-engineering.md` | Is it built to every pasted engineering rule? | Engineering (RR-0385, decision-170) | every task whose rule lists include one on the engineering standards file (`docs/specs/00_engineering_standards.md`, today `eng-all`, `eng-front`, `eng-back` and `eng-shared`) | plan and output (not at the output of a build or fix task: output_off, task-460) |
 | `lens-code-review.md` | Correct, typed, errors handled and logged, no dead code? | A3 Code Reviewer | any task that writes code | output (plan: only if the plan names code) |
 | `lens-ux.md` | Does it serve the person on the other end, in every state, in the approved design text? | A11 User-Advocate | a build on a surface (app or web page) | plan (task-460: not at output) |
 | `lens-error-paths.md` | Error, empty, retry, time-out, double-submit, degrade-safety, idempotency and dedup | A2 DeepSeek lens 4 (section 7 rule 4) | any task that writes code or a counted event | plan (task-460: not at output, RR-0459) |
-| `lens-security.md` | How is this exploited? | A12 Security | only when the change touches money, auth, entitlements, PII or admin (Files line: entitlements, auth, stripe, a metered route), or a Files entry is under src/app/api/ or src/lib/ (task-445) | plan (task-460: not at output, RR-0464) |
+| `lens-security.md` | How is this exploited? | A12 Security | only on security items (task-470, RR-0511): a Files entry outside docs/ and the test roots naming sign-in, money, entitlements, personal data or admin (rule-lists.mjs SEC_WORDS); no src/app/api or src/lib arm (was task-445) | plan (task-460: not at output, RR-0464) |
 
 ### The standard
 
